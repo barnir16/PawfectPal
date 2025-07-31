@@ -200,7 +200,7 @@ export interface LocationUpdate {
 
 // Image upload types
 export interface ImageUpload {
-  file: File;
+  uri: string; // Changed from File to string for React Native compatibility
   type: 'pet' | 'task' | 'service';
   entity_id: number;
 }

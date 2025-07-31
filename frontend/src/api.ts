@@ -203,15 +203,24 @@ export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2
 
 /**
  * Upload pet image
+ * Note: In React Native, you'll need to use react-native-image-picker or expo-image-picker
+ * This is a placeholder for the API structure
  */
-export async function uploadPetImage(petId: number, file: File): Promise<UploadResponse> {
+export async function uploadPetImage(petId: number, imageUri: string): Promise<UploadResponse> {
+  // In React Native, you would use FormData with the image URI
+  // This is a simplified version - implement with actual image picker
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append('file', {
+    uri: imageUri,
+    type: 'image/jpeg',
+    name: 'pet_image.jpg'
+  } as any);
   
   const res = await fetch(`${BASE_URL}/upload/pet-image/${petId}`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${await getToken()}`,
+      'Content-Type': 'multipart/form-data',
     },
     body: formData,
   });
@@ -225,15 +234,24 @@ export async function uploadPetImage(petId: number, file: File): Promise<UploadR
 
 /**
  * Upload task attachment
+ * Note: In React Native, you'll need to use react-native-image-picker or expo-image-picker
+ * This is a placeholder for the API structure
  */
-export async function uploadTaskAttachment(taskId: number, file: File): Promise<UploadResponse> {
+export async function uploadTaskAttachment(taskId: number, imageUri: string): Promise<UploadResponse> {
+  // In React Native, you would use FormData with the image URI
+  // This is a simplified version - implement with actual image picker
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append('file', {
+    uri: imageUri,
+    type: 'image/jpeg',
+    name: 'task_attachment.jpg'
+  } as any);
   
   const res = await fetch(`${BASE_URL}/upload/task-attachment/${taskId}`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${await getToken()}`,
+      'Content-Type': 'multipart/form-data',
     },
     body: formData,
   });
@@ -470,75 +488,34 @@ export async function getCatBreedInfo(breedName: string, apiKey: string): Promis
 // ===== UTILITY FUNCTIONS =====
 
 /**
- * Get current user's location using browser geolocation
+ * Get current user's location using React Native geolocation
+ * Note: This requires expo-location or react-native-geolocation-service
  */
 export function getCurrentLocation(): Promise<Coordinates> {
   return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error('Geolocation is not supported by this browser'));
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        resolve({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-          altitude: position.coords.altitude || undefined,
-          speed: position.coords.speed || undefined,
-        });
-      },
-      (error) => {
-        reject(new Error(`Geolocation error: ${error.message}`));
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000,
-      }
-    );
+    // This is a placeholder - implement with expo-location
+    reject(new Error('Geolocation not implemented. Install expo-location and implement location services.'));
   });
 }
 
 /**
  * Watch user's location for real-time tracking
+ * Note: This requires expo-location or react-native-geolocation-service
  */
 export function watchLocation(
   onLocationUpdate: (coordinates: Coordinates) => void,
   onError: (error: Error) => void
 ): number {
-  if (!navigator.geolocation) {
-    onError(new Error('Geolocation is not supported'));
-    return -1;
-  }
-
-  return navigator.geolocation.watchPosition(
-    (position) => {
-      onLocationUpdate({
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        accuracy: position.coords.accuracy,
-        altitude: position.coords.altitude || undefined,
-        speed: position.coords.speed || undefined,
-      });
-    },
-    (error) => {
-      onError(new Error(`Geolocation error: ${error.message}`));
-    },
-    {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 30000,
-    }
-  );
+  // This is a placeholder - implement with expo-location
+  onError(new Error('Geolocation not implemented. Install expo-location and implement location services.'));
+  return -1;
 }
 
 /**
  * Clear location watching
+ * Note: This requires expo-location or react-native-geolocation-service
  */
 export function clearLocationWatch(watchId: number): void {
-  if (watchId !== -1) {
-    navigator.geolocation.clearWatch(watchId);
-  }
+  // This is a placeholder - implement with expo-location
+  console.log('Location watching cleared');
 } 
