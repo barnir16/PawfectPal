@@ -1,224 +1,241 @@
 # PawfectPal 🐾
 
-A universal pet care management platform that connects pet owners with pet care providers. Built with FastAPI backend and React Native frontend for cross-platform support (Web, Android, iOS).
-
-## 🎯 Project Goals
-
-Transform **PawfectPlanner** (Kotlin pet management app) into **PawfectPal** - a comprehensive pet care service platform that:
-
-- **Manages Pets**: Complete pet profiles with health tracking
-- **Schedules Tasks**: Pet care reminders and activities
-- **Tracks Location**: Real-time GPS tracking during services
-- **Connects Providers**: Pet walkers, sitters, groomers, vets
-- **Documents Services**: Photo uploads and service reports
-- **Supports Multi-Platform**: Web, Android, iOS
+A comprehensive pet care management platform built with **React Native + Expo** (frontend) and **FastAPI + SQLAlchemy** (backend).
 
 ## 🚀 Features
 
-### ✅ Implemented
-- **Authentication**: JWT-based user registration/login
-- **Pet Management**: Complete CRUD with health/behavior tracking
-- **Task Scheduling**: Recurring tasks with vaccine suggestions
-- **GPS Tracking**: Real-time location updates and history
-- **Image Upload**: Pet photos and task attachments
-- **Service Booking**: Walking, sitting, boarding, grooming, veterinary
-- **AI Assistant**: Simulated Gemini-powered chat interface
-- **Multi-language**: English/Hebrew support
-- **Dark Mode**: Theme switching
-- **Push Notifications**: Service updates and reminders
-- **External APIs**: Dog/Cat breed information integration
+### Core Features
+- **Pet Management**: Add, edit, and manage pet profiles with detailed information
+- **Task Scheduling**: Create and manage pet care tasks with reminders
+- **GPS Tracking**: Real-time location tracking for pets (requires expo-location)
+- **Image Upload**: Upload pet photos and task attachments
+- **Service Booking**: Book pet care services (walking, sitting, grooming, etc.)
+- **Vaccine Tracking**: Manage vaccination schedules and records
+- **AI Assistant**: Integrated AI assistant for pet care advice
 
-### 🔄 In Progress
-- **Provider Profiles**: Service provider registration
-- **Service Discovery**: Search and filter providers
-- **Payment Integration**: Stripe/PayPal processing
-- **Real-time Chat**: Provider-owner communication
+### Technical Features
+- **Cross-Platform**: Works on iOS, Android, and Web
+- **JWT Authentication**: Secure user authentication
+- **AsyncStorage**: Persistent data storage for React Native
+- **Real-time Updates**: Live data synchronization
+- **Offline Support**: Basic offline functionality
+- **Multi-language**: Support for English and Hebrew
 
-### 📋 Planned
-- **WhatsApp Integration**: Provider-owner messaging
-- **Vet Integration**: Medical record sharing
-- **Pet Store Integration**: Food/toy ordering
-- **Analytics Dashboard**: Usage tracking and reporting
-
-## 🏗️ Architecture
-
-### Backend (FastAPI + SQLAlchemy)
-```
-backend/
-├── main.py              # FastAPI application
-├── models.py            # Database models
-├── database.py          # Database configuration
-├── requirements.txt     # Python dependencies
-└── uploads/            # Image storage
-```
-
-### Frontend (React Native + Expo)
-```
-frontend/
-├── src/
-│   ├── types.ts         # TypeScript definitions
-│   ├── api.ts           # API client
-│   ├── components/      # React components
-│   ├── utils/           # Utility functions
-│   └── vaccines.ts      # Static vaccine data
-├── App.tsx              # Main application
-└── package.json         # Node.js dependencies
-```
-
-## 🛠️ Tech Stack
-
-### Backend
-- **FastAPI**: Modern Python web framework
-- **SQLAlchemy**: Database ORM
-- **SQLite**: Development database (PostgreSQL for production)
-- **JWT**: Authentication tokens
-- **Pydantic**: Data validation
-- **Uvicorn**: ASGI server
+## 🛠️ Technology Stack
 
 ### Frontend
-- **React Native**: Cross-platform mobile development
-- **Expo**: Development platform
-- **TypeScript**: Type safety
-- **React Navigation**: Navigation system
-- **AsyncStorage**: Local data persistence
+- **React Native** with **Expo**
+- **TypeScript** for type safety
+- **React Navigation** for navigation
+- **AsyncStorage** for data persistence
+- **Expo Vector Icons** for UI icons
 
-### External Services
-- **The Dog API**: Breed information
-- **The Cat API**: Breed information
-- **Google Gemini**: AI assistant (simulated)
+### Backend
+- **FastAPI** for API development
+- **SQLAlchemy** for database ORM
+- **SQLite** for database storage
+- **JWT** for authentication
+- **Pydantic** for data validation
+- **Python 3.11+**
 
-## 📦 Installation
+## 📋 Prerequisites
 
-### Prerequisites
-- Python 3.11+ (FastAPI compatibility)
-- Node.js 18+ and npm
-- Git
+- **Node.js** (v18 or higher)
+- **Python** (3.11 or higher)
+- **Expo CLI** (`npm install -g @expo/cli`)
+- **Git**
 
-### Backend Setup
+## 🚀 Quick Start
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd PawfectPal
-   ```
+### 1. Clone the Repository
+```bash
+git clone https://github.com/barnir16/pawfectpal.git
+cd pawfectpal
+```
 
-2. **Set up Python environment**
-   ```bash
-   cd backend
-   python -m venv venv
-   
-   # Windows
-   venv\Scripts\activate
-   
-   # macOS/Linux
-   source venv/bin/activate
-   ```
+### 2. Backend Setup
+```powershell
+# Navigate to backend directory
+cd backend
 
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+# Create virtual environment
+python -m venv venv
 
-4. **Run the backend**
-   ```bash
-   uvicorn main:app --reload
-   ```
+# Activate virtual environment (Windows)
+venv\Scripts\activate
 
-The API will be available at `http://127.0.0.1:8000`
-API documentation at `http://127.0.0.1:8000/docs`
+# Install dependencies
+pip install -r requirements.txt
 
-### Frontend Setup
+# Initialize database
+python database.py
 
-1. **Install dependencies**
-   ```bash
-   cd frontend
-   npm install
-   ```
+# Start the backend server
+python main.py
+```
 
-2. **Start the development server**
-   ```bash
-   npm start
-   ```
+The backend will be available at `http://127.0.0.1:8000`
 
-3. **Run on different platforms**
-   ```bash
-   # Web
-   npm run web
-   
-   # Android
-   npm run android
-   
-   # iOS (macOS only)
-   npm run ios
-   ```
+### 3. Frontend Setup
+```powershell
+# Navigate to frontend directory
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start the Expo development server
+npm start
+```
+
+### 4. Access the Application
+- **Web**: Open `http://localhost:8081` in your browser
+- **Mobile**: Scan the QR code with Expo Go app
+- **Emulator**: Press `a` for Android or `i` for iOS
 
 ## 🔧 Configuration
 
-### Environment Variables
-Create a `.env` file in the backend directory:
+### API Configuration
+Edit `frontend/src/config.ts` to configure API endpoints:
 
-```env
-# Database
-DATABASE_URL=REDACTED_DATABASE_URL
-
-# JWT
-SECRET_KEY=your-secret-key-here
-ACCESS_TOKEN_EXPIRE_MINUTES=60
-
-# External APIs
-DOG_API_KEY=your-dog-api-key
-CAT_API_KEY=your-cat-api-key
-GEMINI_API_KEY=REDACTED_GEMINI_API_KEY
+```typescript
+export const API_CONFIG = {
+  LOCAL: 'http://127.0.0.1:8000',        // Local development
+  DEVICE: 'http://192.168.1.100:8000',   // Physical device (change IP)
+  PRODUCTION: 'https://your-api.com',     // Production
+};
 ```
 
-### API Keys
-- **The Dog API**: Free tier available at https://thedogapi.com/
-- **The Cat API**: Free tier available at https://thecatapi.com/
-- **Google Gemini**: Available at https://ai.google.dev/
+### Environment Variables
+Create `.env` files for environment-specific settings:
+
+**Backend** (optional):
+```env
+SECRET_KEY=your_secret_key_here
+DATABASE_URL=REDACTED_DATABASE_URL
+```
 
 ## 📱 Usage
 
 ### Authentication
-1. Register a new account
-2. Login with username/password
-3. JWT token is automatically stored
+1. Register a new account or login with existing credentials
+2. JWT tokens are automatically stored and managed
 
 ### Pet Management
-1. Add pets with photos and health information
-2. Enable GPS tracking for real-time location
-3. View location history and activity
+1. Navigate to the "Pets" tab
+2. Tap "Add Pet" to create a new pet profile
+3. Fill in pet details (name, breed, birth date, etc.)
+4. Add health and behavior issues if needed
+5. Upload a photo of your pet
 
-### Task Scheduling
-1. Create tasks with descriptions and schedules
-2. Assign tasks to specific pets
-3. Get vaccine suggestions based on pet type
-
-### Service Booking
-1. Browse available service providers
-2. Book walking, sitting, boarding, grooming, or veterinary services
-3. Track service progress and location
-4. Upload before/after photos
+### Task Management
+1. Navigate to the "Tasks" tab
+2. Tap "Add Task" to create a new task
+3. Set task details (title, description, date/time)
+4. Assign pets to the task
+5. Set repeat intervals if needed
 
 ### GPS Tracking
-1. Enable tracking for pets
-2. View real-time location updates
-3. Review location history and routes
-4. Calculate distance traveled
+1. Enable tracking for pets in their profile
+2. Use the location tracking features (requires expo-location)
+3. View location history and calculate distances
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Metro Bundler Warnings**
+- ✅ Fixed: Package version mismatches resolved
+- ✅ Updated: `react-native-safe-area-context` to `5.4.0`
+- ✅ Updated: `react-native-screens` to `~4.11.1`
+
+**Authentication Issues**
+- Ensure backend is running on the correct port
+- Check API configuration in `frontend/src/config.ts`
+- Verify network connectivity
+
+**Image Upload Issues**
+- Requires expo-image-picker for full functionality
+- Currently using placeholder implementation
+- Implement with actual image picker library
+
+**GPS Tracking Issues**
+- Requires expo-location for full functionality
+- Currently using placeholder implementation
+- Install: `expo install expo-location`
+
+**Database Issues**
+- Ensure SQLite is properly initialized
+- Check file permissions for database file
+- Verify virtual environment is activated
+
+### Development Tips
+
+**Backend Development**
+```bash
+# Activate virtual environment
+venv\Scripts\activate
+
+# Run with auto-reload
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+# Check API documentation
+# Visit: http://127.0.0.1:8000/docs
+```
+
+**Frontend Development**
+```bash
+# Clear Metro cache
+npx expo start --clear
+
+# Run on specific platform
+npx expo start --android
+npx expo start --ios
+npx expo start --web
+```
+
+## 📁 Project Structure
+
+```
+PawfectPal/
+├── backend/                 # FastAPI backend
+│   ├── main.py             # API endpoints
+│   ├── models.py           # Database models
+│   ├── database.py         # Database setup
+│   ├── requirements.txt    # Python dependencies
+│   └── uploads/           # Uploaded files
+├── frontend/              # React Native frontend
+│   ├── App.tsx           # Main app component
+│   ├── src/
+│   │   ├── api.ts        # API client
+│   │   ├── types.ts      # TypeScript types
+│   │   ├── config.ts     # Configuration
+│   │   ├── AuthScreen.tsx
+│   │   ├── PetForm.tsx
+│   │   ├── PetList.tsx
+│   │   ├── TaskForm.tsx
+│   │   ├── components/   # Reusable components
+│   │   └── utils/        # Utility functions
+│   ├── package.json      # Node.js dependencies
+│   └── assets/          # Images and fonts
+├── uploads/             # Shared uploads directory
+└── README.md           # This file
+```
 
 ## 🔒 Security
 
 - **JWT Authentication**: Secure token-based authentication
-- **Password Hashing**: bcrypt for secure password storage
+- **Password Hashing**: Bcrypt password hashing
 - **CORS Configuration**: Proper cross-origin resource sharing
-- **Input Validation**: Pydantic models for data validation
-- **File Upload Security**: Type checking and size limits
+- **Input Validation**: Server-side and client-side validation
+- **SQL Injection Protection**: SQLAlchemy ORM protection
 
 ## 🧪 Testing
 
 ### Backend Testing
 ```bash
 cd backend
-python -m pytest
+python -m pytest tests/
 ```
 
 ### Frontend Testing
@@ -227,80 +244,37 @@ cd frontend
 npm test
 ```
 
-## 📊 API Endpoints
+## 📦 Deployment
 
-### Authentication
-- `POST /register` - User registration
-- `POST /token` - User login
+### Backend Deployment
+1. Set up production database (PostgreSQL recommended)
+2. Configure environment variables
+3. Deploy to cloud platform (Heroku, AWS, etc.)
+4. Update API configuration in frontend
 
-### Pets
-- `GET /pets` - Get user's pets
-- `POST /pets` - Create new pet
-- `PUT /pets/{id}` - Update pet
-- `DELETE /pets/{id}` - Delete pet
-
-### GPS Tracking
-- `POST /pets/{id}/location` - Update pet location
-- `GET /pets/{id}/location-history` - Get location history
-
-### Image Upload
-- `POST /upload/pet-image/{id}` - Upload pet photo
-- `POST /upload/task-attachment/{id}` - Upload task attachment
-
-### Services
-- `GET /services` - Get user's services
-- `POST /services` - Create service booking
-
-### Tasks
-- `GET /tasks` - Get user's tasks
-- `POST /tasks` - Create new task
-
-### Vaccines
-- `GET /vaccines` - Get all vaccines
-- `GET /age_restrictions` - Get age restrictions
+### Frontend Deployment
+1. Build for production: `expo build`
+2. Deploy to app stores or web
+3. Update API endpoints for production
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🆘 Support
+## 🙏 Acknowledgments
 
-For support, please open an issue in the GitHub repository or contact the development team.
-
-## 🔮 Roadmap
-
-### Phase 1: Core Platform ✅
-- [x] User authentication
-- [x] Pet management
-- [x] Task scheduling
-- [x] GPS tracking
-- [x] Image upload
-
-### Phase 2: Service Marketplace 🚧
-- [ ] Provider profiles
-- [ ] Service discovery
-- [ ] Booking system
-- [ ] Payment integration
-
-### Phase 3: Advanced Features 📋
-- [ ] Real-time chat
-- [ ] WhatsApp integration
-- [ ] Vet integration
-- [ ] Analytics dashboard
-
-### Phase 4: Business Features 📋
-- [ ] Provider verification
-- [ ] Insurance integration
-- [ ] Pet store integration
-- [ ] Emergency contacts
+- **Expo** for the amazing React Native development platform
+- **FastAPI** for the modern Python web framework
+- **React Navigation** for navigation solutions
+- **SQLAlchemy** for database ORM
 
 ---
 

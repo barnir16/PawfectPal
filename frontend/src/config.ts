@@ -20,7 +20,8 @@ export const getApiUrl = (): string => {
   // For now, we'll use a simple approach
   
   // Check if we're running on a physical device
-  const isDevice = !__DEV__ || (typeof window !== 'undefined' && window.location.hostname !== 'localhost');
+  // In React Native, __DEV__ is true for development builds
+  const isDevice = !__DEV__;
   
   if (isDevice) {
     // On physical device, use the device URL
