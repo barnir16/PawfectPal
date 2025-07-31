@@ -1,49 +1,112 @@
+import { StorageHelper } from './StorageHelper';
+
+/**
+ * API Key Manager for React Native
+ * Uses AsyncStorage for secure key management
+ */
 export class ApiKeyManager {
   private static readonly PETS_API_KEY_KEY = 'pets_api_key';
   private static readonly GEMINI_API_KEY_KEY = 'gemini_api_key';
 
-  static get petsApiKey(): string | null {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem(this.PETS_API_KEY_KEY);
-  }
-
-  static set petsApiKey(key: string | null) {
-    if (typeof window === 'undefined') return;
-    
-    if (key) {
-      localStorage.setItem(this.PETS_API_KEY_KEY, key);
-    } else {
-      localStorage.removeItem(this.PETS_API_KEY_KEY);
+  /**
+   * Get the pets API key
+   */
+  static async getPetsApiKey(): Promise<string | null> {
+    try {
+      return await StorageHelper.getItem(this.PETS_API_KEY_KEY);
+    } catch (error) {
+      console.error('Error getting pets API key:', error);
+      return null;
     }
   }
 
-  static get geminiApiKey(): string | null {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem(this.GEMINI_API_KEY_KEY);
-  }
-
-  static set geminiApiKey(key: string | null) {
-    if (typeof window === 'undefined') return;
-    
-    if (key) {
-      localStorage.setItem(this.GEMINI_API_KEY_KEY, key);
-    } else {
-      localStorage.removeItem(this.GEMINI_API_KEY_KEY);
+  /**
+   * Set the pets API key
+   */
+  static async setPetsApiKey(key: string | null): Promise<void> {
+    try {
+      if (key) {
+        await StorageHelper.setItem(this.PETS_API_KEY_KEY, key);
+      } else {
+        await StorageHelper.removeItem(this.PETS_API_KEY_KEY);
+      }
+    } catch (error) {
+      console.error('Error setting pets API key:', error);
     }
   }
 
-  static hasPetsApiKey(): boolean {
-    return !!this.petsApiKey;
+  /**
+   * Get the Gemini API key
+   */
+  static async getGeminiApiKey(): Promise<string | null> {
+    try {
+      return await StorageHelper.getItem(this.GEMINI_API_KEY_KEY);
+    } catch (error) {
+      console.error('Error getting Gemini API key:', error);
+      return null;
+    }
   }
 
-  static hasGeminiApiKey(): boolean {
-    return !!this.geminiApiKey;
+  /**
+   * Set the Gemini API key
+   */
+  static async setGeminiApiKey(key: string | null): Promise<void> {
+    try {
+      if (key) {
+        await StorageHelper.setItem(this.GEMINI_API_KEY_KEY, key);
+      } else {
+        await StorageHelper.removeItem(this.GEMINI_API_KEY_KEY);
+      }
+    } catch (error) {
+      console.error('Error setting Gemini API key:', error);
+    }
   }
 
-  static clearAllKeys(): void {
-    if (typeof window === 'undefined') return;
-    
-    localStorage.removeItem(this.PETS_API_KEY_KEY);
-    localStorage.removeItem(this.GEMINI_API_KEY_KEY);
+  /**
+   * Check if pets API key exists
+   */
+  static async hasPetsApiKey(): Promise<boolean> {
+    const key = await this.getPetsApiKey();
+    return !!key;
+  }
+
+  /**
+   * Check if Gemini API key exists
+   */
+  static async hasGeminiApiKey(): Promise<boolean> {
+    const key = await this.getGeminiApiKey();
+    return !!key;
+  }
+
+  /**
+   * Clear all stored API keys
+   */
+  static async clearAllKeys(): Promise<void> {
+    try {
+      await StorageHelper.removeItem(this.PETS_API_KEY_KEY);
+      await StorageHelper.removeItem(this.GEMINI_API_KEY_KEY);
+    } catch (error) {
+      console.error('Error clearing API keys:', error);
+    }
+  }
+
+  /**
+   * Get all API keys
+   */
+  static async getAllKeys(): Promise<{ pets?: string; gemini?: string }> {
+    try {
+      const [petsKey, geminiKey] = await Promise.all([
+        this.getPetsApiKey(),
+        this.getGeminiApiKey(),
+      ]);
+
+      return {
+        pets: petsKey || undefined,
+        gemini: geminiKey || undefined,
+      };
+    } catch (error) {
+      console.error('Error getting all API keys:', error);
+      return {};
+    }
   }
 } 

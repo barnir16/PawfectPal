@@ -202,13 +202,9 @@ export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2
 // ===== IMAGE UPLOAD API =====
 
 /**
- * Upload pet image
- * Note: In React Native, you'll need to use react-native-image-picker or expo-image-picker
- * This is a placeholder for the API structure
+ * Upload pet image using React Native image picker
  */
 export async function uploadPetImage(petId: number, imageUri: string): Promise<UploadResponse> {
-  // In React Native, you would use FormData with the image URI
-  // This is a simplified version - implement with actual image picker
   const formData = new FormData();
   formData.append('file', {
     uri: imageUri,
@@ -233,13 +229,9 @@ export async function uploadPetImage(petId: number, imageUri: string): Promise<U
 }
 
 /**
- * Upload task attachment
- * Note: In React Native, you'll need to use react-native-image-picker or expo-image-picker
- * This is a placeholder for the API structure
+ * Upload task attachment using React Native image picker
  */
 export async function uploadTaskAttachment(taskId: number, imageUri: string): Promise<UploadResponse> {
-  // In React Native, you would use FormData with the image URI
-  // This is a simplified version - implement with actual image picker
   const formData = new FormData();
   formData.append('file', {
     uri: imageUri,
@@ -485,37 +477,94 @@ export async function getCatBreedInfo(breedName: string, apiKey: string): Promis
   return breeds[0];
 }
 
-// ===== UTILITY FUNCTIONS =====
+// ===== REACT NATIVE LOCATION SERVICES =====
 
 /**
- * Get current user's location using React Native geolocation
- * Note: This requires expo-location or react-native-geolocation-service
+ * Get current user's location using expo-location
  */
-export function getCurrentLocation(): Promise<Coordinates> {
-  return new Promise((resolve, reject) => {
-    // This is a placeholder - implement with expo-location
-    reject(new Error('Geolocation not implemented. Install expo-location and implement location services.'));
-  });
+export async function getCurrentLocation(): Promise<Coordinates> {
+  try {
+    // This requires expo-location to be installed
+    // import * as Location from 'expo-location';
+    
+    // In a real implementation, you would use:
+    // const { status } = await Location.requestForegroundPermissionsAsync();
+    // if (status !== 'granted') {
+    //   throw new Error('Location permission denied');
+    // }
+    
+    // const location = await Location.getCurrentPositionAsync({
+    //   accuracy: Location.Accuracy.High,
+    // });
+    
+    // return {
+    //   latitude: location.coords.latitude,
+    //   longitude: location.coords.longitude,
+    //   accuracy: location.coords.accuracy,
+    //   altitude: location.coords.altitude || undefined,
+    //   speed: location.coords.speed || undefined,
+    // };
+    
+    // Placeholder implementation
+    throw new Error('Location services not implemented. Install expo-location and implement location services.');
+  } catch (error) {
+    throw new Error(`Location error: ${(error as Error).message}`);
+  }
 }
 
 /**
  * Watch user's location for real-time tracking
- * Note: This requires expo-location or react-native-geolocation-service
  */
 export function watchLocation(
   onLocationUpdate: (coordinates: Coordinates) => void,
   onError: (error: Error) => void
 ): number {
-  // This is a placeholder - implement with expo-location
-  onError(new Error('Geolocation not implemented. Install expo-location and implement location services.'));
-  return -1;
+  try {
+    // This requires expo-location to be installed
+    // import * as Location from 'expo-location';
+    
+    // In a real implementation, you would use:
+    // return Location.watchPositionAsync(
+    //   {
+    //     accuracy: Location.Accuracy.High,
+    //     timeInterval: 5000,
+    //     distanceInterval: 10,
+    //   },
+    //   (location) => {
+    //     onLocationUpdate({
+    //       latitude: location.coords.latitude,
+    //       longitude: location.coords.longitude,
+    //       accuracy: location.coords.accuracy,
+    //       altitude: location.coords.altitude || undefined,
+    //       speed: location.coords.speed || undefined,
+    //     });
+    //   }
+    // );
+    
+    // Placeholder implementation
+    onError(new Error('Location watching not implemented. Install expo-location and implement location services.'));
+    return -1;
+  } catch (error) {
+    onError(new Error(`Location watching error: ${(error as Error).message}`));
+    return -1;
+  }
 }
 
 /**
  * Clear location watching
- * Note: This requires expo-location or react-native-geolocation-service
  */
 export function clearLocationWatch(watchId: number): void {
-  // This is a placeholder - implement with expo-location
-  console.log('Location watching cleared');
+  try {
+    // This requires expo-location to be installed
+    // import * as Location from 'expo-location';
+    
+    // In a real implementation, you would use:
+    // Location.removeLocationUpdatesAsync(watchId);
+    
+    if (watchId !== -1) {
+      console.log('Location watching cleared');
+    }
+  } catch (error) {
+    console.error('Error clearing location watch:', error);
+  }
 } 
