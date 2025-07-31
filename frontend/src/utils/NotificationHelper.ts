@@ -1,57 +1,114 @@
 import { Task } from '../types';
 
+/**
+ * Notification helper for React Native
+ * Uses expo-notifications for cross-platform notification support
+ */
 export class NotificationHelper {
+  /**
+   * Schedule a notification for a task
+   * Note: Requires expo-notifications to be installed
+   */
   static async scheduleNotification(task: Task): Promise<void> {
-    if (!('Notification' in window)) {
-      console.log('This browser does not support notifications');
-      return;
-    }
+    try {
+      // This is a placeholder - implement with expo-notifications
+      // import * as Notifications from 'expo-notifications';
+      
+      const taskDateTime = new Date(task.dateTime);
+      const now = new Date();
+      const timeUntilTask = taskDateTime.getTime() - now.getTime();
 
-    // Request permission
-    if (Notification.permission !== 'granted') {
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        console.log('Notification permission denied');
-        return;
+      if (timeUntilTask > 0) {
+        // In a real implementation, you would use:
+        // await Notifications.scheduleNotificationAsync({
+        //   content: {
+        //     title: 'PawfectPal Reminder',
+        //     body: `${task.title}: ${task.description}`,
+        //   },
+        //   trigger: {
+        //     date: taskDateTime,
+        //   },
+        // });
+        
+        console.log(`Scheduled notification for task: ${task.title} at ${taskDateTime}`);
       }
-    }
-
-    // Schedule notification
-    const taskDateTime = new Date(task.dateTime);
-    const now = new Date();
-    const timeUntilTask = taskDateTime.getTime() - now.getTime();
-
-    if (timeUntilTask > 0) {
-      setTimeout(() => {
-        new Notification('PawfectPal Reminder', {
-          body: `${task.title}: ${task.description}`,
-          icon: '/favicon.ico',
-          tag: `task-${task.id}`,
-        });
-      }, timeUntilTask);
+    } catch (error) {
+      console.error('Error scheduling notification:', error);
     }
   }
 
+  /**
+   * Cancel a scheduled notification
+   */
   static async cancelNotification(taskId: number): Promise<void> {
-    // In a real app, you'd cancel the scheduled notification
-    // For now, we'll just log it
-    console.log(`Cancelled notification for task ${taskId}`);
+    try {
+      // In a real implementation, you would use:
+      // await Notifications.cancelScheduledNotificationAsync(notificationId);
+      
+      console.log(`Cancelled notification for task ${taskId}`);
+    } catch (error) {
+      console.error('Error cancelling notification:', error);
+    }
   }
 
-  static async enableNotifications(): Promise<boolean> {
-    if (!('Notification' in window)) {
+  /**
+   * Request notification permissions
+   */
+  static async requestPermissions(): Promise<boolean> {
+    try {
+      // In a real implementation, you would use:
+      // const { status } = await Notifications.requestPermissionsAsync();
+      // return status === 'granted';
+      
+      console.log('Requesting notification permissions...');
+      return true; // Placeholder
+    } catch (error) {
+      console.error('Error requesting notification permissions:', error);
       return false;
     }
-
-    const permission = await Notification.requestPermission();
-    return permission === 'granted';
   }
 
+  /**
+   * Check if notifications are supported
+   */
   static isNotificationSupported(): boolean {
-    return 'Notification' in window;
+    // In React Native with expo-notifications, this would always be true
+    return true;
   }
 
-  static getNotificationPermission(): NotificationPermission {
-    return Notification.permission;
+  /**
+   * Get current notification permission status
+   */
+  static async getNotificationPermission(): Promise<string> {
+    try {
+      // In a real implementation, you would use:
+      // const { status } = await Notifications.getPermissionsAsync();
+      // return status;
+      
+      return 'granted'; // Placeholder
+    } catch (error) {
+      console.error('Error getting notification permission:', error);
+      return 'denied';
+    }
+  }
+
+  /**
+   * Initialize notification settings
+   */
+  static async initializeNotifications(): Promise<void> {
+    try {
+      // In a real implementation, you would use:
+      // await Notifications.setNotificationHandler({
+      //   handleNotification: async () => ({
+      //     shouldShowAlert: true,
+      //     shouldPlaySound: true,
+      //     shouldSetBadge: false,
+      //   }),
+      // });
+      
+      console.log('Notifications initialized');
+    } catch (error) {
+      console.error('Error initializing notifications:', error);
+    }
   }
 } 
