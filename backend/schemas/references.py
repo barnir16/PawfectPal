@@ -3,18 +3,18 @@ from pydantic import BaseModel
 
 
 class AgeRestriction(BaseModel):
-    minWeeks: Optional[int] = None
-    maxYears: Optional[int] = None
+    min_weeks: Optional[int] = None
+    max_years: Optional[int] = None
 
 
 class Vaccine(BaseModel):
     name: str
     frequency: str
-    firstDoseAge: Optional[str] = None
-    kittenSchedule: Optional[List[str]] = None
-    puppySchedule: Optional[List[str]] = None
+    first_doseAge: Optional[str] = None
+    kitten_schedule: Optional[List[str]] = None
+    puppy_schedule: Optional[List[str]] = None
     description: str
-    sideEffects: Optional[List[str]] = None
-    ageRestriction: Optional[AgeRestriction] = None
-    lastUpdated: str
-    commonTreatments: Optional[List[str]] = None
+    side_effects: Optional[List[str]] = None
+    age_restriction: Optional[AgeRestriction] = None
+    last_updated: str
+    common_treatments: Optional[List[str]] = None

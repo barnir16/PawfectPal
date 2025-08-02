@@ -11,11 +11,11 @@ class AgeRestrictionORM(Base):
     __tablename__ = "age_restrictions"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    minWeeks: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    maxYears: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    min_weeks: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    max_years: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
     vaccines: Mapped[List[VaccineORM]] = relationship(
-        "VaccineORM", back_populates="ageRestriction"
+        "VaccineORM", back_populates="age_restriction"
     )
 
 
@@ -27,26 +27,26 @@ class VaccineORM(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
     frequency: Mapped[str] = mapped_column(String, nullable=False)
-    firstDoseAge: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    kittenSchedule: Mapped[Optional[str]] = mapped_column(
+    first_doseAge: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    kitten_schedule: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True
     )  # Comma-separated string
-    puppySchedule: Mapped[Optional[str]] = mapped_column(
+    puppy_schedule: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True
     )  # Comma-separated string
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    sideEffects: Mapped[Optional[str]] = mapped_column(
+    side_effects: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True
     )  # Comma-separated string
-    ageRestrictionId: Mapped[Optional[int]] = mapped_column(
+    age_restrictionId: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("age_restrictions.id"), nullable=True
     )
 
-    ageRestriction: Mapped[Optional[AgeRestrictionORM]] = relationship(
+    age_restriction: Mapped[Optional[AgeRestrictionORM]] = relationship(
         "AgeRestrictionORM", back_populates="vaccines"
     )
 
-    lastUpdated: Mapped[str] = mapped_column(String, nullable=False)
-    commonTreatments: Mapped[Optional[str]] = mapped_column(
+    last_updated: Mapped[str] = mapped_column(String, nullable=False)
+    common_treatments: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True
     )  # Comma-separated string

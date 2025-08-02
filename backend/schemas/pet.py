@@ -1,25 +1,25 @@
-from typing import List, Optional
+from typing import Optional
 from pydantic import BaseModel
 from datetime import date, datetime
 
 
 class PetBase(BaseModel):
     name: str
-    breedType: str
+    breed_type: str
     breed: str
-    birthDate: Optional[date] = None  # ISO date string
+    birth_date: Optional[date] = None  # ISO date string
     age: Optional[int] = None
-    isBirthdayGiven: bool = False
-    weightKg: Optional[float] = None
-    photoUri: Optional[str] = None
-    healthIssues: List[str] = []
-    behaviorIssues: List[str] = []
+    is_birthday_given: bool = False
+    weight_kg: Optional[float] = None
+    photo_uri: Optional[str] = None
+    health_issues: Optional[str] = None
+    behavior_issues: Optional[str] = None
 
     # GPS tracking
-    lastKnownLatitude: Optional[float] = None
-    lastKnownLongitude: Optional[float] = None
-    lastLocationUpdate: Optional[datetime] = None  # ISO datetime string
-    isTrackingEnabled: bool = False
+    last_known_latitude: Optional[float] = None
+    last_known_longitude: Optional[float] = None
+    last_location_update: Optional[datetime] = None  # ISO datetime string
+    is_tracking_enabled: bool = False
 
 
 class PetCreate(PetBase):

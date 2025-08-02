@@ -6,8 +6,7 @@ from models import (
     LocationHistoryORM,
     UserORM,
 )
-from schemas import LocationHistoryRead, LocationHistoryCreate
-from datetime import datetime
+from schemas import LocationHistoryRead, LocationHistoryUpdate
 from dependencies.db import get_db
 from dependencies.auth import get_current_user
 
@@ -17,7 +16,7 @@ router = APIRouter(prefix="/gps", tags=["gps"])
 @router.post("/pets/{pet_id}/location", response_model=LocationHistoryRead)
 def update_pet_location(
     pet_id: int,
-    location: LocationHistoryCreate,
+    location: LocationHistoryUpdate,
     db: Session = Depends(get_db),
     current_user: UserORM = Depends(get_current_user),
 ):
@@ -36,7 +35,7 @@ def update_pet_location(
         pet_id=pet_id,
         latitude=location.latitude,
         longitude=location.longitude,
-        timestamp=datetime.fromisoformat(location.timestamp),
+        timestamp=location.timestamp,
         accuracy=location.accuracy,
         speed=location.speed,
         altitude=location.altitude,
@@ -46,21 +45,12 @@ def update_pet_location(
     # Update pet's last known location
     pet.lastKnownLatitude = location.latitude
     pet.lastKnownLongitude = location.longitude
-    pet.lastLocationUpdate = datetime.fromisoformat(location.timestamp)
+    pet.lastLocationUpdate = location.timestamp
 
     db.commit()
     db.refresh(db_location)
 
-    return LocationHistoryRead(
-        id=db_location.id,
-        pet_id=db_location.pet_id,
-        latitude=db_location.latitude,
-        longitude=db_location.longitude,
-        timestamp=db_location.timestamp.isoformat(),
-        accuracy=db_location.accuracy,
-        speed=db_location.speed,
-        altitude=db_location.altitude,
-    )
+    return LocationHistoryRead.model_validate(db_location)
 
 
 @router.get("/pets/{pet_id}/location-history", response_model=List[LocationHistoryRead])
@@ -88,16 +78,4 @@ def get_pet_location_history(
         .all()
     )
 
-    return [
-        LocationHistoryRead(
-            id=loc.id,
-            pet_id=loc.pet_id,
-            latitude=loc.latitude,
-            longitude=loc.longitude,
-            timestamp=loc.timestamp.isoformat(),
-            accuracy=loc.accuracy,
-            speed=loc.speed,
-            altitude=loc.altitude,
-        )
-        for loc in locations
-    ]
+    return [LocationHistoryRead.model_validate(loc) for loc in locations]

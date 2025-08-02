@@ -25,4 +25,4 @@ class LocationHistoryORM(Base):
     altitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 
     # Relationships
-    pet: Mapped["PetORM"] = relationship("PetORM", back_populates="locationHistory")
+    pet: Mapped["PetORM"] = relationship("PetORM", back_populates="location_history")
