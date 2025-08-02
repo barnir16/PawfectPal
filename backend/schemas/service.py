@@ -3,8 +3,7 @@ from pydantic import BaseModel
 from models import ServiceType, ServiceStatus
 
 
-class Service(BaseModel):
-    id: Optional[int] = None
+class ServiceBase(BaseModel):
     pet_id: int
     service_type: ServiceType
     status: ServiceStatus = ServiceStatus.PENDING
@@ -31,3 +30,14 @@ class Service(BaseModel):
     before_images: List[str] = []
     after_images: List[str] = []
     service_report: Optional[str] = None
+
+
+class ServiceCreate(ServiceBase):
+    pass
+
+
+class ServiceRead(ServiceBase):
+    id: int
+
+    class Config:
+        from_attributes = True

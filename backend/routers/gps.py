@@ -6,7 +6,7 @@ from models import (
     LocationHistoryORM,
     UserORM,
 )
-from schemas import LocationHistory
+from schemas import LocationHistoryRead, LocationHistoryCreate
 from datetime import datetime
 from dependencies.db import get_db
 from dependencies.auth import get_current_user
@@ -14,10 +14,10 @@ from dependencies.auth import get_current_user
 router = APIRouter(prefix="/gps", tags=["gps"])
 
 
-@router.post("/pets/{pet_id}/location", response_model=LocationHistory)
+@router.post("/pets/{pet_id}/location", response_model=LocationHistoryRead)
 def update_pet_location(
     pet_id: int,
-    location: LocationHistory,
+    location: LocationHistoryCreate,
     db: Session = Depends(get_db),
     current_user: UserORM = Depends(get_current_user),
 ):
@@ -51,7 +51,7 @@ def update_pet_location(
     db.commit()
     db.refresh(db_location)
 
-    return LocationHistory(
+    return LocationHistoryRead(
         id=db_location.id,
         pet_id=db_location.pet_id,
         latitude=db_location.latitude,
@@ -63,7 +63,7 @@ def update_pet_location(
     )
 
 
-@router.get("/pets/{pet_id}/location-history", response_model=List[LocationHistory])
+@router.get("/pets/{pet_id}/location-history", response_model=List[LocationHistoryRead])
 def get_pet_location_history(
     pet_id: int,
     limit: int = 100,
@@ -89,7 +89,7 @@ def get_pet_location_history(
     )
 
     return [
-        LocationHistory(
+        LocationHistoryRead(
             id=loc.id,
             pet_id=loc.pet_id,
             latitude=loc.latitude,

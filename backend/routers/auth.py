@@ -4,7 +4,7 @@ from models.user import (
     UserORM,
 )
 from schemas import (
-    User,
+    UserRead,
     UserCreate,
 )
 from fastapi.security import OAuth2PasswordRequestForm
@@ -21,13 +21,12 @@ from config import ACCESS_TOKEN_EXPIRE_MINUTES
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=User)
+@router.post("/register", response_model=UserRead)
 def register(user: UserCreate, db: Session = Depends(get_db)):
     """Register a new user"""
     db_user = get_user_by_username(db, username=user.username)
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
-
     hashed_password = get_password_hash(user.password)
     db_user = UserORM(
         username=user.username,
@@ -38,7 +37,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    return User(
+    return UserRead(
         id=db_user.id,
         username=db_user.username,
         is_active=db_user.is_active,

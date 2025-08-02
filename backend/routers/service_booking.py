@@ -10,7 +10,7 @@ from models import (
     ServiceType,
     ServiceStatus,
 )
-from schemas import Service
+from schemas import ServiceCreate, ServiceRead
 from datetime import datetime
 from dependencies.db import get_db
 from dependencies.auth import get_current_user
@@ -18,14 +18,14 @@ from dependencies.auth import get_current_user
 router = APIRouter(prefix="/service_booking", tags=["service_booking"])
 
 
-@router.get("/", response_model=List[Service])
+@router.get("/", response_model=List[ServiceRead])
 def get_services(
     db: Session = Depends(get_db), current_user: UserORM = Depends(get_current_user)
 ):
     """Get all services for the authenticated user"""
     services = db.query(ServiceORM).filter(ServiceORM.user_id == current_user.id).all()
     return [
-        Service(
+        ServiceRead(
             id=s.id,
             pet_id=s.pet_id,
             service_type=ServiceType(s.service_type),
@@ -52,9 +52,9 @@ def get_services(
     ]
 
 
-@router.post("/", response_model=Service)
+@router.post("/", response_model=ServiceRead)
 def create_service(
-    service: Service,
+    service: ServiceCreate,
     db: Session = Depends(get_db),
     current_user: UserORM = Depends(get_current_user),
 ):
@@ -97,7 +97,7 @@ def create_service(
     db.commit()
     db.refresh(db_service)
 
-    return Service(
+    return ServiceRead(
         id=db_service.id,
         pet_id=db_service.pet_id,
         service_type=ServiceType(db_service.service_type),

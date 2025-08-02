@@ -1,6 +1,6 @@
-from .pet import Pet
-from .task import Task
-from .service import Service
-from .location import LocationHistory
-from .user import User, UserCreate
+from .pet import PetBase, PetCreate, PetRead, PetUpdate
+from .task import TaskBase, TaskCreate, TaskRead
+from .service import ServiceBase, ServiceCreate, ServiceRead
+from .location import LocationHistoryBase, LocationHistoryRead, LocationHistoryCreate
+from .user import UserBase, UserCreate, UserRead
 from .references import Vaccine, AgeRestriction
