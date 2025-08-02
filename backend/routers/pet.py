@@ -4,8 +4,6 @@ from typing import List
 from models import (
     PetORM,
     UserORM,
-    list_to_str,
-    str_to_list,
 )
 from schemas.pet import PetCreate, PetRead, PetUpdate
 from dependencies.db import get_db
@@ -20,26 +18,7 @@ def get_pets(
 ):
     """Get all pets for the authenticated user"""
     pets = db.query(PetORM).filter(PetORM.user_id == current_user.id).all()
-    return [
-        PetRead(
-            id=p.id,
-            name=p.name,
-            breedType=p.breedType,
-            breed=p.breed,
-            birthDate=p.birthDate,
-            age=p.age,
-            isBirthdayGiven=bool(p.isBirthdayGiven),
-            weightKg=p.weightKg,
-            photoUri=p.photoUri,
-            healthIssues=str_to_list(p.healthIssues),
-            behaviorIssues=str_to_list(p.behaviorIssues),
-            lastKnownLatitude=p.lastKnownLatitude,
-            lastKnownLongitude=p.lastKnownLongitude,
-            lastLocationUpdate=p.lastLocationUpdate,
-            isTrackingEnabled=p.isTrackingEnabled,
-        )
-        for p in pets
-    ]
+    return [PetRead.model_validate(p) for p in pets]
 
 
 @router.post("/", response_model=PetRead)
@@ -52,40 +31,26 @@ def create_pet(
     db_pet = PetORM(
         user_id=current_user.id,
         name=pet.name,
-        breedType=pet.breedType,
+        breed_type=pet.breed_type,
         breed=pet.breed,
-        birthDate=pet.birthDate if pet.birthDate else None,
+        birth_date=pet.birth_date if pet.birth_date else None,
         age=pet.age,
-        isBirthdayGiven=int(pet.isBirthdayGiven),
-        weightKg=pet.weightKg,
-        photoUri=pet.photoUri,
-        healthIssues=list_to_str(pet.healthIssues),
-        behaviorIssues=list_to_str(pet.behaviorIssues),
-        lastKnownLatitude=pet.lastKnownLatitude,
-        lastKnownLongitude=pet.lastKnownLongitude,
-        lastLocationUpdate=pet.lastLocationUpdate if pet.lastLocationUpdate else None,
-        isTrackingEnabled=pet.isTrackingEnabled,
+        is_birthday_given=int(pet.is_birthday_given),
+        weight_kg=pet.weight_kg,
+        photo_uri=pet.photo_uri,
+        health_issues=pet.health_issues,
+        behavior_issues=pet.behavior_issues,
+        last_known_latitude=pet.last_known_latitude,
+        last_known_longitude=pet.last_known_longitude,
+        last_location_update=pet.last_location_update
+        if pet.last_location_update
+        else None,
+        is_tracking_enabled=pet.is_tracking_enabled,
     )
     db.add(db_pet)
     db.commit()
     db.refresh(db_pet)
-    return PetRead(
-        id=db_pet.id,
-        name=db_pet.name,
-        breedType=db_pet.breedType,
-        breed=db_pet.breed,
-        birthDate=db_pet.birthDate,
-        age=db_pet.age,
-        isBirthdayGiven=bool(db_pet.isBirthdayGiven),
-        weightKg=db_pet.weightKg,
-        photoUri=db_pet.photoUri,
-        healthIssues=str_to_list(db_pet.healthIssues),
-        behaviorIssues=str_to_list(db_pet.behaviorIssues),
-        lastKnownLatitude=db_pet.lastKnownLatitude,
-        lastKnownLongitude=db_pet.lastKnownLongitude,
-        lastLocationUpdate=db_pet.lastLocationUpdate,
-        isTrackingEnabled=db_pet.isTrackingEnabled,
-    )
+    return PetRead.model_validate(db_pet)
 
 
 @router.put("/{pet_id}", response_model=PetRead)
@@ -105,40 +70,24 @@ def update_pet(
         raise HTTPException(status_code=404, detail="Pet not found")
 
     db_pet.name = pet.name
-    db_pet.breedType = pet.breedType
+    db_pet.breed_type = pet.breed_type
     db_pet.breed = pet.breed
-    db_pet.birthDate = pet.birthDate
+    db_pet.birth_date = pet.birth_date
     db_pet.age = pet.age
-    db_pet.isBirthdayGiven = int(pet.isBirthdayGiven)
-    db_pet.weightKg = pet.weightKg
-    db_pet.photoUri = pet.photoUri
-    db_pet.healthIssues = list_to_str(pet.healthIssues)
-    db_pet.behaviorIssues = list_to_str(pet.behaviorIssues)
-    db_pet.lastKnownLatitude = pet.lastKnownLatitude
-    db_pet.lastKnownLongitude = pet.lastKnownLongitude
-    db_pet.lastLocationUpdate = pet.lastLocationUpdate
-    db_pet.isTrackingEnabled = pet.isTrackingEnabled
+    db_pet.is_birthday_given = int(pet.is_birthday_given)
+    db_pet.weight_kg = pet.weight_kg
+    db_pet.photo_uri = pet.photo_uri
+    db_pet.health_issues = pet.health_issues
+    db_pet.behavior_issues = pet.behavior_issues
+    db_pet.last_known_latitude = pet.last_known_latitude
+    db_pet.last_known_longitude = pet.last_known_longitude
+    db_pet.last_location_update = pet.last_location_update
+    db_pet.is_tracking_enabled = pet.is_tracking_enabled
 
     db.commit()
     db.refresh(db_pet)
 
-    return PetRead(
-        id=db_pet.id,
-        name=db_pet.name,
-        breedType=db_pet.breedType,
-        breed=db_pet.breed,
-        birthDate=db_pet.birthDate,
-        age=db_pet.age,
-        isBirthdayGiven=bool(db_pet.isBirthdayGiven),
-        weightKg=db_pet.weightKg,
-        photoUri=db_pet.photoUri,
-        healthIssues=str_to_list(db_pet.healthIssues),
-        behaviorIssues=str_to_list(db_pet.behaviorIssues),
-        lastKnownLatitude=db_pet.lastKnownLatitude,
-        lastKnownLongitude=db_pet.lastKnownLongitude,
-        lastLocationUpdate=db_pet.lastLocationUpdate,
-        isTrackingEnabled=db_pet.isTrackingEnabled,
-    )
+    return PetRead.model_validate(db_pet)
 
 
 @router.delete("/{pet_id}")

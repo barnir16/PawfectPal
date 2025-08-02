@@ -1,14 +1,16 @@
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from models import ServiceType, ServiceStatus
+from datetime import datetime
+import json
 
 
 class ServiceBase(BaseModel):
     pet_id: int
     service_type: ServiceType
     status: ServiceStatus = ServiceStatus.PENDING
-    start_datetime: str  # ISO datetime string
-    end_datetime: Optional[str] = None  # ISO datetime string
+    start_datetime: datetime  # ISO datetime string
+    end_datetime: Optional[datetime] = None  # ISO datetime string
     duration_hours: Optional[float] = None
     price: Optional[float] = None
     currency: str = "USD"
@@ -38,6 +40,16 @@ class ServiceCreate(ServiceBase):
 
 class ServiceRead(ServiceBase):
     id: int
+
+    @field_validator("before_images", "after_images", mode="before")
+    @classmethod
+    def validate_image_lists(cls, v):
+        if isinstance(v, str):
+            # This is the raw JSON string from the database.
+            # We explicitly deserialize it here.
+            return json.loads(v)
+        # If it's already a list, or None, let it pass through.
+        return v
 
     class Config:
         from_attributes = True

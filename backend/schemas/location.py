@@ -1,23 +1,23 @@
 from typing import Optional
 from pydantic import BaseModel
+from datetime import datetime
 
 
 class LocationHistoryBase(BaseModel):
-    pet_id: int
     latitude: float
     longitude: float
-    timestamp: str  # ISO datetime string
+    timestamp: datetime  # ISO datetime string
     accuracy: Optional[float] = None
     speed: Optional[float] = None
     altitude: Optional[float] = None
 
 
-class LocationHistoryCreate(LocationHistoryBase):
+class LocationHistoryUpdate(LocationHistoryBase):
     pass
 
 
 class LocationHistoryRead(LocationHistoryBase):
-    id: int
+    pet_id: int
 
     class Config:
         from_attributes = True

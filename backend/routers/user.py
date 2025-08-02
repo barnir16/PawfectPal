@@ -37,13 +37,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    return UserRead(
-        id=db_user.id,
-        username=db_user.username,
-        is_active=db_user.is_active,
-        email=db_user.email,
-        full_name=db_user.full_name,
-    )
+    return UserRead.model_validate(db_user)
 
 
 @router.post("/token")

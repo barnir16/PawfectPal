@@ -4,6 +4,7 @@ from sqlalchemy import Integer, String, Float, DateTime, Text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base import Base, ServiceStatus
 from datetime import datetime
+import json
 
 if TYPE_CHECKING:
     from .pet import PetORM
@@ -48,12 +49,29 @@ class ServiceORM(Base):
     customer_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Images and documentation
-    before_images: Mapped[Optional[str]] = mapped_column(
-        Text, nullable=True
+    _before_images: Mapped[Optional[str]] = mapped_column(
+        "before_images", Text, nullable=True
     )  # JSON array
-    after_images: Mapped[Optional[str]] = mapped_column(
-        Text, nullable=True
+    _after_images: Mapped[Optional[str]] = mapped_column(
+        "after_images", Text, nullable=True
     )  # JSON array
+
+    @property
+    def before_images(self) -> list[str]:
+        return json.loads(self._before_images) if self._before_images else []
+
+    @before_images.setter
+    def before_images(self, value: list[str]):
+        self._before_images = json.dumps(value)
+
+    @property
+    def after_images(self) -> list[str]:
+        return json.loads(self._after_images) if self._after_images else []
+
+    @after_images.setter
+    def after_images(self, value: list[str]):
+        self._after_images = json.dumps(value)
+
     service_report: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Relationships
