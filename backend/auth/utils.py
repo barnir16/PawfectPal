@@ -15,7 +15,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 # Helper functions
 def get_password_hash(password: str):
-    """Hash password using bcrypt"""
+    """Hash password using argon2"""
     return pwd_context.hash(password)
 
 

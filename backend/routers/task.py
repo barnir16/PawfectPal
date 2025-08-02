@@ -9,7 +9,7 @@ from models import (
     json_to_list,
     list_to_json,
 )
-from schemas import Task
+from schemas import TaskCreate, TaskRead
 from datetime import datetime
 from dependencies.db import get_db
 from dependencies.auth import get_current_user
@@ -17,14 +17,14 @@ from dependencies.auth import get_current_user
 router = APIRouter(prefix="/task", tags=["task"])
 
 
-@router.get("/", response_model=List[Task])
+@router.get("/", response_model=List[TaskRead])
 def get_tasks(
     db: Session = Depends(get_db), current_user: UserORM = Depends(get_current_user)
 ):
     """Get all tasks for the authenticated user"""
     tasks = db.query(TaskORM).filter(TaskORM.user_id == current_user.id).all()
     return [
-        Task(
+        TaskRead(
             id=t.id,
             title=t.title,
             description=t.description,
@@ -38,9 +38,9 @@ def get_tasks(
     ]
 
 
-@router.post("/", response_model=Task)
+@router.post("/", response_model=TaskRead)
 def create_task(
-    task: Task,
+    task: TaskCreate,
     db: Session = Depends(get_db),
     current_user: UserORM = Depends(get_current_user),
 ):
@@ -58,7 +58,7 @@ def create_task(
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
-    return Task(
+    return TaskRead(
         id=db_task.id,
         title=db_task.title,
         description=db_task.description,

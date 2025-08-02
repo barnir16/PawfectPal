@@ -1,35 +1,32 @@
 from fastapi import HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List
 from models import (
     PetORM,
     UserORM,
     list_to_str,
     str_to_list,
 )
-from schemas import (
-    Pet,
-)
-from datetime import datetime, date
+from schemas.pet import PetCreate, PetRead, PetUpdate
 from dependencies.db import get_db
 from dependencies.auth import get_current_user
 
 router = APIRouter(prefix="/pets", tags=["pets"])
 
 
-@router.get("/", response_model=List[Pet])
+@router.get("/", response_model=List[PetRead])
 def get_pets(
     db: Session = Depends(get_db), current_user: UserORM = Depends(get_current_user)
 ):
     """Get all pets for the authenticated user"""
     pets = db.query(PetORM).filter(PetORM.user_id == current_user.id).all()
     return [
-        Pet(
+        PetRead(
             id=p.id,
             name=p.name,
             breedType=p.breedType,
             breed=p.breed,
-            birthDate=p.birthDate.isoformat() if p.birthDate else None,
+            birthDate=p.birthDate,
             age=p.age,
             isBirthdayGiven=bool(p.isBirthdayGiven),
             weightKg=p.weightKg,
@@ -38,18 +35,16 @@ def get_pets(
             behaviorIssues=str_to_list(p.behaviorIssues),
             lastKnownLatitude=p.lastKnownLatitude,
             lastKnownLongitude=p.lastKnownLongitude,
-            lastLocationUpdate=p.lastLocationUpdate.isoformat()
-            if p.lastLocationUpdate
-            else None,
+            lastLocationUpdate=p.lastLocationUpdate,
             isTrackingEnabled=p.isTrackingEnabled,
         )
         for p in pets
     ]
 
 
-@router.post("/", response_model=Pet)
+@router.post("/", response_model=PetRead)
 def create_pet(
-    pet: Pet,
+    pet: PetCreate,
     db: Session = Depends(get_db),
     current_user: UserORM = Depends(get_current_user),
 ):
@@ -59,9 +54,7 @@ def create_pet(
         name=pet.name,
         breedType=pet.breedType,
         breed=pet.breed,
-        birthDate=datetime.fromisoformat(pet.birthDate).date()
-        if pet.birthDate
-        else None,
+        birthDate=pet.birthDate if pet.birthDate else None,
         age=pet.age,
         isBirthdayGiven=int(pet.isBirthdayGiven),
         weightKg=pet.weightKg,
@@ -70,20 +63,18 @@ def create_pet(
         behaviorIssues=list_to_str(pet.behaviorIssues),
         lastKnownLatitude=pet.lastKnownLatitude,
         lastKnownLongitude=pet.lastKnownLongitude,
-        lastLocationUpdate=datetime.fromisoformat(pet.lastLocationUpdate)
-        if pet.lastLocationUpdate
-        else None,
+        lastLocationUpdate=pet.lastLocationUpdate if pet.lastLocationUpdate else None,
         isTrackingEnabled=pet.isTrackingEnabled,
     )
     db.add(db_pet)
     db.commit()
     db.refresh(db_pet)
-    return Pet(
+    return PetRead(
         id=db_pet.id,
         name=db_pet.name,
         breedType=db_pet.breedType,
         breed=db_pet.breed,
-        birthDate=db_pet.birthDate.isoformat() if db_pet.birthDate else None,
+        birthDate=db_pet.birthDate,
         age=db_pet.age,
         isBirthdayGiven=bool(db_pet.isBirthdayGiven),
         weightKg=db_pet.weightKg,
@@ -92,17 +83,15 @@ def create_pet(
         behaviorIssues=str_to_list(db_pet.behaviorIssues),
         lastKnownLatitude=db_pet.lastKnownLatitude,
         lastKnownLongitude=db_pet.lastKnownLongitude,
-        lastLocationUpdate=db_pet.lastLocationUpdate.isoformat()
-        if db_pet.lastLocationUpdate
-        else None,
+        lastLocationUpdate=db_pet.lastLocationUpdate,
         isTrackingEnabled=db_pet.isTrackingEnabled,
     )
 
 
-@router.put("/{pet_id}", response_model=Pet)
+@router.put("/{pet_id}", response_model=PetRead)
 def update_pet(
     pet_id: int,
-    pet: Pet,
+    pet: PetUpdate,
     db: Session = Depends(get_db),
     current_user: UserORM = Depends(get_current_user),
 ):
@@ -118,9 +107,7 @@ def update_pet(
     db_pet.name = pet.name
     db_pet.breedType = pet.breedType
     db_pet.breed = pet.breed
-    db_pet.birthDate = (
-        datetime.fromisoformat(pet.birthDate).date() if pet.birthDate else None
-    )
+    db_pet.birthDate = pet.birthDate
     db_pet.age = pet.age
     db_pet.isBirthdayGiven = int(pet.isBirthdayGiven)
     db_pet.weightKg = pet.weightKg
@@ -129,29 +116,18 @@ def update_pet(
     db_pet.behaviorIssues = list_to_str(pet.behaviorIssues)
     db_pet.lastKnownLatitude = pet.lastKnownLatitude
     db_pet.lastKnownLongitude = pet.lastKnownLongitude
-    db_pet.lastLocationUpdate = (
-        datetime.fromisoformat(pet.lastLocationUpdate)
-        if pet.lastLocationUpdate
-        else None
-    )
+    db_pet.lastLocationUpdate = pet.lastLocationUpdate
     db_pet.isTrackingEnabled = pet.isTrackingEnabled
 
     db.commit()
     db.refresh(db_pet)
-    birth_date: Optional[date] = db_pet.birthDate
-    birth_date_str = birth_date.isoformat() if birth_date is not None else None
 
-    location_update: Optional[datetime] = db_pet.lastLocationUpdate
-    location_update_str = (
-        location_update.isoformat() if location_update is not None else None
-    )
-
-    return Pet(
+    return PetRead(
         id=db_pet.id,
         name=db_pet.name,
         breedType=db_pet.breedType,
         breed=db_pet.breed,
-        birthDate=birth_date_str,
+        birthDate=db_pet.birthDate,
         age=db_pet.age,
         isBirthdayGiven=bool(db_pet.isBirthdayGiven),
         weightKg=db_pet.weightKg,
@@ -160,7 +136,7 @@ def update_pet(
         behaviorIssues=str_to_list(db_pet.behaviorIssues),
         lastKnownLatitude=db_pet.lastKnownLatitude,
         lastKnownLongitude=db_pet.lastKnownLongitude,
-        lastLocationUpdate=location_update_str,
+        lastLocationUpdate=db_pet.lastLocationUpdate,
         isTrackingEnabled=db_pet.isTrackingEnabled,
     )
 
