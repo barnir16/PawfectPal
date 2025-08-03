@@ -1,36 +1,42 @@
-import { Task } from '../types';
+import type { Task } from '../types';
 
 /**
- * Notification helper for React Native
- * Uses expo-notifications for cross-platform notification support
+ * Notification helper for React web
+ * Uses Web Notifications API (https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API)
  */
 export class NotificationHelper {
   /**
    * Schedule a notification for a task
-   * Note: Requires expo-notifications to be installed
+   * Note: Web Notifications API does not support scheduling,
+   * so this triggers immediately or you can implement scheduling with setTimeout while app is open.
    */
-  static async scheduleNotification(task: Task): Promise<void> {
+  static scheduleNotification(task: Task): void {
     try {
-      // This is a placeholder - implement with expo-notifications
-      // import * as Notifications from 'expo-notifications';
-      
+      if (!this.isNotificationSupported()) {
+        console.warn('Notifications not supported in this browser');
+        return;
+      }
+
+      if (Notification.permission !== 'granted') {
+        console.warn('Notification permission not granted');
+        return;
+      }
+
       const taskDateTime = new Date(task.dateTime);
       const now = new Date();
       const timeUntilTask = taskDateTime.getTime() - now.getTime();
 
       if (timeUntilTask > 0) {
-        // In a real implementation, you would use:
-        // await Notifications.scheduleNotificationAsync({
-        //   content: {
-        //     title: 'PawfectPal Reminder',
-        //     body: `${task.title}: ${task.description}`,
-        //   },
-        //   trigger: {
-        //     date: taskDateTime,
-        //   },
-        // });
-        
-        console.log(`Scheduled notification for task: ${task.title} at ${taskDateTime}`);
+        // Web Notifications API can't schedule for later natively.
+        // As a simple approach, use setTimeout while app is running:
+        setTimeout(() => {
+          new Notification('PawfectPal Reminder', {
+            body: `${task.title}: ${task.description}`,
+          });
+          console.log(`Notification shown for task: ${task.title}`);
+        }, timeUntilTask);
+      } else {
+        console.log('Task time is in the past, notification not scheduled.');
       }
     } catch (error) {
       console.error('Error scheduling notification:', error);
@@ -39,16 +45,12 @@ export class NotificationHelper {
 
   /**
    * Cancel a scheduled notification
+   * Note: Web Notifications API has no built-in cancel for notifications scheduled with setTimeout.
+   * You would need to track timeouts to clear them if needed.
    */
-  static async cancelNotification(taskId: number): Promise<void> {
-    try {
-      // In a real implementation, you would use:
-      // await Notifications.cancelScheduledNotificationAsync(notificationId);
-      
-      console.log(`Cancelled notification for task ${taskId}`);
-    } catch (error) {
-      console.error('Error cancelling notification:', error);
-    }
+  static cancelNotification(taskId: number): void {
+    // No direct support in Web Notifications API
+    console.warn('Cancel notification is not supported in Web Notifications API.');
   }
 
   /**
@@ -56,12 +58,12 @@ export class NotificationHelper {
    */
   static async requestPermissions(): Promise<boolean> {
     try {
-      // In a real implementation, you would use:
-      // const { status } = await Notifications.requestPermissionsAsync();
-      // return status === 'granted';
-      
-      console.log('Requesting notification permissions...');
-      return true; // Placeholder
+      if (!this.isNotificationSupported()) {
+        console.warn('Notifications not supported in this browser');
+        return false;
+      }
+      const permission = await Notification.requestPermission();
+      return permission === 'granted';
     } catch (error) {
       console.error('Error requesting notification permissions:', error);
       return false;
@@ -72,43 +74,22 @@ export class NotificationHelper {
    * Check if notifications are supported
    */
   static isNotificationSupported(): boolean {
-    // In React Native with expo-notifications, this would always be true
-    return true;
+    return 'Notification' in window;
   }
 
   /**
    * Get current notification permission status
    */
-  static async getNotificationPermission(): Promise<string> {
-    try {
-      // In a real implementation, you would use:
-      // const { status } = await Notifications.getPermissionsAsync();
-      // return status;
-      
-      return 'granted'; // Placeholder
-    } catch (error) {
-      console.error('Error getting notification permission:', error);
-      return 'denied';
-    }
+  static getNotificationPermission(): string {
+    if (!this.isNotificationSupported()) return 'denied';
+    return Notification.permission;
   }
 
   /**
    * Initialize notification settings
+   * (No special initialization needed for Web Notifications API)
    */
-  static async initializeNotifications(): Promise<void> {
-    try {
-      // In a real implementation, you would use:
-      // await Notifications.setNotificationHandler({
-      //   handleNotification: async () => ({
-      //     shouldShowAlert: true,
-      //     shouldPlaySound: true,
-      //     shouldSetBadge: false,
-      //   }),
-      // });
-      
-      console.log('Notifications initialized');
-    } catch (error) {
-      console.error('Error initializing notifications:', error);
-    }
+  static initializeNotifications(): void {
+    console.log('Web notifications ready');
   }
-} 
+}
