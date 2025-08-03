@@ -6,30 +6,23 @@
 export const API_CONFIG = {
   // For development on local machine
   LOCAL: 'http://127.0.0.1:8000',
-  
+
   // For development on physical device (replace with your computer's IP)
   DEVICE: 'http://192.168.1.100:8000', // Change this to your computer's IP
-  
+
   // For production
   PRODUCTION: 'https://your-api-domain.com',
 };
 
 // Get the appropriate API URL based on environment
 export const getApiUrl = (): string => {
-  // In a real app, you'd use environment variables
-  // For now, we'll use a simple approach
-  
-  // Check if we're running on a physical device
-  // In React Native, __DEV__ is true for development builds
-  const isDevice = !__DEV__;
-  
-  if (isDevice) {
-    // On physical device, use the device URL
-    return API_CONFIG.DEVICE;
-  } else {
-    // On simulator/emulator, use localhost
+  const isDev = import.meta.env.MODE === 'development';
+
+  if (isDev) {
     return API_CONFIG.LOCAL;
   }
+  // You can also add extra checks for production, staging, etc. if needed
+  return API_CONFIG.DEVICE;
 };
 
 // App Configuration
@@ -60,4 +53,4 @@ export const ERROR_MESSAGES = {
   UPLOAD_ERROR: 'Failed to upload file. Please try again.',
   GPS_ERROR: 'Location access denied. Please enable location services.',
   GENERAL_ERROR: 'Something went wrong. Please try again.',
-}; 
+};
