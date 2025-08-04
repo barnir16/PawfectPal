@@ -3,21 +3,19 @@
  */
 
 // Service types and status enums
-export enum ServiceType {
-  WALKING = "walking",
-  SITTING = "sitting", 
-  BOARDING = "boarding",
-  GROOMING = "grooming",
-  VETERINARY = "veterinary"
-}
+export type ServiceType =
+  | "walking"
+  | "sitting"
+  | "boarding"
+  | "grooming"
+  | "veterinary";
 
-export enum ServiceStatus {
-  PENDING = "pending",
-  CONFIRMED = "confirmed",
-  IN_PROGRESS = "in_progress",
-  COMPLETED = "completed",
-  CANCELLED = "cancelled"
-}
+export type ServiceStatus =
+  | "pending"
+  | "confirmed"
+  | "in_progress"
+  | "completed"
+  | "cancelled";
 
 // Core entity interfaces
 export interface Pet {
@@ -200,7 +198,7 @@ export interface LocationUpdate {
 
 // Image upload types
 export interface ImageUpload {
-  uri: string; // Changed from File to string for React Native compatibility
+  uri: string;
   type: 'pet' | 'task' | 'service';
   entity_id: number;
 }
