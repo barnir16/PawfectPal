@@ -1,37 +1,36 @@
-/** @type {import('tailwindcss').Config} */
+// tailwind.config.js
 module.exports = {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
       colors: {
         primary: {
-          main: '#1976d2',
-          light: '#42a5f5',
-          dark: '#1565c0',
-          contrastText: '#fff',
+          500: "#1976d2", // ← enables ring-primary-500
+          400: "#42a5f5",
+          600: "#1565c0",
+          contrastText: "#fff",
         },
         secondary: {
-          main: '#9c27b0',
-          light: '#ba68c8',
-          dark: '#7b1fa2',
-          contrastText: '#fff',
+          500: "#9c27b0",
+          400: "#ba68c8",
+          600: "#7b1fa2",
+          contrastText: "#fff",
         },
         error: {
-          main: '#d32f2f',
+          500: "#d32f2f",
         },
         background: {
-          default: '#f5f5f5',
-          paper: '#ffffff',
+          default: "#f5f5f5",
+          paper: "#ffffff",
         },
       },
-      spacing: 4,
+      spacing: {
+        4: "1rem", // optional: this already exists in Tailwind by default
+      },
     },
   },
   plugins: [],
   corePlugins: {
-    preflight: false, // Disable default styles to avoid conflicts with MUI
+    preflight: false,
   },
-}
+};
