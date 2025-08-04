@@ -1,22 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ScrollView,
-  SafeAreaView,
-  Platform,
-} from 'react-native';
-import { Task, Pet, Vaccine } from './types';
+import { useState, useEffect } from 'react';
+
+import type { Task, Pet, Vaccine } from './types';
 import { createTask, getPets, getVaccines } from './api';
 
 interface TaskFormProps {
-  task?: Task; // For editing existing task
-  onTaskCreated?: () => void;
-  onTaskUpdated?: () => void;
+  readonly task?: Task; // For editing existing task
+  readonly onTaskCreated?: () => void;
+  readonly onTaskUpdated?: () => void;
 }
 
 export default function TaskForm({ task, onTaskCreated, onTaskUpdated }: TaskFormProps) {
@@ -66,19 +56,19 @@ export default function TaskForm({ task, onTaskCreated, onTaskUpdated }: TaskFor
 
   const validateForm = () => {
     if (!formData.title.trim()) {
-      Alert.alert('Error', 'Task title is required');
+      window.alert('Task title is required');
       return false;
     }
     if (!formData.description.trim()) {
-      Alert.alert('Error', 'Task description is required');
+      window.alert('Task description is required');
       return false;
     }
     if (!formData.dateTime) {
-      Alert.alert('Error', 'Date and time are required');
+      window.alert('Date and time are required');
       return false;
     }
     if (formData.selectedPetIds.length === 0) {
-      Alert.alert('Error', 'Please select at least one pet');
+      window.alert('Please select at least one pet');
       return false;
     }
     return true;
@@ -102,16 +92,16 @@ export default function TaskForm({ task, onTaskCreated, onTaskUpdated }: TaskFor
       if (task?.id) {
         // Update existing task
         // await updateTask(task.id, taskData);
-        Alert.alert('Success', 'Task updated successfully!');
+        window.alert('Task updated successfully!');
         onTaskUpdated?.();
       } else {
         // Create new task
         await createTask(taskData);
-        Alert.alert('Success', 'Task created successfully!');
+        window.alert('Task created successfully!');
         onTaskCreated?.();
       }
-    } catch (error) {
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to save task');
+    } catch (error: any) {
+      window.alert('Failed to save task: ' + (error.message || error));
     } finally {
       setLoading(false);
     }
@@ -132,15 +122,16 @@ export default function TaskForm({ task, onTaskCreated, onTaskUpdated }: TaskFor
 
     selectedPets.forEach(pet => {
       vaccines.forEach(vaccine => {
-        // Simple suggestion logic - can be enhanced
-        if (vaccine.name.toLowerCase().includes(pet.breedType.toLowerCase()) ||
-            vaccine.description.toLowerCase().includes(pet.breedType.toLowerCase())) {
+        if (
+          vaccine.name.toLowerCase().includes(pet.breedType.toLowerCase()) ||
+          vaccine.description.toLowerCase().includes(pet.breedType.toLowerCase())
+        ) {
           suggestions.push(vaccine);
         }
       });
     });
 
-    return suggestions.slice(0, 5); // Limit to 5 suggestions
+    return suggestions.slice(0, 5);
   };
 
   const addVaccineToDescription = (vaccine: Vaccine) => {
@@ -154,294 +145,175 @@ export default function TaskForm({ task, onTaskCreated, onTaskUpdated }: TaskFor
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        <Text style={styles.title}>
-          {task ? 'Edit Task' : 'Create New Task'}
-        </Text>
+    <div style={{ maxWidth: 600, margin: 'auto', padding: 20, backgroundColor: '#f5f5f5', borderRadius: 8 }}>
+      <h2 style={{ textAlign: 'center', color: '#333' }}>
+        {task ? 'Edit Task' : 'Create New Task'}
+      </h2>
 
-        <View style={styles.form}>
-          {/* Task Title */}
-          <Text style={styles.label}>Task Title *</Text>
-          <TextInput
-            style={styles.input}
-            value={formData.title}
-            onChangeText={(text) => setFormData({ ...formData, title: text })}
-            placeholder="Enter task title"
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {/* Task Title */}
+        <label htmlFor="task-title" style={{ fontWeight: '600', color: '#333' }}>Task Title *</label>
+        <input
+          id="task-title"
+          type="text"
+          value={formData.title}
+          onChange={e => setFormData({ ...formData, title: e.target.value })}
+          placeholder="Enter task title"
+          style={{ padding: 12, fontSize: 16, borderRadius: 8, border: '1px solid #ddd' }}
+        />
+
+        {/* Task Description */}
+        <label htmlFor="description" style={{ fontWeight: '600', color: '#333' }}>Description *</label>
+        <textarea
+          id="description"
+          value={formData.description}
+          onChange={e => setFormData({ ...formData, description: e.target.value })}
+          placeholder="Enter task description"
+          rows={4}
+          style={{ padding: 12, fontSize: 16, borderRadius: 8, border: '1px solid #ddd', resize: 'vertical' }}
+        />
+
+        {/* Date and Time */}
+        <label htmlFor="Date-&-time" style={{ fontWeight: '600', color: '#333' }}>Date & Time *</label>
+        <input
+          id="Date-&-time"
+          type="datetime-local"
+          value={formData.dateTime}
+          onChange={e => setFormData({ ...formData, dateTime: e.target.value })}
+          style={{ padding: 12, fontSize: 16, borderRadius: 8, border: '1px solid #ddd' }}
+        />
+
+        {/* Repeat Settings */}
+        <label style={{ fontWeight: '600', color: '#333' }}>Repeat (Optional)</label>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+          <input
+            type="number"
+            min={0}
+            placeholder="Interval"
+            value={formData.repeatInterval}
+            onChange={e => setFormData({ ...formData, repeatInterval: e.target.value })}
+            style={{ padding: 12, fontSize: 16, borderRadius: 8, border: '1px solid #ddd', width: 100 }}
           />
-
-          {/* Task Description */}
-          <Text style={styles.label}>Description *</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            value={formData.description}
-            onChangeText={(text) => setFormData({ ...formData, description: text })}
-            placeholder="Enter task description"
-            multiline
-            numberOfLines={4}
-          />
-
-          {/* Date and Time */}
-          <Text style={styles.label}>Date & Time *</Text>
-          <TextInput
-            style={styles.input}
-            value={formData.dateTime}
-            onChangeText={(text) => setFormData({ ...formData, dateTime: text })}
-            placeholder="YYYY-MM-DDTHH:MM"
-          />
-
-          {/* Repeat Settings */}
-          <Text style={styles.label}>Repeat (Optional)</Text>
-          <View style={styles.repeatContainer}>
-            <TextInput
-              style={[styles.input, styles.repeatInput]}
-              value={formData.repeatInterval}
-              onChangeText={(text) => setFormData({ ...formData, repeatInterval: text })}
-              placeholder="Interval"
-              keyboardType="numeric"
-            />
-            <View style={styles.repeatUnitContainer}>
-              {repeatUnits.map((unit) => (
-                <TouchableOpacity
-                  key={unit.value}
-                  style={[
-                    styles.repeatUnitButton,
-                    formData.repeatUnit === unit.value && styles.repeatUnitButtonSelected
-                  ]}
-                  onPress={() => setFormData({ ...formData, repeatUnit: unit.value })}
-                >
-                  <Text style={[
-                    styles.repeatUnitText,
-                    formData.repeatUnit === unit.value && styles.repeatUnitTextSelected
-                  ]}>
-                    {unit.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          {/* Pet Selection */}
-          <Text style={styles.label}>Select Pets *</Text>
-          <View style={styles.petSelectionContainer}>
-            {pets.map((pet) => (
-              <TouchableOpacity
-                key={pet.id}
-                style={[
-                  styles.petSelectionButton,
-                  formData.selectedPetIds.includes(pet.id!) && styles.petSelectionButtonSelected
-                ]}
-                onPress={() => togglePetSelection(pet.id!)}
+          <div style={{ display: 'flex', gap: 8 }}>
+            {repeatUnits.map(unit => (
+              <button
+                key={unit.value}
+                onClick={() => setFormData({ ...formData, repeatUnit: unit.value })}
+                type="button"
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: 6,
+                  border: '1px solid #ddd',
+                  backgroundColor: formData.repeatUnit === unit.value ? '#007AFF' : 'white',
+                  color: formData.repeatUnit === unit.value ? 'white' : '#333',
+                  cursor: 'pointer'
+                }}
               >
-                <Text style={[
-                  styles.petSelectionText,
-                  formData.selectedPetIds.includes(pet.id!) && styles.petSelectionTextSelected
-                ]}>
-                  {pet.name} ({pet.breed})
-                </Text>
-              </TouchableOpacity>
+                {unit.label}
+              </button>
             ))}
-          </View>
+          </div>
+        </div>
 
-          {/* Vaccine Suggestions */}
-          {formData.selectedPetIds.length > 0 && (
-            <View style={styles.vaccineSection}>
-              <Text style={styles.label}>Vaccine Suggestions</Text>
-              <TouchableOpacity
-                style={styles.vaccineButton}
-                onPress={() => setShowVaccineSuggestions(!showVaccineSuggestions)}
-              >
-                <Text style={styles.vaccineButtonText}>
-                  {showVaccineSuggestions ? 'Hide' : 'Show'} Vaccine Suggestions
-                </Text>
-              </TouchableOpacity>
+        {/* Pet Selection */}
+        <label style={{ fontWeight: '600', color: '#333' }}>Select Pets *</label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {pets.map(pet => (
+            <button
+              key={pet.id}
+              type="button"
+              onClick={() => togglePetSelection(pet.id!)}
+              style={{
+                padding: 12,
+                borderRadius: 8,
+                border: '1px solid #ddd',
+                backgroundColor: formData.selectedPetIds.includes(pet.id!) ? '#e3f2fd' : 'white',
+                color: formData.selectedPetIds.includes(pet.id!) ? '#2196f3' : '#333',
+                cursor: 'pointer',
+                textAlign: 'left',
+              }}
+            >
+              {pet.name} ({pet.breed})
+            </button>
+          ))}
+        </div>
 
-              {showVaccineSuggestions && (
-                <View style={styles.vaccineSuggestionsContainer}>
-                  {getVaccineSuggestions().map((vaccine, index) => (
-                    <TouchableOpacity
+        {/* Vaccine Suggestions */}
+        {formData.selectedPetIds.length > 0 && (
+          <div>
+            <label style={{ fontWeight: '600', color: '#333' }}>Vaccine Suggestions</label>
+            <button
+              type="button"
+              onClick={() => setShowVaccineSuggestions(!showVaccineSuggestions)}
+              style={{
+                padding: 12,
+                borderRadius: 8,
+                backgroundColor: '#4CAF50',
+                color: 'white',
+                fontWeight: '600',
+                marginTop: 8,
+                cursor: 'pointer'
+              }}
+            >
+              {showVaccineSuggestions ? 'Hide' : 'Show'} Vaccine Suggestions
+            </button>
+
+            {showVaccineSuggestions && (
+              <div style={{
+                backgroundColor: 'white',
+                borderRadius: 8,
+                padding: 12,
+                border: '1px solid #ddd',
+                marginTop: 8,
+              }}>
+                {getVaccineSuggestions().length === 0 ? (
+                  <p style={{ fontStyle: 'italic', color: '#666', textAlign: 'center', padding: 16 }}>
+                    No vaccine suggestions available
+                  </p>
+                ) : (
+                  getVaccineSuggestions().map((vaccine, index) => (
+                    <button
                       key={index}
-                      style={styles.vaccineSuggestionItem}
-                      onPress={() => addVaccineToDescription(vaccine)}
+                      type="button"
+                      onClick={() => addVaccineToDescription(vaccine)}
+                      style={{
+                        padding: 8,
+                        borderBottom: index < getVaccineSuggestions().length - 1 ? '1px solid #eee' : 'none',
+                        textAlign: 'left',
+                        background: 'none',
+                        border: 'none',
+                        width: '100%',
+                        cursor: 'pointer'
+                      }}
                     >
-                      <Text style={styles.vaccineSuggestionTitle}>{vaccine.name}</Text>
-                      <Text style={styles.vaccineSuggestionDesc}>{vaccine.description}</Text>
-                    </TouchableOpacity>
-                  ))}
-                  {getVaccineSuggestions().length === 0 && (
-                    <Text style={styles.noVaccineText}>No vaccine suggestions available</Text>
-                  )}
-                </View>
-              )}
-            </View>
-          )}
+                      <strong style={{ color: '#333' }}>{vaccine.name}</strong>
+                      <p style={{ color: '#666', marginTop: 4 }}>{vaccine.description}</p>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
-          {/* Submit Button */}
-          <TouchableOpacity
-            style={[styles.submitButton, loading && styles.submitButtonDisabled]}
-            onPress={handleSubmit}
-            disabled={loading}
-          >
-            <Text style={styles.submitButtonText}>
-              {loading ? 'Saving...' : (task ? 'Update Task' : 'Create Task')}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        {/* Submit Button */}
+        <button
+          onClick={handleSubmit}
+          disabled={loading}
+          style={{
+            backgroundColor: loading ? '#ccc' : '#007AFF',
+            borderRadius: 8,
+            padding: 15,
+            color: 'white',
+            fontSize: 16,
+            fontWeight: '600',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            marginTop: 20,
+          }}
+        >
+          {loading ? 'Saving...' : (task ? 'Update Task' : 'Create Task')}
+        </button>
+      </div>
+    </div>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    margin: 20,
-    color: '#333',
-  },
-  form: {
-    padding: 20,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-    marginTop: 16,
-  },
-  input: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 15,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    marginBottom: 8,
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
-  },
-  repeatContainer: {
-    marginBottom: 16,
-  },
-  repeatInput: {
-    marginBottom: 8,
-  },
-  repeatUnitContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  repeatUnitButton: {
-    backgroundColor: 'white',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 6,
-    marginRight: 8,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  repeatUnitButtonSelected: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
-  },
-  repeatUnitText: {
-    fontSize: 14,
-    color: '#333',
-  },
-  repeatUnitTextSelected: {
-    color: 'white',
-    fontWeight: '600',
-  },
-  petSelectionContainer: {
-    marginBottom: 16,
-  },
-  petSelectionButton: {
-    backgroundColor: 'white',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  petSelectionButtonSelected: {
-    backgroundColor: '#e3f2fd',
-    borderColor: '#2196f3',
-  },
-  petSelectionText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  petSelectionTextSelected: {
-    color: '#2196f3',
-    fontWeight: '600',
-  },
-  vaccineSection: {
-    marginBottom: 16,
-  },
-  vaccineButton: {
-    backgroundColor: '#4CAF50',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  vaccineButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  vaccineSuggestionsContainer: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  vaccineSuggestionItem: {
-    padding: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  vaccineSuggestionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  vaccineSuggestionDesc: {
-    fontSize: 14,
-    color: '#666',
-  },
-  noVaccineText: {
-    fontSize: 14,
-    color: '#666',
-    fontStyle: 'italic',
-    textAlign: 'center',
-    padding: 16,
-  },
-  submitButton: {
-    backgroundColor: '#007AFF',
-    borderRadius: 8,
-    padding: 15,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  submitButtonDisabled: {
-    backgroundColor: '#ccc',
-  },
-  submitButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-}); 

@@ -1,16 +1,14 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
 /**
- * Storage helper for React Native using AsyncStorage
- * Provides a consistent interface for storing and retrieving data
+ * Storage helper for Web using localStorage
+ * Provides async-compatible interface for storing and retrieving data
  */
 export class StorageHelper {
   /**
-   * Store a value in AsyncStorage
+   * Store a value in localStorage
    */
   static async setItem(key: string, value: string): Promise<void> {
     try {
-      await AsyncStorage.setItem(key, value);
+      localStorage.setItem(key, value);
     } catch (error) {
       console.error('Error storing data:', error);
       throw error;
@@ -18,11 +16,11 @@ export class StorageHelper {
   }
 
   /**
-   * Retrieve a value from AsyncStorage
+   * Retrieve a value from localStorage
    */
   static async getItem(key: string): Promise<string | null> {
     try {
-      return await AsyncStorage.getItem(key);
+      return localStorage.getItem(key);
     } catch (error) {
       console.error('Error retrieving data:', error);
       return null;
@@ -30,11 +28,11 @@ export class StorageHelper {
   }
 
   /**
-   * Remove a value from AsyncStorage
+   * Remove a value from localStorage
    */
   static async removeItem(key: string): Promise<void> {
     try {
-      await AsyncStorage.removeItem(key);
+      localStorage.removeItem(key);
     } catch (error) {
       console.error('Error removing data:', error);
       throw error;
@@ -42,11 +40,11 @@ export class StorageHelper {
   }
 
   /**
-   * Clear all data from AsyncStorage
+   * Clear all data from localStorage
    */
   static async clear(): Promise<void> {
     try {
-      await AsyncStorage.clear();
+      localStorage.clear();
     } catch (error) {
       console.error('Error clearing data:', error);
       throw error;
@@ -59,7 +57,7 @@ export class StorageHelper {
   static async setObject(key: string, value: any): Promise<void> {
     try {
       const jsonValue = JSON.stringify(value);
-      await AsyncStorage.setItem(key, jsonValue);
+      localStorage.setItem(key, jsonValue);
     } catch (error) {
       console.error('Error storing object:', error);
       throw error;
@@ -71,11 +69,11 @@ export class StorageHelper {
    */
   static async getObject<T>(key: string): Promise<T | null> {
     try {
-      const jsonValue = await AsyncStorage.getItem(key);
+      const jsonValue = localStorage.getItem(key);
       return jsonValue != null ? JSON.parse(jsonValue) : null;
     } catch (error) {
       console.error('Error retrieving object:', error);
       return null;
     }
   }
-} 
+}
