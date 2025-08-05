@@ -11,8 +11,8 @@ import {
   Typography,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import type { Pet } from "../types";
-import { getPets, deletePet } from "../api";
+import type { Pet } from "../../../types";
+import { getPets, deletePet } from "../../../api";
 
 export default function PetListScreen() {
   const [pets, setPets] = useState<Pet[]>([]);
