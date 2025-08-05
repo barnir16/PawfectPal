@@ -14,7 +14,6 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Typography,
-  useTheme,
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -69,7 +68,6 @@ const petOptions = [
 ];
 
 export const Tasks = () => {
-  const theme = useTheme();
   const navigate = useNavigate();
   const [view, setView] = useState<"list" | "grid">("list");
   const [filters, setFilters] = useState({
