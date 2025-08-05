@@ -8,7 +8,6 @@ import {
   Divider,
   FormControlLabel,
   Grid,
-  IconButton,
   List,
   ListItem,
   ListItemSecondaryAction,
@@ -37,9 +36,9 @@ import {
 } from "@mui/icons-material";
 
 interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
+  readonly children?: React.ReactNode;
+  readonly index: number;
+  readonly value: number;
 }
 
 function TabPanel(props: TabPanelProps) {
@@ -84,7 +83,7 @@ export const Settings = () => {
     },
   });
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
@@ -428,7 +427,12 @@ export const Settings = () => {
               <CardHeader title="Security" />
               <Divider />
               <List>
-                <ListItem>
+                <ListItem
+                  onClick={() => {
+                    console.log("Change Password clicked");
+                  }}
+                  sx={{ cursor: "pointer" }}
+                >
                   <ListItemText
                     primary="Change Password"
                     secondary="Last changed 3 months ago"
@@ -436,7 +440,12 @@ export const Settings = () => {
                   <Button variant="outlined">Change</Button>
                 </ListItem>
                 <Divider component="li" />
-                <ListItem>
+                <ListItem
+                  onClick={() => {
+                    console.log("Enable Two-Factor Authentication clicked");
+                  }}
+                  sx={{ cursor: "pointer" }}
+                >
                   <ListItemText
                     primary="Two-Factor Authentication"
                     secondary="Add an extra layer of security"
@@ -526,23 +535,47 @@ export const Settings = () => {
               <CardHeader title="Help & Support" />
               <Divider />
               <List>
-                <ListItem button>
+                <ListItem
+                  onClick={() => {
+                    console.log("Help Center clicked");
+                  }}
+                  sx={{ cursor: "pointer" }}
+                >
                   <ListItemText primary="Help Center" />
                 </ListItem>
                 <Divider component="li" />
-                <ListItem button>
+                <ListItem
+                  onClick={() => {
+                    console.log("Contact Support clicked");
+                  }}
+                  sx={{ cursor: "pointer" }}
+                >
                   <ListItemText primary="Contact Support" />
                 </ListItem>
                 <Divider component="li" />
-                <ListItem button>
+                <ListItem
+                  onClick={() => {
+                    console.log("Terms of Service clicked");
+                  }}
+                  sx={{ cursor: "pointer" }}
+                >
                   <ListItemText primary="Terms of Service" />
                 </ListItem>
                 <Divider component="li" />
-                <ListItem button>
+                <ListItem
+                  onClick={() => {
+                    console.log("Privacy Policy clicked");
+                  }}
+                  sx={{ cursor: "pointer" }}
+                >
                   <ListItemText primary="Privacy Policy" />
                 </ListItem>
                 <Divider component="li" />
-                <ListItem button onClick={handleLogout}>
+                <ListItem
+                  component="button"
+                  onClick={handleLogout}
+                  sx={{ cursor: "pointer" }}
+                >
                   <ListItemIcon>
                     <LogoutIcon color="error" />
                   </ListItemIcon>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import {
@@ -7,7 +7,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  Chip,
   Divider,
   FormControl,
   FormHelperText,
@@ -16,13 +15,10 @@ import {
   InputAdornment,
   InputLabel,
   MenuItem,
-  Paper,
   Select,
   TextField,
   Typography,
-  useTheme,
 } from "@mui/material";
-import type { SelectChangeEvent } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
   Save as SaveIcon,
@@ -94,7 +90,6 @@ const schema = z.object({
 type TaskFormData = z.infer<typeof schema>;
 
 export const TaskForm = () => {
-  const theme = useTheme();
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
   const isEditing = !!id;
@@ -105,8 +100,6 @@ export const TaskForm = () => {
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
-    setValue,
-    watch,
   } = useForm<TaskFormData>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -125,13 +118,8 @@ export const TaskForm = () => {
   // Load task data if editing
   useEffect(() => {
     if (isEditing) {
-      // In a real app, you would fetch the task data from your API
       const fetchTask = async () => {
         try {
-          // Mock API call
-          // const response = await fetch(`/api/tasks/${id}`);
-          // const taskData = await response.json();
-
           // Mock data for demo
           const taskData = {
             id,
@@ -171,38 +159,14 @@ export const TaskForm = () => {
         ...data,
         date,
         time,
-        // Convert date to ISO string for the API
         dueDate: new Date(`${date}T${time}`).toISOString(),
       };
 
       console.log("Submitting task:", taskData);
 
-      // In a real app, you would make an API call here
-      // const method = isEditing ? 'PUT' : 'POST';
-      // const url = isEditing ? `/api/tasks/${id}` : '/api/tasks';
-      // const response = await fetch(url, {
-      //   method,
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(taskData),
-      // });
-
-      // if (!response.ok) {
-      //   throw new Error('Failed to save task');
-      // }
-
-      // Show success message and navigate back
-      // enqueueSnackbar(`Task ${isEditing ? 'updated' : 'created'} successfully!`, {
-      //   variant: 'success',
-      // });
-
       navigate("/tasks");
     } catch (error) {
       console.error("Error saving task:", error);
-      // enqueueSnackbar('Failed to save task. Please try again.', {
-      //   variant: 'error',
-      // });
     }
   };
 
@@ -213,18 +177,9 @@ export const TaskForm = () => {
       )
     ) {
       try {
-        // In a real app, you would make an API call to delete the task
-        // await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
-
-        // Show success message and navigate back
-        // enqueueSnackbar('Task deleted successfully!', { variant: 'success' });
-
         navigate("/tasks");
       } catch (error) {
         console.error("Error deleting task:", error);
-        // enqueueSnackbar('Failed to delete task. Please try again.', {
-        //   variant: 'error',
-        // });
       }
     }
   };

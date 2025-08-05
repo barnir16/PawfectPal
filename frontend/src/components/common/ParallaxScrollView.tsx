@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 
 const HEADER_HEIGHT = 250;
 
 type Props = {
-  headerImage: React.ReactNode;
-  headerBackgroundColor: { dark: string; light: string };
-  colorScheme: "light" | "dark";
-  children: React.ReactNode;
+  readonly headerImage: React.ReactNode;
+  readonly headerBackgroundColor: { dark: string; light: string };
+  readonly colorScheme: "light" | "dark";
+  readonly children: React.ReactNode;
 };
 
 export function ParallaxScrollView({

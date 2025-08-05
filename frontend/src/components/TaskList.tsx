@@ -14,15 +14,7 @@ import {
   IconButton,
   InputLabel,
   MenuItem,
-  Paper,
   Select,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
   TextField,
   Toolbar,
   Tooltip,
@@ -30,12 +22,7 @@ import {
   useTheme,
   Avatar,
   AvatarGroup,
-  Badge,
-  Checkbox,
-  FormControlLabel,
-  Switch,
 } from "@mui/material";
-import type { SelectChangeEvent } from "@mui/material";
 import {
   Add as AddIcon,
   FilterList as FilterListIcon,
@@ -43,21 +30,12 @@ import {
   CheckCircle as CheckCircleIcon,
   Warning as WarningIcon,
   Error as ErrorIcon,
-  MoreVert as MoreVertIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   CalendarToday as CalendarIcon,
-  Pets as PetIcon,
-  Sort as SortIcon,
-  ArrowUpward as ArrowUpwardIcon,
-  ArrowDownward as ArrowDownwardIcon,
 } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
-import type {
-  GridColDef,
-  GridSortModel,
-  GridValueFormatter,
-} from "@mui/x-data-grid";
+import type { GridColDef, GridSortModel } from "@mui/x-data-grid";
 
 // Types
 type Priority = "low" | "medium" | "high";
@@ -149,7 +127,7 @@ const mockTasks: Task[] = [
 ];
 
 // Priority chip component
-const PriorityChip = ({ priority }: { priority: Priority }) => {
+export const PriorityChip = ({ priority }: { priority: Priority }) => {
   const priorityMap = {
     low: { label: "Low", color: "success" as const },
     medium: { label: "Medium", color: "warning" as const },
@@ -162,7 +140,7 @@ const PriorityChip = ({ priority }: { priority: Priority }) => {
 };
 
 // Status chip component
-const StatusChip = ({ status }: { status: TaskStatus }) => {
+export const StatusChip = ({ status }: { status: TaskStatus }) => {
   const statusMap = {
     pending: {
       label: "Pending",
@@ -201,7 +179,7 @@ const StatusChip = ({ status }: { status: TaskStatus }) => {
 };
 
 // Date cell component
-const DateCell = ({ date }: { date: string }) => {
+export const DateCell = ({ date }: { date: string }) => {
   const dueDate = parseISO(date);
   const today = new Date();
 
@@ -227,10 +205,10 @@ const DateCell = ({ date }: { date: string }) => {
 };
 
 // Pet avatars component
-const PetAvatars = ({ petNames }: { petNames: string[] }) => {
+export const PetAvatars = ({ petNames }: { petNames?: string[] }) => {
   const theme = useTheme();
 
-  if (!petNames || petNames.length === 0) {
+  if (!petNames?.length) {
     return (
       <Typography variant="body2" color="text.secondary">
         No pets
@@ -245,9 +223,9 @@ const PetAvatars = ({ petNames }: { petNames: string[] }) => {
         "& .MuiAvatar-root": { width: 28, height: 28, fontSize: "0.8rem" },
       }}
     >
-      {petNames.map((name, index) => (
+      {petNames.map((name) => (
         <Avatar
-          key={index}
+          key={name} // safer unique key than index
           alt={name}
           sx={{ bgcolor: theme.palette.primary.main }}
         >
@@ -258,7 +236,7 @@ const PetAvatars = ({ petNames }: { petNames: string[] }) => {
   );
 };
 
-// Task list component
+// Main TaskList component
 const TaskList = () => {
   const theme = useTheme();
   const [tasks, setTasks] = useState<Task[]>(mockTasks);
@@ -267,8 +245,6 @@ const TaskList = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sortModel, setSortModel] = useState<GridSortModel>([
     { field: "dueDate", sort: "asc" },
   ]);
@@ -286,29 +262,25 @@ const TaskList = () => {
   useEffect(() => {
     let result = [...tasks];
 
-    // Apply search
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       result = result.filter(
         (task) =>
           task.title.toLowerCase().includes(term) ||
-          (task.description && task.description.toLowerCase().includes(term)) ||
+          task.description?.toLowerCase().includes(term) ||
           task.petNames?.some((name) => name.toLowerCase().includes(term)) ||
           task.category?.toLowerCase().includes(term)
       );
     }
 
-    // Apply status filter
     if (statusFilter !== "all") {
       result = result.filter((task) => task.status === statusFilter);
     }
 
-    // Apply priority filter
     if (priorityFilter !== "all") {
       result = result.filter((task) => task.priority === priorityFilter);
     }
 
-    // Apply category filter
     if (categoryFilter !== "all") {
       result = result.filter(
         (task) => (task.category || "Uncategorized") === categoryFilter
@@ -316,44 +288,12 @@ const TaskList = () => {
     }
 
     setFilteredTasks(result);
-    setPage(0); // Reset to first page when filters change
+    // Reset page on filter change
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
   }, [tasks, searchTerm, statusFilter, priorityFilter, categoryFilter]);
 
-  // Handle sort model change
   const handleSortModelChange = (newModel: GridSortModel) => {
     setSortModel(newModel);
-  };
-
-  // Handle page change
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  // Handle rows per page change
-  const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  // Toggle task status (complete/incomplete)
-  const toggleTaskStatus = (taskId: string) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              status: task.status === "completed" ? "pending" : "completed",
-              completedAt:
-                task.status === "completed"
-                  ? undefined
-                  : new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            }
-          : task
-      )
-    );
   };
 
   // Delete task
@@ -363,7 +303,6 @@ const TaskList = () => {
     }
   };
 
-  // Define columns for the data grid
   const columns: GridColDef[] = [
     {
       field: "status",
@@ -394,9 +333,7 @@ const TaskList = () => {
       field: "pets",
       headerName: "Pets",
       width: 120,
-      renderCell: (params) => (
-        <PetAvatars petNames={params.row.petNames || []} />
-      ),
+      renderCell: (params) => <PetAvatars petNames={params.row.petNames} />,
       sortable: false,
     },
     {
@@ -567,8 +504,6 @@ const TaskList = () => {
               onSortModelChange={handleSortModelChange}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
-              // You can also move rowsPerPageOptions into the paginationModel
-              // or use the slots props to customize the pagination controls.
               slots={{
                 toolbar: () => (
                   <Toolbar sx={{ p: 0, mb: 1 }}>
