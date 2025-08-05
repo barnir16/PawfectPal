@@ -14,8 +14,8 @@ import {
   CircularProgress,
   Stack,
 } from "@mui/material";
-import type { Pet } from "../types";
-import { createPet, updatePet } from "../api";
+import type { Pet } from "../../../types";
+import { createPet, updatePet } from "../../../api";
 
 interface PetFormProps {
   readonly pet?: Pet;

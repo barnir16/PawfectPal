@@ -1,35 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Avatar,
-  Box,
-  Button,
-  Card,
-  CardActions,
-  CardContent,
-  CardHeader,
-  Chip,
-  Grid,
-  IconButton,
-  Paper,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-} from "@mui/material";
-import {
-  Add as AddIcon,
-  Pets as PetsIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Search as SearchIcon,
-  FilterList as FilterListIcon,
-} from "@mui/icons-material";
-import { DataGrid } from "@mui/x-data-grid";
-import type { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
-import { format } from "date-fns";
+import { Box, Button, Grid, Typography } from "@mui/material";
+import { Add as AddIcon } from "@mui/icons-material";
 
-interface Pet {
+// Components
+import { PetCard } from "../features/pets/components/PetCard";
+import { PetsTable } from "../features/pets/components/PetsTable";
+import { PetsEmptyState } from "../features/pets/components/PetsEmptyState";
+import { PetsToolbar } from "../features/pets/components/PetsToolbar";
+
+// Types
+export interface Pet {
   id: number;
   name: string;
   type: string;
@@ -43,7 +24,7 @@ interface Pet {
 }
 
 // Mock data - replace with real data from your API
-const mockPets = [
+const mockPets: Pet[] = [
   {
     id: 1,
     name: "Max",
@@ -82,99 +63,7 @@ const mockPets = [
   },
 ];
 
-const petTypes = ["All", "Dog", "Cat", "Bird", "Rabbit", "Other"];
 
-const PetCard = ({
-  pet,
-  onEdit,
-  onDelete,
-}: {
-  pet: any;
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
-}) => {
-  let chipColor: "primary" | "secondary" | "default" = "default";
-  if (pet.type === "Dog") chipColor = "primary";
-  else if (pet.type === "Cat") chipColor = "secondary";
-
-  return (
-    <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      <CardHeader
-        avatar={
-          <Avatar
-            src={pet.image}
-            alt={pet.name}
-            sx={{ width: 60, height: 60, bgcolor: "primary.main" }}
-          >
-            <PetsIcon fontSize="large" />
-          </Avatar>
-        }
-        title={
-          <Typography variant="h6" component="div">
-            {pet.name}
-            <Chip
-              label={pet.type}
-              size="small"
-              sx={{ ml: 1, textTransform: "capitalize" }}
-              color={chipColor}
-            />
-          </Typography>
-        }
-        subheader={`${pet.breed} • ${pet.gender}`}
-        action={
-          <Box>
-            <Tooltip title="Edit">
-              <IconButton
-                onClick={() => onEdit(pet.id)}
-                size="small"
-                sx={{ mr: 0.5 }}
-              >
-                <EditIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Delete">
-              <IconButton
-                onClick={() => onDelete(pet.id)}
-                size="small"
-                color="error"
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Tooltip>
-          </Box>
-        }
-      />
-      <CardContent sx={{ flexGrow: 1, pt: 0 }}>
-        <Stack spacing={1}>
-          <Typography variant="body2" color="text.secondary">
-            <strong>Age:</strong>{" "}
-            {Math.floor(
-              (new Date().getTime() - new Date(pet.birthDate).getTime()) /
-                (1000 * 60 * 60 * 24 * 365.25)
-            )}{" "}
-            years
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            <strong>Weight:</strong> {pet.weight} kg
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            <strong>Last Vet Visit:</strong>{" "}
-            {format(new Date(pet.lastVetVisit), "MMM d, yyyy")}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            <strong>Next Vaccination:</strong>{" "}
-            {format(new Date(pet.nextVaccination), "MMM d, yyyy")}
-          </Typography>
-        </Stack>
-      </CardContent>
-      <CardActions sx={{ mt: "auto", justifyContent: "flex-end" }}>
-        <Button size="small" onClick={() => onEdit(pet.id)}>
-          View Details
-        </Button>
-      </CardActions>
-    </Card>
-  );
-};
 
 export const Pets = () => {
   const navigate = useNavigate();
@@ -208,86 +97,15 @@ export const Pets = () => {
       (selectedType === "All" || pet.type === selectedType)
   );
 
-  const columns: GridColDef<Pet>[] = [
-    {
-      field: "name",
-      headerName: "Name",
-      flex: 1,
-      renderCell: (params: GridRenderCellParams<Pet>) => (
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          <Avatar
-            src={params.row.image}
-            alt={params.row.name}
-            sx={{ width: 40, height: 40, mr: 2 }}
-          >
-            <PetsIcon />
-          </Avatar>
-          {params.row.name}
-        </Box>
-      ),
-    },
-    { field: "type", headerName: "Type", flex: 1 },
-    { field: "breed", headerName: "Breed", flex: 1 },
-    {
-      field: "age",
-      headerName: "Age",
-      flex: 1,
-      valueGetter: (params: GridRenderCellParams<Pet>) =>
-        Math.floor(
-          (new Date().getTime() - new Date(params.row.birthDate).getTime()) /
-            (1000 * 60 * 60 * 24 * 365.25)
-        ) + " years",
-    },
-    { field: "gender", headerName: "Gender", flex: 1 },
-    {
-      field: "actions",
-      headerName: "Actions",
-      width: 150,
-      sortable: false,
-      renderCell: (params) => (
-        <Box>
-          <IconButton onClick={() => handleEditPet(params.row.id)} size="small">
-            <EditIcon />
-          </IconButton>
-          <IconButton
-            onClick={() => handleDeletePet(params.row.id)}
-            size="small"
-            color="error"
-          >
-            <DeleteIcon />
-          </IconButton>
-        </Box>
-      ),
-    },
-  ];
-
-  // Extracted content variable to avoid nested ternary
-  let emptyMessage = "Get started by adding your first pet!";
-  if (searchTerm || selectedType !== "All") {
-    emptyMessage = "Try adjusting your search or filter criteria.";
-  }
-
   let content;
 
   if (filteredPets.length === 0) {
     content = (
-      <Paper sx={{ p: 4, textAlign: "center" }}>
-        <PetsIcon sx={{ fontSize: 60, color: "text.secondary", mb: 2 }} />
-        <Typography variant="h6" gutterBottom>
-          No pets found
-        </Typography>
-        <Typography color="text.secondary" paragraph>
-          {emptyMessage}
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleAddPet}
-          sx={{ mt: 2 }}
-        >
-          Add Pet
-        </Button>
-      </Paper>
+      <PetsEmptyState
+        searchTerm={searchTerm}
+        selectedType={selectedType}
+        onAddPet={handleAddPet}
+      />
     );
   } else if (view === "grid") {
     content = (
@@ -305,35 +123,24 @@ export const Pets = () => {
     );
   } else {
     content = (
-      <Paper sx={{ width: "100%", height: 400, overflow: "hidden" }}>
-        <DataGrid<Pet>
-          rows={filteredPets}
-          columns={columns}
-          pageSizeOptions={[5, 10, 25]}
-          initialState={{
-            pagination: {
-              paginationModel: { page: 0, pageSize: 5 },
-            },
-          }}
-          sx={{
-            "& .MuiDataGrid-cell:focus": { outline: "none" },
-            "& .MuiDataRow-hover": { cursor: "pointer" },
-            height: "100%",
-          }}
-          onRowClick={(params) => handleEditPet(params.row.id)}
-        />
-      </Paper>
+      <PetsTable
+        pets={filteredPets}
+        onEdit={handleEditPet}
+        onDelete={handleDeletePet}
+      />
     );
   }
 
   return (
-    <Box>
+    <Box sx={{ flexGrow: 1, p: 3 }}>
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           mb: 3,
+          flexWrap: "wrap",
+          gap: 2,
         }}
       >
         <Typography variant="h4" component="h1">
@@ -348,73 +155,15 @@ export const Pets = () => {
         </Button>
       </Box>
 
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                variant="outlined"
-                placeholder="Search pets..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <SearchIcon sx={{ color: "text.secondary", mr: 1 }} />
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                select
-                fullWidth
-                label="Filter by Type"
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-                SelectProps={{
-                  native: true,
-                }}
-                InputProps={{
-                  startAdornment: (
-                    <FilterListIcon sx={{ color: "text.secondary", mr: 1 }} />
-                  ),
-                }}
-              >
-                {petTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid
-              item
-              xs={12}
-              md={5}
-              sx={{ display: "flex", justifyContent: "flex-end" }}
-            >
-              <Button
-                variant={view === "grid" ? "contained" : "outlined"}
-                onClick={() => setView("grid")}
-                size="small"
-                sx={{ mr: 1 }}
-                startIcon={<FilterListIcon />}
-              >
-                Grid View
-              </Button>
-              <Button
-                variant={view === "table" ? "contained" : "outlined"}
-                onClick={() => setView("table")}
-                size="small"
-                startIcon={<FilterListIcon />}
-              >
-                Table View
-              </Button>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
+      <PetsToolbar
+        searchTerm={searchTerm}
+        selectedType={selectedType}
+        view={view}
+        onSearchChange={setSearchTerm}
+        onTypeChange={setSelectedType}
+        onViewChange={setView}
+        onAddPet={handleAddPet}
+      />
 
       {content}
     </Box>

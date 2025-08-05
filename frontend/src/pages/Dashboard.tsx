@@ -2,7 +2,8 @@ import { Box, Grid, Paper, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { Add as AddIcon } from "@mui/icons-material";
 import { Button } from "../components/common/Button";
-import { TaskList } from "../components/tasks/TaskList";
+import TaskList from "../features/tasks/components/TaskList";
+import type { Task } from "../features/tasks/components/TaskList";
 
 const Item = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(2),
@@ -42,26 +43,34 @@ export const Dashboard = () => {
     monthlySpending: "$120.75",
   };
 
-  const recentTasks = [
+  // src/pages/Dashboard.tsx
+
+  const recentTasks: Task[] = [
     {
       id: 1,
       title: "Morning Walk",
+      description: "A quick walk around the block.",
       dueDate: "Today, 8:00 AM",
       pet: "Max",
+      priority: "medium",
       completed: false,
     },
     {
       id: 2,
       title: "Vet Appointment",
+      description: "Annual check-up with Dr. Smith.",
       dueDate: "Tomorrow, 2:30 PM",
       pet: "Bella",
+      priority: "high",
       completed: false,
     },
     {
       id: 3,
       title: "Buy Food",
+      description: "Stock up on kibble and treats.",
       dueDate: "Tomorrow",
       pet: "All",
+      priority: "low",
       completed: true,
     },
   ];
@@ -97,6 +106,7 @@ export const Dashboard = () => {
       </Grid>
 
       {/* Recent Tasks */}
+
       <Paper sx={{ p: 3, mb: 4 }}>
         <Box
           sx={{
@@ -109,18 +119,26 @@ export const Dashboard = () => {
           <Typography variant="h6" component="h2">
             Recent Tasks
           </Typography>
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<AddIcon />}
-            // Add onClick handler to navigate to new task form
-          >
+          <Button variant="contained" size="small" startIcon={<AddIcon />}>
             Add Task
           </Button>
         </Box>
-        <TaskList tasks={recentTasks} />
+        <TaskList
+          tasks={recentTasks}
+          onEdit={(id) => {
+            // TODO: Add logic for editing a task
+            console.log("Edit task with ID:", id);
+          }}
+          onDelete={(id) => {
+            // TODO: Add logic for deleting a task
+            console.log("Delete task with ID:", id);
+          }}
+          onToggleComplete={(id, completed) => {
+            // TODO: Add logic for toggling task completion
+            console.log("Toggle task with ID:", id, "to completed:", completed);
+          }}
+        />
       </Paper>
-
       {/* Upcoming Events Section */}
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>

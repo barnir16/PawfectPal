@@ -7,7 +7,7 @@ import { Sidebar } from "./components/layout/Sidebar";
 import { Dashboard } from "./pages/Dashboard";
 import { Tasks } from "./pages/Tasks";
 import { Pets } from "./pages/Pets";
-import { Settings } from "./pages/Settings";
+import Settings from "./pages/Settings.new";
 import TaskForm from "./TaskForm";
 
 const App = () => {
