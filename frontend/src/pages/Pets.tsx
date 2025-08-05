@@ -5,12 +5,10 @@ import {
   Box,
   Button,
   Card,
-  CardActionArea,
   CardActions,
   CardContent,
   CardHeader,
   Chip,
-  Divider,
   Grid,
   IconButton,
   Paper,
@@ -18,7 +16,6 @@ import {
   TextField,
   Tooltip,
   Typography,
-  useTheme,
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -29,11 +26,7 @@ import {
   FilterList as FilterListIcon,
 } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
-import type {
-  GridColDef,
-  GridRenderCellParams,
-  GridValueGetter,
-} from "@mui/x-data-grid";
+import type { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { format } from "date-fns";
 
 interface Pet {
@@ -41,7 +34,7 @@ interface Pet {
   name: string;
   type: string;
   breed: string;
-  birthDate: string; // or Date if you prefer, but strings are common with APIs
+  birthDate: string;
   gender: string;
   weight: number;
   image: string;
@@ -99,92 +92,91 @@ const PetCard = ({
   pet: any;
   onEdit: (id: number) => void;
   onDelete: (id: number) => void;
-}) => (
-  <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-    <CardHeader
-      avatar={
-        <Avatar
-          src={pet.image}
-          alt={pet.name}
-          sx={{ width: 60, height: 60, bgcolor: "primary.main" }}
-        >
-          <PetsIcon fontSize="large" />
-        </Avatar>
-      }
-      title={
-        <Typography variant="h6" component="div">
-          {pet.name}
-          <Chip
-            label={pet.type}
-            size="small"
-            sx={{ ml: 1, textTransform: "capitalize" }}
-            color={
-              pet.type === "Dog"
-                ? "primary"
-                : pet.type === "Cat"
-                  ? "secondary"
-                  : "default"
-            }
-          />
-        </Typography>
-      }
-      subheader={`${pet.breed} • ${pet.gender}`}
-      action={
-        <Box>
-          <Tooltip title="Edit">
-            <IconButton
-              onClick={() => onEdit(pet.id)}
+}) => {
+  let chipColor: "primary" | "secondary" | "default" = "default";
+  if (pet.type === "Dog") chipColor = "primary";
+  else if (pet.type === "Cat") chipColor = "secondary";
+
+  return (
+    <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <CardHeader
+        avatar={
+          <Avatar
+            src={pet.image}
+            alt={pet.name}
+            sx={{ width: 60, height: 60, bgcolor: "primary.main" }}
+          >
+            <PetsIcon fontSize="large" />
+          </Avatar>
+        }
+        title={
+          <Typography variant="h6" component="div">
+            {pet.name}
+            <Chip
+              label={pet.type}
               size="small"
-              sx={{ mr: 0.5 }}
-            >
-              <EditIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Delete">
-            <IconButton
-              onClick={() => onDelete(pet.id)}
-              size="small"
-              color="error"
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      }
-    />
-    <CardContent sx={{ flexGrow: 1, pt: 0 }}>
-      <Stack spacing={1}>
-        <Typography variant="body2" color="text.secondary">
-          <strong>Age:</strong>{" "}
-          {Math.floor(
-            (new Date().getTime() - new Date(pet.birthDate).getTime()) /
-              (1000 * 60 * 60 * 24 * 365.25)
-          )}{" "}
-          years
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          <strong>Weight:</strong> {pet.weight} kg
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          <strong>Last Vet Visit:</strong>{" "}
-          {format(new Date(pet.lastVetVisit), "MMM d, yyyy")}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          <strong>Next Vaccination:</strong>{" "}
-          {format(new Date(pet.nextVaccination), "MMM d, yyyy")}
-        </Typography>
-      </Stack>
-    </CardContent>
-    <CardActions sx={{ mt: "auto", justifyContent: "flex-end" }}>
-      <Button size="small" onClick={() => onEdit(pet.id)}>
-        View Details
-      </Button>
-    </CardActions>
-  </Card>
-);
+              sx={{ ml: 1, textTransform: "capitalize" }}
+              color={chipColor}
+            />
+          </Typography>
+        }
+        subheader={`${pet.breed} • ${pet.gender}`}
+        action={
+          <Box>
+            <Tooltip title="Edit">
+              <IconButton
+                onClick={() => onEdit(pet.id)}
+                size="small"
+                sx={{ mr: 0.5 }}
+              >
+                <EditIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Delete">
+              <IconButton
+                onClick={() => onDelete(pet.id)}
+                size="small"
+                color="error"
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        }
+      />
+      <CardContent sx={{ flexGrow: 1, pt: 0 }}>
+        <Stack spacing={1}>
+          <Typography variant="body2" color="text.secondary">
+            <strong>Age:</strong>{" "}
+            {Math.floor(
+              (new Date().getTime() - new Date(pet.birthDate).getTime()) /
+                (1000 * 60 * 60 * 24 * 365.25)
+            )}{" "}
+            years
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            <strong>Weight:</strong> {pet.weight} kg
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            <strong>Last Vet Visit:</strong>{" "}
+            {format(new Date(pet.lastVetVisit), "MMM d, yyyy")}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            <strong>Next Vaccination:</strong>{" "}
+            {format(new Date(pet.nextVaccination), "MMM d, yyyy")}
+          </Typography>
+        </Stack>
+      </CardContent>
+      <CardActions sx={{ mt: "auto", justifyContent: "flex-end" }}>
+        <Button size="small" onClick={() => onEdit(pet.id)}>
+          View Details
+        </Button>
+      </CardActions>
+    </Card>
+  );
+};
 
 export const Pets = () => {
-  const theme = useTheme();
   const navigate = useNavigate();
   const [view, setView] = useState<"grid" | "table">("grid");
   const [searchTerm, setSearchTerm] = useState("");
@@ -199,7 +191,6 @@ export const Pets = () => {
   };
 
   const handleDeletePet = (id: number) => {
-    // Show confirmation dialog before deleting
     if (
       window.confirm(
         "Are you sure you want to delete this pet? This action cannot be undone."
@@ -270,6 +261,71 @@ export const Pets = () => {
     },
   ];
 
+  // Extracted content variable to avoid nested ternary
+  let emptyMessage = "Get started by adding your first pet!";
+  if (searchTerm || selectedType !== "All") {
+    emptyMessage = "Try adjusting your search or filter criteria.";
+  }
+
+  let content;
+
+  if (filteredPets.length === 0) {
+    content = (
+      <Paper sx={{ p: 4, textAlign: "center" }}>
+        <PetsIcon sx={{ fontSize: 60, color: "text.secondary", mb: 2 }} />
+        <Typography variant="h6" gutterBottom>
+          No pets found
+        </Typography>
+        <Typography color="text.secondary" paragraph>
+          {emptyMessage}
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={handleAddPet}
+          sx={{ mt: 2 }}
+        >
+          Add Pet
+        </Button>
+      </Paper>
+    );
+  } else if (view === "grid") {
+    content = (
+      <Grid container spacing={3}>
+        {filteredPets.map((pet) => (
+          <Grid item key={pet.id} xs={12} sm={6} md={4} lg={3}>
+            <PetCard
+              pet={pet}
+              onEdit={handleEditPet}
+              onDelete={handleDeletePet}
+            />
+          </Grid>
+        ))}
+      </Grid>
+    );
+  } else {
+    content = (
+      <Paper sx={{ width: "100%", height: 400, overflow: "hidden" }}>
+        <DataGrid<Pet>
+          rows={filteredPets}
+          columns={columns}
+          pageSizeOptions={[5, 10, 25]}
+          initialState={{
+            pagination: {
+              paginationModel: { page: 0, pageSize: 5 },
+            },
+          }}
+          sx={{
+            "& .MuiDataGrid-cell:focus": { outline: "none" },
+            "& .MuiDataRow-hover": { cursor: "pointer" },
+            height: "100%",
+          }}
+          onRowClick={(params) => handleEditPet(params.row.id)}
+        />
+      </Paper>
+    );
+  }
+
   return (
     <Box>
       <Box
@@ -315,7 +371,7 @@ export const Pets = () => {
                 fullWidth
                 label="Filter by Type"
                 value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value as string)}
+                onChange={(e) => setSelectedType(e.target.value)}
                 SelectProps={{
                   native: true,
                 }}
@@ -360,62 +416,7 @@ export const Pets = () => {
         </CardContent>
       </Card>
 
-      {filteredPets.length === 0 ? (
-        <Paper sx={{ p: 4, textAlign: "center" }}>
-          <PetsIcon sx={{ fontSize: 60, color: "text.secondary", mb: 2 }} />
-          <Typography variant="h6" gutterBottom>
-            No pets found
-          </Typography>
-          <Typography color="text.secondary" paragraph>
-            {searchTerm || selectedType !== "All"
-              ? "Try adjusting your search or filter criteria."
-              : "Get started by adding your first pet!"}
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleAddPet}
-            sx={{ mt: 2 }}
-          >
-            Add Pet
-          </Button>
-        </Paper>
-      ) : view === "grid" ? (
-        <Grid container spacing={3}>
-          {filteredPets.map((pet) => (
-            <Grid item key={pet.id} xs={12} sm={6} md={4} lg={3}>
-              <PetCard
-                pet={pet}
-                onEdit={handleEditPet}
-                onDelete={handleDeletePet}
-              />
-            </Grid>
-          ))}
-        </Grid>
-      ) : (
-        <Paper sx={{ width: "100%", overflow: "hidden" }}>
-          <DataGrid<Pet>
-            rows={filteredPets}
-            columns={columns}
-            autoHeight
-            pageSizeOptions={[5, 10, 25]}
-            initialState={{
-              pagination: {
-                paginationModel: { page: 0, pageSize: 5 },
-              },
-            }}
-            sx={{
-              "& .MuiDataGrid-cell:focus": {
-                outline: "none",
-              },
-              "& .MuiDataRow-hover": {
-                cursor: "pointer",
-              },
-            }}
-            onRowClick={(params) => handleEditPet(params.row.id)}
-          />
-        </Paper>
-      )}
+      {content}
     </Box>
   );
 };
