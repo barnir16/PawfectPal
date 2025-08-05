@@ -15,11 +15,9 @@ import {
   InputAdornment,
   InputLabel,
   MenuItem,
-  Paper,
   Select,
   TextField,
   Typography,
-  useTheme,
   Avatar,
   FormControlLabel,
   Switch,
@@ -33,10 +31,10 @@ import {
   AddAPhoto as AddPhotoIcon,
   Pets as PetIcon,
   Cake as CakeIcon,
-  Scale as ScaleIcon,
   Female as FemaleIcon,
   Male as MaleIcon,
-  Help as HelpIcon,
+  ColorLens as ColorLensIcon,
+  MonitorWeight as MonitorWeightIcon,
 } from "@mui/icons-material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -81,7 +79,9 @@ const schema = z.object({
     invalid_type_error: "That's not a valid date!",
   }),
   weight: z
-    .number()
+    .number({
+      invalid_type_error: "Weight must be a number",
+    })
     .min(0.1, "Weight must be greater than 0")
     .max(200, "Weight seems too high"),
   weightUnit: z.string(),
@@ -89,21 +89,18 @@ const schema = z.object({
   microchipNumber: z.string().optional(),
   isNeutered: z.boolean(),
   notes: z.string().optional(),
-  // In a real app, this would be a file upload or URL to the stored image
   image: z.string().optional(),
 });
 
 type PetFormData = z.infer<typeof schema>;
 
 export const PetForm = () => {
-  const theme = useTheme();
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
   const isEditing = !!id;
   const [breeds, setBreeds] = useState<string[]>([]);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  // Form setup
   const {
     control,
     handleSubmit,
@@ -130,9 +127,8 @@ export const PetForm = () => {
   });
 
   const watchType = watch("type");
-  const watchImage = watch("image");
+  const watchGender = watch("gender");
 
-  // Update breeds when pet type changes
   useEffect(() => {
     if (watchType === "Dog") {
       setBreeds(dogBreeds);
@@ -141,21 +137,13 @@ export const PetForm = () => {
     } else {
       setBreeds(["Other"]);
     }
-    // Reset breed when type changes
     setValue("breed", "");
   }, [watchType, setValue]);
 
-  // Load pet data if editing
   useEffect(() => {
     if (isEditing) {
-      // In a real app, you would fetch the pet data from your API
       const fetchPet = async () => {
         try {
-          // Mock API call
-          // const response = await fetch(`/api/pets/${id}`);
-          // const petData = await response.json();
-
-          // Mock data for demo
           const petData = {
             id,
             name: "Max",
@@ -172,13 +160,11 @@ export const PetForm = () => {
             image: "/placeholder-dog.jpg",
           };
 
-          // Set form values
           reset({
             ...petData,
             birthDate: parseISO(petData.birthDate),
           });
 
-          // Set image preview if image exists
           if (petData.image) {
             setImagePreview(petData.image);
           }
@@ -186,17 +172,13 @@ export const PetForm = () => {
           console.error("Error loading pet:", error);
         }
       };
-
       fetchPet();
     }
   }, [id, isEditing, reset]);
 
-  // Handle image upload
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // In a real app, you would upload the file to your server
-      // and get back a URL to store in your database
       const reader = new FileReader();
       reader.onloadend = () => {
         const imageUrl = reader.result as string;
@@ -209,62 +191,28 @@ export const PetForm = () => {
 
   const onSubmit: SubmitHandler<PetFormData> = async (data) => {
     try {
-      // Format the birth date for the API
       const formattedData = {
         ...data,
         birthDate: format(data.birthDate, "yyyy-MM-dd"),
       };
-
       console.log("Submitting pet:", formattedData);
-
-      // In a real app, you would make an API call here
-      // const method = isEditing ? 'PUT' : 'POST';
-      // const url = isEditing ? `/api/pets/${id}` : '/api/pets';
-      // const response = await fetch(url, {
-      //   method,
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(formattedData),
-      // });
-
-      // if (!response.ok) {
-      //   throw new Error('Failed to save pet');
-      // }
-
-      // Show success message and navigate back
-      // enqueueSnackbar(`Pet ${isEditing ? 'updated' : 'added'} successfully!`, {
-      //   variant: 'success',
-      // });
-
       navigate("/pets");
     } catch (error) {
       console.error("Error saving pet:", error);
-      // enqueueSnackbar('Failed to save pet. Please try again.', {
-      //   variant: 'error',
-      // });
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (
       window.confirm(
         "Are you sure you want to delete this pet? This action cannot be undone."
       )
     ) {
       try {
-        // In a real app, you would make an API call to delete the pet
-        // await fetch(`/api/pets/${id}`, { method: 'DELETE' });
-
-        // Show success message and navigate back
-        // enqueueSnackbar('Pet deleted successfully!', { variant: 'success' });
-
+        console.log(`Deleting pet with ID: ${id}`);
         navigate("/pets");
       } catch (error) {
         console.error("Error deleting pet:", error);
-        // enqueueSnackbar('Failed to delete pet. Please try again.', {
-        //   variant: 'error',
-        // });
       }
     }
   };
@@ -310,7 +258,6 @@ export const PetForm = () => {
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)}>
               <Grid container spacing={3}>
-                {/* Pet Photo */}
                 <Grid item xs={12} md={4} lg={3}>
                   <Box
                     sx={{
@@ -449,7 +396,7 @@ export const PetForm = () => {
                               label="Gender"
                               startAdornment={
                                 <InputAdornment position="start">
-                                  {field.value === "female" ? (
+                                  {watchGender === "female" ? (
                                     <FemaleIcon
                                       color={
                                         errors.gender ? "error" : "inherit"
@@ -531,7 +478,7 @@ export const PetForm = () => {
                               InputProps={{
                                 startAdornment: (
                                   <InputAdornment position="start">
-                                    <ScaleIcon
+                                    <MonitorWeightIcon
                                       color={
                                         errors.weight ? "error" : "inherit"
                                       }
@@ -540,25 +487,31 @@ export const PetForm = () => {
                                 ),
                               }}
                               onChange={(e) =>
-                                field.onChange(parseFloat(e.target.value) || 0)
+                                field.onChange(
+                                  parseFloat(e.target.value) || undefined
+                                )
                               }
                             />
                           )}
                         />
-                        <Controller
-                          name="weightUnit"
-                          control={control}
-                          render={({ field }) => (
-                            <Select
-                              {...field}
-                              label="Unit"
-                              sx={{ minWidth: 100 }}
-                            >
-                              <MenuItem value="kg">kg</MenuItem>
-                              <MenuItem value="lbs">lbs</MenuItem>
-                            </Select>
-                          )}
-                        />
+                        <FormControl>
+                          <InputLabel id="weight-unit-label">Unit</InputLabel>
+                          <Controller
+                            name="weightUnit"
+                            control={control}
+                            render={({ field }) => (
+                              <Select
+                                {...field}
+                                labelId="weight-unit-label"
+                                label="Unit"
+                                sx={{ minWidth: 100 }}
+                              >
+                                <MenuItem value="kg">kg</MenuItem>
+                                <MenuItem value="lbs">lbs</MenuItem>
+                              </Select>
+                            )}
+                          />
+                        </FormControl>
                       </Box>
                     </Grid>
 
@@ -574,6 +527,15 @@ export const PetForm = () => {
                             variant="outlined"
                             error={!!errors.color}
                             helperText={errors.color?.message}
+                            InputProps={{
+                              startAdornment: (
+                                <InputAdornment position="start">
+                                  <ColorLensIcon
+                                    color={errors.color ? "error" : "inherit"}
+                                  />
+                                </InputAdornment>
+                              ),
+                            }}
                           />
                         )}
                       />
@@ -591,6 +553,19 @@ export const PetForm = () => {
                             variant="outlined"
                             error={!!errors.microchipNumber}
                             helperText={errors.microchipNumber?.message}
+                            InputProps={{
+                              startAdornment: (
+                                <InputAdornment position="start">
+                                  <PetIcon
+                                    color={
+                                      errors.microchipNumber
+                                        ? "error"
+                                        : "inherit"
+                                    }
+                                  />
+                                </InputAdornment>
+                              ),
+                            }}
                           />
                         )}
                       />
