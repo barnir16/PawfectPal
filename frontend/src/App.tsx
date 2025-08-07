@@ -2,13 +2,13 @@ import { useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Box, CssBaseline, ThemeProvider } from "@mui/material";
 import { theme } from "./theme";
-import { Header } from "./components/layout/Header";
-import { Sidebar } from "./components/layout/Sidebar";
-import { Dashboard } from "./pages/Dashboard";
-import { Tasks } from "./pages/Tasks";
-import { Pets } from "./pages/Pets";
-import { Settings } from "./pages/Settings";
-import TaskForm from "./TaskForm";
+import { Header } from "./app/layout/Header";
+import { Sidebar } from "./app/layout/Sidebar";
+import { Dashboard } from "./features/dashboard/pages/DashboardPage";
+import { Tasks } from "./features/tasks/pages/TasksPage";
+import { Pets } from "./features/pets/pages/PetsPage";
+import Settings from "./features/settings/components/Settings/Settings";
+import TaskForm from "./features/tasks/components/TaskForm/TaskForm";
 
 const App = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
