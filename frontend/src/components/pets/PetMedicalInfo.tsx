@@ -1,7 +1,7 @@
-import { Control, FieldErrors } from 'react-hook-form';
-import { TextField, Grid } from '@mui/material';
-import { MedicalServices as MedicalIcon, Notes as NotesIcon } from '@mui/icons-material';
-import { PetFormData } from '../../pages/PetForm';
+import { type FieldErrors, Controller } from "react-hook-form";
+import { TextField, Grid } from "@mui/material";
+import { Notes as NotesIcon } from "@mui/icons-material";
+import type { PetFormData } from "./../../features/pets/components/PetForm/PetForm.tsx";
 
 interface PetMedicalInfoProps {
   control: any; // Using any to avoid type issues with Controller
@@ -16,7 +16,7 @@ export const PetMedicalInfo = ({
 }: PetMedicalInfoProps) => {
   return (
     <Grid container spacing={3}>
-      <Grid item xs={12}>
+      <Grid size={{ xs: 12 }}>
         <TextField
           name="notes"
           label="Medical Notes"
@@ -29,19 +29,19 @@ export const PetMedicalInfo = ({
           disabled={isSubmitting}
           InputProps={{
             startAdornment: (
-              <NotesIcon 
-                color="action" 
-                sx={{ 
-                  position: 'absolute',
+              <NotesIcon
+                color="action"
+                sx={{
+                  position: "absolute",
                   left: 14,
                   top: 14,
-                }} 
+                }}
               />
             ),
             sx: {
               pl: 6,
               pt: 2,
-              '& textarea': {
+              "& textarea": {
                 pl: 2,
               },
             },
@@ -63,19 +63,19 @@ export const PetMedicalInfo = ({
                   disabled={isSubmitting}
                   InputProps={{
                     startAdornment: (
-                      <NotesIcon 
-                        color="action" 
-                        sx={{ 
-                          position: 'absolute',
+                      <NotesIcon
+                        color="action"
+                        sx={{
+                          position: "absolute",
                           left: 14,
                           top: 14,
-                        }} 
+                        }}
                       />
                     ),
                     sx: {
                       pl: 6,
                       pt: 2,
-                      '& textarea': {
+                      "& textarea": {
                         pl: 2,
                       },
                     },
@@ -86,7 +86,7 @@ export const PetMedicalInfo = ({
           )}
         />
       </Grid>
-      
+
       {/* Add more medical-related fields here as needed */}
       {/* For example: */}
       {/* <Grid item xs={12} sm={6}>

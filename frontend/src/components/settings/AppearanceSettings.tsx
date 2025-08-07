@@ -1,10 +1,18 @@
-import { useState } from 'react';
-import { Box, Button, FormControl, InputLabel, MenuItem, Select, Typography, Grid } from '@mui/material';
-import { Save as SaveIcon, Cancel as CancelIcon } from '@mui/icons-material';
-import { SettingsCard } from './SettingsCard';
+import { useState } from "react";
+import {
+  Box,
+  Button,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  Grid,
+} from "@mui/material";
+import { Save as SaveIcon, Cancel as CancelIcon } from "@mui/icons-material";
+import { SettingsCard } from "./SettingsCard";
 
-type ThemePreference = 'light' | 'dark' | 'system';
-type Language = 'en' | 'es' | 'fr' | 'de';
+type ThemePreference = "light" | "dark" | "system";
+type Language = "en" | "es" | "fr" | "de";
 
 interface AppearanceSettingsProps {
   theme: ThemePreference;
@@ -12,7 +20,11 @@ interface AppearanceSettingsProps {
   onSave: (settings: { theme: ThemePreference; language: Language }) => void;
 }
 
-export const AppearanceSettings = ({ theme, language, onSave }: AppearanceSettingsProps) => {
+export const AppearanceSettings = ({
+  theme,
+  language,
+  onSave,
+}: AppearanceSettingsProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentTheme, setCurrentTheme] = useState(theme);
   const [currentLanguage, setCurrentLanguage] = useState(language);
@@ -29,20 +41,32 @@ export const AppearanceSettings = ({ theme, language, onSave }: AppearanceSettin
   };
 
   return (
-    <SettingsCard 
+    <SettingsCard
       title="Appearance"
       subtitle="Customize the look and feel"
       action={
         !isEditing ? (
-          <Button startIcon={<SaveIcon />} onClick={() => setIsEditing(true)} variant="outlined">
+          <Button
+            startIcon={<SaveIcon />}
+            onClick={() => setIsEditing(true)}
+            variant="outlined"
+          >
             Edit
           </Button>
         ) : (
           <Box display="flex" gap={1}>
-            <Button startIcon={<CancelIcon />} onClick={handleCancel} variant="outlined">
+            <Button
+              startIcon={<CancelIcon />}
+              onClick={handleCancel}
+              variant="outlined"
+            >
               Cancel
             </Button>
-            <Button startIcon={<SaveIcon />} onClick={handleSave} variant="contained">
+            <Button
+              startIcon={<SaveIcon />}
+              onClick={handleSave}
+              variant="contained"
+            >
               Save
             </Button>
           </Box>
@@ -50,12 +74,14 @@ export const AppearanceSettings = ({ theme, language, onSave }: AppearanceSettin
       }
     >
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <FormControl fullWidth disabled={!isEditing}>
             <InputLabel>Theme</InputLabel>
             <Select
               value={currentTheme}
-              onChange={(e) => setCurrentTheme(e.target.value as ThemePreference)}
+              onChange={(e) =>
+                setCurrentTheme(e.target.value as ThemePreference)
+              }
               label="Theme"
             >
               <MenuItem value="light">Light</MenuItem>
@@ -64,7 +90,7 @@ export const AppearanceSettings = ({ theme, language, onSave }: AppearanceSettin
             </Select>
           </FormControl>
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <FormControl fullWidth disabled={!isEditing}>
             <InputLabel>Language</InputLabel>
             <Select

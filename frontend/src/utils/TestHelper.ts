@@ -1,4 +1,6 @@
-import  type { Pet, Task, Service } from '../types';
+import type { Pet } from '../types/pets';
+import type { Task } from '../types/tasks';
+import type { Service } from '../types/services';
 import {
   login,
   register,
@@ -126,111 +128,131 @@ export class TestHelper {
     }
   }
 
-  private static async testPetManagement(): Promise<void> {
+private static async testPetManagement(): Promise<void> {
     try {
-      try {
-        const pets = await getPets();
-        this.addTestResult('Get Pets', 'PASS', `Retrieved ${pets.length} pets`);
-      } catch (error) {
-        this.addTestResult('Get Pets', 'FAIL', `Get pets failed: ${(error as Error).message}`);
-      }
-
-      try {
-        const newPet: Omit<Pet, 'id'> = {
-          name: 'Test Pet',
-          breedType: 'dog',
-          breed: 'Golden Retriever',
-          birthDate: '2020-01-01',
-          age: 3,
-          isBirthdayGiven: true,
-          weightKg: 25,
-          healthIssues: [],
-          behaviorIssues: [],
-          isTrackingEnabled: false,
-        };
-
-        const createdPet = await createPet(newPet);
-        if (createdPet.id) {
-          this.addTestResult('Create Pet', 'PASS', 'Pet creation working');
-
-          try {
-            const updatedPet = await updatePet(createdPet.id, { ...newPet, name: 'Updated Test Pet' });
-            if (updatedPet.name === 'Updated Test Pet') {
-              this.addTestResult('Update Pet', 'PASS', 'Pet update working');
-            } else {
-              this.addTestResult('Update Pet', 'FAIL', 'Pet update failed');
-            }
-          } catch (error) {
-            this.addTestResult('Update Pet', 'FAIL', `Update pet failed: ${(error as Error).message}`);
-          }
-
-          try {
-            await deletePet(createdPet.id);
-            this.addTestResult('Delete Pet', 'PASS', 'Pet deletion working');
-          } catch (error) {
-            this.addTestResult('Delete Pet', 'FAIL', `Delete pet failed: ${(error as Error).message}`);
-          }
-        } else {
-          this.addTestResult('Create Pet', 'FAIL', 'Pet creation failed - no ID returned');
+        try {
+            const pets = await getPets();
+            this.addTestResult('Get Pets', 'PASS', `Retrieved ${pets.length} pets`);
+        } catch (error) {
+            this.addTestResult('Get Pets', 'FAIL', `Get pets failed: ${(error as Error).message}`);
         }
-      } catch (error) {
-        this.addTestResult('Create Pet', 'FAIL', `Create pet failed: ${(error as Error).message}`);
-      }
-    } catch (error) {
-      this.addTestResult('Pet Management', 'FAIL', `Pet management error: ${(error as Error).message}`);
-    }
-  }
 
-  private static async testTaskManagement(): Promise<void> {
+        try {
+            const newPet: Omit<Pet, 'id'> = {
+              name: 'Test Pet',
+              
+              type: 'dog', 
+
+              breedType: 'dog',
+              breed: 'Golden Retriever',
+              birthDate: '2020-01-01',
+              age: 3,
+              isBirthdayGiven: true,
+              weightKg: 25,
+              healthIssues: [],
+              behaviorIssues: [],
+              isTrackingEnabled: false,
+
+              gender: 'male',
+              weightUnit: 'kg',
+              isNeutered: true,
+              isVaccinated: true,
+              isMicrochipped: true,
+              ownerId: 1,
+              isActive: true,
+
+              isLost: false,
+            };
+            
+            const createdPet = await createPet(newPet);
+            if (createdPet.id) {
+                this.addTestResult('Create Pet', 'PASS', 'Pet creation working');
+
+                try {
+                    const updatedPet = await updatePet(createdPet.id, { ...newPet, name: 'Updated Test Pet' });
+                    if (updatedPet.name === 'Updated Test Pet') {
+                        this.addTestResult('Update Pet', 'PASS', 'Pet update working');
+                    } else {
+                        this.addTestResult('Update Pet', 'FAIL', 'Pet update failed');
+                    }
+                } catch (error) {
+                    this.addTestResult('Update Pet', 'FAIL', `Update pet failed: ${(error as Error).message}`);
+                }
+
+                try {
+                    await deletePet(createdPet.id);
+                    this.addTestResult('Delete Pet', 'PASS', 'Pet deletion working');
+                } catch (error) {
+                    this.addTestResult('Delete Pet', 'FAIL', `Delete pet failed: ${(error as Error).message}`);
+                }
+            } else {
+                this.addTestResult('Create Pet', 'FAIL', 'Pet creation failed - no ID returned');
+            }
+        } catch (error) {
+            this.addTestResult('Create Pet', 'FAIL', `Create pet failed: ${(error as Error).message}`);
+        }
+    } catch (error) {
+        this.addTestResult('Pet Management', 'FAIL', `Pet management error: ${(error as Error).message}`);
+    }
+}
+
+private static async testTaskManagement(): Promise<void> {
     try {
-      try {
-        const tasks = await getTasks();
-        this.addTestResult('Get Tasks', 'PASS', `Retrieved ${tasks.length} tasks`);
-      } catch (error) {
-        this.addTestResult('Get Tasks', 'FAIL', `Get tasks failed: ${(error as Error).message}`);
-      }
-
-      try {
-        const newTask: Omit<Task, 'id'> = {
-          title: 'Test Task',
-          description: 'This is a test task',
-          dateTime: new Date().toISOString(),
-          petIds: [],
-          attachments: [],
-        };
-
-        const createdTask = await createTask(newTask);
-        if (createdTask.id) {
-          this.addTestResult('Create Task', 'PASS', 'Task creation working');
-
-          try {
-            const updatedTask = await updateTask(createdTask.id, { ...newTask, title: 'Updated Test Task' });
-            if (updatedTask.title === 'Updated Test Task') {
-              this.addTestResult('Update Task', 'PASS', 'Task update working');
-            } else {
-              this.addTestResult('Update Task', 'FAIL', 'Task update failed');
-            }
-          } catch (error) {
-            this.addTestResult('Update Task', 'FAIL', `Update task failed: ${(error as Error).message}`);
-          }
-
-          try {
-            await deleteTask(createdTask.id);
-            this.addTestResult('Delete Task', 'PASS', 'Task deletion working');
-          } catch (error) {
-            this.addTestResult('Delete Task', 'FAIL', `Delete task failed: ${(error as Error).message}`);
-          }
-        } else {
-          this.addTestResult('Create Task', 'FAIL', 'Task creation failed - no ID returned');
+        try {
+            const tasks = await getTasks();
+            this.addTestResult('Get Tasks', 'PASS', `Retrieved ${tasks.length} tasks`);
+        } catch (error) {
+            this.addTestResult('Get Tasks', 'FAIL', `Get tasks failed: ${(error as Error).message}`);
         }
-      } catch (error) {
-        this.addTestResult('Create Task', 'FAIL', `Create task failed: ${(error as Error).message}`);
-      }
-    } catch (error) {
-      this.addTestResult('Task Management', 'FAIL', `Task management error: ${(error as Error).message}`);
-    }
-  }
 
+        try {
+            // Updated newTask object to include all required properties
+            const newTask: Omit<Task, 'id'> = {
+                title: 'Test Task',
+                description: 'This is a test task',
+                dateTime: new Date().toISOString(),
+                petIds: [],
+                attachments: [],
+                
+                // Add the previously missing required properties with mock data
+                priority: 'medium', // Example from the error message
+                isCompleted: false,
+                category: 'other',
+                createdBy: 1, // Mock user
+                isRecurring: false,
+            };
+
+            const createdTask = await createTask(newTask);
+            if (createdTask.id) {
+                this.addTestResult('Create Task', 'PASS', 'Task creation working');
+
+                try {
+                    const updatedTask = await updateTask(createdTask.id, { ...newTask, title: 'Updated Test Task' });
+                    if (updatedTask.title === 'Updated Test Task') {
+                        this.addTestResult('Update Task', 'PASS', 'Task update working');
+                    } else {
+                        this.addTestResult('Update Task', 'FAIL', 'Task update failed');
+                    }
+                } catch (error) {
+                    this.addTestResult('Update Task', 'FAIL', `Update task failed: ${(error as Error).message}`);
+                }
+
+                try {
+                    await deleteTask(createdTask.id);
+                    this.addTestResult('Delete Task', 'PASS', 'Task deletion working');
+                } catch (error) {
+                    this.addTestResult('Delete Task', 'FAIL', `Delete task failed: ${(error as Error).message}`);
+                }
+            } else {
+                this.addTestResult('Create Task', 'FAIL', 'Task creation failed - no ID returned');
+            }
+        } catch (error) {
+            this.addTestResult('Create Task', 'FAIL', `Create task failed: ${(error as Error).message}`);
+        }
+    } catch (error) {
+        this.addTestResult('Task Management', 'FAIL', `Task management error: ${(error as Error).message}`);
+    }
+}
   private static async testServiceManagement(): Promise<void> {
     try {
       try {

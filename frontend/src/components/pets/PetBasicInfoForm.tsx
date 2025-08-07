@@ -1,8 +1,16 @@
-import { Control, Controller, FieldErrors } from 'react-hook-form';
-import { TextField, Grid, MenuItem, FormControl, InputLabel, Select, FormHelperText } from '@mui/material';
-import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { PetFormData } from '../../pages/PetForm';
+import { type Control, Controller, type FieldErrors } from "react-hook-form";
+import {
+  TextField,
+  Grid,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
+  FormHelperText,
+} from "@mui/material";
+import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import type { PetFormData } from "./../../features/pets/components/PetForm/PetForm.tsx";
 
 interface PetBasicInfoFormProps {
   control: Control<PetFormData>;
@@ -22,7 +30,7 @@ export const PetBasicInfoForm = ({
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Grid container spacing={3}>
-        <Grid item xs={12} sm={6}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <Controller
             name="name"
             control={control}
@@ -38,19 +46,15 @@ export const PetBasicInfoForm = ({
             )}
           />
         </Grid>
-        
-        <Grid item xs={12} sm={6}>
+
+        <Grid size={{ xs: 12, sm: 6 }}>
           <Controller
             name="type"
             control={control}
             render={({ field }) => (
               <FormControl fullWidth error={!!errors.type}>
                 <InputLabel>Pet Type</InputLabel>
-                <Select
-                  {...field}
-                  label="Pet Type"
-                  disabled={isSubmitting}
-                >
+                <Select {...field} label="Pet Type" disabled={isSubmitting}>
                   <MenuItem value="">
                     <em>Select a type</em>
                   </MenuItem>
@@ -67,8 +71,8 @@ export const PetBasicInfoForm = ({
             )}
           />
         </Grid>
-        
-        <Grid item xs={12} sm={6}>
+
+        <Grid size={{ xs: 12, sm: 6 }}>
           <Controller
             name="breed"
             control={control}
@@ -96,19 +100,15 @@ export const PetBasicInfoForm = ({
             )}
           />
         </Grid>
-        
-        <Grid item xs={12} sm={6}>
+
+        <Grid size={{ xs: 12, sm: 6 }}>
           <Controller
             name="gender"
             control={control}
             render={({ field }) => (
               <FormControl fullWidth error={!!errors.gender}>
                 <InputLabel>Gender</InputLabel>
-                <Select
-                  {...field}
-                  label="Gender"
-                  disabled={isSubmitting}
-                >
+                <Select {...field} label="Gender" disabled={isSubmitting}>
                   <MenuItem value="">
                     <em>Select a gender</em>
                   </MenuItem>
@@ -123,8 +123,8 @@ export const PetBasicInfoForm = ({
             )}
           />
         </Grid>
-        
-        <Grid item xs={12} sm={6}>
+
+        <Grid size={{ xs: 12, sm: 6 }}>
           <Controller
             name="birthDate"
             control={control}

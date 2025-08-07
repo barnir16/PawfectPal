@@ -1,7 +1,18 @@
-import { useState } from 'react';
-import { Box, Button, TextField, Grid, Avatar, IconButton, Typography } from '@mui/material';
-import { Edit as EditIcon, Save as SaveIcon, Cancel as CancelIcon } from '@mui/icons-material';
-import { SettingsCard } from './SettingsCard';
+import { useState } from "react";
+import {
+  Box,
+  Button,
+  TextField,
+  Grid,
+  Avatar,
+  IconButton,
+} from "@mui/material";
+import {
+  Edit as EditIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon,
+} from "@mui/icons-material";
+import { SettingsCard } from "./SettingsCard";
 
 interface ProfileData {
   name: string;
@@ -22,9 +33,9 @@ export const ProfileSettings = ({ profile, onSave }: ProfileSettingsProps) => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -40,7 +51,7 @@ export const ProfileSettings = ({ profile, onSave }: ProfileSettingsProps) => {
   };
 
   return (
-    <SettingsCard 
+    <SettingsCard
       title="Profile Information"
       subtitle="Update your personal information"
       action={
@@ -76,10 +87,10 @@ export const ProfileSettings = ({ profile, onSave }: ProfileSettingsProps) => {
     >
       <Box component="form" onSubmit={handleSubmit}>
         <Grid container spacing={3}>
-          <Grid item xs={12} display="flex" justifyContent="center">
+          <Grid size={{ xs: 12 }} display="flex" justifyContent="center">
             <Box position="relative">
-              <Avatar 
-                src={formData.avatar} 
+              <Avatar
+                src={formData.avatar}
                 sx={{ width: 120, height: 120, mb: 2 }}
               />
               {isEditing && (
@@ -88,13 +99,13 @@ export const ProfileSettings = ({ profile, onSave }: ProfileSettingsProps) => {
                   aria-label="upload picture"
                   component="label"
                   sx={{
-                    position: 'absolute',
+                    position: "absolute",
                     bottom: 10,
                     right: 10,
-                    bgcolor: 'background.paper',
-                    '&:hover': {
-                      bgcolor: 'action.hover'
-                    }
+                    bgcolor: "background.paper",
+                    "&:hover": {
+                      bgcolor: "action.hover",
+                    },
                   }}
                 >
                   <input hidden accept="image/*" type="file" />
@@ -103,8 +114,8 @@ export const ProfileSettings = ({ profile, onSave }: ProfileSettingsProps) => {
               )}
             </Box>
           </Grid>
-          
-          <Grid item xs={12} md={6}>
+
+          <Grid size={{ xs: 12, md: 6 }}>
             <TextField
               fullWidth
               label="Full Name"
@@ -114,7 +125,7 @@ export const ProfileSettings = ({ profile, onSave }: ProfileSettingsProps) => {
               disabled={!isEditing}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <TextField
               fullWidth
               label="Email"
@@ -125,7 +136,7 @@ export const ProfileSettings = ({ profile, onSave }: ProfileSettingsProps) => {
               disabled={!isEditing}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <TextField
               fullWidth
               label="Phone Number"
@@ -135,7 +146,7 @@ export const ProfileSettings = ({ profile, onSave }: ProfileSettingsProps) => {
               disabled={!isEditing}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <TextField
               fullWidth
               label="Address"

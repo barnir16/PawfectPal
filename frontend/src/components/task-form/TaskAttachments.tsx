@@ -14,7 +14,7 @@ import {
   Delete as DeleteIcon,
   InsertDriveFile as FileIcon,
 } from "@mui/icons-material";
-import type { TaskFormData } from "../../pages/TaskForm.new";
+import type { TaskFormData } from "./../../features/tasks/components/TaskForm/TaskForm";
 
 type TaskAttachmentsProps = {
   control: Control<TaskFormData>;
@@ -36,7 +36,7 @@ export const TaskAttachments = ({
 
   return (
     <Grid container spacing={3}>
-      <Grid item xs={12}>
+      <Grid size={{ xs: 12 }}>
         <Typography variant="h6" gutterBottom>
           Notes & Attachments
         </Typography>
@@ -58,7 +58,7 @@ export const TaskAttachments = ({
         />
       </Grid>
 
-      <Grid item xs={12}>
+      <Grid size={{ xs: 12 }}>
         <input
           type="file"
           id="file-upload"

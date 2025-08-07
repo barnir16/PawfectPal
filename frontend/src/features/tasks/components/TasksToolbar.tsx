@@ -1,11 +1,16 @@
-import { Button } from "@mui/material";
-import { Add as AddIcon } from "@mui/icons-material";
-import { ToggleButton, ToggleButtonGroup } from "@mui/material";
-import { ViewList as ViewListIcon, ViewModule as ViewModuleIcon } from "@mui/icons-material";
+import { ToggleButton, ToggleButtonGroup, Button } from "@mui/material";
+import {
+  ViewList as ViewListIcon,
+  ViewModule as ViewModuleIcon,
+  Add as AddIcon,
+} from "@mui/icons-material";
 
 interface TasksToolbarProps {
-  view: 'list' | 'grid';
-  onViewChange: (event: React.MouseEvent<HTMLElement>, newView: 'list' | 'grid' | null) => void;
+  view: "list" | "grid";
+  onViewChange: (
+    event: React.MouseEvent<HTMLElement>,
+    newView: "list" | "grid" | null
+  ) => void;
   onAddTask: () => void;
   children?: React.ReactNode;
 }
@@ -17,15 +22,17 @@ export const TasksToolbar = ({
   children,
 }: TasksToolbarProps) => {
   return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: '1rem',
-      flexWrap: 'wrap',
-      gap: '1rem'
-    }}>
-      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: "1rem",
+        flexWrap: "wrap",
+        gap: "1rem",
+      }}
+    >
+      <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
         <Button
           variant="contained"
           color="primary"
@@ -36,7 +43,7 @@ export const TasksToolbar = ({
         </Button>
         {children}
       </div>
-      
+
       <ToggleButtonGroup
         value={view}
         exclusive

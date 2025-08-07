@@ -1,11 +1,4 @@
-import {
-  Box,
-  Typography,
-  Avatar,
-  IconButton,
-  Chip,
-  useTheme,
-} from "@mui/material";
+import { Box, Typography, Avatar, IconButton, Chip } from "@mui/material";
 import {
   Edit as EditIcon,
   ArrowBack as ArrowBackIcon,

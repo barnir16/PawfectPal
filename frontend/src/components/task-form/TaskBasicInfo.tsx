@@ -8,7 +8,7 @@ import {
   MenuItem,
   FormHelperText,
 } from "@mui/material";
-import type { TaskFormData } from "../../pages/TaskForm.new";
+import type { TaskFormData } from "./../../features/tasks/components/TaskForm/TaskForm";
 
 type TaskBasicInfoProps = {
   control: Control<TaskFormData>;
@@ -27,7 +27,7 @@ export const TaskBasicInfo = ({
 }: TaskBasicInfoProps) => {
   return (
     <Grid container spacing={3}>
-      <Grid item xs={12}>
+      <Grid size={{ xs: 12 }}>
         <Controller
           name="title"
           control={control}
@@ -45,7 +45,7 @@ export const TaskBasicInfo = ({
         />
       </Grid>
 
-      <Grid item xs={12}>
+      <Grid size={{ xs: 12 }}>
         <Controller
           name="description"
           control={control}
@@ -64,7 +64,7 @@ export const TaskBasicInfo = ({
         />
       </Grid>
 
-      <Grid item xs={12} sm={6}>
+      <Grid size={{ xs: 12, sm: 6 }}>
         <Controller
           name="petId"
           control={control}
@@ -86,7 +86,7 @@ export const TaskBasicInfo = ({
         />
       </Grid>
 
-      <Grid item xs={12} sm={6}>
+      <Grid size={{ xs: 12, sm: 6 }}>
         <Controller
           name="type"
           control={control}
@@ -108,7 +108,7 @@ export const TaskBasicInfo = ({
         />
       </Grid>
 
-      <Grid item xs={12} sm={6}>
+      <Grid size={{ xs: 12, sm: 6 }}>
         <Controller
           name="priority"
           control={control}
