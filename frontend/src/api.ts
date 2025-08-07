@@ -1,17 +1,20 @@
-import type { 
-  Pet, Task, Vaccine, AgeRestriction, User, LoginResponse, 
-  BreedInfoResponse, CatBreedInfoResponse, Service, LocationHistory,
-  ServiceStatus, Coordinates, UploadResponse
-} from './types';
+import type { Pet } from './types/pets';
+import type { Task } from './types/tasks';
+import type { Vaccine, AgeRestriction } from './types/vaccines';
+import type { User, LoginResponse } from './types/auth';
+import type { BreedInfoResponse, CatBreedInfoResponse } from './types/external';
+import type { Service, ServiceStatus } from './types/services';
+import type { LocationHistory, Coordinates } from './types/location';
+import type { UploadResponse } from './types/common';
 import { StorageHelper } from './utils/StorageHelper';
 import { getApiUrl } from './config';
 
-const BASE_URL = getApiUrl();
+export const BASE_URL = getApiUrl();
 
 /**
  * Get stored authentication token
  */
-const getToken = async (): Promise<string | null> => {
+export const getToken = async (): Promise<string | null> => {
   return await StorageHelper.getItem('authToken');
 };
 
@@ -29,7 +32,7 @@ const getAuthHeaders = async () => {
 /**
  * Handle API errors consistently
  */
-const handleApiError = async (response: Response): Promise<never> => {
+export const handleApiError = async (response: Response): Promise<never> => {
   const errorText = await response.text();
   let errorMessage: string;
   
