@@ -1,7 +1,7 @@
 import { type Control, Controller } from "react-hook-form";
 import { Grid, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import { Repeat as RepeatIcon } from "@mui/icons-material";
-import type { TaskFormData } from "../../pages/TaskForm.new";
+import type { TaskFormData } from "./../../features/tasks/components/TaskForm/TaskForm";
 
 type TaskRecurrenceProps = {
   control: Control<TaskFormData>;
@@ -13,7 +13,7 @@ export const TaskRecurrence = ({
   repeatOptions,
 }: TaskRecurrenceProps) => {
   return (
-    <Grid item xs={12}>
+    <Grid size={{ xs: 12 }}>
       <Controller
         name="repeat"
         control={control}

@@ -1,6 +1,9 @@
-import { useState, ChangeEvent } from 'react';
-import { Avatar, Box, Button, IconButton } from '@mui/material';
-import { AddAPhoto as AddPhotoIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { useState, type ChangeEvent } from "react";
+import { Avatar, Box, Button } from "@mui/material";
+import {
+  AddAPhoto as AddPhotoIcon,
+  Delete as DeleteIcon,
+} from "@mui/icons-material";
 
 interface PetImageUploadProps {
   imageUrl?: string | null;
@@ -39,11 +42,11 @@ export const PetImageUpload = ({
   return (
     <Box
       sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        position: 'relative',
-        width: '100%',
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        position: "relative",
+        width: "100%",
       }}
     >
       <Avatar
@@ -53,25 +56,25 @@ export const PetImageUpload = ({
           width: 150,
           height: 150,
           mb: 2,
-          bgcolor: 'primary.light',
-          '& .MuiSvgIcon-root': {
+          bgcolor: "primary.light",
+          "& .MuiSvgIcon-root": {
             fontSize: 60,
           },
         }}
       >
         <AddPhotoIcon />
       </Avatar>
-      
+
       <input
         accept="image/*"
-        style={{ display: 'none' }}
+        style={{ display: "none" }}
         id="pet-photo-upload"
         type="file"
         onChange={handleFileChange}
         disabled={disabled}
       />
-      
-      <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+
+      <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
         <label htmlFor="pet-photo-upload">
           <Button
             component="span"
@@ -79,10 +82,10 @@ export const PetImageUpload = ({
             startIcon={<AddPhotoIcon />}
             disabled={disabled}
           >
-            {preview ? 'Change Photo' : 'Add Photo'}
+            {preview ? "Change Photo" : "Add Photo"}
           </Button>
         </label>
-        
+
         {preview && onRemove && (
           <Button
             variant="outlined"

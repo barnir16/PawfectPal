@@ -14,7 +14,7 @@ import {
   CircularProgress,
   Stack,
 } from "@mui/material";
-import type { Pet } from "../../../types";
+import type { Pet } from "../../../types/pets";
 import { createPet, updatePet } from "../../../api";
 
 interface PetFormProps {
@@ -103,6 +103,7 @@ export default function PetForm({
     setLoading(true);
 
     const petData: Omit<Pet, "id"> = {
+      // Properties from your formData state
       name: formData.name.trim(),
       breedType: formData.breedType,
       breed: formData.breed.trim(),
@@ -122,6 +123,19 @@ export default function PetForm({
         : [],
       isBirthdayGiven: formData.isBirthdayGiven,
       isTrackingEnabled: false,
+
+      // Add default or placeholder values for all the missing REQUIRED properties
+      weightUnit: "kg", // Assuming the form always uses kilograms
+      gender: "other", // Default value
+      isNeutered: false, // Default value for a new pet
+      isVaccinated: false, // Default value for a new pet
+      isMicrochipped: false, // Default value for a new pet
+      ownerId: 1, // Placeholder: Replace with the actual ID of the logged-in user
+      isActive: true, // A new pet is usually active
+
+      // ADDED: The missing properties from the Pet interface
+      type: formData.breedType, // You can use breedType as a placeholder for type
+      isLost: false, // Default value, since the pet is being created
     };
 
     try {
@@ -140,7 +154,6 @@ export default function PetForm({
       setLoading(false);
     }
   };
-
   const calculateAge = (birthDate: string) => {
     if (!birthDate) return null;
     const birth = new Date(birthDate);

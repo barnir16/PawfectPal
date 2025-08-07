@@ -1,7 +1,16 @@
-import { Control, Controller, FieldErrors } from 'react-hook-form';
-import { TextField, Grid, InputAdornment, FormControlLabel, Checkbox } from '@mui/material';
-import { MonitorWeight as WeightIcon, ColorLens as ColorIcon } from '@mui/icons-material';
-import { PetFormData } from '../../pages/PetForm';
+import { type Control, Controller, type FieldErrors } from "react-hook-form";
+import {
+  TextField,
+  Grid,
+  InputAdornment,
+  FormControlLabel,
+  Checkbox,
+} from "@mui/material";
+import {
+  MonitorWeight as WeightIcon,
+  ColorLens as ColorIcon,
+} from "@mui/icons-material";
+import type { PetFormData } from "./../../features/pets/components/PetForm/PetForm.tsx";
 
 interface PetDetailsFormProps {
   control: Control<PetFormData>;
@@ -16,7 +25,7 @@ export const PetDetailsForm = ({
 }: PetDetailsFormProps) => {
   return (
     <Grid container spacing={3}>
-      <Grid item xs={12} sm={6} md={4}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <Controller
           name="weight"
           control={control}
@@ -39,12 +48,12 @@ export const PetDetailsForm = ({
                         <select
                           {...unitField}
                           style={{
-                            border: 'none',
-                            background: 'transparent',
-                            color: 'inherit',
-                            font: 'inherit',
-                            cursor: 'pointer',
-                            outline: 'inherit',
+                            border: "none",
+                            background: "transparent",
+                            color: "inherit",
+                            font: "inherit",
+                            cursor: "pointer",
+                            outline: "inherit",
                           }}
                           disabled={isSubmitting}
                         >
@@ -61,14 +70,14 @@ export const PetDetailsForm = ({
                   </InputAdornment>
                 ),
               }}
-              onChange={(e) => field.onChange(parseFloat(e.target.value) || '')}
-              value={field.value || ''}
+              onChange={(e) => field.onChange(parseFloat(e.target.value) || "")}
+              value={field.value || ""}
             />
           )}
         />
       </Grid>
 
-      <Grid item xs={12} sm={6} md={4}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <Controller
           name="color"
           control={control}
@@ -92,7 +101,7 @@ export const PetDetailsForm = ({
         />
       </Grid>
 
-      <Grid item xs={12} sm={6} md={4}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <Controller
           name="microchipNumber"
           control={control}
@@ -109,7 +118,7 @@ export const PetDetailsForm = ({
         />
       </Grid>
 
-      <Grid item xs={12}>
+      <Grid size={{ xs: 12 }}>
         <Controller
           name="isNeutered"
           control={control}

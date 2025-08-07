@@ -11,13 +11,12 @@ import {
   Typography,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import type { Pet } from "../../../types";
+import type { Pet } from "../../../types/pets";
 import { getPets, deletePet } from "../../../api";
 
 export default function PetListScreen() {
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
 
   const fetchPets = async () => {
@@ -29,7 +28,6 @@ export default function PetListScreen() {
       alert("Failed to fetch pets");
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
@@ -100,7 +98,7 @@ export default function PetListScreen() {
       ) : (
         <Grid container spacing={3}>
           {pets.map((pet) => (
-            <Grid item xs={12} sm={6} md={4} key={pet.id || pet.name}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={pet.id || pet.name}>
               <Card>
                 <CardContent>
                   <Box

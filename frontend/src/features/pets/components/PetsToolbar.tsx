@@ -1,5 +1,8 @@
 import { Box, TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
-import { Search as SearchIcon, FilterList as FilterListIcon } from "@mui/icons-material";
+import {
+  Search as SearchIcon,
+  FilterList as FilterListIcon,
+} from "@mui/icons-material";
 
 interface PetsToolbarProps {
   searchTerm: string;
@@ -20,7 +23,6 @@ export const PetsToolbar = ({
   onSearchChange,
   onTypeChange,
   onViewChange,
-  onAddPet,
 }: PetsToolbarProps) => {
   return (
     <Box
@@ -43,7 +45,7 @@ export const PetsToolbar = ({
         }}
         sx={{ flexGrow: 1, maxWidth: 400 }}
       />
-      
+
       <TextField
         select
         variant="outlined"
@@ -64,7 +66,7 @@ export const PetsToolbar = ({
           </option>
         ))}
       </TextField>
-      
+
       <ToggleButtonGroup
         value={view}
         exclusive
