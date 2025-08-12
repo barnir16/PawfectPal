@@ -9,13 +9,13 @@ import {
   Box,
   Typography,
   IconButton,
-  Chip
+  Chip,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 
-type Priority = 'low' | 'medium' | 'high';
+type Priority = "low" | "medium" | "high";
 
 export interface Task {
   id: number | string;
@@ -33,7 +33,7 @@ type TaskListProps = {
   onDelete: (id: number | string) => void;
   onToggleComplete: (id: number | string, completed: boolean) => void;
   onTaskToggle?: (taskId: number | string) => void; // For backward compatibility
-  onTaskClick?: (taskId: number | string) => void;  // For backward compatibility
+  onTaskClick?: (taskId: number | string) => void; // For backward compatibility
 };
 
 const StyledListItem = styled(ListItem)(({ theme }) => ({
@@ -51,11 +51,13 @@ export const TaskList = ({
   onTaskToggle,
   onTaskClick,
 }: TaskListProps) => {
-  const handleToggle = (taskId: number | string, currentStatus: boolean) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    event.stopPropagation();
-    onToggleComplete?.(taskId, !currentStatus);
-    onTaskToggle?.(taskId);
-  };
+  const handleToggle =
+    (taskId: number | string, currentStatus: boolean) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      event.stopPropagation();
+      onToggleComplete?.(taskId, !currentStatus);
+      onTaskToggle?.(taskId);
+    };
 
   const handleClick = (taskId: number | string) => () => {
     onTaskClick?.(taskId);
@@ -66,10 +68,11 @@ export const TaskList = ({
     onEdit?.(taskId);
   };
 
-  const handleDelete = (taskId: number | string) => (event: React.MouseEvent) => {
-    event.stopPropagation();
-    onDelete?.(taskId);
-  };
+  const handleDelete =
+    (taskId: number | string) => (event: React.MouseEvent) => {
+      event.stopPropagation();
+      onDelete?.(taskId);
+    };
 
   if (tasks.length === 0) {
     return (
@@ -82,22 +85,22 @@ export const TaskList = ({
   return (
     <List sx={{ width: "100%", bgcolor: "background.paper" }}>
       {tasks.map((task) => (
-        <StyledListItem 
-          key={task.id} 
+        <StyledListItem
+          key={task.id}
           disablePadding
           secondaryAction={
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <IconButton 
-                edge="end" 
-                aria-label="edit" 
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <IconButton
+                edge="end"
+                aria-label="edit"
                 onClick={handleEdit(task.id)}
                 size="small"
               >
                 <EditIcon fontSize="small" />
               </IconButton>
-              <IconButton 
-                edge="end" 
-                aria-label="delete" 
+              <IconButton
+                edge="end"
+                aria-label="delete"
                 onClick={handleDelete(task.id)}
                 size="small"
                 color="error"
@@ -107,11 +110,7 @@ export const TaskList = ({
             </Box>
           }
         >
-          <ListItemButton
-            role={undefined}
-            onClick={handleClick(task.id)}
-            dense
-          >
+          <ListItemButton role={undefined} onClick={handleClick(task.id)} dense>
             <ListItemIcon>
               <Checkbox
                 edge="start"
@@ -122,31 +121,37 @@ export const TaskList = ({
               />
             </ListItemIcon>
             <ListItemText
-              primary={task.title}
+              primary={
+                <Typography
+                  sx={{
+                    textDecoration: task.completed ? "line-through" : "none",
+                    color: task.completed ? "text.secondary" : "text.primary",
+                  }}
+                >
+                  {task.title}
+                </Typography>
+              }
               secondary={
-                <Box sx={{ display: "flex", gap: 2, alignItems: 'center' }}>
+                <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
                   <Typography variant="caption">
                     {new Date(task.dueDate).toLocaleDateString()}
                   </Typography>
-                  <Chip 
-                    label={task.priority} 
-                    size="small" 
+                  <Chip
+                    label={task.priority}
+                    size="small"
                     color={
-                      task.priority === 'high' ? 'error' : 
-                      task.priority === 'medium' ? 'warning' : 'default'
+                      task.priority === "high"
+                        ? "error"
+                        : task.priority === "medium"
+                          ? "warning"
+                          : "default"
                     }
                     variant="outlined"
                   />
                   <Typography variant="caption">{task.pet}</Typography>
                 </Box>
               }
-              primaryTypographyProps={{
-                sx: {
-                  textDecoration: task.completed ? "line-through" : "none",
-                  color: task.completed ? "text.secondary" : "text.primary",
-                },
-              }}
-            />
+            />{" "}
           </ListItemButton>
         </StyledListItem>
       ))}
