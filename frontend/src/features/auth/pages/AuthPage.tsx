@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { login, register } from "./../../../api";
+import { login, register } from "../../../services";
 import { StorageHelper } from "./../../../utils/StorageHelper";
 
 interface AuthScreenProps {

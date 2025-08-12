@@ -9,6 +9,7 @@ import { Tasks } from "./features/tasks/pages/TasksPage";
 import { Pets } from "./features/pets/pages/PetsPage";
 import Settings from "./features/settings/components/Settings/Settings";
 import TaskForm from "./features/tasks/components/TaskForm/TaskForm";
+import AuthScreen from "./features/auth/pages/AuthPage";
 
 const App = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -41,6 +42,18 @@ const App = () => {
             <Route path="/tasks/:id" element={<TaskForm />} />
             <Route path="/pets" element={<Pets />} />
             <Route path="/settings" element={<Settings />} />
+            <Route
+              path="/auth"
+              element={
+                <AuthScreen
+                  onLoginSuccess={() => {
+                    // handle login success: e.g., navigate to dashboard
+                    // or set auth state, etc.
+                    console.log("Logged in!");
+                  }}
+                />
+              }
+            />{" "}
           </Routes>
         </Box>
       </Box>
