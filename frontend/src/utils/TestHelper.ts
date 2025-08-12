@@ -1,23 +1,11 @@
 import type { Pet } from '../types/pets';
 import type { Task } from '../types/tasks';
 import type { Service } from '../types/services';
-import {
-  login,
-  register,
-  getPets,
-  createPet,
-  updatePet,
-  deletePet,
-  getTasks,
-  createTask,
-  updateTask,
-  deleteTask,
-  getServices,
-  createService,
-  updateServiceStatus,
-  getVaccines,
-  getAgeRestrictions,
-} from '../api';
+import { login, register } from '../services/auth/authService';
+import { getPets, createPet, updatePet, deletePet } from '../services/pets/petService';
+import { getTasks, createTask, updateTask, deleteTask } from '../services/tasks/taskService';
+import { getServices, createService, updateServiceStatus } from '../services/services/serviceService';
+import { getVaccines, getAgeRestrictions } from '../services/vaccines/vaccineService';
 import { StorageHelper } from './StorageHelper';
 import { ApiKeyManager } from './ApiKeyManager';
 

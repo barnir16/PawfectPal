@@ -3,7 +3,9 @@ import { useState, useEffect } from "react";
 import type { Task } from "./types/tasks";
 import type { Pet } from "./types/pets";
 import type { Vaccine } from "./types/vaccines";
-import { createTask, getPets, getVaccines } from "./api";
+import { createTask } from "./services/tasks/taskService";
+import { getPets } from "./services/pets/petService";
+import { getVaccines } from "./services/vaccines/vaccineService";
 
 type TaskFormData = {
   title: string;
