@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Button, Grid, Typography } from "@mui/material";
+import { Box, Button, Grid, Typography, CircularProgress } from "@mui/material";
 import { Add as AddIcon } from "@mui/icons-material";
 
 // Components
@@ -9,65 +9,34 @@ import { PetsTable } from "./../../../features/pets/components/PetsTable";
 import { PetsEmptyState } from "./../../../features/pets/components/PetsEmptyState";
 import { PetsToolbar } from "./../../../features/pets/components/PetsToolbar";
 
-// Types
-export interface Pet {
-  id: number;
-  name: string;
-  type: string;
-  breed: string;
-  birthDate: string;
-  gender: string;
-  weight: number;
-  image: string;
-  lastVetVisit: string;
-  nextVaccination: string;
-}
-
-// Mock data - replace with real data from your API
-const mockPets: Pet[] = [
-  {
-    id: 1,
-    name: "Max",
-    type: "Dog",
-    breed: "Golden Retriever",
-    birthDate: "2020-05-15",
-    gender: "Male",
-    weight: 28.5,
-    image: "/placeholder-dog.jpg",
-    lastVetVisit: "2023-10-10",
-    nextVaccination: "2024-04-15",
-  },
-  {
-    id: 2,
-    name: "Bella",
-    type: "Cat",
-    breed: "Siamese",
-    birthDate: "2019-11-22",
-    gender: "Female",
-    weight: 4.2,
-    image: "/placeholder-cat.jpg",
-    lastVetVisit: "2023-09-28",
-    nextVaccination: "2024-03-28",
-  },
-  {
-    id: 3,
-    name: "Charlie",
-    type: "Dog",
-    breed: "Beagle",
-    birthDate: "2021-02-10",
-    gender: "Male",
-    weight: 12.8,
-    image: "/placeholder-dog2.jpg",
-    lastVetVisit: "2023-11-05",
-    nextVaccination: "2024-05-10",
-  },
-];
+// API and Types
+import { getPets, deletePet } from "../../../services/pets/petService";
+import type { Pet } from "../../../types/pets/pet";
 
 export const Pets = () => {
   const navigate = useNavigate();
+  const [pets, setPets] = useState<Pet[]>([]);
+  const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"grid" | "table">("grid");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState("All");
+
+  const fetchPets = async () => {
+    try {
+      setLoading(true);
+      const fetchedPets = await getPets();
+      setPets(fetchedPets);
+    } catch (error) {
+      console.error("Failed to fetch pets:", error);
+      // Don't show alert here, just log the error
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPets();
+  }, []);
 
   const handleAddPet = () => {
     navigate("/pets/new");
@@ -77,27 +46,44 @@ export const Pets = () => {
     navigate(`/pets/${id}/edit`);
   };
 
-  const handleDeletePet = (id: number) => {
+  const handleDeletePet = async (id: number) => {
     if (
       window.confirm(
         "Are you sure you want to delete this pet? This action cannot be undone."
       )
     ) {
-      // Delete pet logic here
-      console.log("Deleting pet with id:", id);
+      try {
+        await deletePet(id);
+        // Refresh the pets list
+        await fetchPets();
+      } catch (error) {
+        console.error("Failed to delete pet:", error);
+        alert("Failed to delete pet. Please try again.");
+      }
     }
   };
 
-  const filteredPets = mockPets.filter(
+  const filteredPets = pets.filter(
     (pet) =>
       (pet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         pet.breed.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (selectedType === "All" || pet.type === selectedType)
+      (selectedType === "All" || (pet.type || pet.breedType) === selectedType)
   );
 
   let content;
 
-  if (filteredPets.length === 0) {
+  if (loading) {
+    content = (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="200px"
+      >
+        <CircularProgress />
+      </Box>
+    );
+  } else if (filteredPets.length === 0) {
     content = (
       <PetsEmptyState
         searchTerm={searchTerm}
@@ -109,7 +95,7 @@ export const Pets = () => {
     content = (
       <Grid container spacing={3}>
         {filteredPets.map((pet) => (
-          <Grid key={pet.id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+          <Grid key={pet.id} size={{ xs: 12, sm: 6, md: 6, lg: 4, xl: 3 }}>
             <PetCard
               pet={pet}
               onEdit={handleEditPet}

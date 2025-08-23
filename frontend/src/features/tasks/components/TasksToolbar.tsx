@@ -1,8 +1,10 @@
-import { ToggleButton, ToggleButtonGroup, Button } from "@mui/material";
+import { ToggleButton, ToggleButtonGroup, Button, Tooltip } from "@mui/material";
 import {
   ViewList as ViewListIcon,
   ViewModule as ViewModuleIcon,
   Add as AddIcon,
+  Download as DownloadIcon,
+  Sync as SyncIcon,
 } from "@mui/icons-material";
 
 interface TasksToolbarProps {
@@ -12,6 +14,8 @@ interface TasksToolbarProps {
     newView: "list" | "grid" | null
   ) => void;
   onAddTask: () => void;
+  onExportTasks?: () => void;
+  onSyncWithGoogleCalendar?: () => void;
   children?: React.ReactNode;
 }
 
@@ -19,6 +23,8 @@ export const TasksToolbar = ({
   view,
   onViewChange,
   onAddTask,
+  onExportTasks,
+  onSyncWithGoogleCalendar,
   children,
 }: TasksToolbarProps) => {
   return (
@@ -41,6 +47,31 @@ export const TasksToolbar = ({
         >
           Add Task
         </Button>
+        
+        {onExportTasks && (
+          <Tooltip title="Export tasks to iCal file">
+            <Button
+              variant="outlined"
+              startIcon={<DownloadIcon />}
+              onClick={onExportTasks}
+            >
+              Export
+            </Button>
+          </Tooltip>
+        )}
+        
+        {onSyncWithGoogleCalendar && (
+          <Tooltip title="Sync tasks with Google Calendar">
+            <Button
+              variant="outlined"
+              startIcon={<SyncIcon />}
+              onClick={onSyncWithGoogleCalendar}
+            >
+              Sync Calendar
+            </Button>
+          </Tooltip>
+        )}
+        
         {children}
       </div>
 

@@ -1,4 +1,4 @@
-import type { Task } from '../types/tasks';
+import type { Task } from '../types/tasks/task';
 
 /**
  * Notification helper for React web
@@ -48,7 +48,7 @@ export class NotificationHelper {
    * Note: Web Notifications API has no built-in cancel for notifications scheduled with setTimeout.
    * You would need to track timeouts to clear them if needed.
    */
-  static cancelNotification(taskId: number): void {
+  static cancelNotification(_taskId: number): void {
     // No direct support in Web Notifications API
     console.warn('Cancel notification is not supported in Web Notifications API.');
   }

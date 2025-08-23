@@ -1,42 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Grid } from "@mui/material";
+import { Box, Grid, CircularProgress, Alert } from "@mui/material";
 import TaskList from "../components/TaskList";
 import { TasksToolbar } from "./../../../features/tasks/components/TasksToolbar";
 import { TaskFilters } from "./../../../features/tasks/components/TaskFilters";
 import { TasksEmptyState } from "./../../../features/tasks/components/TasksEmptyState";
 import { TaskGridItem } from "./../../../features/tasks/components/TaskGridItem";
-
-// Mock data - replace with real data from your API
-const mockTasks = [
-  {
-    id: 1,
-    title: "Morning Walk",
-    description: "Take Max for a 30-minute walk in the park",
-    dueDate: "2023-11-15T08:00:00",
-    pet: "Max",
-    priority: "high" as const,
-    completed: false,
-  },
-  {
-    id: 2,
-    title: "Vet Appointment",
-    description: "Annual checkup for Bella",
-    dueDate: "2023-11-16T14:30:00",
-    pet: "Bella",
-    priority: "high" as const,
-    completed: false,
-  },
-  {
-    id: 3,
-    title: "Buy Food",
-    description: "Get more dog food and treats",
-    dueDate: "2023-11-17T18:00:00",
-    pet: "All",
-    priority: "medium" as const,
-    completed: true,
-  },
-];
+import { getTasks, deleteTask, completeTask, downloadTasksAsICal, syncTasksWithGoogleCalendar } from "../../../services/tasks/taskService";
+import { getPets } from "../../../services/pets/petService";
+import type { Task } from "../../../types/tasks/task";
+import type { Pet } from "../../../types/pets/pet";
 
 const priorityOptions = [
   { value: "all", label: "All Priorities" },
@@ -45,21 +18,49 @@ const priorityOptions = [
   { value: "low", label: "Low" },
 ];
 
-const petOptions = [
-  { value: "all", label: "All Pets" },
-  { value: "Max", label: "Max" },
-  { value: "Bella", label: "Bella" },
-  { value: "Charlie", label: "Charlie" },
-];
-
 export const Tasks = () => {
   const navigate = useNavigate();
-  const [view, setView] = useState<"list" | "grid">("list");
+  const [view, setView] = useState<"list" | "grid">("grid");
   const [filters, setFilters] = useState({
     status: "all",
     priority: "all",
     pet: "all",
   });
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [pets, setPets] = useState<Pet[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Create pet options from real pets
+  const petOptions = [
+    { value: "all", label: "All Pets" },
+    ...pets.map(pet => ({ value: pet.id?.toString() || '', label: pet.name }))
+  ];
+
+  // Load tasks and pets
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const [tasksData, petsData] = await Promise.all([
+          getTasks(),
+          getPets()
+        ]);
+        
+        setTasks(tasksData);
+        setPets(petsData);
+      } catch (err) {
+        console.error('Error loading tasks:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load tasks');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -86,68 +87,146 @@ export const Tasks = () => {
     navigate(`/tasks/edit/${id}`);
   };
 
-  const handleDeleteTask = (id: number | string) => {
-    // In a real app, this would be an API call
-    console.log("Delete task", id);
+  const handleDeleteTask = async (id: number | string) => {
+    try {
+      await deleteTask(Number(id));
+      // Refresh tasks after deletion
+      const updatedTasks = await getTasks();
+      setTasks(updatedTasks);
+    } catch (err) {
+      console.error('Error deleting task:', err);
+      alert('Failed to delete task');
+    }
   };
 
-  const handleToggleComplete = (id: number | string, completed: boolean) => {
-    // In a real app, this would be an API call
-    console.log(`Mark task ${id} as ${completed ? "completed" : "incomplete"}`);
+  const handleExportTasks = () => {
+    try {
+      downloadTasksAsICal(tasks, `pawfectpal-tasks-${new Date().toISOString().split('T')[0]}.ics`);
+    } catch (err) {
+      console.error('Error exporting tasks:', err);
+      alert('Failed to export tasks');
+    }
+  };
+
+  const handleSyncWithGoogleCalendar = async () => {
+    try {
+      await syncTasksWithGoogleCalendar(tasks);
+      alert('Tasks synced with Google Calendar successfully!');
+    } catch (err) {
+      console.error('Error syncing with Google Calendar:', err);
+      alert('Failed to sync with Google Calendar. Check console for details.');
+    }
+  };
+
+  const handleToggleComplete = async (id: number | string, completed: boolean) => {
+    try {
+      if (completed) {
+        await completeTask(Number(id));
+      } else {
+        // For uncompleting, we need to update the task status
+        // This would require an updateTask call with status: 'pending'
+        console.log(`Mark task ${id} as incomplete`);
+      }
+      // Refresh tasks after update
+      const updatedTasks = await getTasks();
+      setTasks(updatedTasks);
+    } catch (err) {
+      console.error('Error updating task:', err);
+      alert('Failed to update task');
+    }
   };
 
   // Filter tasks based on selected filters
-  const filteredTasks = mockTasks.filter((task) => {
-    if (
-      filters.status !== "all" &&
-      task.completed !== (filters.status === "completed")
-    ) {
-      return false;
-    }
+  const filteredTasks = tasks.filter((task) => {
+    // Priority filter
     if (filters.priority !== "all" && task.priority !== filters.priority) {
       return false;
     }
-    if (filters.pet !== "all" && task.pet !== filters.pet) {
-      return false;
+    
+    // Pet filter
+    if (filters.pet !== "all") {
+      const petId = parseInt(filters.pet);
+      if (!task.petIds.includes(petId)) {
+        return false;
+      }
     }
+    
+    // Status filter
+    if (filters.status !== "all") {
+      if (filters.status === "completed" && !task.isCompleted) {
+        return false;
+      }
+      if (filters.status === "pending" && task.isCompleted) {
+        return false;
+      }
+    }
+    
     return true;
   });
 
-  const hasActiveFilters = Object.values(filters).some((f) => f !== "all");
-  const showEmptyState = filteredTasks.length === 0;
+  // Loading state
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <Box p={3}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      </Box>
+    );
+  }
+
+  // Convert tasks to the format expected by TaskList and TaskGridItem components
+  const formattedTasks = filteredTasks.map(task => ({
+    id: task.id || 0,
+    title: task.title,
+    description: task.description || "No description",
+    dueDate: task.dateTime,
+    pet: task.petIds.length > 0 
+      ? pets.find(p => p.id === task.petIds[0])?.name || "Unknown Pet"
+      : "All Pets",
+    priority: (task.priority === 'urgent' ? 'high' : task.priority || 'medium') as 'low' | 'medium' | 'high',
+    completed: task.isCompleted || false,
+  }));
 
   return (
-    <Box sx={{ flexGrow: 1, p: 3 }}>
+    <Box>
       <TasksToolbar
         view={view}
         onViewChange={handleViewChange}
         onAddTask={handleAddTask}
-      >
-        <TaskFilters
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          statusOptions={[
-            { value: "all", label: "All Statuses" },
-            { value: "completed", label: "Completed" },
-            { value: "pending", label: "Pending" },
-          ]}
-          priorityOptions={priorityOptions}
-          petOptions={petOptions}
-        />
-      </TasksToolbar>
+        onExportTasks={handleExportTasks}
+        onSyncWithGoogleCalendar={handleSyncWithGoogleCalendar}
+      />
 
-      {showEmptyState ? (
-        <TasksEmptyState
-          hasFilters={hasActiveFilters}
-          onResetFilters={() =>
-            setFilters({ status: "all", priority: "all", pet: "all" })
-          }
-          onAddTask={handleAddTask}
+      <TaskFilters
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        priorityOptions={priorityOptions}
+        petOptions={petOptions}
+      />
+
+      {formattedTasks.length === 0 ? (
+        <TasksEmptyState hasFilters={false} />
+      ) : view === "list" ? (
+        <TaskList
+          tasks={formattedTasks}
+          onEdit={handleEditTask}
+          onDelete={handleDeleteTask}
+          onToggleComplete={handleToggleComplete}
         />
-      ) : view === "grid" ? (
-        <Grid container spacing={3}>
-          {filteredTasks.map((task) => (
-            <Grid key={task.id} size={{ xs: 12, sm: 6, md: 4 }}>
+      ) : (
+        <Grid container spacing={2} sx={{ mt: 2 }}>
+          {formattedTasks.map((task) => (
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={task.id}>
               <TaskGridItem
                 task={task}
                 onEdit={handleEditTask}
@@ -157,13 +236,6 @@ export const Tasks = () => {
             </Grid>
           ))}
         </Grid>
-      ) : (
-        <TaskList
-          tasks={filteredTasks}
-          onEdit={handleEditTask}
-          onDelete={handleDeleteTask}
-          onToggleComplete={handleToggleComplete}
-        />
       )}
     </Box>
   );

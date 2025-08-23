@@ -1,5 +1,5 @@
 import type { Pet } from '../types/pets';
-import type { Task } from '../types/tasks';
+import type { Task } from '../types/tasks/task';
 import type { Service } from '../types/services';
 import { login, register } from '../services/auth/authService';
 import { getPets, createPet, updatePet, deletePet } from '../services/pets/petService';

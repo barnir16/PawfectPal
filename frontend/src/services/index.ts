@@ -16,8 +16,16 @@ export * from './vaccines/vaccineService';
 // Service booking services
 export * from './services/serviceService';
 
-// Location services
-export * from './location/locationService';
+// Location services - export specific functions to avoid conflicts
+export { 
+  getCurrentLocation,
+  watchLocation,
+  clearLocationWatch
+} from './location/locationService';
+
+// Medical services
+export * from './medical/medicalRecordService';
+export * from './medical/vaccinationService';
 
 // External API services
 export * from './external/externalApiService';

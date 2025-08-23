@@ -5,7 +5,7 @@ import {
   LocalHospital as HospitalIcon,
   Event as EventIcon,
 } from "@mui/icons-material";
-import { format, differenceInYears, differenceInMonths } from "date-fns";
+
 
 interface PetStatsProps {
   pet: {

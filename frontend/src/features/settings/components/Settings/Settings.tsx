@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Box, Container, Typography } from "@mui/material";
+import { useAuth } from "../../../../contexts/AuthContext";
 import SettingsSidebar from "../../../../components/settings/SettingsSidebar";
 import ProfileSettings from "../../../../components/settings/ProfileSettings";
 import NotificationSettings from "../../../../components/settings/NotificationSettings";
@@ -24,6 +26,8 @@ interface NotificationSettings {
 }
 
 const Settings = () => {
+  const { logout, forceLogout } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
   const [profile, setProfile] = useState<UserProfile>({
     name: "John Doe",
@@ -77,8 +81,8 @@ const Settings = () => {
   };
 
   const handlePasswordChange = async (
-    currentPassword: string,
-    newPassword: string
+    _currentPassword: string,
+    _newPassword: string
   ) => {
     // In a real app, you would make an API call here
     console.log("Changing password");
@@ -102,9 +106,15 @@ const Settings = () => {
     }
   };
 
-  const handleLogout = () => {
-    console.log("Logging out");
-    // Handle logout
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/auth");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      await forceLogout("Logout failed. Please try logging in again.");
+      navigate("/auth");
+    }
   };
 
   return (

@@ -19,6 +19,8 @@ import { NotesAndFiles } from "../../../../components/pet-detail/NotesAndFiles";
 import { ActionButtons } from "../../../../components/pet-detail/ActionButtons";
 import type { Task } from "../../../../components/pet-detail/Appointments";
 import type { FileAttachment } from "../../../../components/pet-detail/NotesAndFiles";
+import { getPet, deletePet } from "../../../../services/pets/petService";
+import type { Pet } from "../../../../types/pets/pet";
 // Mock data - replace with API calls in a real app
 const mockPet = {
   id: "1",
@@ -130,29 +132,36 @@ export const PetDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [tabValue, setTabValue] = useState(0);
-  const [pet, setPet] = useState(mockPet);
+  const [pet, setPet] = useState<Pet | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // In a real app, fetch pet data by ID
+  // Fetch pet data by ID
   useEffect(() => {
     const fetchPet = async () => {
-      try {
-        // Simulate API call
-        // const response = await api.get(`/pets/${id}`);
-        // setPet(response.data);
+      if (!id) {
+        setError("Pet ID not provided");
         setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError(null);
+        const petData = await getPet(parseInt(id));
+        setPet(petData);
       } catch (error) {
         console.error("Error fetching pet:", error);
-        // Handle error (e.g., show error message, redirect, etc.)
+        setError("Failed to load pet details. Pet may not exist.");
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    if (id) {
-      fetchPet();
-    }
+    fetchPet();
   }, [id]);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
@@ -160,15 +169,21 @@ export const PetDetail = () => {
     navigate(`/pets/${id}/edit`);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
+    if (!pet?.id) return;
+    
     if (
       window.confirm(
-        "Are you sure you want to delete this pet? This action cannot be undone."
+        `Are you sure you want to delete ${pet.name}? This action cannot be undone.`
       )
     ) {
-      // Handle delete logic
-      console.log("Deleting pet:", id);
-      navigate("/pets");
+      try {
+        await deletePet(pet.id);
+        navigate("/pets");
+      } catch (error) {
+        console.error("Error deleting pet:", error);
+        alert("Failed to delete pet. Please try again.");
+      }
     }
   };
 
@@ -183,7 +198,31 @@ export const PetDetail = () => {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>; // Replace with a proper loading component
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+          <Typography>Loading pet details...</Typography>
+        </Box>
+      </Container>
+    );
+  }
+
+  if (error || !pet) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 4 }}>
+          <Typography variant="h6" color="error" gutterBottom>
+            {error || "Pet not found"}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            The pet you're looking for doesn't exist or has been removed.
+          </Typography>
+          <IconButton onClick={() => navigate('/pets')} sx={{ mr: 1 }}>
+            <ArrowBackIcon />
+          </IconButton>
+        </Box>
+      </Container>
+    );
   }
 
   return (

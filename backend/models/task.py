@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Optional, TYPE_CHECKING, List
-from sqlalchemy import Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy import Integer, String, Text, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base import Base
 from datetime import datetime
@@ -22,12 +22,18 @@ class TaskORM(Base):
     date_time: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     repeat_interval: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     repeat_unit: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    repeat_end_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     _pet_ids: Mapped[Optional[str]] = mapped_column(
         "pet_ids", String, nullable=True
     )  # Comma-separated pet IDs
     _attachments: Mapped[Optional[str]] = mapped_column(
         "attachments", Text, nullable=True
     )  # JSON array of image URLs
+    
+    # Task status and priority
+    priority: Mapped[str] = mapped_column(String, nullable=False, default="medium")
+    status: Mapped[str] = mapped_column(String, nullable=False, default="pending")
+    is_completed: Mapped[bool] = mapped_column(Boolean, default=False)
 
     @property
     def pet_ids(self) -> List[int]:

@@ -38,6 +38,17 @@ class UserCreate(ProviderExtras, UserContact, UserBase):
 
 class UserRead(ProviderExtras, UserContact, UserBase):
     id: int
+    
+    # OAuth information
+    google_id: Optional[str] = None
+    profile_picture_url: Optional[str] = None
+    
+    # Address information
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    country: Optional[str] = None
+    postal_code: Optional[str] = None
 
     class Config:
         from_attributes = True

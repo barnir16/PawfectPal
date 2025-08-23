@@ -11,19 +11,7 @@ import {
   Pets as PetsIcon,
 } from "@mui/icons-material";
 import { useState } from "react";
-
-interface Pet {
-  id: number;
-  name: string;
-  type: string;
-  breed: string;
-  birthDate: string;
-  gender: string;
-  weight: number;
-  image: string;
-  lastVetVisit: string;
-  nextVaccination: string;
-}
+import type { Pet } from "../../../types/pets/pet";
 
 interface PetsTableProps {
   pets: Pet[];
@@ -45,7 +33,7 @@ export const PetsTable = ({ pets, onEdit, onDelete }: PetsTableProps) => {
       renderCell: (params: GridRenderCellParams<Pet>) => (
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Avatar
-            src={params.row.image}
+            src={params.row.imageUrl || params.row.photo_uri}
             alt={params.row.name}
             sx={{ width: 40, height: 40, mr: 2 }}
           >
@@ -55,17 +43,39 @@ export const PetsTable = ({ pets, onEdit, onDelete }: PetsTableProps) => {
         </Box>
       ),
     },
-    { field: "type", headerName: "Type", flex: 1 },
+    { 
+      field: "type", 
+      headerName: "Type", 
+      flex: 1,
+      valueGetter: (_, row) => row.type || row.breedType || "Unknown"
+    },
     { field: "breed", headerName: "Breed", flex: 1 },
     {
       field: "age",
       headerName: "Age",
       flex: 1,
-      valueGetter: (value, row) => {
-        const birthDate = new Date(row.birthDate);
-        const ageInMilliseconds = Date.now() - birthDate.getTime();
-        const ageInYears = ageInMilliseconds / (1000 * 60 * 60 * 24 * 365.25);
-        return `${Math.floor(ageInYears)} years`;
+      valueGetter: (_, row) => {
+        // First try to use the age field directly
+        if (row.age !== undefined && row.age !== null) {
+          return `${row.age} years`;
+        }
+        
+        // Then try to calculate from birth date (check both field names)
+        const birthDate = row.birthDate || row.birth_date;
+        if (birthDate) {
+          try {
+            const birth = new Date(birthDate);
+            if (isNaN(birth.getTime())) {
+              return "Unknown age";
+            }
+            const ageInMilliseconds = Date.now() - birth.getTime();
+            const ageInYears = ageInMilliseconds / (1000 * 60 * 60 * 24 * 365.25);
+            return `${Math.floor(ageInYears)} years`;
+          } catch {
+            return "Unknown age";
+          }
+        }
+        return "Unknown age";
       },
     },
     { field: "gender", headerName: "Gender", flex: 1 },
@@ -76,13 +86,18 @@ export const PetsTable = ({ pets, onEdit, onDelete }: PetsTableProps) => {
       sortable: false,
       renderCell: (params: GridRenderCellParams<Pet>) => (
         <Box>
-          <IconButton onClick={() => onEdit(params.row.id)} size="small">
+          <IconButton 
+            onClick={() => params.row.id && onEdit(params.row.id)} 
+            size="small"
+            disabled={!params.row.id}
+          >
             <EditIcon />
           </IconButton>
           <IconButton
-            onClick={() => onDelete(params.row.id)}
+            onClick={() => params.row.id && onDelete(params.row.id)}
             size="small"
             color="error"
+            disabled={!params.row.id}
           >
             <DeleteIcon />
           </IconButton>

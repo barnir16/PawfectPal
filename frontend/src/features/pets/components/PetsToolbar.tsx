@@ -2,6 +2,8 @@ import { Box, TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import {
   Search as SearchIcon,
   FilterList as FilterListIcon,
+  GridView as GridViewIcon,
+  ViewList as ViewListIcon,
 } from "@mui/icons-material";
 
 interface PetsToolbarProps {
@@ -75,14 +77,10 @@ export const PetsToolbar = ({
         size="small"
       >
         <ToggleButton value="grid" aria-label="grid view">
-          <Box component="span" className="material-icons">
-            view_module
-          </Box>
+          <GridViewIcon />
         </ToggleButton>
         <ToggleButton value="table" aria-label="table view">
-          <Box component="span" className="material-icons">
-            view_list
-          </Box>
+          <ViewListIcon />
         </ToggleButton>
       </ToggleButtonGroup>
     </Box>
