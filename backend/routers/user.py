@@ -10,6 +10,7 @@ from schemas import (
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 from dependencies.db import get_db
+from dependencies.auth import get_current_user
 from auth.utils import (
     get_password_hash,
     get_user_by_username,
@@ -17,8 +18,26 @@ from auth.utils import (
     create_access_token,
 )
 from config import ACCESS_TOKEN_EXPIRE_MINUTES
+from pydantic import BaseModel
+import jwt
+import requests
+from typing import Optional
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+# Create a separate router for user endpoints that don't have the /auth prefix
+user_router = APIRouter(prefix="/users", tags=["users"])
+
+
+# Google OAuth Models
+class GoogleAuthRequest(BaseModel):
+    credential: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int
 
 
 @router.post("/register", response_model=UserRead)
@@ -58,3 +77,114 @@ def login(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.post("/google", response_model=TokenResponse)
+def google_auth(request: GoogleAuthRequest, db: Session = Depends(get_db)):
+    """Authenticate user with Google OAuth"""
+    try:
+        # Handle both JWT and base64-encoded credentials
+        decoded_token = None
+        
+        # First try base64-encoded format (OAuth2 flow)
+        try:
+            import base64
+            import json
+            decoded_data = base64.b64decode(request.credential).decode('utf-8')
+            decoded_token = json.loads(decoded_data)
+            print(f"✅ Decoded OAuth2 credential: {decoded_token}")
+        except Exception as e1:
+            print(f"❌ Failed to decode as OAuth2: {e1}")
+            # Try JWT format (original Google Sign-In)
+            try:
+                decoded_token = jwt.decode(request.credential, options={"verify_signature": False})
+                print(f"✅ Decoded JWT credential: {decoded_token}")
+            except Exception as e2:
+                print(f"❌ Failed to decode as JWT: {e2}")
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid credential format. OAuth2 error: {e1}, JWT error: {e2}"
+                )
+        
+        # Extract user information
+        google_id = decoded_token.get("sub")
+        email = decoded_token.get("email")
+        name = decoded_token.get("name")
+        picture = decoded_token.get("picture")
+        
+        if not email or not google_id:
+            print(f"❌ Missing required fields - email: {email}, google_id: {google_id}")
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid Google token: missing required fields"
+            )
+        
+        print(f"🔍 Looking for user with email: {email}")
+        
+        # Check if user exists by email
+        db_user = db.query(UserORM).filter(UserORM.email == email).first()
+        print(f"👤 Found existing user: {db_user.username if db_user else 'None'}")
+        
+        if not db_user:
+            # Create new user from Google account
+            username = email.split('@')[0]  # Use email prefix as username
+            # Ensure username is unique
+            counter = 1
+            original_username = username
+            while get_user_by_username(db, username):
+                username = f"{original_username}{counter}"
+                counter += 1
+            
+            db_user = UserORM(
+                username=username,
+                email=email,
+                full_name=name or email,
+                hashed_password="",  # No password for Google OAuth users
+                is_active=True,
+                google_id=google_id,
+                profile_picture_url=picture
+            )
+            db.add(db_user)
+            db.commit()
+            db.refresh(db_user)
+        else:
+            # Update existing user's Google info if needed
+            if not db_user.google_id:
+                db_user.google_id = google_id
+            if picture and not db_user.profile_picture_url:
+                db_user.profile_picture_url = picture
+            db.commit()
+        
+        # Create access token
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": db_user.username}, expires_delta=access_token_expires
+        )
+        
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60
+        }
+        
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid Google token"
+        )
+    except Exception as e:
+        import traceback
+        print(f"❌ DETAILED ERROR: {str(e)}")
+        print(f"📍 TRACEBACK: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Authentication failed: {str(e)}"
+        )
+
+
+@user_router.get("/me", response_model=UserRead)
+def get_current_user_info(
+    current_user: UserORM = Depends(get_current_user)
+):
+    """Get current user information"""
+    return UserRead.model_validate(current_user)

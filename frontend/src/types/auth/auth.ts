@@ -9,25 +9,24 @@ export interface User {
   full_name?: string;
   profile_image?: string;
   is_active: boolean;
+  
+  // OAuth information
+  google_id?: string;
+  profile_picture_url?: string;
+  
+  // Service provider information
   is_provider: boolean;
   provider_services?: string[];
   provider_rating?: number;
   provider_bio?: string;
   provider_hourly_rate?: number;
+  
+  // Address information
   address?: string;
   city?: string;
   state?: string;
   country?: string;
   postal_code?: string;
-  date_joined: string; // ISO date string
-  last_login?: string; // ISO date string
-  preferences?: UserPreferences;
-  settings?: UserSettings;
-  is_email_verified: boolean;
-  is_phone_verified: boolean;
-  timezone?: string;
-  language?: string;
-  notification_preferences?: NotificationPreferences;
 }
 
 /**

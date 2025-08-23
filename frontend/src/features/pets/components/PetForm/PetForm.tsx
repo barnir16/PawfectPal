@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { format, parseISO } from "date-fns";
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { useAuth } from "../../../../contexts/AuthContext";
 import {
   Box,
   Card,
@@ -19,36 +18,25 @@ import {
 import { ArrowBack as ArrowBackIcon } from "@mui/icons-material";
 
 // Import our new components
-import { PetImageUpload } from "./../../../../components/pets/PetImageUpload";
-import { PetBasicInfoForm } from "./../../../../components/pets/PetBasicInfoForm";
-import { PetDetailsForm } from "./../../../../components/pets/PetDetailsForm";
-import { PetMedicalInfo } from "./../../../../components/pets/PetMedicalInfo";
-import { FormActionButtons } from "./../../../../components/pets/FormActionButtons";
+import { PetImageUpload } from "../../../../components/pets/PetImageUpload";
+import { PetBasicInfoForm } from "../../../../components/pets/PetBasicInfoForm";
+import { PetDetailsForm } from "../../../../components/pets/PetDetailsForm";
+import { PetMedicalInfo } from "../../../../components/pets/PetMedicalInfo";
+import { FormActionButtons } from "../../../../components/pets/FormActionButtons";
 
-// Mock data - in a real app, these would come from an API
-const petTypes = ["Dog", "Cat", "Bird", "Rabbit", "Fish", "Hamster", "Other"];
-const dogBreeds = [
-  "Labrador Retriever",
-  "German Shepherd",
-  "Golden Retriever",
-  "French Bulldog",
-  "Bulldog",
-  "Poodle",
-  "Beagle",
-  "Rottweiler",
-  "Other",
-];
+// Import API services
+import { createPet, updatePet, getPet } from "../../../../services/pets/petService";
 
-const catBreeds = [
-  "Siamese",
-  "Persian",
-  "Maine Coon",
-  "Ragdoll",
-  "Bengal",
-  "Sphynx",
-  "British Shorthair",
-  "Other",
-];
+// Import types
+import type { Pet, PetType, PetGender } from "../../../../types/pets/pet";
+
+// Pet types - standard supported types plus "other"
+const petTypes: PetType[] = ["dog", "cat", "other"];
+
+// Import breed fetching
+import { fetchDogBreeds, fetchCatBreeds } from "../../../../services/external/externalApiService";
+
+
 
 // Define our form schema using Zod
 const schema = z.object({
@@ -56,22 +44,35 @@ const schema = z.object({
   type: z.string().min(1, "Please select a pet type"),
   breed: z.string().min(1, "Please select or enter a breed"),
   gender: z.string().min(1, "Please select a gender"),
-  birthDate: z.date({
-    required_error: "Please select a birth date",
-    invalid_type_error: "That's not a valid date!",
-  }),
+  ageType: z.enum(["birthday", "age"]),
+  birthDate: z.date().optional(),
+  age: z.number().min(0).max(30).optional(),
   weight: z
     .number({
       invalid_type_error: "Weight must be a number",
     })
     .min(0.1, "Weight must be greater than 0")
-    .max(200, "Weight seems too high"),
+    .max(200, "Weight seems too high")
+    .optional(),
   weightUnit: z.string(),
   color: z.string().optional(),
   microchipNumber: z.string().optional(),
   isNeutered: z.boolean(),
   notes: z.string().optional(),
+  healthIssues: z.array(z.string()).optional(),
+  behaviorIssues: z.array(z.string()).optional(),
   image: z.string().optional(),
+}).refine((data) => {
+  if (data.ageType === "birthday" && !data.birthDate) {
+    return false;
+  }
+  if (data.ageType === "age" && (data.age === undefined || data.age < 0)) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Please provide either a birth date or age",
+  path: ["ageType"]
 });
 
 export type PetFormData = z.infer<typeof schema>;
@@ -79,18 +80,20 @@ export type PetFormData = z.infer<typeof schema>;
 export const PetForm = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
+  const { forceLogout } = useAuth();
   const isEditing = !!id;
-  const [breeds, setBreeds] = useState<string[]>([]);
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [breeds, setBreeds] = useState<string[]>([]);
+  const [loadingBreeds, setLoadingBreeds] = useState(false);
+  const [breedError, setBreedError] = useState<string | null>(null);
 
   const {
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
-    watch,
     setValue,
+    watch,
   } = useForm<PetFormData>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -98,63 +101,95 @@ export const PetForm = () => {
       type: "",
       breed: "",
       gender: "",
+      ageType: "birthday" as const,
       birthDate: new Date(),
-      weight: 0,
+      age: undefined,
+      weight: undefined,
       weightUnit: "kg",
       color: "",
       microchipNumber: "",
       isNeutered: false,
       notes: "",
+      healthIssues: [],
+      behaviorIssues: [],
       image: "",
     },
   });
 
-  const watchType = watch("type");
+  const selectedPetType = watch("type");
 
-  // Update breeds when pet type changes
+  // Fetch breeds when pet type changes
   useEffect(() => {
-    if (watchType === "Dog") {
-      setBreeds(dogBreeds);
-    } else if (watchType === "Cat") {
-      setBreeds(catBreeds);
-    } else {
-      setBreeds(["Other"]);
-    }
-    setValue("breed", "");
-  }, [watchType, setValue]);
+    const fetchBreeds = async () => {
+      if (!selectedPetType || selectedPetType === "other") {
+        setBreeds([]);
+        return;
+      }
+
+      setLoadingBreeds(true);
+      setBreedError(null);
+
+      try {
+        let fetchedBreeds: string[] = [];
+        if (selectedPetType === "dog") {
+          fetchedBreeds = await fetchDogBreeds();
+        } else if (selectedPetType === "cat") {
+          fetchedBreeds = await fetchCatBreeds();
+        }
+        
+        // Always add "Other" option for manual entry
+        fetchedBreeds.push("Other");
+        setBreeds(fetchedBreeds);
+      } catch (error) {
+        console.error("Failed to fetch breeds:", error);
+        setBreedError("Failed to load breeds. You can still enter a breed manually.");
+        // Fallback to basic list
+        const fallbackBreeds = selectedPetType === "dog" 
+          ? ["Labrador Retriever", "German Shepherd", "Golden Retriever", "Bulldog", "Other"]
+          : ["Persian", "Maine Coon", "Siamese", "British Shorthair", "Other"];
+        setBreeds(fallbackBreeds);
+      } finally {
+        setLoadingBreeds(false);
+      }
+    };
+
+    fetchBreeds();
+  }, [selectedPetType]);
+
+
 
   // Load pet data if editing
   useEffect(() => {
-    if (isEditing) {
+    if (isEditing && id) {
       const fetchPet = async () => {
         try {
-          // In a real app, this would be an API call
-          const petData = {
-            id,
-            name: "Max",
-            type: "Dog",
-            breed: "Golden Retriever",
-            gender: "male",
-            birthDate: "2020-05-15T00:00:00.000Z",
-            weight: 28.5,
-            weightUnit: "kg",
-            color: "Golden",
-            microchipNumber: "123456789012345",
-            isNeutered: true,
-            notes: "Loves to play fetch and swim",
-            image: "/placeholder-dog.jpg",
-          };
-
+          const petData = await getPet(parseInt(id));
+          
           reset({
-            ...petData,
-            birthDate: parseISO(petData.birthDate),
+            name: petData.name,
+            type: petData.type,
+            breed: petData.breed,
+            gender: petData.gender,
+            ageType: petData.isBirthdayGiven ? "birthday" : "age" as const,
+            birthDate: petData.birthDate ? new Date(petData.birthDate) : new Date(),
+            age: petData.age,
+            weight: petData.weightKg,
+            weightUnit: petData.weightUnit,
+            color: petData.color,
+            microchipNumber: petData.microchipNumber,
+            isNeutered: petData.isNeutered,
+            notes: petData.notes,
+            healthIssues: petData.healthIssues || [],
+            behaviorIssues: petData.behaviorIssues || [],
+            image: petData.imageUrl,
           });
 
-          if (petData.image) {
-            setImagePreview(petData.image);
+          if (petData.imageUrl) {
+            setImagePreview(petData.imageUrl);
           }
         } catch (error) {
           console.error("Error loading pet:", error);
+          alert("Failed to load pet data for editing.");
         }
       };
       fetchPet();
@@ -162,7 +197,6 @@ export const PetForm = () => {
   }, [id, isEditing, reset]);
 
   const handleImageUpload = (file: File | null) => {
-    setImageFile(file);
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -179,20 +213,54 @@ export const PetForm = () => {
 
   const onSubmit = async (data: PetFormData) => {
     try {
-      const formattedData = {
-        ...data,
-        birthDate: format(data.birthDate, "yyyy-MM-dd"),
-        // In a real app, you would handle the image file upload here
-        image: imageFile || data.image,
+      const formattedData: Omit<Pet, 'id'> = {
+        name: data.name,
+        type: data.type as PetType,
+        breed: data.breed,
+        gender: data.gender as PetGender,
+        age: data.age,
+        birthDate: data.birthDate ? data.birthDate.toISOString().split('T')[0] : undefined,
+        weightKg: data.weight || undefined,
+        weightUnit: data.weightUnit as "kg" | "lb",
+        color: data.color,
+        microchipNumber: data.microchipNumber,
+        isNeutered: data.isNeutered,
+        notes: data.notes,
+        imageUrl: data.image,
+        // Health and behavior issues are already arrays
+        healthIssues: Array.isArray(data.healthIssues) ? data.healthIssues : (data.healthIssues ? [data.healthIssues] : []),
+        behaviorIssues: Array.isArray(data.behaviorIssues) ? data.behaviorIssues : (data.behaviorIssues ? [data.behaviorIssues] : []),
+        isVaccinated: false,
+        isMicrochipped: false,
+        isTrackingEnabled: false,
+        isLost: false,
+        isActive: true,
+        isBirthdayGiven: data.ageType === 'birthday',
+        ownerId: 1, // This should come from auth context
       };
 
       console.log("Submitting pet:", formattedData);
-      // In a real app, you would make an API call here
-      // await api.savePet(formattedData);
+      
+      if (isEditing && id) {
+        await updatePet(parseInt(id), formattedData);
+        alert("Pet updated successfully!");
+      } else {
+        await createPet(formattedData);
+        alert("Pet created successfully!");
+      }
 
       navigate("/pets");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving pet:", error);
+      
+      // Handle authentication errors
+      if (error?.isAuthError) {
+        await forceLogout("Your session has expired. Please log in again.");
+        navigate("/auth");
+        return;
+      }
+      
+      alert(`Error saving pet: ${error.message || "Unknown error occurred"}`);
     }
   };
 
@@ -218,8 +286,7 @@ export const PetForm = () => {
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box>
+    <Box>
         <Box
           sx={{
             display: "flex",
@@ -268,6 +335,8 @@ export const PetForm = () => {
                     petTypes={petTypes}
                     breeds={breeds}
                     isSubmitting={isSubmitting}
+                    loadingBreeds={loadingBreeds}
+                    breedError={breedError}
                   />
                 </CardContent>
               </Card>
@@ -314,8 +383,7 @@ export const PetForm = () => {
           </Grid>
         </form>
       </Box>
-    </LocalizationProvider>
-  );
+    );
 };
 
 export default PetForm;

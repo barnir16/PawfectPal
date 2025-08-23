@@ -34,7 +34,7 @@ export const PetDetailsForm = ({
               {...field}
               fullWidth
               type="number"
-              label="Weight"
+              label="Weight (optional)"
               error={!!errors.weight}
               helperText={errors.weight?.message}
               disabled={isSubmitting}
@@ -70,7 +70,7 @@ export const PetDetailsForm = ({
                   </InputAdornment>
                 ),
               }}
-              onChange={(e) => field.onChange(parseFloat(e.target.value) || "")}
+              onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
               value={field.value || ""}
             />
           )}

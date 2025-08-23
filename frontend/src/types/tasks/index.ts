@@ -4,7 +4,10 @@ export * from './task';
 export type {
   Task,
   TaskPriority,
-  TaskCategory,
+  TaskStatus,
+  RepeatUnit,
+  TaskCreateData,
+  TaskUpdateData,
+  TaskFilters,
   TaskStats,
-  TaskFilterOptions,
 } from './task';

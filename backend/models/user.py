@@ -26,6 +26,10 @@ class UserORM(Base):
     phone: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     full_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     profile_image: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    
+    # OAuth information
+    google_id: Mapped[Optional[str]] = mapped_column(String, nullable=True, unique=True)
+    profile_picture_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
     # Service provider information
     is_provider: Mapped[bool] = mapped_column(Boolean, default=False)

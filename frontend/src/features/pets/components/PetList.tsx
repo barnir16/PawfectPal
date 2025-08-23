@@ -9,10 +9,13 @@ import {
   Grid,
   Stack,
   Typography,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
+import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import type { Pet } from "../../../types/pets";
-import { getPets, deletePet } from "../../../api";
+import type { Pet } from "../../../types/pets/pet";
+import { getPets, deletePet } from "../../../services/pets/petService";
 
 export default function PetListScreen() {
   const [pets, setPets] = useState<Pet[]>([]);
@@ -48,12 +51,33 @@ export default function PetListScreen() {
     }
   };
 
-  const calculateAge = (birthDate: string) => {
-    const birth = new Date(birthDate);
-    const today = new Date();
-    const ageInMs = today.getTime() - birth.getTime();
-    const ageInYears = ageInMs / (1000 * 60 * 60 * 24 * 365.25);
-    return Math.floor(ageInYears);
+  const calculateAge = (pet: Pet) => {
+    // First try to use the age field directly
+    if (pet.age !== undefined && pet.age !== null) {
+      return `${pet.age} years`;
+    }
+    
+    // Then try to calculate from birth date
+    const birthDate = pet.birthDate || pet.birth_date;
+    if (birthDate) {
+      try {
+        const birth = new Date(birthDate);
+        if (isNaN(birth.getTime())) return "Unknown age";
+        const today = new Date();
+        const ageInMs = today.getTime() - birth.getTime();
+        const ageInYears = ageInMs / (1000 * 60 * 60 * 24 * 365.25);
+        return `${Math.floor(ageInYears)} years`;
+      } catch {
+        return "Unknown age";
+      }
+    }
+    return "Unknown age";
+  };
+
+  const formatWeight = (pet: Pet) => {
+    const weight = pet.weightKg || pet.weight_kg;
+    if (!weight) return "Not specified";
+    return `${weight} ${pet.weightUnit || 'kg'}`;
   };
 
   if (loading) {
@@ -98,55 +122,83 @@ export default function PetListScreen() {
       ) : (
         <Grid container spacing={3}>
           {pets.map((pet) => (
-            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={pet.id || pet.name}>
-              <Card>
-                <CardContent>
+            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4, xl: 3 }} key={pet.id || pet.name}>
+              <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+                <CardContent sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
                   <Box
                     display="flex"
                     justifyContent="space-between"
-                    alignItems="center"
+                    alignItems="flex-start"
+                    mb={2}
                   >
-                    <Typography variant="h6">{pet.name}</Typography>
-                    <Typography variant="body2" color="primary">
-                      {pet.breedType}
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography 
+                        variant="h6" 
+                        sx={{ 
+                          overflow: "hidden", 
+                          textOverflow: "ellipsis", 
+                          whiteSpace: "nowrap",
+                          mb: 1
+                        }}
+                      >
+                        {pet.name}
+                      </Typography>
+                      <Typography 
+                        variant="body2" 
+                        color="primary"
+                        sx={{ 
+                          overflow: "hidden", 
+                          textOverflow: "ellipsis", 
+                          whiteSpace: "nowrap" 
+                        }}
+                      >
+                        {pet.breedType || pet.type || "Unknown type"}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", gap: 0.5, ml: 1 }}>
+                      <Tooltip title="Edit">
+                        <IconButton
+                          size="small"
+                          onClick={() => navigate(`/edit-pet/${pet.id}`)}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete">
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleDeletePet(pet)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </Box>
+
+                  <Typography 
+                    color="textSecondary" 
+                    sx={{ 
+                      overflow: "hidden", 
+                      textOverflow: "ellipsis", 
+                      whiteSpace: "nowrap",
+                      mb: 2
+                    }}
+                  >
+                    {pet.breed}
+                  </Typography>
+
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Typography variant="body2" sx={{ mb: 1 }}>
+                      <strong>Age:</strong> {calculateAge(pet)}
+                    </Typography>
+                    <Typography variant="body2" sx={{ mb: 1 }}>
+                      <strong>Weight:</strong> {formatWeight(pet)}
+                    </Typography>
+                    <Typography variant="body2" sx={{ mb: 1 }}>
+                      <strong>Gender:</strong> {pet.gender}
                     </Typography>
                   </Box>
-                  <Typography color="textSecondary">{pet.breed}</Typography>
-
-                  <Box mt={1}>
-                    {pet.weightKg && (
-                      <Typography variant="body2">
-                        Weight: {pet.weightKg} kg
-                      </Typography>
-                    )}
-                    {pet.birthDate && (
-                      <Typography variant="body2">
-                        Age: {calculateAge(pet.birthDate)} years
-                      </Typography>
-                    )}
-                  </Box>
-
-                  {pet.healthIssues.length > 0 && (
-                    <Box mt={2}>
-                      <Typography variant="subtitle2">
-                        Health Issues:
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        {pet.healthIssues.join(", ")}
-                      </Typography>
-                    </Box>
-                  )}
-
-                  {pet.behaviorIssues.length > 0 && (
-                    <Box mt={2}>
-                      <Typography variant="subtitle2">
-                        Behavior Issues:
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        {pet.behaviorIssues.join(", ")}
-                      </Typography>
-                    </Box>
-                  )}
 
                   <Stack
                     direction="row"
@@ -156,16 +208,10 @@ export default function PetListScreen() {
                   >
                     <Button
                       size="small"
+                      variant="outlined"
                       onClick={() => navigate(`/edit-pet/${pet.id}`)}
                     >
-                      Edit
-                    </Button>
-                    <Button
-                      size="small"
-                      color="error"
-                      onClick={() => handleDeletePet(pet)}
-                    >
-                      Delete
+                      View Details
                     </Button>
                   </Stack>
                 </CardContent>

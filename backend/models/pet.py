@@ -32,9 +32,9 @@ class PetORM(Base):
     breed: Mapped[str] = mapped_column(String, nullable=False)
     birth_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     age: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    is_birthday_given: Mapped[int] = mapped_column(
-        Integer, default=0
-    )  # Boolean as Integer for SQLite
+    is_birthday_given: Mapped[bool] = mapped_column(
+        Boolean, default=False
+    )  # Boolean field
     weight_kg: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     photo_uri: Mapped[Optional[str]] = mapped_column(
         String, nullable=True
@@ -46,6 +46,28 @@ class PetORM(Base):
         Text, nullable=True
     )  # Comma-separated
 
+    # Additional pet information fields
+    gender: Mapped[str] = mapped_column(String, nullable=False, default="unknown")
+    weight_unit: Mapped[str] = mapped_column(String, nullable=False, default="kg")
+    color: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    microchip_number: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    is_neutered: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_vaccinated: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_microchipped: Mapped[bool] = mapped_column(Boolean, default=False)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Medical records
+    last_vet_visit: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    next_vet_visit: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    vet_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    vet_phone: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    vet_address: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    medical_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
     # GPS tracking fields
     last_known_latitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     last_known_longitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
@@ -53,12 +75,22 @@ class PetORM(Base):
         DateTime, nullable=True
     )
     is_tracking_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_lost: Mapped[bool] = mapped_column(Boolean, default=False)
+    
+    # Metadata
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     # Relationships
-    user: Mapped["UserORM"] = relationship("UserORM", back_populates="pets")
+    user: Mapped["UserORM"] = relationship("UserORM", back_populates="pets", lazy="selectin", foreign_keys=[user_id])
     services: Mapped[list["ServiceORM"]] = relationship(
-        "ServiceORM", back_populates="pet"
+        "ServiceORM", back_populates="pet", lazy="selectin"
     )
     location_history: Mapped[list["LocationHistoryORM"]] = relationship(
-        "LocationHistoryORM", back_populates="pet"
+        "LocationHistoryORM", back_populates="pet", lazy="selectin"
+    )
+    medical_records: Mapped[list["MedicalRecordORM"]] = relationship(
+        "MedicalRecordORM", back_populates="pet", lazy="selectin"
+    )
+    vaccinations: Mapped[list["VaccinationORM"]] = relationship(
+        "VaccinationORM", back_populates="pet", lazy="selectin"
     )

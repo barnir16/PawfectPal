@@ -1,7 +1,13 @@
 import { StorageHelper } from '../utils/StorageHelper';
-import { getApiUrl } from '../config';
+import { configService } from './config/firebaseConfigService';
 
-export const BASE_URL = getApiUrl();
+// Get API URL from Firebase config with fallback
+export const getBaseUrl = (): string => {
+  const apiConfig = configService.getApiConfig();
+  return apiConfig.baseUrl;
+};
+
+export const BASE_URL = getBaseUrl();
 
 /**
  * Get stored authentication token
@@ -33,7 +39,59 @@ export const handleApiError = async (response: Response): Promise<never> => {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
   
-  const errorMessage = errorData?.detail || errorData?.message || `HTTP error! status: ${response.status}`;
+  // For authentication errors, provide clear explanations
+  if (response.status === 401) {
+    let authError = "Authentication failed";
+    if (errorData?.detail) {
+      if (errorData.detail === "Could not validate credentials") {
+        authError = "Your login session has expired. Please log in again.";
+      } else {
+        authError = errorData.detail;
+      }
+    }
+    const error = new Error(authError);
+    (error as any).status = response.status;
+    (error as any).isAuthError = true;
+    (error as any).data = errorData;
+    throw error;
+  }
+  
+  // For validation errors, show detailed field errors
+  if (response.status === 422 && errorData?.detail) {
+    if (Array.isArray(errorData.detail)) {
+      const fieldErrors = errorData.detail.map((err: any) => `${err.loc?.join('.')}: ${err.msg}`).join(', ');
+      const error = new Error(`Please check the following fields:\n${fieldErrors}`);
+      (error as any).status = response.status;
+      (error as any).data = errorData;
+      throw error;
+    } else {
+      const error = new Error(`Please check your input: ${errorData.detail}`);
+      (error as any).status = response.status;
+      (error as any).data = errorData;
+      throw error;
+    }
+  }
+  
+  // For other errors, provide user-friendly messages
+  let errorMessage = "Something went wrong";
+  if (errorData?.detail) {
+    if (response.status === 403) {
+      errorMessage = "You don't have permission to perform this action";
+    } else if (response.status === 404) {
+      errorMessage = "The requested resource was not found";
+    } else if (response.status === 500) {
+      errorMessage = "Server error. Please try again later";
+    } else {
+      errorMessage = errorData.detail;
+    }
+  } else if (response.status === 403) {
+    errorMessage = "Access denied. Please check your permissions.";
+  } else if (response.status === 404) {
+    errorMessage = "Resource not found. Please check the URL.";
+  } else if (response.status === 500) {
+    errorMessage = "Server error. Please try again later.";
+  }
+  
   const error = new Error(errorMessage);
   (error as any).status = response.status;
   (error as any).data = errorData;
@@ -63,7 +121,9 @@ export const apiRequest = async <T>(
     headers.delete('Content-Type');
   }
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
+  // Use fresh base URL from config
+  const baseUrl = getBaseUrl();
+  const response = await fetch(`${baseUrl}${endpoint}`, {
     ...options,
     headers
   });

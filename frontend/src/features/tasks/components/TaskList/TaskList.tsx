@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { format, parseISO, isBefore, isToday, isTomorrow } from "date-fns";
+
 import {
   Box,
   Button,
@@ -10,7 +10,6 @@ import {
   Chip,
   Divider,
   FormControl,
-  Grid,
   IconButton,
   InputLabel,
   MenuItem,
@@ -36,6 +35,26 @@ import {
 } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
 import type { GridColDef, GridSortModel } from "@mui/x-data-grid";
+
+// Helper functions to replace date-fns
+const isToday = (date: string | Date) => {
+  const today = new Date();
+  const d = new Date(date);
+  return today.toDateString() === d.toDateString();
+};
+
+const isTomorrow = (date: string | Date) => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const d = new Date(date);
+  return tomorrow.toDateString() === d.toDateString();
+};
+
+const isBefore = (date: string | Date, compareDate: string | Date) => {
+  const d = new Date(date);
+  const compare = new Date(compareDate);
+  return d < compare;
+};
 
 // Types
 type Priority = "low" | "medium" | "high";
@@ -180,18 +199,34 @@ export const StatusChip = ({ status }: { status: TaskStatus }) => {
 
 // Date cell component
 export const DateCell = ({ date }: { date: string }) => {
-  const dueDate = parseISO(date);
+  const dueDate = new Date(date);
   const today = new Date();
 
   let textColor = "text.primary";
-  let dateText = format(dueDate, "MMM d, yyyy h:mm a");
+  let dateText = dueDate.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric'
+  }) + ' ' + dueDate.toLocaleTimeString('en-US', { 
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
 
   if (isToday(dueDate)) {
     textColor = "info.main";
-    dateText = `Today, ${format(dueDate, "h:mm a")}`;
+    dateText = `Today, ${dueDate.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit', 
+      hour12: true 
+    })}`;
   } else if (isTomorrow(dueDate)) {
     textColor = "info.main";
-    dateText = `Tomorrow, ${format(dueDate, "h:mm a")}`;
+    dateText = `Tomorrow, ${dueDate.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit', 
+      hour12: true 
+    })}`;
   } else if (isBefore(dueDate, today)) {
     textColor = "error.main";
   }
@@ -360,7 +395,14 @@ const TaskList = () => {
       width: 200,
       renderCell: (params) => <DateCell date={params.row.dueDate} />,
       valueFormatter: (value: string) =>
-        value ? format(parseISO(value), "yyyy-MM-dd HH:mm") : "",
+        value ? new Date(value).toLocaleString('en-US', { 
+          year: 'numeric', 
+          month: '2-digit', 
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        }) : "",
     },
     {
       field: "actions",
@@ -412,87 +454,87 @@ const TaskList = () => {
         />
         <Divider />
         <CardContent>
-          <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                variant="outlined"
-                placeholder="Search tasks..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />,
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={2}>
-              <FormControl fullWidth>
-                <InputLabel id="status-filter-label">Status</InputLabel>
-                <Select
-                  labelId="status-filter-label"
-                  value={statusFilter}
-                  label="Status"
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                >
-                  <MenuItem value="all">All Statuses</MenuItem>
-                  <MenuItem value="pending">Pending</MenuItem>
-                  <MenuItem value="in_progress">In Progress</MenuItem>
-                  <MenuItem value="completed">Completed</MenuItem>
-                  <MenuItem value="overdue">Overdue</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6} md={2}>
-              <FormControl fullWidth>
-                <InputLabel id="priority-filter-label">Priority</InputLabel>
-                <Select
-                  labelId="priority-filter-label"
-                  value={priorityFilter}
-                  label="Priority"
-                  onChange={(e) => setPriorityFilter(e.target.value)}
-                >
-                  <MenuItem value="all">All Priorities</MenuItem>
-                  <MenuItem value="high">High</MenuItem>
-                  <MenuItem value="medium">Medium</MenuItem>
-                  <MenuItem value="low">Low</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6} md={2}>
-              <FormControl fullWidth>
-                <InputLabel id="category-filter-label">Category</InputLabel>
-                <Select
-                  labelId="category-filter-label"
-                  value={categoryFilter}
-                  label="Category"
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                >
-                  <MenuItem value="all">All Categories</MenuItem>
-                  {categories.map((category) => (
-                    <MenuItem key={category} value={category}>
-                      {category}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6} md={2}>
-              <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<FilterListIcon />}
-                onClick={() => {
-                  setSearchTerm("");
-                  setStatusFilter("all");
-                  setPriorityFilter("all");
-                  setCategoryFilter("all");
-                }}
-                sx={{ height: "56px" }}
-              >
-                Clear Filters
-              </Button>
-            </Grid>
-          </Grid>
+                     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(5, 1fr)' }, gap: 2, mb: 3 }}>
+             <Box>
+               <TextField
+                 fullWidth
+                 variant="outlined"
+                 placeholder="Search tasks..."
+                 value={searchTerm}
+                 onChange={(e) => setSearchTerm(e.target.value)}
+                 InputProps={{
+                   startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />,
+                 }}
+               />
+             </Box>
+             <Box>
+               <FormControl fullWidth>
+                 <InputLabel id="status-filter-label">Status</InputLabel>
+                 <Select
+                   labelId="status-filter-label"
+                   value={statusFilter}
+                   label="Status"
+                   onChange={(e) => setStatusFilter(e.target.value)}
+                 >
+                   <MenuItem value="all">All Statuses</MenuItem>
+                   <MenuItem value="pending">Pending</MenuItem>
+                   <MenuItem value="in_progress">In Progress</MenuItem>
+                   <MenuItem value="completed">Completed</MenuItem>
+                   <MenuItem value="overdue">Overdue</MenuItem>
+                 </Select>
+               </FormControl>
+             </Box>
+             <Box>
+               <FormControl fullWidth>
+                 <InputLabel id="priority-filter-label">Priority</InputLabel>
+                 <Select
+                   labelId="priority-filter-label"
+                   value={priorityFilter}
+                   label="Priority"
+                   onChange={(e) => setPriorityFilter(e.target.value)}
+                 >
+                   <MenuItem value="all">All Priorities</MenuItem>
+                   <MenuItem value="high">High</MenuItem>
+                   <MenuItem value="medium">Medium</MenuItem>
+                   <MenuItem value="low">Low</MenuItem>
+                 </Select>
+               </FormControl>
+             </Box>
+             <Box>
+               <FormControl fullWidth>
+                 <InputLabel id="category-filter-label">Category</InputLabel>
+                 <Select
+                   labelId="category-filter-label"
+                   value={categoryFilter}
+                   label="Category"
+                   onChange={(e) => setCategoryFilter(e.target.value)}
+                 >
+                   <MenuItem value="all">All Categories</MenuItem>
+                   {categories.map((category) => (
+                     <MenuItem key={category} value={category}>
+                       {category}
+                     </MenuItem>
+                   ))}
+                 </Select>
+               </FormControl>
+             </Box>
+             <Box>
+               <Button
+                 fullWidth
+                 variant="outlined"
+                 startIcon={<FilterListIcon />}
+                 onClick={() => {
+                   setSearchTerm("");
+                   setStatusFilter("all");
+                   setPriorityFilter("all");
+                   setCategoryFilter("all");
+                 }}
+                 sx={{ height: "56px" }}
+               >
+                 Clear Filters
+               </Button>
+             </Box>
+           </Box>
 
           <Box sx={{ height: 500, width: "100%" }}>
             <DataGrid
