@@ -1,5 +1,6 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getRemoteConfig, RemoteConfig, fetchAndActivate, getValue } from 'firebase/remote-config';
+import { SHARED_CONFIG } from '../../config/shared';
 
 interface AppConfig {
   // API Configuration
@@ -46,28 +47,28 @@ class FirebaseConfigService {
   private isInitialized = false;
   private fallbackConfig: AppConfig = {
     // Fallback configuration for when Firebase is not available
-    apiBaseUrl: 'http://127.0.0.1:8000',
+    apiBaseUrl: SHARED_CONFIG.development.apiBaseUrl,
     googleClientId: '204752166323-r69volulegreitj2nflcoag0eae3iggk.apps.googleusercontent.com',
-    googleMapsApiKey: '',
-    weatherApiKey: '',
-    openAiApiKey: '',
-    petsApiKey: '',
-    geminiApiKey: '',
-    enableGoogleAuth: true,
-    enableGpsTracking: false,
-    enableAiChatbot: true,
-    enableNotifications: true,
-    enableOfflineMode: false,
-    environment: 'development',
+    googleMapsApiKey: SHARED_CONFIG.externalApis.googleMapsApiKey,
+    weatherApiKey: SHARED_CONFIG.externalApis.weatherApiKey,
+    openAiApiKey: SHARED_CONFIG.externalApis.openAiApiKey,
+    petsApiKey: SHARED_CONFIG.externalApis.petsApiKey,
+    geminiApiKey: SHARED_CONFIG.externalApis.geminiApiKey,
+    enableGoogleAuth: SHARED_CONFIG.features.enableGoogleAuth,
+    enableGpsTracking: SHARED_CONFIG.features.enableGpsTracking,
+    enableAiChatbot: SHARED_CONFIG.features.enableAiChatbot,
+    enableNotifications: SHARED_CONFIG.features.enableNotifications,
+    enableOfflineMode: SHARED_CONFIG.features.enableOfflineMode,
+    environment: SHARED_CONFIG.app.environment,
     apiTimeout: 10000,
-    maxImageUploadSize: 5242880, // 5MB
-    supportedImageFormats: ['image/jpeg', 'image/png', 'image/webp'],
-    emergencyVetContact: '911',
-    poisonControlContact: '(888) 426-4435',
-    primaryColor: '#007AFF',
-    secondaryColor: '#34C759',
-    appName: 'PawfectPal',
-    version: '1.0.0',
+    maxImageUploadSize: SHARED_CONFIG.ui.maxImageUploadSize,
+    supportedImageFormats: SHARED_CONFIG.ui.supportedImageFormats,
+    emergencyVetContact: SHARED_CONFIG.emergency.vetContact,
+    poisonControlContact: SHARED_CONFIG.emergency.poisonControl,
+    primaryColor: SHARED_CONFIG.ui.primaryColor,
+    secondaryColor: SHARED_CONFIG.ui.secondaryColor,
+    appName: SHARED_CONFIG.app.name,
+    version: SHARED_CONFIG.app.version,
   };
 
   /**
@@ -77,18 +78,11 @@ class FirebaseConfigService {
     if (this.isInitialized) return;
 
     try {
-      // Firebase configuration - these are public and safe to hardcode
-      const firebaseConfig = {
-        apiKey: "AIzaSyDoNsVE_ZmgBBuVJ3IKZpAAZRz9HS-67s8",
-        authDomain: "pawfectpal-ac5d7.firebaseapp.com",
-        projectId: "pawfectpal-ac5d7",
-        storageBucket: "pawfectpal-ac5d7.firebasestorage.app",
-        messagingSenderId: "204752166323",
-        appId: "1:204752166323:web:4efd89fff62af150343fc6",
-      };
+      // Use shared configuration (safe to expose)
+      const firebaseConfig = SHARED_CONFIG.firebase;
 
       // Check if Firebase config is provided
-      if (!firebaseConfig.projectId) {
+      if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
         console.warn('Firebase configuration not found. Using fallback configuration.');
         this.config = { ...this.fallbackConfig };
         this.isInitialized = true;
@@ -101,6 +95,7 @@ class FirebaseConfigService {
 
       // Set default values (convert arrays to JSON strings for Firebase)
       const firebaseDefaults: { [key: string]: string | number | boolean } = {
+        // App configuration
         api_base_url: this.fallbackConfig.apiBaseUrl,
         google_client_id: this.fallbackConfig.googleClientId,
         google_maps_api_key: this.fallbackConfig.googleMapsApiKey,
