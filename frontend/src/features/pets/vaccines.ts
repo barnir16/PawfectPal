@@ -43,7 +43,7 @@ export const dogVaccines = [
 export const catVaccines = [
   {
     name: "Rabies",
-    frequency: "1 year",
+    frequency: "2 years",
     firstDoseAge: "4 months",
     description: "Recommended for cats that roam outdoors. Fatal if contracted.",
     sideEffects: ["lethargy", "mild fever"],

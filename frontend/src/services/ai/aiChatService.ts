@@ -48,6 +48,9 @@ class AIChatService {
    * Initialize chat with user context
    */
   async initializeContext(pets: Pet[], recentTasks: Task[] = []): Promise<void> {
+    console.log('🤖 AI Service: Initializing context with pets:', pets.length, pets.map(p => p.name));
+    console.log('🤖 AI Service: Initializing context with tasks:', recentTasks.length);
+    
     this.context = {
       pets,
       recentTasks,
@@ -56,6 +59,8 @@ class AIChatService {
         notificationFrequency: 'medium'
       }
     };
+    
+    console.log('🤖 AI Service: Context initialized:', this.context);
   }
 
   /**
@@ -66,6 +71,9 @@ class AIChatService {
     petContext?: Pet
   ): Promise<ChatResponse> {
     try {
+      console.log('🤖 AI Service: sendMessage called with:', { userMessage, petContext });
+      console.log('🤖 AI Service: Current context:', this.context);
+      
       // Add user message to history
       const userChatMessage: ChatMessage = {
         id: this.generateMessageId(),
@@ -107,33 +115,40 @@ class AIChatService {
     petContext?: Pet
   ): Promise<ChatResponse> {
     const intent = this.detectIntent(userMessage);
-    const pets = petContext ? [petContext] : this.context?.pets || [];
+    // Always include all pets in context, but prioritize the selected pet if provided
+    const allPets = this.context?.pets || [];
+    const selectedPet = petContext;
+    const pets = selectedPet ? [selectedPet, ...allPets.filter(p => p.id !== selectedPet.id)] : allPets;
+
+    console.log('🤖 AI Context - All pets:', allPets.length);
+    console.log('🤖 AI Context - Selected pet:', selectedPet?.name);
+    console.log('🤖 AI Context - Pets for response:', pets.map(p => p.name));
 
     switch (intent) {
       case 'health_concern':
-        return this.handleHealthConcern(userMessage, pets);
+        return this.handleHealthConcern(userMessage, pets, selectedPet);
       
       case 'behavior_issue':
-        return this.handleBehaviorIssue(userMessage, pets);
+        return this.handleBehaviorIssue(userMessage, pets, selectedPet);
       
       case 'feeding_question':
-        return this.handleFeedingQuestion(userMessage, pets);
+        return this.handleFeedingQuestion(userMessage, pets, selectedPet);
       
       case 'exercise_planning':
-        return this.handleExercisePlanning(userMessage, pets);
+        return this.handleExercisePlanning(userMessage, pets, selectedPet);
       
       case 'grooming_advice':
-        return this.handleGroomingAdvice(userMessage, pets);
+        return this.handleGroomingAdvice(userMessage, pets, selectedPet);
       
       case 'task_creation':
-        return this.handleTaskCreation(userMessage, pets);
+        return this.handleTaskCreation(userMessage, pets, selectedPet);
       
       case 'emergency':
-        return this.handleEmergency(userMessage, pets);
+        return this.handleEmergency(userMessage, pets, selectedPet);
       
       case 'general_question':
       default:
-        return this.handleGeneralQuestion(userMessage, pets);
+        return this.handleGeneralQuestion(userMessage, pets, selectedPet);
     }
   }
 
@@ -188,8 +203,8 @@ class AIChatService {
   /**
    * Handle health-related concerns
    */
-  private handleHealthConcern(message: string, pets: Pet[]): ChatResponse {
-    const pet = pets[0];
+  private handleHealthConcern(message: string, pets: Pet[], selectedPet?: Pet): ChatResponse {
+    const pet = selectedPet || pets[0];
     const petName = pet?.name || 'your pet';
     
     return {
@@ -220,8 +235,8 @@ class AIChatService {
   /**
    * Handle behavior-related issues
    */
-  private handleBehaviorIssue(message: string, pets: Pet[]): ChatResponse {
-    const pet = pets[0];
+  private handleBehaviorIssue(message: string, pets: Pet[], selectedPet?: Pet): ChatResponse {
+    const pet = selectedPet || pets[0];
     const petName = pet?.name || 'your pet';
     
     return {
@@ -246,14 +261,26 @@ class AIChatService {
   /**
    * Handle feeding and nutrition questions
    */
-  private handleFeedingQuestion(message: string, pets: Pet[]): ChatResponse {
-    const pet = pets[0];
+  private handleFeedingQuestion(message: string, pets: Pet[], selectedPet?: Pet): ChatResponse {
+    const pet = selectedPet || pets[0];
     const petName = pet?.name || 'your pet';
     const age = pet?.age || 'unknown age';
     const weight = pet?.weightKg || 'unknown weight';
     
+    // Build comprehensive response using all pets' data
+    let responseMessage = `For ${petName} (${age} years old, ${weight}kg), proper nutrition is essential for health and longevity. `;
+    
+    if (pets.length > 1) {
+      const otherPets = pets.filter(p => p.id !== pet?.id);
+      if (otherPets.length > 0) {
+        responseMessage += `I also see you have ${otherPets.length} other pet${otherPets.length > 1 ? 's' : ''}: ${otherPets.map(p => `${p.name} (${p.type || 'unknown type'}, ${p.age || 'unknown age'} years)`).join(', ')}. `;
+      }
+    }
+    
+    responseMessage += `What specific feeding question do you have? I can help with portion sizes, feeding schedules, or dietary recommendations.`;
+    
     return {
-      message: `For ${petName} (${age} years old, ${weight}kg), proper nutrition is essential for health and longevity. What specific feeding question do you have? I can help with portion sizes, feeding schedules, or dietary recommendations.`,
+      message: responseMessage,
       suggestedActions: [
         {
           id: 'feeding_schedule',
@@ -274,8 +301,8 @@ class AIChatService {
   /**
    * Handle exercise and activity planning
    */
-  private handleExercisePlanning(message: string, pets: Pet[]): ChatResponse {
-    const pet = pets[0];
+  private handleExercisePlanning(message: string, pets: Pet[], selectedPet?: Pet): ChatResponse {
+    const pet = selectedPet || pets[0];
     const petName = pet?.name || 'your pet';
     const type = pet?.type || 'pet';
     
@@ -301,8 +328,8 @@ class AIChatService {
   /**
    * Handle grooming advice
    */
-  private handleGroomingAdvice(message: string, pets: Pet[]): ChatResponse {
-    const pet = pets[0];
+  private handleGroomingAdvice(message: string, pets: Pet[], selectedPet?: Pet): ChatResponse {
+    const pet = selectedPet || pets[0];
     const petName = pet?.name || 'your pet';
     
     return {
@@ -327,7 +354,7 @@ class AIChatService {
   /**
    * Handle task creation requests
    */
-  private handleTaskCreation(message: string, pets: Pet[]): ChatResponse {
+  private handleTaskCreation(message: string, pets: Pet[], selectedPet?: Pet): ChatResponse {
     return {
       message: `I can help you create reminders and tasks for your pet's care. What would you like to be reminded about? Common tasks include feeding times, medication, vet appointments, grooming, and exercise.`,
       suggestedActions: [
@@ -344,7 +371,7 @@ class AIChatService {
   /**
    * Handle emergency situations
    */
-  private handleEmergency(message: string, pets: Pet[]): ChatResponse {
+  private handleEmergency(message: string, pets: Pet[], selectedPet?: Pet): ChatResponse {
     return {
       message: `🚨 This appears to be an emergency situation. Please contact your veterinarian or emergency animal hospital immediately. Do not delay seeking professional help. Would you like me to help you find emergency veterinary services in your area?`,
       suggestedActions: [
@@ -367,21 +394,31 @@ class AIChatService {
   /**
    * Handle general questions
    */
-  private handleGeneralQuestion(message: string, pets: Pet[]): ChatResponse {
+  private handleGeneralQuestion(message: string, pets: Pet[], selectedPet?: Pet): ChatResponse {
+    let responseMessage = `Hi! I'm your AI pet care assistant. `;
+    
+    if (pets.length > 0) {
+      responseMessage += `I can see you have ${pets.length} pet${pets.length > 1 ? 's' : ''}: `;
+      responseMessage += pets.map(p => `${p.name} (${p.type || 'unknown type'}, ${p.age || 'unknown age'} years old)`).join(', ');
+      responseMessage += `. `;
+    }
+    
+    responseMessage += `I can help you with health concerns, behavior issues, feeding questions, exercise planning, grooming advice, and creating care reminders. I can also provide emergency guidance when needed. What would you like to know about your pet's care?`;
+    
     return {
-      message: `Hi! I'm your AI pet care assistant. I can help you with health concerns, behavior issues, feeding questions, exercise planning, grooming advice, and creating care reminders. I can also provide emergency guidance when needed. What would you like to know about your pet's care?`,
+      message: responseMessage,
       suggestedActions: [
         {
-          id: 'health_checkup',
+          id: 'health_check',
           type: 'view_tips',
-          label: 'Health Tips',
-          description: 'Learn about preventive pet health care'
+          label: 'Health Check',
+          description: 'Get general health tips for your pets'
         },
         {
-          id: 'daily_care',
-          type: 'view_tips', 
-          label: 'Daily Care Routine',
-          description: 'Establish a comprehensive care routine'
+          id: 'care_schedule',
+          type: 'create_task',
+          label: 'Create Care Schedule',
+          description: 'Set up regular care reminders'
         }
       ]
     };
@@ -392,6 +429,27 @@ class AIChatService {
    */
   getConversationHistory(): ChatMessage[] {
     return [...this.conversationHistory];
+  }
+
+  /**
+   * Get current context for debugging
+   */
+  getCurrentContext(): AIContext | null {
+    return this.context;
+  }
+
+  /**
+   * Check if context has pets
+   */
+  hasPets(): boolean {
+    return this.context?.pets && this.context.pets.length > 0;
+  }
+
+  /**
+   * Get pet count for debugging
+   */
+  getPetCount(): number {
+    return this.context?.pets?.length || 0;
   }
 
   /**

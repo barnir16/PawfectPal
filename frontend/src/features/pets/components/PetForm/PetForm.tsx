@@ -117,12 +117,32 @@ export const PetForm = () => {
   });
 
   const selectedPetType = watch("type");
+  const selectedBreed = watch("breed");
 
-  // Fetch breeds when pet type changes
+  // Fetch breeds when pet type changes - start with "Other" option
   useEffect(() => {
-    const fetchBreeds = async () => {
-      if (!selectedPetType || selectedPetType === "other") {
-        setBreeds([]);
+    if (!selectedPetType || selectedPetType === "other") {
+      setBreeds([]);
+      return;
+    }
+
+    // Start with "Other" option always available
+    setBreeds(["Other"]);
+    setLoadingBreeds(false);
+    setBreedError(null);
+  }, [selectedPetType]);
+
+  // Fetch breeds when user types in breed field (3+ characters)
+  useEffect(() => {
+    const searchBreeds = async () => {
+      if (!selectedPetType || selectedPetType === "other" || !selectedBreed) {
+        setBreeds(["Other"]);
+        return;
+      }
+
+      // Only search if we have 3+ characters
+      if (selectedBreed.length < 3) {
+        setBreeds(["Other"]);
         return;
       }
 
@@ -132,30 +152,31 @@ export const PetForm = () => {
       try {
         let fetchedBreeds: string[] = [];
         if (selectedPetType === "dog") {
-          fetchedBreeds = await fetchDogBreeds();
+          console.log('🔍 Searching for dog breeds with:', selectedBreed);
+          fetchedBreeds = await fetchDogBreeds(selectedBreed);
         } else if (selectedPetType === "cat") {
-          fetchedBreeds = await fetchCatBreeds();
+          console.log('🔍 Searching for cat breeds with:', selectedBreed);
+          fetchedBreeds = await fetchCatBreeds(selectedBreed);
         }
+        
+        console.log('🔍 Search results:', fetchedBreeds);
         
         // Always add "Other" option for manual entry
         fetchedBreeds.push("Other");
         setBreeds(fetchedBreeds);
       } catch (error) {
-        console.error("Failed to fetch breeds:", error);
-        setBreedError("Failed to load breeds. You can still enter a breed manually.");
-        // Fallback to basic list
-        const fallbackBreeds = selectedPetType === "dog" 
-          ? ["Labrador Retriever", "German Shepherd", "Golden Retriever", "Bulldog", "Other"]
-          : ["Persian", "Maine Coon", "Siamese", "British Shorthair", "Other"];
-        setBreeds(fallbackBreeds);
+        console.error("Failed to search breeds:", error);
+        setBreedError("Failed to search breeds. You can still enter a custom breed.");
+        setBreeds(["Other"]);
       } finally {
         setLoadingBreeds(false);
       }
     };
 
-    fetchBreeds();
-  }, [selectedPetType]);
-
+    // Debounce the search to avoid too many API calls
+    const timeoutId = setTimeout(searchBreeds, 150);
+    return () => clearTimeout(timeoutId);
+  }, [selectedPetType, selectedBreed]);
 
 
   // Load pet data if editing

@@ -29,7 +29,8 @@ export const PetsTable = ({ pets, onEdit, onDelete }: PetsTableProps) => {
     {
       field: "name",
       headerName: "Name",
-      flex: 1,
+      flex: 1.5,
+      minWidth: 200,
       renderCell: (params: GridRenderCellParams<Pet>) => (
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Avatar
@@ -46,14 +47,31 @@ export const PetsTable = ({ pets, onEdit, onDelete }: PetsTableProps) => {
     { 
       field: "type", 
       headerName: "Type", 
-      flex: 1,
+      flex: 0.8,
+      minWidth: 100,
       valueGetter: (_, row) => row.type || row.breedType || "Unknown"
     },
-    { field: "breed", headerName: "Breed", flex: 1 },
+    { 
+      field: "breed", 
+      headerName: "Breed", 
+      flex: 1.2,
+      minWidth: 150,
+      renderCell: (params: GridRenderCellParams<Pet>) => (
+        <Box sx={{ 
+          overflow: 'hidden', 
+          textOverflow: 'ellipsis', 
+          whiteSpace: 'nowrap',
+          maxWidth: '100%'
+        }}>
+          {params.row.breed}
+        </Box>
+      )
+    },
     {
       field: "age",
       headerName: "Age",
-      flex: 1,
+      flex: 0.8,
+      minWidth: 120,
       valueGetter: (_, row) => {
         // First try to use the age field directly
         if (row.age !== undefined && row.age !== null) {
@@ -78,11 +96,17 @@ export const PetsTable = ({ pets, onEdit, onDelete }: PetsTableProps) => {
         return "Unknown age";
       },
     },
-    { field: "gender", headerName: "Gender", flex: 1 },
+    { 
+      field: "gender", 
+      headerName: "Gender", 
+      flex: 0.6,
+      minWidth: 80
+    },
     {
       field: "actions",
       headerName: "Actions",
-      width: 150,
+      width: 120,
+      minWidth: 120,
       sortable: false,
       renderCell: (params: GridRenderCellParams<Pet>) => (
         <Box>
@@ -107,7 +131,27 @@ export const PetsTable = ({ pets, onEdit, onDelete }: PetsTableProps) => {
   ];
 
   return (
-    <Box sx={{ height: 600, width: "100%" }}>
+    <Box sx={{ 
+      height: 600, 
+      width: "100%",
+      '& .MuiDataGrid-root': {
+        border: 'none',
+      },
+      '& .MuiDataGrid-cell': {
+        borderBottom: '1px solid #f0f0f0',
+      },
+      '& .MuiDataGrid-columnHeaders': {
+        backgroundColor: '#fafafa',
+        borderBottom: '2px solid #e0e0e0',
+      },
+      '& .MuiDataGrid-virtualScroller': {
+        backgroundColor: '#ffffff',
+      },
+      '& .MuiDataGrid-footerContainer': {
+        borderTop: '2px solid #e0e0e0',
+        backgroundColor: '#fafafa',
+      },
+    }}>
       <DataGrid
         rows={pets}
         columns={columns}
@@ -115,6 +159,13 @@ export const PetsTable = ({ pets, onEdit, onDelete }: PetsTableProps) => {
         onPaginationModelChange={setPaginationModel}
         pageSizeOptions={[5, 10, 20]}
         disableRowSelectionOnClick
+        autoHeight={false}
+        density="comfortable"
+        sx={{
+          '& .MuiDataGrid-cell:focus': {
+            outline: 'none',
+          },
+        }}
       />
     </Box>
   );

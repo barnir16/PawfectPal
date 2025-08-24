@@ -70,6 +70,7 @@ const transformPetFromBackend = (backendPet: any): Pet => {
     id: backendPet.id,
     name: backendPet.name,
     type: backendPet.breed_type || backendPet.type,
+    breedType: backendPet.breed_type || backendPet.type, // Add this field
     breed: backendPet.breed,
     
     // Physical attributes

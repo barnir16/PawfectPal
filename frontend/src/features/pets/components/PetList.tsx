@@ -7,7 +7,6 @@ import {
   CircularProgress,
   Container,
   Grid,
-  Stack,
   Typography,
   IconButton,
   Tooltip,
@@ -122,9 +121,20 @@ export default function PetListScreen() {
       ) : (
         <Grid container spacing={3}>
           {pets.map((pet) => (
-            <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4, xl: 3 }} key={pet.id || pet.name}>
-              <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-                <CardContent sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
+            <Grid key={pet.id || pet.name} size={{ xs: 12, sm: 6, md: 4, lg: 3, xl: 2 }}>
+              <Card sx={{ 
+                height: "100%", 
+                display: "flex", 
+                flexDirection: "column",
+                minHeight: 280
+              }}>
+                <CardContent sx={{ 
+                  flexGrow: 1, 
+                  display: "flex", 
+                  flexDirection: "column", 
+                  p: 2,
+                  '&:last-child': { pb: 2 }
+                }}>
                   <Box
                     display="flex"
                     justifyContent="space-between"
@@ -138,7 +148,8 @@ export default function PetListScreen() {
                           overflow: "hidden", 
                           textOverflow: "ellipsis", 
                           whiteSpace: "nowrap",
-                          mb: 1
+                          mb: 1,
+                          fontSize: '1.1rem'
                         }}
                       >
                         {pet.name}
@@ -149,7 +160,8 @@ export default function PetListScreen() {
                         sx={{ 
                           overflow: "hidden", 
                           textOverflow: "ellipsis", 
-                          whiteSpace: "nowrap" 
+                          whiteSpace: "nowrap",
+                          fontWeight: 'medium'
                         }}
                       >
                         {pet.breedType || pet.type || "Unknown type"}
@@ -182,38 +194,39 @@ export default function PetListScreen() {
                       overflow: "hidden", 
                       textOverflow: "ellipsis", 
                       whiteSpace: "nowrap",
-                      mb: 2
+                      mb: 2,
+                      fontSize: '0.9rem'
                     }}
                   >
                     {pet.breed}
                   </Typography>
 
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Typography variant="body2" sx={{ mb: 1 }}>
+                  <Box sx={{ flexGrow: 1, mb: 2 }}>
+                    <Typography variant="body2" sx={{ mb: 1, fontSize: '0.9rem' }}>
                       <strong>Age:</strong> {calculateAge(pet)}
                     </Typography>
-                    <Typography variant="body2" sx={{ mb: 1 }}>
+                    <Typography variant="body2" sx={{ mb: 1, fontSize: '0.9rem' }}>
                       <strong>Weight:</strong> {formatWeight(pet)}
                     </Typography>
-                    <Typography variant="body2" sx={{ mb: 1 }}>
+                    <Typography variant="body2" sx={{ mb: 1, fontSize: '0.9rem' }}>
                       <strong>Gender:</strong> {pet.gender}
                     </Typography>
                   </Box>
 
-                  <Stack
-                    direction="row"
-                    justifyContent="flex-end"
-                    mt={2}
-                    spacing={1}
-                  >
+                  <Box sx={{ mt: 'auto' }}>
                     <Button
-                      size="small"
-                      variant="outlined"
-                      onClick={() => navigate(`/edit-pet/${pet.id}`)}
+                      variant="contained"
+                      fullWidth
+                      onClick={() => navigate(`/pets/${pet.id}`)}
+                      sx={{ 
+                        textTransform: 'none',
+                        fontWeight: 'medium',
+                        py: 1
+                      }}
                     >
                       View Details
                     </Button>
-                  </Stack>
+                  </Box>
                 </CardContent>
               </Card>
             </Grid>
