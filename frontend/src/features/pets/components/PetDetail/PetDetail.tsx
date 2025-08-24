@@ -17,6 +17,8 @@ import { MedicalRecords } from "../../../../components/pet-detail/MedicalRecords
 import { Appointments } from "../../../../components/pet-detail/Appointments";
 import { NotesAndFiles } from "../../../../components/pet-detail/NotesAndFiles";
 import { ActionButtons } from "../../../../components/pet-detail/ActionButtons";
+import { BreedInfoCard } from "../../../../components/pets/BreedInfoCard";
+import { VaccineTracker } from "../../../../components/pets/VaccineTracker";
 import type { Task } from "../../../../components/pet-detail/Appointments";
 import type { FileAttachment } from "../../../../components/pet-detail/NotesAndFiles";
 import { getPet, deletePet } from "../../../../services/pets/petService";
@@ -148,7 +150,12 @@ export const PetDetail = () => {
       try {
         setIsLoading(true);
         setError(null);
+        console.log('🔍 Fetching pet with ID:', id);
         const petData = await getPet(parseInt(id));
+        console.log('🔍 Pet data fetched:', petData);
+        console.log('🔍 Pet type:', petData.type);
+        console.log('🔍 Pet breedType:', petData.breedType);
+        console.log('🔍 Pet breed:', petData.breed);
         setPet(petData);
       } catch (error) {
         console.error("Error fetching pet:", error);
@@ -162,6 +169,7 @@ export const PetDetail = () => {
   }, [id]);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    console.log('🔍 Tab changed from', tabValue, 'to', newValue);
     setTabValue(newValue);
   };
 
@@ -267,7 +275,13 @@ export const PetDetail = () => {
             <Tab label="Medical Records" {...a11yProps(0)} />
             <Tab label="Appointments" {...a11yProps(1)} />
             <Tab label="Notes & Files" {...a11yProps(2)} />
+            <Tab label="Breed Info" {...a11yProps(3)} />
+            <Tab label="Vaccines" {...a11yProps(4)} />
           </Tabs>
+          {/* Test if tabs are visible */}
+          <Box sx={{ p: 1, bgcolor: '#f0f0f0', fontSize: '12px' }}>
+            Debug: Tab {tabValue} selected (0=Medical, 1=Appointments, 2=Notes, 3=Breed Info, 4=Vaccines)
+          </Box>
         </Box>
 
         <TabPanel value={tabValue} index={0}>
@@ -294,6 +308,29 @@ export const PetDetail = () => {
             onUploadFile={(file) => console.log("Upload file:", file)}
             onDeleteFile={(id) => console.log("Delete file:", id)}
           />
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={3}>
+          {/* CRITICAL TEST: Simple display to verify tab content renders */}
+          <Box sx={{ p: 2, border: '3px solid red', borderRadius: 1, mb: 2, bgcolor: '#ffebee' }}>
+            <Typography variant="h4" color="error">🚨 CRITICAL TEST 🚨</Typography>
+            <Typography variant="h6">If you see this red box, the tab content is rendering!</Typography>
+            <Typography>Tab Value: {tabValue}</Typography>
+            <Typography>Pet Name: {pet?.name}</Typography>
+            <Typography>Pet Type: {pet?.type}</Typography>
+            <Typography>Pet Breed: {pet?.breed}</Typography>
+          </Box>
+          
+          <BreedInfoCard
+            petType={pet.type || pet.breedType || 'unknown'}
+            breedName={pet.breed}
+            currentWeight={pet.weightKg || pet.weight_kg}
+            weightUnit={pet.weightUnit}
+          />
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={4}>
+          <VaccineTracker pet={pet} />
         </TabPanel>
       </Box>
     </Container>

@@ -66,6 +66,11 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
           getPets(),
           getTasks()
         ]);
+        
+        console.log('🤖 Chatbot: Initializing with pets:', petsData);
+        console.log('🤖 Chatbot: Initializing with tasks:', tasksData);
+        console.log('🤖 Chatbot: Selected pet:', selectedPet);
+        
         setPets(petsData);
         await aiChatService.initializeContext(petsData, tasksData);
         
@@ -83,6 +88,9 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
           }))
         };
         setMessages([welcomeMessage]);
+        
+        // Debug: Check context after initialization
+        console.log('🤖 Chatbot: Context after initialization:', aiChatService.getCurrentContext());
       } catch (error) {
         console.error('Error initializing chat:', error);
       }
@@ -106,7 +114,10 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
     setIsLoading(true);
 
     try {
+      console.log('🤖 Chatbot: Sending message with selectedPet:', selectedPet);
+      console.log('🤖 Chatbot: Current pets state:', pets);
       const response = await aiChatService.sendMessage(userMessage, selectedPet);
+      console.log('🤖 Chatbot: AI response:', response);
       setMessages(aiChatService.getConversationHistory());
     } catch (error) {
       console.error('Error sending message:', error);
@@ -146,6 +157,14 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
   const handleQuickSuggestion = async (suggestion: string) => {
     setInputMessage(suggestion);
     setTimeout(() => handleSendMessage(), 100);
+  };
+
+  const handleDebugContext = () => {
+    console.log('🤖 Chatbot: Debug - Current context:', aiChatService.getCurrentContext());
+    console.log('🤖 Chatbot: Debug - Has pets:', aiChatService.hasPets());
+    console.log('🤖 Chatbot: Debug - Pet count:', aiChatService.getPetCount());
+    console.log('🤖 Chatbot: Debug - Current pets state:', pets);
+    console.log('🤖 Chatbot: Debug - Selected pet:', selectedPet);
   };
 
   const getActionIcon = (type: SuggestedAction['type']) => {
@@ -328,6 +347,15 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
                 disabled={!inputMessage.trim() || isLoading}
               >
                 <SendIcon />
+              </IconButton>
+              {/* Debug button - remove after testing */}
+              <IconButton
+                color="secondary"
+                onClick={handleDebugContext}
+                size="small"
+                title="Debug Context"
+              >
+                <BotIcon />
               </IconButton>
             </Box>
           </Box>

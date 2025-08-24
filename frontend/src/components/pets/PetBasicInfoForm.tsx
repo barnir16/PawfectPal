@@ -106,15 +106,18 @@ export const PetBasicInfoForm = ({
                 <Autocomplete
                   value={field.value || ""}
                   onChange={(_, newValue) => field.onChange(newValue || "")}
+                  onInputChange={(_, newInputValue) => {
+                    // Update form field immediately for responsive search
+                    field.onChange(newInputValue);
+                  }}
                   options={breeds}
                   loading={loadingBreeds}
                   disabled={isSubmitting || !petType}
                   freeSolo
-                  filterOptions={(options, params) => {
-                    const filtered = options.filter(option =>
-                      option.toLowerCase().includes(params.inputValue.toLowerCase())
-                    );
-                    return filtered;
+                  autoComplete
+                  filterOptions={(options) => {
+                    // Don't filter locally - only show what the API returned
+                    return options;
                   }}
                   renderInput={(params) => (
                     <TextField
@@ -126,12 +129,20 @@ export const PetBasicInfoForm = ({
                         breedError ||
                         (!petType 
                           ? "Select pet type first" 
+                          : field.value && field.value.length < 3
+                          ? "Type at least 3 characters to search breeds"
                           : loadingBreeds 
-                          ? "Loading breeds..." 
-                          : "Type to search breeds or enter a custom breed"
+                          ? "Searching breeds..." 
+                          : "Type to search breeds or enter custom breed"
                         )
                       }
-                      placeholder={!petType ? "Select pet type first" : "Type to search breeds..."}
+                      placeholder={
+                        !petType 
+                          ? "Select pet type first" 
+                          : field.value && field.value.length < 3
+                          ? "Type at least 3 characters..."
+                          : "Type to search breeds..."
+                      }
                     />
                   )}
                   renderOption={(props, option) => (
@@ -142,8 +153,10 @@ export const PetBasicInfoForm = ({
                   noOptionsText={
                     !petType 
                       ? "Select pet type first"
+                      : field.value && field.value.length < 3
+                      ? "Type at least 3 characters to search breeds"
                       : loadingBreeds 
-                      ? "Loading breeds..."
+                      ? "Searching breeds..."
                       : "No breeds found - you can enter a custom breed"
                   }
                 />
