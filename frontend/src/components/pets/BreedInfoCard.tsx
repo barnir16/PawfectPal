@@ -16,6 +16,7 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
+  Button,
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
@@ -47,49 +48,34 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
 
-  // Simple debug logging
-  console.log('🔍 BreedInfoCard rendered with props:', { petType, breedName, currentWeight, weightUnit });
-
-  // Validate props
-  if (!petType || !breedName) {
-    console.warn('⚠️ BreedInfoCard: Invalid props:', { petType, breedName });
-    return (
-      <Card>
-        <CardHeader title="Breed Information" />
-        <CardContent>
-          <Typography color="error">
-            Invalid props: petType="{petType}", breedName="{breedName}"
-          </Typography>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Simple test to see if component renders
-  console.log('🔍 About to return JSX - final step');
-
-  // Simple test to see if component renders
-  console.log('🔍 About to return JSX - really final step');
+  // Normalize and validate props with better fallbacks
+  const normalizedPetType = petType?.toLowerCase().trim() || 'unknown';
+  const normalizedBreedName = breedName?.trim() || 'Unknown Breed';
+  
+  console.log('🔍 BreedInfoCard: Rendering with props:', { petType, breedName, currentWeight, weightUnit });
+  console.log('🔍 Normalized values:', { normalizedPetType, normalizedBreedName });
 
   useEffect(() => {
-    console.log('🔍 useEffect triggered with:', { petType, breedName });
+    console.log('🔍 useEffect triggered with:', { normalizedPetType, normalizedBreedName });
     
     const fetchBreedInfo = async () => {
       try {
-        console.log('🔍 Starting to fetch breed info for:', { petType, breedName });
+        console.log('🔍 Starting to fetch breed info for:', { normalizedPetType, normalizedBreedName });
         setLoading(true);
         setError(null);
         
         let info: BreedInfo | null = null;
         
-        if (petType === 'dog') {
-          console.log('🐕 Fetching dog breed info for:', breedName);
-          info = await fetchDogBreedInfo(breedName);
-        } else if (petType === 'cat') {
-          console.log('🐱 Fetching cat breed info for:', breedName);
-          info = await fetchCatBreedInfo(breedName);
+        if (normalizedPetType === 'dog') {
+          console.log('🐕 Fetching dog breed info for:', normalizedBreedName);
+          info = await fetchDogBreedInfo(normalizedBreedName);
+        } else if (normalizedPetType === 'cat') {
+          console.log('🐱 Fetching cat breed info for:', normalizedBreedName);
+          info = await fetchCatBreedInfo(normalizedBreedName);
         } else {
-          console.log('❓ Unknown pet type:', petType);
+          console.log('❓ Unknown pet type:', normalizedPetType);
+          setLoading(false);
+          return;
         }
         
         console.log('📋 Breed info result:', info);
@@ -102,12 +88,15 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
       }
     };
 
-    if (breedName && petType) {
+    // Only fetch if we have valid data
+    if (normalizedBreedName && normalizedBreedName !== 'Unknown Breed' && normalizedPetType !== 'unknown') {
+      console.log('🔍 Proceeding with breed info fetch');
       fetchBreedInfo();
     } else {
+      console.log('🔍 Skipping breed info fetch - insufficient data');
       setLoading(false);
     }
-  }, [breedName, petType]);
+  }, [normalizedPetType, normalizedBreedName]);
 
   const handleToggleExpanded = () => {
     setExpanded(!expanded);
@@ -140,15 +129,14 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
         <CardHeader title="Breed Information" />
         <CardContent>
           <Typography>Loading breed information for {breedName}...</Typography>
+          {/* Debug info during loading */}
           <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
             <Typography variant="caption" color="text.secondary">Debug Props:</Typography>
             <Typography variant="body2">Pet Type: {petType}</Typography>
             <Typography variant="body2">Breed Name: {breedName}</Typography>
             <Typography variant="body2">Current Weight: {currentWeight} {weightUnit}</Typography>
-          </Box>
-          <Box sx={{ mt: 2, p: 2, bgcolor: '#e3f2fd', borderRadius: 1 }}>
-            <Typography variant="caption" color="primary">Status: LOADING</Typography>
-            <Typography variant="body2">Attempting to fetch breed info...</Typography>
+            <Typography variant="body2">Normalized Pet Type: {normalizedPetType}</Typography>
+            <Typography variant="body2">Normalized Breed Name: {normalizedBreedName}</Typography>
           </Box>
           <Skeleton variant="text" width="60%" />
           <Skeleton variant="text" width="40%" />
@@ -166,10 +154,24 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
           <Typography variant="h6" color="error">Debug Info:</Typography>
           <Typography>Pet Type: {petType}</Typography>
           <Typography>Breed Name: {breedName}</Typography>
+          <Typography>Normalized Pet Type: {normalizedPetType}</Typography>
+          <Typography>Normalized Breed Name: {normalizedBreedName}</Typography>
           <Typography>Error: {error || 'No breed info returned'}</Typography>
           <Alert severity="info" sx={{ mt: 2 }}>
             No detailed breed information available for {breedName}.
           </Alert>
+          {/* Test button to manually trigger API call */}
+          <Box sx={{ mt: 2 }}>
+            <Button
+              variant="outlined"
+              onClick={async () => {
+                console.log('🧪 Manual test of breed info API...');
+                await testBreedInfoAPI();
+              }}
+            >
+              Test Breed Info API
+            </Button>
+          </Box>
         </CardContent>
       </Card>
     );
@@ -177,70 +179,26 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
 
   return (
     <Card>
-      <CardHeader
-        title={`${breedName} Information`}
-        action={
-          <Box>
-            <IconButton
-              size="small"
-              onClick={() => setExpanded(!expanded)}
-              aria-expanded={expanded}
-              aria-label="show more"
-            >
-              {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            </IconButton>
-            {/* Test button - remove after testing */}
-            <IconButton
-              size="small"
-              onClick={async () => {
-                console.log('🧪 Testing breed info API directly...');
-                await testBreedInfoAPI();
-              }}
-              sx={{ ml: 1 }}
-              color="secondary"
-            >
-              <WarningIcon />
-            </IconButton>
-            {/* Debug button - remove after testing */}
-            <IconButton
-              size="small"
-              onClick={() => {
-                console.log('🔍 Manual refresh triggered for:', { petType, breedName });
-                setLoading(true);
-                setError(null);
-                // Force refresh
-                const fetchBreedInfo = async () => {
-                  try {
-                    let info: BreedInfo | null = null;
-                    if (petType === 'dog') {
-                      console.log('🐕 Testing fetchDogBreedInfo with:', breedName);
-                      info = await fetchDogBreedInfo(breedName);
-                      console.log('🐕 Result:', info);
-                    } else if (petType === 'cat') {
-                      console.log('🐱 Testing fetchCatBreedInfo with:', breedName);
-                      info = await fetchCatBreedInfo(breedName);
-                      console.log('🐱 Result:', info);
-                    }
-                    console.log('🔍 Manual refresh result:', info);
-                    setBreedInfo(info);
-                  } catch (err) {
-                    console.error('❌ Manual refresh error:', err);
-                    setError('Failed to fetch breed information');
-                  } finally {
-                    setLoading(false);
-                  }
-                };
-                fetchBreedInfo();
-              }}
-              sx={{ ml: 1 }}
-              color="primary"
-            >
-              <InfoIcon />
-            </IconButton>
+      <CardHeader 
+        title={
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <PetsIcon color="primary" />
+            <Typography variant="h6">Breed Information</Typography>
           </Box>
+        }
+        action={
+          <IconButton
+            onClick={() => setExpanded(!expanded)}
+            aria-expanded={expanded}
+            aria-label="show more"
+          >
+            {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          </IconButton>
         }
       />
       
+
+
       <CardContent>
         {/* Weight Status Alert */}
         {weightStatus && (
@@ -252,7 +210,7 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
         {/* Basic Information */}
         <Grid container spacing={2} sx={{ mb: 2 }}>
           {breedInfo.averageWeight && (
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Typography variant="subtitle2" color="text.secondary">
                 Average Weight Range
               </Typography>
@@ -263,7 +221,7 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
           )}
           
           {breedInfo.lifeExpectancy && (
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Typography variant="subtitle2" color="text.secondary">
                 Life Expectancy
               </Typography>
@@ -305,97 +263,78 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
                   color={breedInfo.characteristics.trainability === 'high' ? 'success' : 'default'}
                 />
               )}
-              {breedInfo.characteristics.goodWithChildren !== undefined && (
-                <Chip
-                  label={breedInfo.characteristics.goodWithChildren ? 'Good with kids' : 'Not kid-friendly'}
-                  size="small"
-                  color={breedInfo.characteristics.goodWithChildren ? 'success' : 'warning'}
-                />
-              )}
-              {breedInfo.characteristics.goodWithOtherPets !== undefined && (
-                <Chip
-                  label={breedInfo.characteristics.goodWithOtherPets ? 'Pet-friendly' : 'Not pet-friendly'}
-                  size="small"
-                  color={breedInfo.characteristics.goodWithOtherPets ? 'success' : 'warning'}
-                />
-              )}
             </Box>
           </Box>
         )}
 
+        {/* Health Considerations */}
+        {breedInfo.healthConsiderations && breedInfo.healthConsiderations.length > 0 && (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+              Health Considerations
+            </Typography>
+            <List dense>
+              {breedInfo.healthConsiderations.map((consideration, index) => (
+                <ListItem key={index} sx={{ py: 0.5 }}>
+                  <ListItemIcon sx={{ minWidth: 32 }}>
+                    <HealthIcon color="warning" fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary={consideration} />
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        )}
+
+        {/* Exercise and Diet */}
         <Collapse in={expanded}>
-          <Divider sx={{ my: 2 }} />
-          
-          {/* Health Considerations */}
-          {breedInfo.healthConsiderations && breedInfo.healthConsiderations.length > 0 && (
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                <HealthIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                Health Considerations
-              </Typography>
-              <List dense>
-                {breedInfo.healthConsiderations.map((consideration, index) => (
-                  <ListItem key={index} sx={{ py: 0.5 }}>
-                    <ListItemIcon sx={{ minWidth: 32 }}>
-                      <WarningIcon color="warning" fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText primary={consideration} />
-                  </ListItem>
-                ))}
-              </List>
-            </Box>
-          )}
-
-          {/* Exercise Needs */}
-          {breedInfo.exerciseNeeds && (
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                <FitnessIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                Exercise Needs
-              </Typography>
-              <Typography variant="body2">
-                {breedInfo.exerciseNeeds}
-              </Typography>
-            </Box>
-          )}
-
-          {/* Diet Recommendations */}
-          {breedInfo.dietRecommendations && (
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                <FoodIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                Diet Recommendations
-              </Typography>
-              <Typography variant="body2">
-                {breedInfo.dietRecommendations}
-              </Typography>
-            </Box>
-          )}
-
-          {/* Origin and Temperament */}
-          <Grid container spacing={2}>
-            {breedInfo.origin && (
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Origin
+          <Box sx={{ mt: 2 }}>
+            <Divider sx={{ mb: 2 }} />
+            
+            {breedInfo.exerciseNeeds && (
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                  Exercise Needs
                 </Typography>
                 <Typography variant="body2">
-                  {breedInfo.origin}
+                  {breedInfo.exerciseNeeds}
                 </Typography>
-              </Grid>
+              </Box>
+            )}
+            
+            {breedInfo.dietRecommendations && (
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                  Diet Recommendations
+                </Typography>
+                <Typography variant="body2">
+                  {breedInfo.dietRecommendations}
+                </Typography>
+              </Box>
             )}
             
             {breedInfo.temperament && (
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
                   Temperament
                 </Typography>
                 <Typography variant="body2">
                   {breedInfo.temperament}
                 </Typography>
-              </Grid>
+              </Box>
             )}
-          </Grid>
+            
+            {breedInfo.origin && (
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                  Origin
+                </Typography>
+                <Typography variant="body2">
+                  {breedInfo.origin}
+                </Typography>
+              </Box>
+            )}
+          </Box>
         </Collapse>
       </CardContent>
     </Card>

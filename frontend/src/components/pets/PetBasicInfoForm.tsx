@@ -288,11 +288,16 @@ export const PetBasicInfoForm = ({
                   label="Age (years)"
                   type="number"
                   error={!!errors.age}
-                  helperText={errors.age?.message}
+                  helperText={errors.age?.message || "Enter age between 0 and 30 years"}
                   disabled={isSubmitting}
                   value={field.value || ''}
                   onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                  inputProps={{ min: 0, max: 30, step: 0.1 }}
+                  inputProps={{ 
+                    min: 0, 
+                    max: 30, 
+                    step: 0.1,
+                    placeholder: "0.0"
+                  }}
                 />
               )}
             />

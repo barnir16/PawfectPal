@@ -81,6 +81,61 @@ function getBreedSearchCacheKey(petType: string, searchTerm: string): string {
   return `${petType.toLowerCase()}_search_${searchTerm.toLowerCase().trim()}`;
 }
 
+// Normalize breed name for better matching
+function normalizeBreedName(breedName: string): string {
+  return breedName
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s]/g, '') // Remove special characters
+    .replace(/\s+/g, ' ') // Normalize spaces
+    .trim();
+}
+
+// Find best breed match from database
+function findBestBreedMatch(breedName: string, breedDatabase: Record<string, any>): string | null {
+  const normalizedSearch = normalizeBreedName(breedName);
+  
+  // First try exact match
+  if (breedDatabase[normalizedSearch]) {
+    return normalizedSearch;
+  }
+  
+  // Try partial matches
+  const searchWords = normalizedSearch.split(' ');
+  for (const dbBreed of Object.keys(breedDatabase)) {
+    const dbWords = dbBreed.split(' ');
+    
+    // Check if all search words are contained in database breed
+    const allWordsMatch = searchWords.every(word => 
+      dbWords.some(dbWord => dbWord.includes(word) || word.includes(dbWord))
+    );
+    
+    if (allWordsMatch) {
+      return dbBreed;
+    }
+  }
+  
+  // Try fuzzy matching for common variations
+  const commonVariations: Record<string, string> = {
+    'labrador': 'labrador retriever',
+    'lab': 'labrador retriever',
+    'golden': 'golden retriever',
+    'german shepherd': 'german shepherd dog',
+    'gsd': 'german shepherd dog',
+    'bulldog': 'english bulldog',
+    'french bulldog': 'french bulldog',
+    'persian': 'persian cat',
+    'siamese': 'siamese cat',
+    'ragdoll': 'ragdoll cat',
+  };
+  
+  if (commonVariations[normalizedSearch]) {
+    return commonVariations[normalizedSearch];
+  }
+  
+  return null;
+}
+
 /**
  * Test function to verify breed info API is working
  */
@@ -148,12 +203,13 @@ export const fetchDogBreedInfo = async (breedName: string): Promise<BreedInfo | 
   try {
     console.log('🐕 Fetching dog breed info for:', breedName);
     
-    // Try to get from our enhanced database first
-    const enhancedInfo = DOG_BREED_DATABASE[breedName.toLowerCase()];
-    if (enhancedInfo) {
-      console.log('🐕 Found enhanced breed info in database for:', breedName);
+    // Try to get from our enhanced database first with improved matching
+    const bestMatch = findBestBreedMatch(breedName, DOG_BREED_DATABASE);
+    if (bestMatch) {
+      console.log('🐕 Found enhanced breed info in database for:', breedName, 'matched to:', bestMatch);
+      const enhancedInfo = DOG_BREED_DATABASE[bestMatch];
       const completeInfo: BreedInfo = {
-        name: breedName,
+        name: breedName, // Keep original breed name
         ...enhancedInfo
       };
       breedInfoCache.set(cacheKey, completeInfo);
@@ -255,12 +311,13 @@ export const fetchCatBreedInfo = async (breedName: string): Promise<BreedInfo | 
   try {
     console.log('🐱 Fetching cat breed info for:', breedName);
     
-    // Try to get from our enhanced database first
-    const enhancedInfo = CAT_BREED_DATABASE[breedName.toLowerCase()];
-    if (enhancedInfo) {
-      console.log('🐱 Found enhanced breed info in database for:', breedName);
+    // Try to get from our enhanced database first with improved matching
+    const bestMatch = findBestBreedMatch(breedName, CAT_BREED_DATABASE);
+    if (bestMatch) {
+      console.log('🐱 Found enhanced breed info in database for:', breedName, 'matched to:', bestMatch);
+      const enhancedInfo = CAT_BREED_DATABASE[bestMatch];
       const completeInfo: BreedInfo = {
-        name: breedName,
+        name: breedName, // Keep original breed name
         ...enhancedInfo
       };
       breedInfoCache.set(cacheKey, completeInfo);
@@ -551,20 +608,32 @@ export const fetchDogBreeds = debounce(async (searchTerm?: string): Promise<stri
   if (searchTerm) {
     const cacheKey = getBreedSearchCacheKey('dog', searchTerm);
     if (breedSearchCache.has(cacheKey)) {
-      console.log('🐕 Using cached dog breeds for:', searchTerm);
       return breedSearchCache.get(cacheKey)!;
     }
     
     // Only search if we have enough characters
     if (!shouldSearchBreed(searchTerm)) {
-      console.log('🐕 Search term too short, returning empty array');
       return [];
     }
   }
 
   try {
-    console.log('🐕 Fetching dog breeds from API...');
-    // Try the more comprehensive dog breeds API first
+    // Check if we already have the full list cached
+    const cachedAllBreeds = breedSearchCache.get('dog_all');
+    if (cachedAllBreeds && !searchTerm) {
+      return cachedAllBreeds;
+    }
+    
+    // Check if we have a cached search result
+    if (searchTerm) {
+      const cacheKey = getBreedSearchCacheKey('dog', searchTerm);
+      const cachedResult = breedSearchCache.get(cacheKey);
+      if (cachedResult) {
+        return cachedResult;
+      }
+    }
+    
+    // Only fetch from API if we don't have cached data
     let response = await fetch('https://api.thedogapi.com/v1/breeds');
     let data;
     
@@ -572,91 +641,52 @@ export const fetchDogBreeds = debounce(async (searchTerm?: string): Promise<stri
       data = await response.json();
       if (Array.isArray(data) && data.length > 0) {
         const breeds = data.map((breed: any) => breed.name.toLowerCase());
-        console.log('🐕 Using The Dog API - Fetched', breeds.length, 'dog breeds');
-        console.log('🐕 Sample breed names:', breeds.slice(0, 10));
         
-        // Log all breeds that contain "bull" for debugging
-        const bullBreeds = breeds.filter(breed => breed.includes('bull'));
-        console.log('🐕 All breeds containing "bull":', bullBreeds);
+        // Cache the full list
+        breedSearchCache.set('dog_all', breeds);
         
         // Filter breeds if search term provided
-        let filteredBreeds = breeds;
         if (searchTerm) {
           const lowerSearchTerm = searchTerm.toLowerCase().trim();
-          console.log('🐕 Searching for breed:', searchTerm, 'normalized to:', lowerSearchTerm);
-          
-          filteredBreeds = breeds.filter(breed => {
-            const matches = breed.includes(lowerSearchTerm);
-            if (matches) {
-              console.log('🐕 Found match:', breed, 'for search term:', searchTerm);
-            }
-            return matches;
-          });
-          
-          console.log('🐕 Filtered breeds:', filteredBreeds);
+          const filteredBreeds = breeds.filter(breed => breed.includes(lowerSearchTerm));
           
           // Cache the filtered results
           const cacheKey = getBreedSearchCacheKey('dog', searchTerm);
           breedSearchCache.set(cacheKey, filteredBreeds);
-          console.log('🐕 Cached', filteredBreeds.length, 'filtered dog breeds for:', searchTerm);
+          
+          return filteredBreeds;
         }
         
-        // Always cache the full list
-        breedSearchCache.set('dog_all', breeds);
-        
-        console.log('🐕 Returning', filteredBreeds.length, 'formatted dog breeds');
-        return filteredBreeds;
+        return breeds;
       }
     }
     
     // Fallback to dog.ceo API if The Dog API fails
-    console.log('🐕 Falling back to dog.ceo API...');
     response = await fetch('https://dog.ceo/api/breeds/list/all');
     data = await response.json();
     
     if (data.status === 'success') {
       const breeds = Object.keys(data.message);
-      console.log('🐕 Dog breeds API response (fallback):', data);
-      console.log('🐕 Fetched', breeds.length, 'dog breeds from fallback API');
-      console.log('🐕 Sample breed names:', breeds.slice(0, 10));
       
-      // Log all breeds that contain "bull" for debugging
-      const bullBreeds = breeds.filter(breed => breed.toLowerCase().includes('bull'));
-      console.log('🐕 All breeds containing "bull" (fallback):', bullBreeds);
+      // Cache the full list
+      breedSearchCache.set('dog_all', breeds);
       
       // Filter breeds if search term provided
-      let filteredBreeds = breeds;
       if (searchTerm) {
         const lowerSearchTerm = searchTerm.toLowerCase().trim();
-        console.log('🐕 Searching for breed:', searchTerm, 'normalized to:', lowerSearchTerm);
-        
-        filteredBreeds = breeds.filter(breed => {
+        const filteredBreeds = breeds.filter(breed => {
           const normalizedBreed = breed.toLowerCase();
-          
-          // Simple but effective matching: check if search term is contained in breed name
-          // This will find "frenchbulldog" when searching for "bull"
-          const matches = normalizedBreed.includes(lowerSearchTerm);
-          
-          if (matches) {
-            console.log('🐕 Found match:', breed, 'for search term:', searchTerm);
-          }
-          
-          return matches;
+          return normalizedBreed.includes(lowerSearchTerm);
         });
-        
-        console.log('🐕 Filtered breeds:', filteredBreeds);
         
         // Cache the filtered results
         const cacheKey = getBreedSearchCacheKey('dog', searchTerm);
         breedSearchCache.set(cacheKey, filteredBreeds);
-        console.log('🐕 Cached', filteredBreeds.length, 'filtered dog breeds for:', searchTerm);
+        
+        return filteredBreeds;
       }
       
-      // Always cache the full list
-      breedSearchCache.set('dog_all', breeds);
-      
-      console.log('🐕 Returning', filteredBreeds.length, 'formatted dog breeds');
-      return filteredBreeds;
+      return breeds;
     } else {
       throw new Error('Failed to fetch dog breeds from both APIs');
     }
@@ -668,7 +698,6 @@ export const fetchDogBreeds = debounce(async (searchTerm?: string): Promise<stri
       const cacheKey = getBreedSearchCacheKey('dog', searchTerm);
       const cached = breedSearchCache.get(cacheKey);
       if (cached) {
-        console.log('🐕 Returning cached results due to error:', cached);
         return cached;
       }
     }
@@ -684,46 +713,56 @@ export const fetchCatBreeds = debounce(async (searchTerm?: string): Promise<stri
   if (searchTerm) {
     const cacheKey = getBreedSearchCacheKey('cat', searchTerm);
     if (breedSearchCache.has(cacheKey)) {
-      console.log('🐱 Using cached cat breeds for:', searchTerm);
       return breedSearchCache.get(cacheKey)!;
     }
     
     // Only search if we have enough characters
     if (!shouldSearchBreed(searchTerm)) {
-      console.log('🐱 Search term too short, returning empty array');
       return [];
     }
   }
 
   try {
-    console.log('🐱 Fetching cat breeds from API...');
+    // Check if we already have the full list cached
+    const cachedAllBreeds = breedSearchCache.get('cat_all');
+    if (cachedAllBreeds && !searchTerm) {
+      return cachedAllBreeds;
+    }
+    
+    // Check if we have a cached search result
+    if (searchTerm) {
+      const cacheKey = getBreedSearchCacheKey('cat', searchTerm);
+      const cachedResult = breedSearchCache.get(cacheKey);
+      if (cachedResult) {
+        return cachedResult;
+      }
+    }
+    
+    // Only fetch from API if we don't have cached data
     const response = await fetch('https://api.thecatapi.com/v1/breeds');
     const data = await response.json();
     
     if (Array.isArray(data)) {
       const breeds = data.map((breed: any) => breed.name);
-      console.log('🐱 Cat breeds API response:', data);
-      console.log('🐱 Fetched', breeds.length, 'cat breeds from API');
+      
+      // Cache the full list
+      breedSearchCache.set('cat_all', breeds);
       
       // Filter breeds if search term provided
-      let filteredBreeds = breeds;
       if (searchTerm) {
         const lowerSearchTerm = searchTerm.toLowerCase().trim();
-        filteredBreeds = breeds.filter(breed => 
+        const filteredBreeds = breeds.filter(breed => 
           breed.toLowerCase().includes(lowerSearchTerm)
         );
         
         // Cache the filtered results
         const cacheKey = getBreedSearchCacheKey('cat', searchTerm);
         breedSearchCache.set(cacheKey, filteredBreeds);
-        console.log('🐱 Cached', filteredBreeds.length, 'filtered cat breeds for:', searchTerm);
+        
+        return filteredBreeds;
       }
       
-      // Always cache the full list
-      breedSearchCache.set('cat_all', breeds);
-      
-      console.log('🐱 Returning', filteredBreeds.length, 'formatted cat breeds');
-      return filteredBreeds;
+      return breeds;
     } else {
       throw new Error('Failed to fetch cat breeds');
     }
@@ -734,7 +773,6 @@ export const fetchCatBreeds = debounce(async (searchTerm?: string): Promise<stri
       const cacheKey = getBreedSearchCacheKey('cat', searchTerm);
       const cached = breedSearchCache.get(cacheKey);
       if (cached) {
-        console.log('🐱 Returning cached cat breeds due to error');
         return cached;
       }
     }

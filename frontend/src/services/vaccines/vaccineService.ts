@@ -175,3 +175,124 @@ export const getOverdueVaccinations = async (petId: number): Promise<Vaccination
     `/pets/${petId}/vaccinations/overdue`
   );
 };
+
+// New methods for the vaccination router endpoints
+
+/**
+ * Get vaccinations for a specific pet
+ */
+export const getPetVaccinations = async (
+  petId: number,
+  page: number = 1,
+  pageSize: number = 50
+): Promise<{
+  vaccinations: any[];
+  total: number;
+  page: number;
+  page_size: number;
+}> => {
+  return apiRequest(`/vaccinations/pet/${petId}?page=${page}&page_size=${pageSize}`);
+};
+
+/**
+ * Create a new vaccination record for a pet
+ */
+export const createPetVaccination = async (
+  petId: number,
+  vaccinationData: {
+    vaccine_name: string;
+    date_administered: string;
+    next_due_date: string;
+    batch_number?: string;
+    manufacturer?: string;
+    veterinarian?: string;
+    clinic?: string;
+    dose_number?: number;
+    notes?: string;
+    is_completed?: boolean;
+    reminder_sent?: boolean;
+  }
+): Promise<any> => {
+  return apiRequest(`/vaccinations/pet/${petId}`, {
+    method: 'POST',
+    body: JSON.stringify(vaccinationData)
+  });
+};
+
+/**
+ * Update an existing vaccination record
+ */
+export const updatePetVaccination = async (
+  vaccinationId: number,
+  updates: Partial<{
+    vaccine_name: string;
+    date_administered: string;
+    next_due_date: string;
+    batch_number: string;
+    manufacturer: string;
+    veterinarian: string;
+    clinic: string;
+    dose_number: number;
+    notes: string;
+    is_completed: boolean;
+    reminder_sent: boolean;
+  }>
+): Promise<any> => {
+  return apiRequest(`/vaccinations/${vaccinationId}`, {
+    method: 'PUT',
+    body: JSON.stringify(updates)
+  });
+};
+
+/**
+ * Delete a vaccination record
+ */
+export const deletePetVaccination = async (vaccinationId: number): Promise<void> => {
+  return apiRequest(`/vaccinations/${vaccinationId}`, {
+    method: 'DELETE'
+  });
+};
+
+/**
+ * Get vaccination summary for a pet
+ */
+export const getPetVaccinationSummary = async (petId: number): Promise<{
+  pet_id: number;
+  total_vaccinations: number;
+  up_to_date: boolean;
+  next_due_date: string | null;
+  overdue_count: number;
+  completed_series: string[];
+}> => {
+  return apiRequest(`/vaccinations/pet/${petId}/summary`);
+};
+
+/**
+ * Get vaccinations due soon for all user's pets
+ */
+export const getVaccinationsDueSoon = async (daysAhead: number = 30): Promise<{
+  vaccination_id: number;
+  pet_id: number;
+  pet_name: string;
+  vaccine_name: string;
+  due_date: string;
+  days_until_due: number;
+  is_overdue: boolean;
+}[]> => {
+  return apiRequest(`/vaccinations/due-soon?days_ahead=${daysAhead}`);
+};
+
+/**
+ * Get overdue vaccinations for all user's pets
+ */
+export const getOverdueVaccinationsForAllPets = async (): Promise<{
+  vaccination_id: number;
+  pet_id: number;
+  pet_name: string;
+  vaccine_name: string;
+  due_date: string;
+  days_until_due: number;
+  is_overdue: boolean;
+}[]> => {
+  return apiRequest('/vaccinations/overdue');
+};

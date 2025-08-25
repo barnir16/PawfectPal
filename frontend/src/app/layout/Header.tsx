@@ -6,6 +6,8 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { LanguageSwitcher } from "../../components/common/LanguageSwitcher";
+import { useLocalization } from "../../contexts/LocalizationContext";
 
 type HeaderProps = {
   onMenuClick: () => void;
@@ -14,6 +16,7 @@ type HeaderProps = {
 export const Header = ({ onMenuClick }: HeaderProps) => {
   const { user, logout, forceLogout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLocalization();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleAccountClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -69,6 +72,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
           <Typography variant="body2" sx={{ color: 'inherit' }}>
             {user?.username || 'User'}
           </Typography>
+          <LanguageSwitcher variant="compact" />
           <IconButton
             size="large"
             aria-label="account of current user"
@@ -88,11 +92,11 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
           >
             <MenuItem onClick={handleAccountSettings}>
               <SettingsIcon sx={{ mr: 1 }} />
-              Account Settings
+              {t('navigation.settings')}
             </MenuItem>
             <MenuItem onClick={handleLogout}>
               <LogoutIcon sx={{ mr: 1 }} />
-              Logout
+              {t('navigation.logout')}
             </MenuItem>
           </Menu>
         </Box>

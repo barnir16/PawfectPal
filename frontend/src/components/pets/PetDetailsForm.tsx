@@ -36,8 +36,14 @@ export const PetDetailsForm = ({
               type="number"
               label="Weight (optional)"
               error={!!errors.weight}
-              helperText={errors.weight?.message}
+              helperText={errors.weight?.message || "Enter weight greater than 0"}
               disabled={isSubmitting}
+              inputProps={{ 
+                min: 0.1, 
+                max: 200, 
+                step: 0.1,
+                placeholder: "0.0"
+              }}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
