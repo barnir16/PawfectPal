@@ -19,6 +19,7 @@ import { NotesAndFiles } from "../../../../components/pet-detail/NotesAndFiles";
 import { ActionButtons } from "../../../../components/pet-detail/ActionButtons";
 import { BreedInfoCard } from "../../../../components/pets/BreedInfoCard";
 import { VaccineTracker } from "../../../../components/pets/VaccineTracker";
+import { PetWeightMonitor } from "../../../../components/pets/PetWeightMonitor";
 import type { Task } from "../../../../components/pet-detail/Appointments";
 import type { FileAttachment } from "../../../../components/pet-detail/NotesAndFiles";
 import { getPet, deletePet } from "../../../../services/pets/petService";
@@ -156,6 +157,9 @@ export const PetDetail = () => {
         console.log('🔍 Pet type:', petData.type);
         console.log('🔍 Pet breedType:', petData.breedType);
         console.log('🔍 Pet breed:', petData.breed);
+        console.log('🔍 Pet weightKg:', petData.weightKg);
+        console.log('🔍 Pet weightUnit:', petData.weightUnit);
+        console.log('🔍 Full pet object:', JSON.stringify(petData, null, 2));
         setPet(petData);
       } catch (error) {
         console.error("Error fetching pet:", error);
@@ -277,11 +281,8 @@ export const PetDetail = () => {
             <Tab label="Notes & Files" {...a11yProps(2)} />
             <Tab label="Breed Info" {...a11yProps(3)} />
             <Tab label="Vaccines" {...a11yProps(4)} />
+            <Tab label="Weight Monitor" {...a11yProps(5)} />
           </Tabs>
-          {/* Test if tabs are visible */}
-          <Box sx={{ p: 1, bgcolor: '#f0f0f0', fontSize: '12px' }}>
-            Debug: Tab {tabValue} selected (0=Medical, 1=Appointments, 2=Notes, 3=Breed Info, 4=Vaccines)
-          </Box>
         </Box>
 
         <TabPanel value={tabValue} index={0}>
@@ -311,26 +312,20 @@ export const PetDetail = () => {
         </TabPanel>
 
         <TabPanel value={tabValue} index={3}>
-          {/* CRITICAL TEST: Simple display to verify tab content renders */}
-          <Box sx={{ p: 2, border: '3px solid red', borderRadius: 1, mb: 2, bgcolor: '#ffebee' }}>
-            <Typography variant="h4" color="error">🚨 CRITICAL TEST 🚨</Typography>
-            <Typography variant="h6">If you see this red box, the tab content is rendering!</Typography>
-            <Typography>Tab Value: {tabValue}</Typography>
-            <Typography>Pet Name: {pet?.name}</Typography>
-            <Typography>Pet Type: {pet?.type}</Typography>
-            <Typography>Pet Breed: {pet?.breed}</Typography>
-          </Box>
-          
           <BreedInfoCard
-            petType={pet.type || pet.breedType || 'unknown'}
-            breedName={pet.breed}
-            currentWeight={pet.weightKg || pet.weight_kg}
-            weightUnit={pet.weightUnit}
+            petType={pet?.type || pet?.breedType || 'dog'}
+            breedName={pet?.breed || 'Mixed Breed'}
+            currentWeight={pet?.weightKg || pet?.weight_kg || 0}
+            weightUnit={pet?.weightUnit || 'kg'}
           />
         </TabPanel>
 
         <TabPanel value={tabValue} index={4}>
           <VaccineTracker pet={pet} />
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={5}>
+          <PetWeightMonitor pet={pet} />
         </TabPanel>
       </Box>
     </Container>

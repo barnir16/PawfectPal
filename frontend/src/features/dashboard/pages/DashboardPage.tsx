@@ -1,9 +1,13 @@
-import { Box, Grid, Paper, Typography } from "@mui/material";
+import { useState, useEffect } from "react";
+import { Box, Grid, Paper, Typography, CircularProgress, Alert } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { Add as AddIcon } from "@mui/icons-material";
 import { Button } from "./../../../components/ui/Button";
 import TaskList from "./../../../features/tasks/components/TaskList";
-import type { Task } from "./../../../features/tasks/components/TaskList";
+import type { Task as TaskListTask } from "./../../../features/tasks/components/TaskList";
+import { getPets } from "../../../services/pets/petService";
+import { getTasks } from "../../../services/tasks/taskService";
+import { getOverdueVaccinationsForAllPets } from "../../../services/vaccines/vaccineService";
 
 const Item = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(2),
@@ -35,45 +39,102 @@ const StatCard = ({ title, value, description }: StatCardProps) => (
 );
 
 export const Dashboard = () => {
-  // These would normally come from your API/state
-  const stats = {
-    totalPets: 3,
-    tasksDue: 5,
-    upcomingVetVisits: 2,
-    monthlySpending: "$120.75",
-  };
+  const [stats, setStats] = useState({
+    totalPets: 0,
+    tasksDue: 0,
+    upcomingVetVisits: 0,
+    overdueVaccinations: 0,
+  });
+  const [recentTasks, setRecentTasks] = useState<TaskListTask[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // src/pages/Dashboard.tsx
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Fetch pets, tasks, and vaccination data
+        const [petsData, tasksData] = await Promise.all([
+          getPets(),
+          getTasks()
+        ]);
+        
+        // Get vaccination data for all pets
+        let overdueVaccinations: any[] = [];
+        
+        if (petsData.length > 0) {
+          try {
+            const overdueData = await getOverdueVaccinationsForAllPets(); // Get overdue vaccinations for all pets
+            overdueVaccinations = overdueData;
+          } catch (error) {
+            console.warn('Could not fetch vaccination data:', error);
+            // Continue without vaccination data
+          }
+        }
 
-  const recentTasks: Task[] = [
-    {
-      id: 1,
-      title: "Morning Walk",
-      description: "A quick walk around the block.",
-      dueDate: "Today, 8:00 AM",
-      pet: "Max",
-      priority: "medium",
-      completed: false,
-    },
-    {
-      id: 2,
-      title: "Vet Appointment",
-      description: "Annual check-up with Dr. Smith.",
-      dueDate: "Tomorrow, 2:30 PM",
-      pet: "Bella",
-      priority: "high",
-      completed: false,
-    },
-    {
-      id: 3,
-      title: "Buy Food",
-      description: "Stock up on kibble and treats.",
-      dueDate: "Tomorrow",
-      pet: "All",
-      priority: "low",
-      completed: true,
-    },
-  ];
+        // Calculate stats
+        const totalPets = petsData.length;
+        const tasksDue = tasksData.filter(task => !task.isCompleted && new Date(task.dateTime) <= new Date()).length;
+        const upcomingVetVisits = tasksData.filter(task => 
+          !task.isCompleted && 
+          task.title.toLowerCase().includes('vet') && 
+          new Date(task.dateTime) > new Date()
+        ).length;
+        const overdueVaccinationsCount = overdueVaccinations.length;
+
+        setStats({
+          totalPets,
+          tasksDue,
+          upcomingVetVisits,
+          overdueVaccinations: overdueVaccinationsCount,
+        });
+
+        // Get recent tasks (last 5 incomplete tasks) and convert to TaskList format
+        const recentIncompleteTasks = tasksData
+          .filter(task => !task.isCompleted)
+          .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
+          .slice(0, 5)
+          .map(task => ({
+            id: task.id || 0,
+            title: task.title,
+            description: task.description,
+            dueDate: task.dateTime,
+            pet: petsData.find(p => p.id === task.petIds[0])?.name || 'Unknown',
+            priority: task.priority || 'medium',
+            completed: task.isCompleted || false
+          } as TaskListTask));
+
+        setRecentTasks(recentIncompleteTasks);
+        
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        setError('Failed to load dashboard data. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert severity="error" sx={{ mb: 2 }}>
+        {error}
+      </Alert>
+    );
+  }
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -98,15 +159,14 @@ export const Dashboard = () => {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
-            title="Monthly Spending"
-            value={stats.monthlySpending}
-            description="On pet care"
+            title="Overdue Vaccinations"
+            value={stats.overdueVaccinations}
+            description="Need attention"
           />
         </Grid>
       </Grid>
 
       {/* Recent Tasks */}
-
       <Paper sx={{ p: 3, mb: 4 }}>
         <Box
           sx={{
@@ -123,22 +183,30 @@ export const Dashboard = () => {
             Add Task
           </Button>
         </Box>
-        <TaskList
-          tasks={recentTasks}
-          onEdit={(id) => {
-            // TODO: Add logic for editing a task
-            console.log("Edit task with ID:", id);
-          }}
-          onDelete={(id) => {
-            // TODO: Add logic for deleting a task
-            console.log("Delete task with ID:", id);
-          }}
-          onToggleComplete={(id, completed) => {
-            // TODO: Add logic for toggling task completion
-            console.log("Toggle task with ID:", id, "to completed:", completed);
-          }}
-        />
+        
+        {recentTasks.length === 0 ? (
+          <Typography color="text.secondary" sx={{ fontStyle: "italic", textAlign: "center", py: 3 }}>
+            No pending tasks. Great job keeping up with your pet care!
+          </Typography>
+        ) : (
+          <TaskList
+            tasks={recentTasks}
+            onEdit={(id) => {
+              // TODO: Add logic for editing a task
+              console.log("Edit task with ID:", id);
+            }}
+            onDelete={(id) => {
+              // TODO: Add logic for deleting a task
+              console.log("Delete task with ID:", id);
+            }}
+            onToggleComplete={(id, completed) => {
+              // TODO: Add logic for toggling task completion
+              console.log("Toggle task with ID:", id, "to completed:", completed);
+            }}
+          />
+        )}
       </Paper>
+
       {/* Upcoming Events Section */}
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 6 }}>
@@ -146,9 +214,15 @@ export const Dashboard = () => {
             <Typography variant="h6" component="h2" gutterBottom>
               Upcoming Events
             </Typography>
-            <Typography color="text.secondary" sx={{ fontStyle: "italic" }}>
-              No upcoming events
-            </Typography>
+            {stats.upcomingVetVisits > 0 ? (
+              <Typography color="primary">
+                {stats.upcomingVetVisits} vet appointment(s) scheduled
+              </Typography>
+            ) : (
+              <Typography color="text.secondary" sx={{ fontStyle: "italic" }}>
+                No upcoming events
+              </Typography>
+            )}
           </Paper>
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
@@ -156,9 +230,15 @@ export const Dashboard = () => {
             <Typography variant="h6" component="h2" gutterBottom>
               Health Reminders
             </Typography>
-            <Typography color="text.secondary" sx={{ fontStyle: "italic" }}>
-              No health reminders
-            </Typography>
+            {stats.overdueVaccinations > 0 ? (
+              <Typography color="error">
+                {stats.overdueVaccinations} vaccination(s) overdue
+              </Typography>
+            ) : (
+              <Typography color="text.secondary" sx={{ fontStyle: "italic" }}>
+                All vaccinations up to date
+              </Typography>
+            )}
           </Paper>
         </Grid>
       </Grid>

@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { Box, CssBaseline, ThemeProvider, CircularProgress } from "@mui/material";
 import { theme } from "./theme";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { LocalizationProvider } from "./contexts/LocalizationContext";
 import { Header } from "./app/layout/Header";
 import { Sidebar } from "./app/layout/Sidebar";
 import { Dashboard } from "./features/dashboard/pages/DashboardPage";
@@ -20,9 +21,11 @@ const App = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <LocalizationProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </LocalizationProvider>
     </ThemeProvider>
   );
 };
