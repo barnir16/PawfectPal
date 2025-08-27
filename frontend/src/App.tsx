@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { Box, CssBaseline, ThemeProvider, CircularProgress } from "@mui/material";
+import {
+  Box,
+  CssBaseline,
+  ThemeProvider,
+  CircularProgress,
+} from "@mui/material";
 import { theme } from "./theme";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LocalizationProvider } from "./contexts/LocalizationContext";
@@ -9,6 +14,7 @@ import { Sidebar } from "./app/layout/Sidebar";
 import { Dashboard } from "./features/dashboard/pages/DashboardPage";
 import { Tasks } from "./features/tasks/pages/TasksPage";
 import { Pets } from "./features/pets/pages/PetsPage";
+import { ServicesPage } from "./features/services/pages/ServicesPage";
 import { PetForm } from "./features/pets/components/PetForm/PetForm";
 import { PetDetail } from "./features/pets/components/PetDetail/PetDetail";
 import Settings from "./features/settings/components/Settings/Settings";
@@ -33,7 +39,8 @@ const App = () => {
 const AppContent = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { isChatOpen, selectedPet, openChat, closeChat, toggleChat } = useAIChat();
+  const { isChatOpen, selectedPet, openChat, closeChat, toggleChat } =
+    useAIChat();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -95,6 +102,7 @@ const AppContent = () => {
           <Route path="/pets/:id/edit" element={<PetForm />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/auth" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/services" element={<ServicesPage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Box>
