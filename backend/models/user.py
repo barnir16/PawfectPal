@@ -1,14 +1,14 @@
 from __future__ import annotations
 from typing import List, Optional, TYPE_CHECKING
-from sqlalchemy import String, Integer, Boolean, Float, Text
+from sqlalchemy import String, Integer, Boolean, Float, Text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base import Base
-
 
 if TYPE_CHECKING:
     from .pet import PetORM
     from .task import TaskORM
     from .service import ServiceORM
+    from .provider import ProviderORM  # new import
 
 
 class UserORM(Base):
@@ -26,17 +26,16 @@ class UserORM(Base):
     phone: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     full_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     profile_image: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    
+
     # OAuth information
     google_id: Mapped[Optional[str]] = mapped_column(String, nullable=True, unique=True)
     profile_picture_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
-    # Service provider information
+    # Provider relationship
     is_provider: Mapped[bool] = mapped_column(Boolean, default=False)
-    provider_services: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    provider_rating: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    provider_bio: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    provider_hourly_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    provider_profile: Mapped[Optional["ProviderORM"]] = relationship(
+        "ProviderORM", back_populates="user", uselist=False
+    )
 
     # Address information
     address: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

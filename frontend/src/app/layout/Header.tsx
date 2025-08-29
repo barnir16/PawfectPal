@@ -1,4 +1,14 @@
-import { AppBar, IconButton, Toolbar, Box, Menu, MenuItem, Typography, Avatar } from "@mui/material";
+import {
+  AppBar,
+  IconButton,
+  Toolbar,
+  Box,
+  Menu,
+  MenuItem,
+  Typography,
+  Avatar,
+  Button,
+} from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -8,13 +18,14 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { LanguageSwitcher } from "../../components/common/LanguageSwitcher";
 import { useLocalization } from "../../contexts/LocalizationContext";
+import { BASE_URL } from "../../services";
 
 type HeaderProps = {
   onMenuClick: () => void;
 };
 
 export const Header = ({ onMenuClick }: HeaderProps) => {
-  const { user, logout, forceLogout } = useAuth();
+  const { user, setUser, logout, forceLogout } = useAuth();
   const navigate = useNavigate();
   const { t } = useLocalization();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -45,6 +56,29 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
     handleClose();
   };
 
+  const handleBecomeProvider = async () => {
+    try {
+      const token = localStorage.getItem("authToken"); // or from context
+      if (!token) throw new Error("No auth token found");
+
+      const res = await fetch(`${BASE_URL}/auth/me`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // <-- add this
+        },
+        body: JSON.stringify({ is_provider: true }),
+      });
+
+      if (!res.ok) throw new Error("Failed to become provider");
+
+      const updatedUser = await res.json();
+      setUser(updatedUser);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const open = Boolean(anchorEl);
 
   return (
@@ -69,34 +103,48 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
         </IconButton>
         <Box sx={{ flexGrow: 1 }} />
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Typography variant="body2" sx={{ color: 'inherit' }}>
-            {user?.username || 'User'}
+          <Typography variant="body2" sx={{ color: "inherit" }}>
+            {user?.username || "User"}
           </Typography>
+
+          {!user?.is_provider && (
+            <Button
+              color="white"
+              variant="outlined"
+              size="small"
+              onClick={() => handleBecomeProvider()}
+            >
+              {t("Become a Provider")}
+            </Button>
+          )}
+
           <LanguageSwitcher variant="compact" />
+
           <IconButton
             size="large"
             aria-label="account of current user"
             color="inherit"
             onClick={handleAccountClick}
           >
-            <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.dark' }}>
-              {user?.username?.charAt(0)?.toUpperCase() || 'U'}
+            <Avatar sx={{ width: 32, height: 32, bgcolor: "primary.dark" }}>
+              {user?.username?.charAt(0)?.toUpperCase() || "U"}
             </Avatar>
           </IconButton>
+
           <Menu
             anchorEl={anchorEl}
             open={open}
             onClose={handleClose}
-            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+            transformOrigin={{ horizontal: "right", vertical: "top" }}
+            anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
           >
             <MenuItem onClick={handleAccountSettings}>
               <SettingsIcon sx={{ mr: 1 }} />
-              {t('navigation.settings')}
+              {t("navigation.settings")}
             </MenuItem>
             <MenuItem onClick={handleLogout}>
               <LogoutIcon sx={{ mr: 1 }} />
-              {t('navigation.logout')}
+              {t("navigation.logout")}
             </MenuItem>
           </Menu>
         </Box>
