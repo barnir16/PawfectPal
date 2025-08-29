@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useAuth } from "../../../../contexts/AuthContext";
+import { useLocalization } from "../../../../contexts/LocalizationContext";
 import {
   Box,
   Card,
@@ -81,6 +82,7 @@ export const PetForm = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
   const { forceLogout } = useAuth();
+  const { t } = useLocalization();
   const isEditing = !!id;
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [breeds, setBreeds] = useState<string[]>([]);
@@ -210,7 +212,7 @@ export const PetForm = () => {
           }
         } catch (error) {
           console.error("Error loading pet:", error);
-          alert("Failed to load pet data for editing.");
+          alert(t('pets.failedToLoad'));
         }
       };
       fetchPet();
@@ -264,10 +266,10 @@ export const PetForm = () => {
       
       if (isEditing && id) {
         await updatePet(parseInt(id), formattedData);
-        alert("Pet updated successfully!");
+        alert(t('pets.petUpdated'));
       } else {
         await createPet(formattedData);
-        alert("Pet created successfully!");
+        alert(t('pets.petCreated'));
       }
 
       navigate("/pets");
@@ -276,19 +278,19 @@ export const PetForm = () => {
       
       // Handle authentication errors
       if (error?.isAuthError) {
-        await forceLogout("Your session has expired. Please log in again.");
+        await forceLogout(t('pets.sessionExpired'));
         navigate("/auth");
         return;
       }
       
-      alert(`Error saving pet: ${error.message || "Unknown error occurred"}`);
+      alert(t('pets.errorSavingPet', { error: error.message || "Unknown error occurred" }));
     }
   };
 
   const handleDelete = () => {
     if (
       window.confirm(
-        "Are you sure you want to delete this pet? This action cannot be undone."
+        t('pets.deleteConfirmation')
       )
     ) {
       try {
@@ -321,17 +323,17 @@ export const PetForm = () => {
               <ArrowBackIcon />
             </IconButton>
             <Typography variant="h4" component="h1">
-              {isEditing ? "Edit Pet" : "Add New Pet"}
+              {isEditing ? t('pets.editPet') : t('pets.addNewPet')}
             </Typography>
           </Box>
         </Box>
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={3}>
-            {/* Left column - Image upload */}
+            {/* Left column - Image upload and breed info */}
             <Grid size={{ xs: 12, md: 4, lg: 3 }}>
               <Card>
-                <CardHeader title="Pet Photo" />
+                <CardHeader title={t('pets.petPhoto')} />
                 <Divider />
                 <CardContent>
                   <PetImageUpload
@@ -340,6 +342,28 @@ export const PetForm = () => {
                     onRemove={() => handleImageUpload(null)}
                     disabled={isSubmitting}
                   />
+                  
+                  {/* Breed Information */}
+                  <Box sx={{ mt: 3 }}>
+                    <Typography variant="h6" gutterBottom>
+                      {t('pets.breedInfo')}
+                    </Typography>
+                    <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        <strong>{t('pets.type')}:</strong> {watch('type') || t('pets.notSpecified')}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        <strong>{t('pets.breed')}:</strong> {watch('breed') || t('pets.notSpecified')}
+                      </Typography>
+                      {watch('type') && watch('type') !== 'other' && (
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1, p: 1, bgcolor: 'primary.50', borderRadius: 1 }}>
+                          💡 <strong>Tip:</strong> {watch('type') === 'dog' 
+                            ? 'Dogs need regular exercise, training, and socialization. Consider their energy level and size when planning activities.'
+                            : 'Cats are independent but need mental stimulation, proper nutrition, and regular veterinary care.'}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
                 </CardContent>
               </Card>
             </Grid>
@@ -347,7 +371,7 @@ export const PetForm = () => {
             {/* Right column - Form fields */}
             <Grid size={{ xs: 12, md: 8, lg: 9 }}>
               <Card>
-                <CardHeader title="Basic Information" />
+                                  <CardHeader title={t('pets.basicInformation')} />
                 <Divider />
                 <CardContent>
                   <PetBasicInfoForm
@@ -364,7 +388,7 @@ export const PetForm = () => {
 
               <Box mt={3}>
                 <Card>
-                  <CardHeader title="Physical Details" />
+                  <CardHeader title={t('pets.physicalDetails')} />
                   <Divider />
                   <CardContent>
                     <PetDetailsForm
@@ -378,7 +402,7 @@ export const PetForm = () => {
 
               <Box mt={3}>
                 <Card>
-                  <CardHeader title="Medical Information" />
+                  <CardHeader title={t('pets.medicalInformation')} />
                   <Divider />
                   <CardContent>
                     <PetMedicalInfo
@@ -397,7 +421,7 @@ export const PetForm = () => {
                   isSubmitting={isSubmitting}
                   onCancel={handleCancel}
                   onDelete={handleDelete}
-                  submitButtonText={isEditing ? "Update Pet" : "Add Pet"}
+                  submitButtonText={isEditing ? t('pets.updatePet') : t('pets.addPet')}
                 />
               </Box>
             </Grid>

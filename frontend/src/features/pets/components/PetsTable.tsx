@@ -11,6 +11,7 @@ import {
   Pets as PetsIcon,
 } from "@mui/icons-material";
 import { useState } from "react";
+import { useLocalization } from "../../../contexts/LocalizationContext";
 import type { Pet } from "../../../types/pets/pet";
 
 interface PetsTableProps {
@@ -20,6 +21,7 @@ interface PetsTableProps {
 }
 
 export const PetsTable = ({ pets, onEdit, onDelete }: PetsTableProps) => {
+  const { t } = useLocalization();
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
     pageSize: 10,
@@ -28,7 +30,7 @@ export const PetsTable = ({ pets, onEdit, onDelete }: PetsTableProps) => {
   const columns: GridColDef<Pet>[] = [
     {
       field: "name",
-      headerName: "Name",
+      headerName: t('pets.name'),
       flex: 1.5,
       minWidth: 200,
       renderCell: (params: GridRenderCellParams<Pet>) => (
@@ -46,14 +48,14 @@ export const PetsTable = ({ pets, onEdit, onDelete }: PetsTableProps) => {
     },
     { 
       field: "type", 
-      headerName: "Type", 
+      headerName: t('pets.type'), 
       flex: 0.8,
       minWidth: 100,
-      valueGetter: (_, row) => row.type || row.breedType || "Unknown"
+      valueGetter: (_, row) => row.type || row.breedType || t('pets.unknown')
     },
     { 
       field: "breed", 
-      headerName: "Breed", 
+      headerName: t('pets.breed'), 
       flex: 1.2,
       minWidth: 150,
       renderCell: (params: GridRenderCellParams<Pet>) => (
@@ -69,13 +71,13 @@ export const PetsTable = ({ pets, onEdit, onDelete }: PetsTableProps) => {
     },
     {
       field: "age",
-      headerName: "Age",
+      headerName: t('pets.age'),
       flex: 0.8,
       minWidth: 120,
       valueGetter: (_, row) => {
         // First try to use the age field directly
         if (row.age !== undefined && row.age !== null) {
-          return `${row.age} years`;
+          return `${row.age} ${t('pets.years')}`;
         }
         
         // Then try to calculate from birth date (check both field names)
@@ -84,16 +86,16 @@ export const PetsTable = ({ pets, onEdit, onDelete }: PetsTableProps) => {
           try {
             const birth = new Date(birthDate);
             if (isNaN(birth.getTime())) {
-              return "Unknown age";
+              return t('pets.unknownAge');
             }
             const ageInMilliseconds = Date.now() - birth.getTime();
             const ageInYears = ageInMilliseconds / (1000 * 60 * 60 * 24 * 365.25);
-            return `${Math.floor(ageInYears)} years`;
+            return `${Math.floor(ageInYears)} ${t('pets.years')}`;
           } catch {
-            return "Unknown age";
+            return t('pets.unknownAge');
           }
         }
-        return "Unknown age";
+        return t('pets.unknownAge');
       },
     },
     { 

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { Box, CssBaseline, ThemeProvider, CircularProgress } from "@mui/material";
-import { theme } from "./theme";
+import { Box, CircularProgress } from "@mui/material";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LocalizationProvider } from "./contexts/LocalizationContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
 import { Header } from "./app/layout/Header";
 import { Sidebar } from "./app/layout/Sidebar";
 import { Dashboard } from "./features/dashboard/pages/DashboardPage";
@@ -13,14 +13,14 @@ import { PetForm } from "./features/pets/components/PetForm/PetForm";
 import { PetDetail } from "./features/pets/components/PetDetail/PetDetail";
 import Settings from "./features/settings/components/Settings/Settings";
 import TaskForm from "./features/tasks/components/TaskForm/TaskForm";
+import { WeightTrackingPage } from "./features/weight/pages/WeightTrackingPage";
 import AuthScreen from "./features/auth/pages/AuthPage";
 import { AIChatbot, ChatToggleButton } from "./components/ai/AIChatbot";
 import { useAIChat } from "./hooks/useAIChat";
 
 const App = () => {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
+    <ThemeProvider>
       <LocalizationProvider>
         <AuthProvider>
           <AppContent />
@@ -93,6 +93,7 @@ const AppContent = () => {
           <Route path="/pets/new" element={<PetForm />} />
           <Route path="/pets/:id" element={<PetDetail />} />
           <Route path="/pets/:id/edit" element={<PetForm />} />
+          <Route path="/weight-tracking" element={<WeightTrackingPage />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/auth" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

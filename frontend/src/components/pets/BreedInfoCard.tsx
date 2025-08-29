@@ -28,7 +28,8 @@ import {
   Info as InfoIcon,
   Warning as WarningIcon,
 } from '@mui/icons-material';
-import { fetchDogBreedInfo, fetchCatBreedInfo, testBreedInfoAPI, type BreedInfo } from '../../services/external/externalApiService';
+import { useLocalization } from '../../contexts/LocalizationContext';
+import { fetchDogBreedInfo, fetchCatBreedInfo, testBreedInfoAPI, checkExternalAPIAccessibility, type BreedInfo } from '../../services/external/externalApiService';
 
 interface BreedInfoCardProps {
   petType: string;
@@ -43,6 +44,7 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
   currentWeight,
   weightUnit = 'kg'
 }) => {
+  const { t } = useLocalization();
   const [breedInfo, setBreedInfo] = useState<BreedInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -68,10 +70,52 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
         
         if (normalizedPetType === 'dog') {
           console.log('🐕 Fetching dog breed info for:', normalizedBreedName);
-          info = await fetchDogBreedInfo(normalizedBreedName);
+          try {
+            info = await fetchDogBreedInfo(normalizedBreedName);
+            console.log('🐕 Dog breed info result:', info);
+          } catch (apiError) {
+            console.error('🐕 Dog breed API error:', apiError);
+            // Fallback to basic info
+            info = {
+              name: normalizedBreedName,
+              averageWeight: { min: 15, max: 35, unit: 'kg' as const },
+              lifeExpectancy: { min: 10, max: 15, unit: 'years' as const },
+              characteristics: {
+                energyLevel: 'moderate' as const,
+                groomingNeeds: 'moderate' as const,
+                trainability: 'moderate' as const,
+              },
+              healthConsiderations: ['Regular veterinary checkups recommended'],
+              exerciseNeeds: 'Daily exercise and mental stimulation needed',
+              dietRecommendations: 'High-quality dog food appropriate for size and age',
+              origin: 'Various origins',
+              temperament: 'Loyal and friendly companion'
+            };
+          }
         } else if (normalizedPetType === 'cat') {
           console.log('🐱 Fetching cat breed info for:', normalizedBreedName);
-          info = await fetchCatBreedInfo(normalizedBreedName);
+          try {
+            info = await fetchCatBreedInfo(normalizedBreedName);
+            console.log('🐱 Cat breed info result:', info);
+          } catch (apiError) {
+            console.error('🐱 Cat breed API error:', apiError);
+            // Fallback to basic info
+            info = {
+              name: normalizedBreedName,
+              averageWeight: { min: 3, max: 6, unit: 'kg' as const },
+              lifeExpectancy: { min: 12, max: 18, unit: 'years' as const },
+              characteristics: {
+                energyLevel: 'moderate' as const,
+                groomingNeeds: 'moderate' as const,
+                trainability: 'moderate' as const,
+              },
+              healthConsiderations: ['Regular veterinary checkups recommended'],
+              exerciseNeeds: 'Playtime and environmental enrichment needed',
+              dietRecommendations: 'High-quality cat food appropriate for age',
+              origin: 'Various origins',
+              temperament: 'Independent and affectionate companion'
+            };
+          }
         } else {
           console.log('❓ Unknown pet type:', normalizedPetType);
           setLoading(false);
@@ -82,7 +126,7 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
         setBreedInfo(info);
       } catch (err) {
         console.error('❌ Error fetching breed info:', err);
-        setError('Failed to fetch breed information');
+        setError(t('pets.failedToFetch'));
       } finally {
         setLoading(false);
       }
@@ -126,9 +170,9 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
   if (loading) {
     return (
       <Card>
-        <CardHeader title="Breed Information" />
+        <CardHeader title={t('pets.breedInfo')} />
         <CardContent>
-          <Typography>Loading breed information for {breedName}...</Typography>
+          <Typography>{t('pets.loadingBreedInfo', { breed: breedName })}</Typography>
           {/* Debug info during loading */}
           <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
             <Typography variant="caption" color="text.secondary">Debug Props:</Typography>
@@ -149,17 +193,37 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
   if (error || !breedInfo) {
     return (
       <Card>
-        <CardHeader title="Breed Information" />
+        <CardHeader title={t('pets.breedInfo')} />
         <CardContent>
-          <Typography variant="h6" color="error">Debug Info:</Typography>
-          <Typography>Pet Type: {petType}</Typography>
-          <Typography>Breed Name: {breedName}</Typography>
-          <Typography>Normalized Pet Type: {normalizedPetType}</Typography>
-          <Typography>Normalized Breed Name: {normalizedBreedName}</Typography>
-          <Typography>Error: {error || 'No breed info returned'}</Typography>
+          <Typography variant="h6" color="error">{t('pets.debugInfo')}:</Typography>
+          <Typography>{t('pets.petType')}: {petType}</Typography>
+          <Typography>{t('pets.breed')}: {breedName}</Typography>
+          <Typography>{t('pets.normalizedPetType')}: {normalizedPetType}</Typography>
+          <Typography>{t('pets.normalizedBreedName')}: {normalizedBreedName}</Typography>
+          <Typography>{t('pets.error')}: {error || t('pets.noBreedInfoReturned')}</Typography>
+          
+          {/* Show basic breed info even when API fails */}
+          <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+              {t('pets.breedInfo')}
+            </Typography>
+            <Typography variant="body2">
+              <strong>{t('pets.type')}:</strong> {petType}
+            </Typography>
+            <Typography variant="body2">
+              <strong>{t('pets.breed')}:</strong> {breedName}
+            </Typography>
+            {currentWeight && (
+              <Typography variant="body2">
+                <strong>{t('pets.currentWeight')}:</strong> {currentWeight} {weightUnit}
+              </Typography>
+            )}
+          </Box>
+          
           <Alert severity="info" sx={{ mt: 2 }}>
-            No detailed breed information available for {breedName}.
+            {t('pets.noDetailedBreedInfo', { breed: breedName })}.
           </Alert>
+          
           {/* Test button to manually trigger API call */}
           <Box sx={{ mt: 2 }}>
             <Button
@@ -168,8 +232,19 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
                 console.log('🧪 Manual test of breed info API...');
                 await testBreedInfoAPI();
               }}
+              sx={{ mr: 1 }}
             >
-              Test Breed Info API
+              {t('pets.testBreedInfoAPI')}
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={async () => {
+                const accessibility = await checkExternalAPIAccessibility();
+                console.log('🌐 API Accessibility Check:', accessibility);
+                alert(`Network: ${accessibility.network ? '✅' : '❌'}\nDog API: ${accessibility.dogAPI ? '✅' : '❌'}\nCat API: ${accessibility.catAPI ? '✅' : '❌'}`);
+              }}
+            >
+              {t('pets.checkAPIAccessibility')}
             </Button>
           </Box>
         </CardContent>
@@ -183,7 +258,7 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
         title={
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <PetsIcon color="primary" />
-            <Typography variant="h6">Breed Information</Typography>
+            <Typography variant="h6">{t('pets.breedInfo')}</Typography>
           </Box>
         }
         action={
@@ -212,7 +287,7 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
           {breedInfo.averageWeight && (
             <Grid size={{ xs: 12, sm: 6 }}>
               <Typography variant="subtitle2" color="text.secondary">
-                Average Weight Range
+                {t('pets.averageWeightRange')}
               </Typography>
               <Typography variant="body1">
                 {breedInfo.averageWeight.min} - {breedInfo.averageWeight.max} {breedInfo.averageWeight.unit}
@@ -223,7 +298,7 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
           {breedInfo.lifeExpectancy && (
             <Grid size={{ xs: 12, sm: 6 }}>
               <Typography variant="subtitle2" color="text.secondary">
-                Life Expectancy
+                {t('pets.lifeExpectancy')}
               </Typography>
               <Typography variant="body1">
                 {breedInfo.lifeExpectancy.min} - {breedInfo.lifeExpectancy.max} years
@@ -236,13 +311,13 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
         {breedInfo.characteristics && (
           <Box sx={{ mb: 2 }}>
             <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-              Characteristics
+              {t('pets.characteristics')}
             </Typography>
             <Box display="flex" flexWrap="wrap" gap={1}>
               {breedInfo.characteristics.energyLevel && (
                 <Chip
                   icon={<FitnessIcon />}
-                  label={`Energy: ${breedInfo.characteristics.energyLevel}`}
+                  label={`${t('pets.energy')}: ${t(`pets.energyLevel.${breedInfo.characteristics.energyLevel}`)}`}
                   size="small"
                   color={breedInfo.characteristics.energyLevel === 'high' ? 'error' : 'default'}
                 />
@@ -250,7 +325,7 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
               {breedInfo.characteristics.groomingNeeds && (
                 <Chip
                   icon={<PetsIcon />}
-                  label={`Grooming: ${breedInfo.characteristics.groomingNeeds}`}
+                  label={`${t('pets.grooming')}: ${t(`pets.groomingNeeds.${breedInfo.characteristics.groomingNeeds}`)}`}
                   size="small"
                   color={breedInfo.characteristics.groomingNeeds === 'high' ? 'warning' : 'default'}
                 />
@@ -258,7 +333,7 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
               {breedInfo.characteristics.trainability && (
                 <Chip
                   icon={<InfoIcon />}
-                  label={`Training: ${breedInfo.characteristics.trainability}`}
+                  label={`${t('pets.training')}: ${t(`pets.trainability.${breedInfo.characteristics.trainability}`)}`}
                   size="small"
                   color={breedInfo.characteristics.trainability === 'high' ? 'success' : 'default'}
                 />
@@ -271,7 +346,7 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
         {breedInfo.healthConsiderations && breedInfo.healthConsiderations.length > 0 && (
           <Box sx={{ mb: 2 }}>
             <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-              Health Considerations
+              {t('pets.healthConsiderations')}
             </Typography>
             <List dense>
               {breedInfo.healthConsiderations.map((consideration, index) => (
@@ -294,7 +369,7 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
             {breedInfo.exerciseNeeds && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                  Exercise Needs
+                  {t('pets.exerciseNeeds')}
                 </Typography>
                 <Typography variant="body2">
                   {breedInfo.exerciseNeeds}
@@ -305,7 +380,7 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
             {breedInfo.dietRecommendations && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                  Diet Recommendations
+                  {t('pets.dietRecommendations')}
                 </Typography>
                 <Typography variant="body2">
                   {breedInfo.dietRecommendations}
@@ -316,7 +391,7 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
             {breedInfo.temperament && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                  Temperament
+                  {t('pets.temperament')}
                 </Typography>
                 <Typography variant="body2">
                   {breedInfo.temperament}
@@ -327,7 +402,7 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
             {breedInfo.origin && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                  Origin
+                  {t('pets.origin')}
                 </Typography>
                 <Typography variant="body2">
                   {breedInfo.origin}

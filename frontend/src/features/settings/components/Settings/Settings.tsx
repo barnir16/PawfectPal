@@ -44,6 +44,7 @@ import {
 import { useLocalization } from '../../../../contexts/LocalizationContext';
 import { LanguageSwitcher } from '../../../../components/common/LanguageSwitcher';
 import { useAuth } from '../../../../contexts/AuthContext';
+import { useTheme as useCustomTheme } from '../../../../contexts/ThemeContext';
 
 interface UserPreferences {
   darkMode: boolean;
@@ -64,7 +65,7 @@ interface UserPreferences {
 }
 
 const Settings: React.FC = () => {
-  const theme = useTheme();
+  const muiTheme = useCustomTheme();
   const { t, currentLanguage } = useLocalization();
   const { user } = useAuth();
   
@@ -90,7 +91,7 @@ const Settings: React.FC = () => {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
-  // Load user preferences from localStorage or API
+    // Load user preferences from localStorage or API
   useEffect(() => {
     const loadPreferences = () => {
       try {
@@ -103,9 +104,20 @@ const Settings: React.FC = () => {
         console.error('Error loading preferences:', error);
       }
     };
-
+    
     loadPreferences();
   }, []);
+
+  // Sync theme with preferences
+  useEffect(() => {
+    const savedMode = localStorage.getItem('pawfectPal_theme') as 'light' | 'dark';
+    if (savedMode && savedMode !== (preferences.darkMode ? 'dark' : 'light')) {
+      setPreferences(prev => ({
+        ...prev,
+        darkMode: savedMode === 'dark'
+      }));
+    }
+  }, [preferences.darkMode]);
 
   // Check for changes
   useEffect(() => {
@@ -160,8 +172,7 @@ const Settings: React.FC = () => {
   const handleDarkModeToggle = () => {
     const newDarkMode = !preferences.darkMode;
     handlePreferenceChange('darkMode', newDarkMode);
-    // TODO: Implement actual theme switching
-    console.log('Theme switched to:', newDarkMode ? 'dark' : 'light');
+    muiTheme.setTheme(newDarkMode ? 'dark' : 'light');
   };
 
   const handleNotificationsToggle = () => {
@@ -188,7 +199,7 @@ const Settings: React.FC = () => {
           {t('settings.title')}
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Customize your PawfectPal experience and manage your preferences
+          {t('pets.customizeExperience')}
         </Typography>
       </Box>
 
@@ -201,7 +212,7 @@ const Settings: React.FC = () => {
             onClick={handleSavePreferences}
             disabled={isLoading}
           >
-            {isLoading ? 'Saving...' : 'Save Changes'}
+            {isLoading ? t('pets.saving') : t('pets.saveChanges')}
           </Button>
         </Box>
       )}
@@ -220,11 +231,11 @@ const Settings: React.FC = () => {
             />
             <CardContent>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Choose your preferred language for the application
+                {t('pets.chooseLanguage')}
               </Typography>
               <LanguageSwitcher variant="button" showLabel={true} />
               <Alert severity="info" sx={{ mt: 2 }}>
-                Current language: {currentLanguage === 'en' ? 'English' : 'עברית'}
+                {t('pets.currentLanguage')} {currentLanguage === 'en' ? 'English' : 'עברית'}
               </Alert>
             </CardContent>
           </Card>
@@ -243,7 +254,7 @@ const Settings: React.FC = () => {
             />
             <CardContent>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Customize the appearance of the application
+                {t('pets.customizeAppearance')}
               </Typography>
               <FormControlLabel
                 control={
@@ -256,7 +267,7 @@ const Settings: React.FC = () => {
                 label={preferences.darkMode ? t('settings.darkMode') : t('settings.lightMode')}
               />
               <Typography variant="caption" display="block" sx={{ mt: 1, color: 'text.secondary' }}>
-                {preferences.darkMode ? 'Dark theme provides better contrast in low-light conditions' : 'Light theme is easier on the eyes during daytime use'}
+                {preferences.darkMode ? t('pets.darkThemeBenefits') : t('pets.lightThemeBenefits')}
               </Typography>
             </CardContent>
           </Card>
@@ -275,7 +286,7 @@ const Settings: React.FC = () => {
             />
             <CardContent>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Manage how and when you receive notifications
+                {t('pets.manageNotifications')}
               </Typography>
               
               <List>
@@ -284,8 +295,8 @@ const Settings: React.FC = () => {
                     <NotificationsIcon color="primary" />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Enable Notifications"
-                    secondary="Receive alerts for important pet care reminders"
+                    primary={t('pets.enableNotifications')}
+                    secondary={t('pets.receiveAlerts')}
                   />
                   <ListItemSecondaryAction>
                     <Switch
@@ -304,8 +315,8 @@ const Settings: React.FC = () => {
                     <PetsIcon color="primary" />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Pet Care Alerts"
-                    secondary="Vaccination reminders, vet appointments, feeding schedules"
+                    primary={t('pets.petCareAlerts')}
+                    secondary={t('pets.vaccinationReminders')}
                   />
                   <ListItemSecondaryAction>
                     <Switch
@@ -325,8 +336,8 @@ const Settings: React.FC = () => {
                     <SecurityIcon color="primary" />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Push Notifications"
-                    secondary="Instant alerts on your device"
+                    primary={t('pets.pushNotifications')}
+                    secondary={t('pets.instantAlerts')}
                   />
                   <ListItemSecondaryAction>
                     <Switch
@@ -342,15 +353,15 @@ const Settings: React.FC = () => {
 
               <Box sx={{ mt: 2 }}>
                 <FormControl fullWidth>
-                  <InputLabel>Reminder Frequency</InputLabel>
+                  <InputLabel>{t('pets.reminderFrequency')}</InputLabel>
                   <Select
                     value={preferences.reminderFrequency}
                     onChange={handleReminderFrequencyChange}
-                    label="Reminder Frequency"
+                    label={t('pets.reminderFrequency')}
                   >
-                    <MenuItem value="daily">Daily</MenuItem>
-                    <MenuItem value="weekly">Weekly</MenuItem>
-                    <MenuItem value="monthly">Monthly</MenuItem>
+                    <MenuItem value="daily">{t('tasks.daily')}</MenuItem>
+                    <MenuItem value="weekly">{t('tasks.weekly')}</MenuItem>
+                    <MenuItem value="monthly">{t('tasks.monthly')}</MenuItem>
                   </Select>
                 </FormControl>
               </Box>
@@ -365,18 +376,18 @@ const Settings: React.FC = () => {
               title={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <PhoneIcon color="primary" />
-                  <Typography variant="h6">Emergency Contacts</Typography>
+                  <Typography variant="h6">{t('pets.emergencyContacts')}</Typography>
                 </Box>
               }
             />
             <CardContent>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Store important contact information for emergencies
+                {t('pets.storeContacts')}
               </Typography>
               
               <TextField
                 fullWidth
-                label="Primary Veterinarian"
+                label={t('pets.primaryVet')}
                 value={preferences.emergencyContacts.primaryVet}
                 onChange={(e) => handleEmergencyContactChange('primaryVet', e.target.value)}
                 placeholder="Dr. Smith - (555) 123-4567"
@@ -392,7 +403,7 @@ const Settings: React.FC = () => {
               
               <TextField
                 fullWidth
-                label="Emergency Vet Clinic"
+                label={t('pets.emergencyVet')}
                 value={preferences.emergencyContacts.emergencyVet}
                 onChange={(e) => handleEmergencyContactChange('emergencyVet', e.target.value)}
                 placeholder="24/7 Emergency Hospital - (555) 999-0000"
@@ -408,7 +419,7 @@ const Settings: React.FC = () => {
               
               <TextField
                 fullWidth
-                label="Pet Sitter"
+                label={t('pets.petSitter')}
                 value={preferences.emergencyContacts.petSitter}
                 onChange={(e) => handleEmergencyContactChange('petSitter', e.target.value)}
                 placeholder="Jane Doe - (555) 111-2222"
@@ -437,7 +448,7 @@ const Settings: React.FC = () => {
             />
             <CardContent>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Manage your privacy and data security settings
+                {t('pets.managePrivacy')}
               </Typography>
               
               <List>
@@ -446,8 +457,8 @@ const Settings: React.FC = () => {
                     <PetsIcon color="primary" />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Share Pet Data"
-                    secondary="Allow sharing anonymous pet care data for research"
+                    primary={t('pets.sharePetData')}
+                    secondary={t('pets.allowSharing')}
                   />
                   <ListItemSecondaryAction>
                     <Switch
@@ -466,8 +477,8 @@ const Settings: React.FC = () => {
                     <LocationIcon color="primary" />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Location Tracking"
-                    secondary="Allow GPS tracking during walks and activities"
+                    primary={t('pets.locationTracking')}
+                    secondary={t('pets.allowGPS')}
                   />
                   <ListItemSecondaryAction>
                     <Switch
@@ -482,10 +493,10 @@ const Settings: React.FC = () => {
               
               <Box sx={{ mt: 2 }}>
                 <Button variant="outlined" color="primary" sx={{ mr: 1 }}>
-                  Privacy Policy
+                  {t('pets.privacyPolicy')}
                 </Button>
                 <Button variant="outlined" color="primary">
-                  Data Export
+                  {t('pets.dataExport')}
                 </Button>
               </Box>
             </CardContent>
@@ -505,23 +516,23 @@ const Settings: React.FC = () => {
             />
             <CardContent>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Learn more about PawfectPal and get support
+                {t('pets.learnMore')}
               </Typography>
               
               <Box sx={{ mb: 2 }}>
                 <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                  Version: 1.0.0
+                  {t('pets.version')}: 1.0.0
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Built with React and FastAPI
+                  {t('pets.builtWith')} React and FastAPI
                 </Typography>
               </Box>
               
               <Button variant="outlined" color="primary" sx={{ mr: 1 }}>
-                Help & Support
+                {t('pets.helpSupport')}
               </Button>
               <Button variant="outlined" color="primary">
-                About PawfectPal
+                {t('pets.aboutPawfectPal')}
               </Button>
             </CardContent>
           </Card>
@@ -533,7 +544,7 @@ const Settings: React.FC = () => {
         open={saveSuccess}
         autoHideDuration={3000}
         onClose={() => setSaveSuccess(false)}
-        message="Settings saved successfully!"
+        message={t('pets.saveChanges')}
       />
     </Container>
   );

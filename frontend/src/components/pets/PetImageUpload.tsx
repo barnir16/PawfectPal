@@ -4,6 +4,7 @@ import {
   AddAPhoto as AddPhotoIcon,
   Delete as DeleteIcon,
 } from "@mui/icons-material";
+import { useLocalization } from "../../contexts/LocalizationContext";
 
 interface PetImageUploadProps {
   imageUrl?: string | null;
@@ -18,6 +19,7 @@ export const PetImageUpload = ({
   onRemove,
   disabled = false,
 }: PetImageUploadProps) => {
+  const { t } = useLocalization();
   const [preview, setPreview] = useState<string | null>(imageUrl || null);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -82,7 +84,7 @@ export const PetImageUpload = ({
             startIcon={<AddPhotoIcon />}
             disabled={disabled}
           >
-            {preview ? "Change Photo" : "Add Photo"}
+            {preview ? t('pets.changePhoto') : t('pets.addPhoto')}
           </Button>
         </label>
 
@@ -94,7 +96,7 @@ export const PetImageUpload = ({
             onClick={handleRemove}
             disabled={disabled}
           >
-            Remove
+            {t('common.delete')}
           </Button>
         )}
       </Box>

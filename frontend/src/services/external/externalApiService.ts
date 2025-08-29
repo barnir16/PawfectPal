@@ -1,6 +1,7 @@
 /**
  * External API service for integrating with third-party APIs
  */
+import { ApiKeyManager } from '../../utils/ApiKeyManager';
 
 // Enhanced breed information interface
 export interface BreedInfo {
@@ -64,6 +65,27 @@ function debounce<T extends (...args: any[]) => Promise<any>>(
       }, wait);
     });
   };
+}
+
+// Timeout wrapper for fetch requests
+async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs: number = 5000): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timeout');
+    }
+    throw error;
+  }
 }
 
 // Check if breed name has enough characters for meaningful search
@@ -137,6 +159,63 @@ function findBestBreedMatch(breedName: string, breedDatabase: Record<string, any
 }
 
 /**
+ * Check if external APIs are accessible
+ */
+export const checkExternalAPIAccessibility = async (): Promise<{
+  dogAPI: boolean;
+  catAPI: boolean;
+  network: boolean;
+}> => {
+  const result = {
+    dogAPI: false,
+    catAPI: false,
+    network: false
+  };
+
+  try {
+    // Test network connectivity
+    const networkResponse = await fetchWithTimeout('https://httpbin.org/get', {}, 3000);
+    result.network = networkResponse.ok;
+  } catch (error) {
+    console.log('🌐 Network connectivity test failed:', error);
+  }
+
+  try {
+    // Test Dog API
+    const apiKey = ApiKeyManager.getPetsApiKey();
+    const headers: HeadersInit = {};
+    if (apiKey) {
+      headers['x-api-key'] = apiKey;
+    }
+    
+    const dogResponse = await fetchWithTimeout('https://api.thedogapi.com/v1/breeds/search?q=labrador', {
+      headers
+    }, 5000);
+    result.dogAPI = dogResponse.ok;
+  } catch (error) {
+    console.log('🐕 Dog API test failed:', error);
+  }
+
+  try {
+    // Test Cat API
+    const apiKey = ApiKeyManager.getPetsApiKey();
+    const headers: HeadersInit = {};
+    if (apiKey) {
+      headers['x-api-key'] = apiKey;
+    }
+    
+    const catResponse = await fetchWithTimeout('https://api.thecatapi.com/v1/breeds/search?q=persian', {
+      headers
+    }, 5000);
+    result.catAPI = catResponse.ok;
+  } catch (error) {
+    console.log('🐱 Cat API test failed:', error);
+  }
+
+  return result;
+};
+
+/**
  * Test function to verify breed info API is working
  */
 export const testBreedInfoAPI = async (): Promise<void> => {
@@ -166,7 +245,15 @@ export const testBreedInfoAPI = async (): Promise<void> => {
     // Test network connectivity
     console.log('🧪 Testing network connectivity...');
     try {
-      const response = await fetch('https://api.thedogapi.com/v1/breeds/search?q=labrador');
+      const apiKey = ApiKeyManager.getPetsApiKey();
+      const headers: HeadersInit = {};
+      if (apiKey) {
+        headers['x-api-key'] = apiKey;
+      }
+      
+      const response = await fetchWithTimeout('https://api.thedogapi.com/v1/breeds/search?q=labrador', {
+        headers
+      }, 5000);
       console.log('🧪 Network test response status:', response.status);
       if (response.ok) {
         const data = await response.json();
@@ -221,7 +308,15 @@ export const fetchDogBreedInfo = async (breedName: string): Promise<BreedInfo | 
     // Try to get detailed info from The Dog API
     try {
       console.log('🐕 Calling The Dog API for breed info:', breedName);
-      const breedResponse = await fetch(`https://api.thedogapi.com/v1/breeds/search?q=${encodeURIComponent(breedName)}`);
+      const apiKey = ApiKeyManager.getPetsApiKey();
+      const headers: HeadersInit = {};
+      if (apiKey) {
+        headers['x-api-key'] = apiKey;
+      }
+      
+      const breedResponse = await fetchWithTimeout(`https://api.thedogapi.com/v1/breeds/search?q=${encodeURIComponent(breedName)}`, {
+        headers
+      }, 5000);
       
       if (breedResponse.ok) {
         const breedData = await breedResponse.json();
@@ -264,8 +359,23 @@ export const fetchDogBreedInfo = async (breedName: string): Promise<BreedInfo | 
       console.log('🐕 External dog API failed:', apiError);
     }
     
-    // Fallback to basic breed info if external API fails
-    console.log('🐕 Using fallback basic breed info for:', breedName);
+    // Fallback to enhanced local breed data if external API fails
+    console.log('🐕 Using enhanced local breed data for:', breedName);
+    const normalizedBreedName = breedName.toLowerCase().trim();
+    const enhancedData = ENHANCED_DOG_BREED_DATA[normalizedBreedName];
+    
+    if (enhancedData) {
+      const enhancedInfo: BreedInfo = {
+        name: breedName,
+        ...enhancedData
+      };
+      console.log('🐕 Created enhanced breed info from local data for:', breedName);
+      breedInfoCache.set(cacheKey, enhancedInfo);
+      return enhancedInfo;
+    }
+    
+    // Final fallback to basic breed info
+    console.log('🐕 Using basic fallback breed info for:', breedName);
     const basicInfo: BreedInfo = {
       name: breedName,
       averageWeight: { min: 20, max: 30, unit: 'kg' as const },
@@ -325,7 +435,15 @@ export const fetchCatBreedInfo = async (breedName: string): Promise<BreedInfo | 
     }
 
     // Fallback to external API if not in our database
-    const response = await fetch(`https://api.thecatapi.com/v1/breeds/search?q=${encodeURIComponent(breedName)}`);
+    const apiKey = ApiKeyManager.getPetsApiKey();
+    const headers: HeadersInit = {};
+    if (apiKey) {
+      headers['x-api-key'] = apiKey;
+    }
+    
+    const response = await fetchWithTimeout(`https://api.thecatapi.com/v1/breeds/search?q=${encodeURIComponent(breedName)}`, {
+      headers
+    }, 5000);
     if (response.ok) {
       const data = await response.json();
       
@@ -357,7 +475,42 @@ export const fetchCatBreedInfo = async (breedName: string): Promise<BreedInfo | 
       }
     }
     
-    return null;
+    // Fallback to enhanced local breed data if external API fails
+    console.log('🐱 Using enhanced local breed data for:', breedName);
+    const normalizedBreedName = breedName.toLowerCase().trim();
+    const enhancedData = ENHANCED_CAT_BREED_DATA[normalizedBreedName];
+    
+    if (enhancedData) {
+      const enhancedInfo: BreedInfo = {
+        name: breedName,
+        ...enhancedData
+      };
+      console.log('🐱 Created enhanced breed info from local data for:', breedName);
+      breedInfoCache.set(cacheKey, enhancedInfo);
+      return enhancedInfo;
+    }
+    
+    // Final fallback to basic breed info
+    console.log('🐱 Using basic fallback breed info for:', breedName);
+    const basicInfo: BreedInfo = {
+      name: breedName,
+      averageWeight: { min: 3, max: 5, unit: 'kg' as const },
+      lifeExpectancy: { min: 12, max: 16, unit: 'years' as const },
+      characteristics: {
+        energyLevel: 'moderate' as const,
+        groomingNeeds: 'moderate' as const,
+        trainability: 'moderate' as const,
+      },
+      healthConsiderations: ['General breed health considerations'],
+      exerciseNeeds: 'Regular daily exercise recommended',
+      dietRecommendations: 'High-quality cat food appropriate for age and health',
+      origin: 'Various origins',
+      temperament: 'Independent and affectionate companion',
+    };
+    
+    console.log('🐱 Created basic breed info from fallback for:', breedName);
+    breedInfoCache.set(cacheKey, basicInfo);
+    return basicInfo;
   } catch (error) {
     console.error('❌ Error fetching cat breed info:', error);
     return null;
@@ -634,7 +787,15 @@ export const fetchDogBreeds = debounce(async (searchTerm?: string): Promise<stri
     }
     
     // Only fetch from API if we don't have cached data
-    let response = await fetch('https://api.thedogapi.com/v1/breeds');
+    const apiKey = ApiKeyManager.getPetsApiKey();
+    const headers: HeadersInit = {};
+    if (apiKey) {
+      headers['x-api-key'] = apiKey;
+    }
+    
+    let response = await fetchWithTimeout('https://api.thedogapi.com/v1/breeds', {
+      headers
+    }, 5000);
     let data;
     
     if (response.ok) {
@@ -739,7 +900,15 @@ export const fetchCatBreeds = debounce(async (searchTerm?: string): Promise<stri
     }
     
     // Only fetch from API if we don't have cached data
-    const response = await fetch('https://api.thecatapi.com/v1/breeds');
+    const apiKey = ApiKeyManager.getPetsApiKey();
+    const headers: HeadersInit = {};
+    if (apiKey) {
+      headers['x-api-key'] = apiKey;
+    }
+    
+    const response = await fetchWithTimeout('https://api.thecatapi.com/v1/breeds', {
+      headers
+    }, 5000);
     const data = await response.json();
     
     if (Array.isArray(data)) {
@@ -835,4 +1004,107 @@ export const calculateDistance = (
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   const d = R * c; // Distance in km
   return d;
+};
+
+// Enhanced local breed data as fallback when external APIs fail
+const ENHANCED_DOG_BREED_DATA: Record<string, Partial<BreedInfo>> = {
+  'labrador retriever': {
+    averageWeight: { min: 25, max: 36, unit: 'kg' as const },
+    lifeExpectancy: { min: 10, max: 14, unit: 'years' as const },
+    characteristics: {
+      energyLevel: 'high' as const,
+      groomingNeeds: 'moderate' as const,
+      trainability: 'high' as const,
+      goodWithChildren: true,
+      goodWithOtherPets: true,
+    },
+    healthConsiderations: ['Hip dysplasia', 'Elbow dysplasia', 'Progressive retinal atrophy'],
+    exerciseNeeds: 'High energy - needs daily vigorous exercise and mental stimulation',
+    dietRecommendations: 'High-quality dog food for large breeds, watch for weight gain',
+    origin: 'Canada',
+    temperament: 'Friendly, outgoing, and high-spirited companion'
+  },
+  'german shepherd': {
+    averageWeight: { min: 30, max: 40, unit: 'kg' as const },
+    lifeExpectancy: { min: 7, max: 10, unit: 'years' as const },
+    characteristics: {
+      energyLevel: 'high' as const,
+      groomingNeeds: 'moderate' as const,
+      trainability: 'high' as const,
+      goodWithChildren: true,
+      goodWithOtherPets: false,
+    },
+    healthConsiderations: ['Hip dysplasia', 'Elbow dysplasia', 'Degenerative myelopathy'],
+    exerciseNeeds: 'High energy - needs daily exercise, training, and mental stimulation',
+    dietRecommendations: 'High-quality dog food for large breeds, protein-rich diet',
+    origin: 'Germany',
+    temperament: 'Intelligent, loyal, and protective working dog'
+  },
+  'golden retriever': {
+    averageWeight: { min: 25, max: 34, unit: 'kg' as const },
+    lifeExpectancy: { min: 10, max: 12, unit: 'years' as const },
+    characteristics: {
+      energyLevel: 'high' as const,
+      groomingNeeds: 'high' as const,
+      trainability: 'high' as const,
+      goodWithChildren: true,
+      goodWithOtherPets: true,
+    },
+    healthConsiderations: ['Hip dysplasia', 'Elbow dysplasia', 'Cancer', 'Heart disease'],
+    exerciseNeeds: 'High energy - needs daily exercise and activities',
+    dietRecommendations: 'High-quality dog food, watch for obesity',
+    origin: 'Scotland',
+    temperament: 'Friendly, intelligent, and devoted family dog'
+  }
+};
+
+const ENHANCED_CAT_BREED_DATA: Record<string, Partial<BreedInfo>> = {
+  'persian': {
+    averageWeight: { min: 3, max: 5, unit: 'kg' as const },
+    lifeExpectancy: { min: 12, max: 16, unit: 'years' as const },
+    characteristics: {
+      energyLevel: 'low' as const,
+      groomingNeeds: 'high' as const,
+      trainability: 'low' as const,
+      goodWithChildren: false,
+      goodWithOtherPets: false,
+    },
+    healthConsiderations: ['Polycystic kidney disease', 'Brachycephalic syndrome', 'Dental issues'],
+    exerciseNeeds: 'Low energy - gentle play and short play sessions',
+    dietRecommendations: 'High-quality cat food, may need special dental care',
+    origin: 'Persia (Iran)',
+    temperament: 'Quiet, gentle, and affectionate lap cat'
+  },
+  'siamese': {
+    averageWeight: { min: 3, max: 5, unit: 'kg' as const },
+    lifeExpectancy: { min: 15, max: 20, unit: 'years' as const },
+    characteristics: {
+      energyLevel: 'high' as const,
+      groomingNeeds: 'low' as const,
+      trainability: 'high' as const,
+      goodWithChildren: true,
+      goodWithOtherPets: true,
+    },
+    healthConsiderations: ['Progressive retinal atrophy', 'Amyloidosis', 'Dental issues'],
+    exerciseNeeds: 'High energy - needs interactive play and mental stimulation',
+    dietRecommendations: 'High-quality cat food, may need dental care',
+    origin: 'Thailand',
+    temperament: 'Vocal, intelligent, and social companion'
+  },
+  'maine coon': {
+    averageWeight: { min: 4, max: 8, unit: 'kg' as const },
+    lifeExpectancy: { min: 12, max: 15, unit: 'years' as const },
+    characteristics: {
+      energyLevel: 'moderate' as const,
+      groomingNeeds: 'high' as const,
+      trainability: 'moderate' as const,
+      goodWithChildren: true,
+      goodWithOtherPets: true,
+    },
+    healthConsiderations: ['Hip dysplasia', 'Hypertrophic cardiomyopathy', 'Spinal muscular atrophy'],
+    exerciseNeeds: 'Moderate energy - enjoys play and climbing',
+    dietRecommendations: 'High-quality cat food for large breeds',
+    origin: 'Scotland',
+    temperament: 'Gentle giant, affectionate, and dog-like personality'
+  }
 };

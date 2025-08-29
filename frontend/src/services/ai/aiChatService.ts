@@ -73,6 +73,14 @@ class AIChatService {
       console.log('🤖 AI Service: sendMessage called with:', { userMessage, petContext });
       console.log('🤖 AI Service: Current context:', this.context);
       
+      // Validate input
+      if (!userMessage || userMessage.trim().length === 0) {
+        return {
+          message: "Please provide a message so I can help you.",
+          suggestedActions: []
+        };
+      }
+      
       // Add user message to history
       const userChatMessage: ChatMessage = {
         id: this.generateMessageId(),
@@ -85,6 +93,11 @@ class AIChatService {
 
       // Determine the intent and generate response
       const response = await this.generateAIResponse(userMessage, petContext);
+      
+      // Validate response
+      if (!response || !response.message) {
+        throw new Error('Invalid response generated');
+      }
 
       // Add AI response to history
       const aiChatMessage: ChatMessage = {
@@ -92,13 +105,24 @@ class AIChatService {
         content: response.message,
         isUser: false,
         timestamp: new Date(),
-        suggestedActions: response.suggestedActions
+        suggestedActions: response.suggestedActions || []
       };
       this.conversationHistory.push(aiChatMessage);
 
       return response;
     } catch (error) {
       console.error('Error in AI chat:', error);
+      
+      // Add error response to history
+      const errorChatMessage: ChatMessage = {
+        id: this.generateMessageId(),
+        content: "I'm sorry, I'm having trouble processing your request right now. Please try again later.",
+        isUser: false,
+        timestamp: new Date(),
+        suggestedActions: []
+      };
+      this.conversationHistory.push(errorChatMessage);
+      
       return {
         message: "I'm sorry, I'm having trouble processing your request right now. Please try again later.",
         suggestedActions: []
@@ -145,8 +169,14 @@ class AIChatService {
       case 'emergency':
         return this.handleEmergency(userMessage, pets, selectedPet);
       
+      case 'specific_question':
+        return this.handleSpecificQuestion(userMessage, pets, selectedPet);
+      
       case 'general_question':
+        return this.handleGeneralQuestion(userMessage, pets, selectedPet);
+      
       default:
+        console.log('🤖 AI Service: No specific intent detected, using fallback response');
         return this.handleGeneralQuestion(userMessage, pets, selectedPet);
     }
   }
@@ -154,44 +184,55 @@ class AIChatService {
 
 
   /**
-   * Detect user intent from message
+   * Detect user intent from message with improved context analysis
    */
   private detectIntent(message: string): string {
     const lowerMessage = message.toLowerCase();
     
-    // Emergency keywords
-    if (this.containsKeywords(lowerMessage, ['emergency', 'urgent', 'poisoned', 'bleeding', 'unconscious', 'choking'])) {
+    // Check for specific pet questions first (age, name, info)
+    if (this.containsKeywords(lowerMessage, ['how old', 'age', 'what is', 'tell me about', 'who is', 'pet', 'she', 'he', 'her', 'his'])) {
+      return 'specific_question';
+    }
+    
+    // Emergency keywords - highest priority
+    if (this.containsKeywords(lowerMessage, ['emergency', 'urgent', 'poisoned', 'bleeding', 'unconscious', 'choking', 'seizure', 'collapse'])) {
       return 'emergency';
     }
     
-    // Health-related keywords
-    if (this.containsKeywords(lowerMessage, ['sick', 'ill', 'symptom', 'vet', 'health', 'medicine', 'pain', 'limping'])) {
+    // Health-related keywords - check for specific symptoms
+    if (this.containsKeywords(lowerMessage, ['sick', 'ill', 'symptom', 'vet', 'health', 'medicine', 'pain', 'limping', 'vomiting', 'diarrhea', 'coughing', 'sneezing', 'itching', 'rash'])) {
       return 'health_concern';
     }
     
-    // Behavior-related keywords
-    if (this.containsKeywords(lowerMessage, ['behavior', 'training', 'aggressive', 'anxious', 'barking', 'destructive'])) {
+    // Behavior-related keywords - check for specific behaviors
+    if (this.containsKeywords(lowerMessage, ['behavior', 'training', 'aggressive', 'anxious', 'barking', 'destructive', 'chewing', 'scratching', 'jumping', 'pulling', 'fearful', 'shy'])) {
       return 'behavior_issue';
     }
     
-    // Feeding-related keywords
-    if (this.containsKeywords(lowerMessage, ['food', 'feed', 'eat', 'diet', 'nutrition', 'hungry', 'meal'])) {
+    // Feeding-related keywords - check for specific feeding concerns
+    if (this.containsKeywords(lowerMessage, ['food', 'feed', 'eat', 'diet', 'nutrition', 'hungry', 'meal', 'portion', 'allergy', 'weight', 'obese', 'skinny', 'appetite'])) {
       return 'feeding_question';
     }
     
-    // Exercise-related keywords
-    if (this.containsKeywords(lowerMessage, ['exercise', 'walk', 'play', 'active', 'energy', 'tired'])) {
+    // Exercise-related keywords - check for specific activity needs
+    if (this.containsKeywords(lowerMessage, ['exercise', 'walk', 'play', 'active', 'energy', 'tired', 'lazy', 'hyper', 'bored', 'stimulation', 'enrichment'])) {
       return 'exercise_planning';
     }
     
-    // Grooming-related keywords
-    if (this.containsKeywords(lowerMessage, ['groom', 'brush', 'bath', 'nail', 'fur', 'coat', 'clean'])) {
+    // Grooming-related keywords - check for specific grooming needs
+    if (this.containsKeywords(lowerMessage, ['groom', 'brush', 'bath', 'nail', 'fur', 'coat', 'clean', 'shedding', 'matted', 'ear', 'dental', 'teeth'])) {
       return 'grooming_advice';
     }
     
-    // Task creation keywords
-    if (this.containsKeywords(lowerMessage, ['remind', 'schedule', 'appointment', 'task', 'todo'])) {
+    // Task creation keywords - check for scheduling needs
+    if (this.containsKeywords(lowerMessage, ['remind', 'schedule', 'appointment', 'task', 'todo', 'routine', 'daily', 'weekly', 'monthly'])) {
       return 'task_creation';
+    }
+    
+    // Check for specific questions that might need different handling
+    if (lowerMessage.includes('how') || lowerMessage.includes('what') || lowerMessage.includes('why') || lowerMessage.includes('when')) {
+      // These are specific questions that need contextual answers
+      return 'specific_question';
     }
     
     return 'general_question';
@@ -213,16 +254,23 @@ class AIChatService {
       const petAge = selectedPet.age || 'unknown age';
       const petWeight = selectedPet.weightKg || selectedPet.weight_kg || 'unknown weight';
       
-      // Check for specific health keywords in the message
+      // Provide more specific and helpful responses based on the actual question
       if (lowerMessage.includes('knee') || lowerMessage.includes('limping') || lowerMessage.includes('leg')) {
+        let specificAdvice = '';
+        if (lowerMessage.includes('knee')) {
+          specificAdvice = `For knee issues specifically, common causes include ligament tears, arthritis, or patellar luxation. `;
+        } else if (lowerMessage.includes('limping')) {
+          specificAdvice = `Limping can indicate pain, injury, or joint problems. `;
+        }
+        
         return {
-          message: `I see you're concerned about ${petName}'s knee/leg issue. Limping in ${petType}s can be caused by various factors like arthritis, injury, or joint problems. Since ${petName} is ${petAge} years old and weighs ${petWeight}kg, this could be age-related or weight-related. I recommend scheduling a vet appointment to get this checked out. Would you like me to help you create a reminder for a vet visit?`,
+          message: `${specificAdvice}Since ${petName} is ${petAge} years old and weighs ${petWeight}kg, this could be age-related arthritis, weight-related joint stress, or an injury. I recommend: 1) Rest and limited activity, 2) Monitor for worsening symptoms, 3) Schedule a vet appointment within 24-48 hours if the limping persists. Would you like me to help you create a vet appointment reminder?`,
           suggestedActions: [
             {
               id: 'schedule_vet',
               type: 'schedule_vet',
               label: 'Schedule Vet Appointment',
-              description: 'Book an appointment for knee/leg examination'
+              description: 'Book an appointment for examination'
             },
             {
               id: 'emergency_info',
@@ -235,8 +283,30 @@ class AIChatService {
       }
       
       if (lowerMessage.includes('weight') || lowerMessage.includes('diet') || lowerMessage.includes('feeding')) {
+        // Provide specific dietary advice based on pet type and age
+        let dietaryAdvice = '';
+        const age = typeof petAge === 'number' ? petAge : parseFloat(petAge as string) || 0;
+        
+        if (petType === 'dog') {
+          if (age < 1) {
+            dietaryAdvice = 'Puppies need high-quality puppy food with frequent meals (3-4 times daily). ';
+          } else if (age > 7) {
+            dietaryAdvice = 'Senior dogs may need lower-calorie food with joint supplements. ';
+          } else {
+            dietaryAdvice = 'Adult dogs typically do well with 2 meals daily of high-quality adult food. ';
+          }
+        } else if (petType === 'cat') {
+          if (age < 1) {
+            dietaryAdvice = 'Kittens need kitten-specific food with high protein content. ';
+          } else if (age > 7) {
+            dietaryAdvice = 'Senior cats may need food with lower phosphorus and higher protein. ';
+          } else {
+            dietaryAdvice = 'Adult cats can be fed 2-3 times daily with high-quality cat food. ';
+          }
+        }
+        
         return {
-          message: `Regarding ${petName}'s weight and diet - at ${petWeight}kg, ${petName} is a ${petAge} year old ${petType}. Proper nutrition is crucial for maintaining a healthy weight. I can help you create feeding reminders or schedule a vet checkup to discuss ${petName}'s dietary needs. What specific concerns do you have about ${petName}'s weight or feeding?`,
+          message: `${dietaryAdvice}At ${petWeight}kg, ${petName} is a ${petAge} year old ${petType}. For specific dietary recommendations, I'd need to know: 1) Current food brand/type, 2) Feeding schedule, 3) Any food allergies or sensitivities. Would you like me to help you create a feeding schedule or schedule a vet consultation for personalized nutrition advice?`,
           suggestedActions: [
             {
               id: 'feeding_schedule',
@@ -254,9 +324,9 @@ class AIChatService {
         };
       }
       
-      // Generic health concern response
+      // For other health concerns, ask for specific symptoms
       return {
-        message: `I understand you're concerned about ${petName}'s health. ${petName} is a ${petAge} year old ${petType} weighing ${petWeight}kg. While I can provide general guidance, any serious health concerns should be addressed by a veterinarian immediately. What specific symptoms or behaviors have you noticed with ${petName}?`,
+        message: `I understand you're concerned about ${petName}'s health. To provide better guidance, could you tell me: 1) What specific symptoms or behaviors are you seeing? 2) When did this start? 3) Has anything changed in ${petName}'s routine or environment? This will help me give you more targeted advice.`,
         suggestedActions: [
           {
             id: 'schedule_vet',
@@ -378,15 +448,61 @@ class AIChatService {
   /**
    * Handle behavior-related issues
    */
-  private handleBehaviorIssue(_message: string, pets: Pet[], selectedPet?: Pet): ChatResponse {
+  private handleBehaviorIssue(message: string, pets: Pet[], selectedPet?: Pet): ChatResponse {
+    const lowerMessage = message.toLowerCase();
+    
+    // Check for specific behavior questions about pets not getting along
+    if (lowerMessage.includes('not getting along') || lowerMessage.includes('fighting') || lowerMessage.includes('conflict') || lowerMessage.includes('aggressive')) {
+      if (pets.length >= 2) {
+        return {
+          message: `I understand you're having issues with your pets not getting along. This is a common problem that can be resolved with proper management and training. Here are some immediate steps you can take:
+
+1) **Separate them temporarily** - Give them space to calm down
+2) **Identify triggers** - What causes the conflicts? Food, toys, attention?
+3) **Gradual introduction** - Reintroduce them slowly under controlled conditions
+4) **Positive reinforcement** - Reward calm behavior around each other
+5) **Professional help** - Consider consulting a pet behaviorist
+
+Which specific pets are having conflicts, and what triggers the aggressive behavior?`,
+          suggestedActions: [
+            {
+              id: 'behavior_tips',
+              type: 'view_tips',
+              label: 'Pet Conflict Resolution',
+              description: 'Learn techniques for managing multi-pet households'
+            },
+            {
+              id: 'schedule_vet',
+              type: 'schedule_vet',
+              label: 'Consult Behaviorist',
+              description: 'Get professional behavior consultation'
+            }
+          ]
+        };
+      }
+    }
+    
     if (selectedPet) {
       const petName = selectedPet.name;
       const petType = selectedPet.type || selectedPet.breedType || 'pet';
+      const petAge = selectedPet.age || 'unknown age';
       const behaviorIssues = selectedPet.behaviorIssues?.length > 0 ? 
         `I notice ${petName} has some recorded behavior concerns: ${selectedPet.behaviorIssues.join(', ')}. ` : '';
       
+      // Provide specific behavior advice based on the actual question
+      let specificAdvice = '';
+      if (lowerMessage.includes('aggressive') || lowerMessage.includes('biting') || lowerMessage.includes('growling')) {
+        specificAdvice = `Aggression in ${petType}s can stem from fear, pain, or territorial behavior. `;
+      } else if (lowerMessage.includes('anxious') || lowerMessage.includes('fearful') || lowerMessage.includes('scared')) {
+        specificAdvice = `Anxiety in ${petType}s often results from lack of socialization, past trauma, or environmental changes. `;
+      } else if (lowerMessage.includes('barking') || lowerMessage.includes('meowing') || lowerMessage.includes('vocal')) {
+        specificAdvice = `Excessive vocalization can indicate boredom, attention-seeking, or underlying anxiety. `;
+      } else if (lowerMessage.includes('destructive') || lowerMessage.includes('chewing') || lowerMessage.includes('scratching')) {
+        specificAdvice = `Destructive behavior is often a sign of boredom, lack of exercise, or separation anxiety. `;
+      }
+      
       return {
-        message: `${behaviorIssues}Behavior issues with ${petName} (${petType}) can often be addressed with consistent training and patience. Could you describe the specific behavior you're concerned about? This will help me provide more targeted advice.`,
+        message: `${behaviorIssues}${specificAdvice}For ${petName} (${petType}, ${petAge} years), I recommend: 1) Identify the trigger, 2) Provide appropriate outlets (toys, exercise), 3) Use positive reinforcement training, 4) Consider professional help for severe cases. What specific behavior are you seeing, and when does it occur?`,
         suggestedActions: [
           {
             id: 'create_training_task',
@@ -642,9 +758,186 @@ class AIChatService {
   }
 
   /**
-   * Handle general questions
+   * Handle specific questions with intelligent analysis
    */
-  private handleGeneralQuestion(_message: string, pets: Pet[], _selectedPet?: Pet): ChatResponse {
+  private handleSpecificQuestion(message: string, pets: Pet[], selectedPet?: Pet): ChatResponse {
+    const lowerMessage = message.toLowerCase();
+    
+    // Check if message mentions a specific pet by name
+    let targetPet = selectedPet;
+    if (!targetPet) {
+      targetPet = pets.find(pet => 
+        lowerMessage.includes(pet.name.toLowerCase()) ||
+        lowerMessage.includes('she') || 
+        lowerMessage.includes('he') ||
+        lowerMessage.includes('her') ||
+        lowerMessage.includes('his')
+      );
+    }
+    
+    // If we found a specific pet, provide targeted answers
+    if (targetPet) {
+      const petName = targetPet.name;
+      const petType = targetPet.type || targetPet.breedType || 'pet';
+      const petAge = targetPet.age || 0;
+      const petBreed = targetPet.breed || 'unknown breed';
+      
+      // Handle age questions
+      if (lowerMessage.includes('how old') || lowerMessage.includes('age')) {
+        if (petAge && petAge > 0) {
+          return {
+            message: `${petName} is ${petAge} year${petAge === 1 ? '' : 's'} old. ${petAge < 1 ? 'This is a very young ' : petAge > 7 ? 'This is a senior ' : 'This is an adult '}${petType}.`,
+            suggestedActions: [
+              {
+                id: 'care_tips',
+                type: 'view_tips',
+                label: 'Age-Appropriate Care',
+                description: `Get care tips for ${petName}'s age`
+              }
+            ]
+          };
+        } else {
+          return {
+            message: `I don't have ${petName}'s age information in the system. You can update this in ${petName}'s profile.`,
+            suggestedActions: [
+              {
+                id: 'update_profile',
+                type: 'view_tips',
+                label: 'Update Pet Profile',
+                description: 'Add missing information'
+              }
+            ]
+          };
+        }
+      }
+      
+      // Handle general pet info questions
+      if (lowerMessage.includes('what is') || lowerMessage.includes('tell me about') || lowerMessage.includes('who is')) {
+        const ageInfo = petAge && petAge > 0 ? `${petAge} year${petAge === 1 ? '' : 's'} old` : 'age unknown';
+        return {
+          message: `${petName} is a ${ageInfo} ${petType} of the ${petBreed} breed. ${petName} is a beloved member of your family and I'm here to help with their care!`,
+          suggestedActions: [
+            {
+              id: 'care_schedule',
+              type: 'create_task',
+              label: 'Create Care Schedule',
+              description: `Set up care reminders for ${petName}`
+            },
+            {
+              id: 'health_check',
+              type: 'view_tips',
+              label: 'Health Assessment',
+              description: `Review ${petName}'s health status`
+            }
+          ]
+        };
+      }
+      
+      // Analyze the specific question type
+      if (lowerMessage.includes('how often')) {
+         const age = typeof petAge === 'number' ? petAge : parseFloat(petAge as string) || 0;
+         
+         if (lowerMessage.includes('feed') || lowerMessage.includes('food')) {
+           if (petType === 'dog') {
+             if (age < 1) return { message: `${petName} is a puppy and should be fed 3-4 times daily with high-quality puppy food.`, suggestedActions: [] };
+             else if (age > 7) return { message: `${petName} is a senior dog and typically does well with 2 meals daily, possibly with smaller portions.`, suggestedActions: [] };
+             else return { message: `${petName} is an adult dog and should be fed 2 times daily with high-quality adult dog food.`, suggestedActions: [] };
+           } else if (petType === 'cat') {
+             if (age < 1) return { message: `${petName} is a kitten and should be fed 3-4 times daily with kitten-specific food.`, suggestedActions: [] };
+             else if (age > 7) return { message: `${petName} is a senior cat and may prefer smaller, more frequent meals (2-3 times daily).`, suggestedActions: [] };
+             else return { message: `${petName} is an adult cat and can be fed 2-3 times daily with high-quality cat food.`, suggestedActions: [] };
+           }
+         } else if (lowerMessage.includes('walk') || lowerMessage.includes('exercise')) {
+           if (petType === 'dog') {
+             if (age < 1) return { message: `${petName} is a puppy and needs short, frequent walks (5-10 minutes, 3-4 times daily) plus playtime.`, suggestedActions: [] };
+             else if (age > 7) return { message: `${petName} is a senior dog and may prefer shorter, gentler walks (15-20 minutes, 2-3 times daily).`, suggestedActions: [] };
+             else return { message: `${petName} is an adult dog and typically needs 30-60 minutes of exercise daily, including walks and playtime.`, suggestedActions: [] };
+           }
+         } else if (lowerMessage.includes('groom') || lowerMessage.includes('brush')) {
+           if (petType === 'dog') {
+             if (lowerMessage.includes('long') || lowerMessage.includes('thick')) {
+               return { message: `${petName} has a long/thick coat and should be brushed daily to prevent matting.`, suggestedActions: [] };
+             } else {
+               return { message: `${petName} should be brushed 2-3 times weekly, with more frequent brushing during shedding seasons.`, suggestedActions: [] };
+             }
+           } else if (petType === 'cat') {
+             return { message: `${petName} should be brushed 2-3 times weekly, and most cats benefit from regular nail trimming every 2-3 weeks.`, suggestedActions: [] };
+           }
+         }
+       }
+      
+      // Default response for specific pet questions
+      return {
+        message: `I'd be happy to help with ${petName}! ${petName} is a ${petAge && petAge > 0 ? petAge + ' year old ' : ''}${petType}. What specific aspect of ${petName}'s care would you like to know about? I can help with feeding, exercise, grooming, health, and behavior.`,
+        suggestedActions: [
+          {
+            id: 'care_tips',
+            type: 'view_tips',
+            label: 'Care Guidelines',
+            description: `Get specific care recommendations for ${petName}`
+          },
+          {
+            id: 'health_check',
+            type: 'view_tips',
+            label: 'Health Assessment',
+            description: `Review ${petName}'s health status`
+          }
+        ]
+      };
+    }
+    
+    // For general specific questions without a selected pet
+    return {
+      message: `I'd be happy to help with that! To provide the most relevant answer, could you tell me: 1) Which pet you're asking about, or 2) Provide more details about your specific question?`,
+      suggestedActions: [
+        {
+          id: 'select_pet',
+          type: 'view_tips',
+          label: 'Select a Pet',
+          description: 'Choose a pet to get specific advice'
+        }
+      ]
+    };
+  }
+
+  /**
+   * Handle general questions with better context awareness
+   */
+  private handleGeneralQuestion(_message: string, pets: Pet[], selectedPet?: Pet): ChatResponse {
+    const lowerMessage = _message.toLowerCase();
+    
+    // If a specific pet is selected, provide more targeted help
+    if (selectedPet) {
+      const petName = selectedPet.name;
+      const petType = selectedPet.type || selectedPet.breedType || 'pet';
+      const petAge = selectedPet.age || 'unknown age';
+      
+      return {
+        message: `I'm here to help with ${petName}'s care! ${petName} is a ${petAge} year old ${petType}. I can help with: 1) Health monitoring and vet appointments, 2) Feeding and nutrition advice, 3) Exercise and training plans, 4) Grooming and care routines, 5) Creating reminders for important tasks. What specific aspect of ${petName}'s care would you like to discuss?`,
+        suggestedActions: [
+          {
+            id: 'health_check',
+            type: 'view_tips',
+            label: 'Health Assessment',
+            description: 'Review health status and recommendations'
+          },
+          {
+            id: 'care_schedule',
+            type: 'create_task',
+            label: 'Create Care Schedule',
+            description: 'Set up daily care routines'
+          },
+          {
+            id: 'vet_appointment',
+            type: 'schedule_vet',
+            label: 'Schedule Vet Visit',
+            description: 'Book a checkup appointment'
+          }
+        ]
+      };
+    }
+    
+    // For general questions, provide overview and ask for specifics
     let responseMessage = `Hi! I'm your AI pet care assistant. `;
     
     if (pets.length > 0) {
@@ -653,7 +946,12 @@ class AIChatService {
       responseMessage += `. `;
     }
     
-    responseMessage += `I can help you with health concerns, behavior issues, feeding questions, exercise planning, grooming advice, and creating care reminders. I can also provide emergency guidance when needed. What would you like to know about your pet's care?`;
+    // Check if this is a specific question that we can answer directly
+    if (lowerMessage.includes('tips') || lowerMessage.includes('advice') || lowerMessage.includes('help')) {
+      responseMessage += `I'd be happy to help! I can provide specific advice on pet care, behavior training, health monitoring, and more. What would you like to know about?`;
+    } else {
+      responseMessage += `I can help you with health concerns, behavior issues, feeding questions, exercise planning, grooming advice, and creating care reminders. To provide the best help, could you tell me: 1) Which pet you're asking about, or 2) What specific care topic you need help with?`;
+    }
     
     return {
       message: responseMessage,

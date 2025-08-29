@@ -1,5 +1,6 @@
 import { Card, CardContent, Typography, Box, Chip, IconButton } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, CheckCircle as CheckCircleIcon } from "@mui/icons-material";
+import { useLocalization } from "../../../contexts/LocalizationContext";
 
 interface TaskGridItemProps {
   task: {
@@ -8,7 +9,7 @@ interface TaskGridItemProps {
     description: string;
     dueDate: string;
     pet: string;
-    priority: 'low' | 'medium' | 'high';
+    priority: 'low' | 'medium' | 'high' | 'urgent';
     completed: boolean;
   };
   onEdit: (id: number) => void;
@@ -22,10 +23,13 @@ export const TaskGridItem = ({
   onDelete,
   onToggleComplete,
 }: TaskGridItemProps) => {
+  const { t } = useLocalization();
+  
   const priorityColors = {
     high: 'error',
     medium: 'warning',
     low: 'info',
+    urgent: 'error', // Added urgent color
   } as const;
 
   const formatDate = (dateString: string) => {
@@ -59,7 +63,7 @@ export const TaskGridItem = ({
             {task.title}
           </Typography>
           <Chip 
-            label={task.priority} 
+            label={t(`tasks.${task.priority}`)} 
             size="small" 
             color={priorityColors[task.priority]}
             variant="outlined"
@@ -76,7 +80,7 @@ export const TaskGridItem = ({
 
         <Box display="flex" alignItems="center" mb={1}>
           <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>
-            Pet:
+            {t('tasks.petLabel')}:
           </Typography>
           <Chip 
             label={task.pet} 
@@ -86,7 +90,7 @@ export const TaskGridItem = ({
         </Box>
 
         <Typography variant="caption" color="text.secondary" display="block" mb={2}>
-          Due: {formatDate(task.dueDate)}
+          {t('tasks.dueLabel')} {formatDate(task.dueDate)}
         </Typography>
       </CardContent>
 
@@ -96,7 +100,7 @@ export const TaskGridItem = ({
             size="small" 
             color={task.completed ? 'success' : 'default'}
             onClick={() => onToggleComplete(task.id, !task.completed)}
-            aria-label={task.completed ? 'Mark as incomplete' : 'Mark as complete'}
+            aria-label={task.completed ? t('tasks.markIncomplete') : t('tasks.markComplete')}
           >
             <CheckCircleIcon fontSize="small" />
           </IconButton>

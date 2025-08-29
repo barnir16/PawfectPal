@@ -1,17 +1,44 @@
-// Core API utilities
-export * from './api';
+// Core API utilities - export specific functions to avoid conflicts
+export {
+  getBaseUrl,
+  getToken,
+  getAuthHeaders,
+  handleApiError,
+  apiRequest
+} from './api';
 
 // Auth services
 export * from './auth/authService';
 
-// Pet services
-export * from './pets/petService';
+// Pet services - export specific functions to avoid conflicts
+export {
+  getPets,
+  getPet,
+  createPet,
+  updatePet,
+  deletePet,
+  uploadPetImage,
+  updatePetLocation,
+  getPetLocationHistory,
+  getPetLastLocation,
+  getPetsNearLocation
+} from './pets/petService';
 
 // Task services
 export * from './tasks/taskService';
 
-// Vaccine services
-export * from './vaccines/vaccineService';
+// Vaccine services - export specific functions to avoid conflicts
+export {
+  getVaccines,
+  getVaccine,
+  createVaccine,
+  updateVaccine,
+  deleteVaccine,
+  getPetVaccinations,
+  getOverdueVaccinations,
+  getVaccinationsDueSoon,
+  getPetVaccinationSummary
+} from './vaccines/vaccineService';
 
 // Service booking services
 export * from './services/serviceService';
@@ -23,9 +50,15 @@ export {
   clearLocationWatch
 } from './location/locationService';
 
+
+
 // Medical services
 export * from './medical/medicalRecordService';
 export * from './medical/vaccinationService';
+
+// Weight services
+export * from './weight/weightService';
+export * from './weight/weightMonitoringService';
 
 // External API services
 export * from './external/externalApiService';

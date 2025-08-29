@@ -14,6 +14,7 @@ import {
   useMediaQuery,
   IconButton,
 } from "@mui/material";
+import { useLocalization } from "../../contexts/LocalizationContext";
 import {
   Dashboard as DashboardIcon,
   Pets as PetsIcon,
@@ -30,18 +31,19 @@ type SidebarProps = {
 
 const drawerWidth = 240;
 
-const menuItems = [
-  { text: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
-  { text: "Pets", icon: <PetsIcon />, path: "/pets" },
-  { text: "Tasks", icon: <TasksIcon />, path: "/tasks" },
-  { text: "Settings", icon: <SettingsIcon />, path: "/settings" },
-];
-
 export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
   const theme = useTheme();
   const location = useLocation();
+  const { t } = useLocalization();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [open, setOpen] = useState(!isMobile);
+
+  const menuItems = [
+    { text: t('navigation.dashboard'), icon: <DashboardIcon />, path: "/dashboard" },
+    { text: t('navigation.pets'), icon: <PetsIcon />, path: "/pets" },
+    { text: t('navigation.tasks'), icon: <TasksIcon />, path: "/tasks" },
+    { text: t('navigation.settings'), icon: <SettingsIcon />, path: "/settings" },
+  ];
 
   const handleDrawerToggle = () => {
     if (isMobile) {
