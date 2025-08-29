@@ -1,7 +1,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from routers import pet, references, image_upload, task, location, service, user, medical_record, vaccination
+from routers import (
+    pet,
+    references,
+    image_upload,
+    task,
+    location,
+    service,
+    user,
+    medical_record,
+    vaccination,
+    provider,
+)
 
 
 app = FastAPI(
@@ -24,7 +35,7 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Include auth routes first (from user.py router with /auth prefix)
 app.include_router(user.router)
-# Include user routes (from user.py user_router with /users prefix)  
+# Include user routes (from user.py user_router with /users prefix)
 app.include_router(user.user_router)
 
 # Include all other routers
@@ -37,6 +48,7 @@ app.include_router(location.router)
 app.include_router(image_upload.router)
 app.include_router(service.router)
 app.include_router(task.router)
+app.include_router(provider.router)
 
 
 @app.get("/")

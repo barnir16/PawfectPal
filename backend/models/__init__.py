@@ -7,4 +7,5 @@ from .user import UserORM
 from .medical_record import MedicalRecordORM
 from .vaccination import VaccinationORM
 from .references import VaccineORM, AgeRestrictionORM
+from .provider import ProviderORM
 from .utils import list_to_str, str_to_list, json_to_list, list_to_json

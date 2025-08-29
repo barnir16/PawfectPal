@@ -72,29 +72,8 @@ def create_service(
     if not pet:
         raise HTTPException(status_code=404, detail="Pet not found")
 
-    db_service = ServiceORM(
-        user_id=current_user.id,
-        pet_id=service.pet_id,
-        service_type=service.service_type,
-        status=service.status,
-        start_datetime=service.start_datetime,
-        end_datetime=service.end_datetime,
-        duration_hours=service.duration_hours,
-        price=service.price,
-        currency=service.currency,
-        pickup_address=service.pickup_address,
-        dropoff_address=service.dropoff_address,
-        pickup_latitude=service.pickup_latitude,
-        pickup_longitude=service.pickup_longitude,
-        dropoff_latitude=service.dropoff_latitude,
-        dropoff_longitude=service.dropoff_longitude,
-        provider_id=service.provider_id,
-        provider_notes=service.provider_notes,
-        customer_notes=service.customer_notes,
-        before_images=service.before_images,
-        after_images=service.after_images,
-        service_report=service.service_report,
-    )
+    db_service = ServiceORM(user_id=current_user.id, **service.model_dump())
+
     db.add(db_service)
     db.commit()
     db.refresh(db_service)

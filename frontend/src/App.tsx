@@ -15,6 +15,7 @@ import { Dashboard } from "./features/dashboard/pages/DashboardPage";
 import { Tasks } from "./features/tasks/pages/TasksPage";
 import { Pets } from "./features/pets/pages/PetsPage";
 import { ServicesPage } from "./features/services/pages/ServicesPage";
+import { BookService } from "./features/services/pages/BookService";
 import { PetForm } from "./features/pets/components/PetForm/PetForm";
 import { PetDetail } from "./features/pets/components/PetDetail/PetDetail";
 import Settings from "./features/settings/components/Settings/Settings";
@@ -103,6 +104,7 @@ const AppContent = () => {
           <Route path="/settings" element={<Settings />} />
           <Route path="/auth" element={<Navigate to="/dashboard" replace />} />
           <Route path="/services" element={<ServicesPage />} />
+          <Route path="/bookservice" element={<BookService />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Box>

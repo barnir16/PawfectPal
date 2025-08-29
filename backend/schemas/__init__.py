@@ -4,3 +4,4 @@ from .service import ServiceBase, ServiceCreate, ServiceRead
 from .location import LocationHistoryBase, LocationHistoryRead, LocationHistoryUpdate
 from .user import UserBase, UserCreate, UserRead
 from .references import Vaccine, AgeRestriction
+from .provider import UserUpdateProvider

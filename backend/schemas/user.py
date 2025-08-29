@@ -1,5 +1,6 @@
 from typing import List, Optional
 from pydantic import BaseModel, EmailStr, field_validator
+from .provider import ProviderExtras
 
 
 class UserBase(BaseModel):
@@ -12,14 +13,6 @@ class UserBase(BaseModel):
 class UserContact(BaseModel):
     phone: Optional[str] = None
     profile_image: Optional[str] = None
-
-
-class ProviderExtras(BaseModel):
-    is_provider: bool = False
-    provider_services: Optional[List[str]] = None
-    provider_rating: Optional[float] = None
-    provider_bio: Optional[str] = None
-    provider_hourly_rate: Optional[float] = None
 
 
 class UserCreate(ProviderExtras, UserContact, UserBase):
@@ -38,11 +31,11 @@ class UserCreate(ProviderExtras, UserContact, UserBase):
 
 class UserRead(ProviderExtras, UserContact, UserBase):
     id: int
-    
+
     # OAuth information
     google_id: Optional[str] = None
     profile_picture_url: Optional[str] = None
-    
+
     # Address information
     address: Optional[str] = None
     city: Optional[str] = None
