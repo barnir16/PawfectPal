@@ -44,11 +44,12 @@ import {
 import { dogVaccines, catVaccines } from '../../features/pets/vaccines';
 import { 
   getPetVaccinations, 
-  createPetVaccination, 
-  updatePetVaccination, 
-  deletePetVaccination,
+  createVaccination, 
+  updateVaccination, 
+  deleteVaccination,
   getPetVaccinationSummary
-} from '../../services/vaccines/vaccineService';
+} from '../../services/medical/vaccinationService';
+import { useLocalization } from '../../contexts/LocalizationContext';
 import type { Pet } from '../../types/pets/pet';
 
 interface VaccineRecord {
@@ -69,14 +70,16 @@ interface VaccineTrackerProps {
 }
 
 export const VaccineTracker: React.FC<VaccineTrackerProps> = ({ pet }) => {
+  const { t } = useLocalization();
+  
   // Safety check for pet data
   if (!pet) {
     return (
       <Card>
-        <CardHeader title="Vaccine Tracking" />
+        <CardHeader title={t('pets.vaccineTracking')} />
         <CardContent>
           <Typography color="error">
-            No pet data available. Please select a pet to view vaccine information.
+            {t('pets.noPetDataAvailable')}
           </Typography>
         </CardContent>
       </Card>
@@ -237,7 +240,17 @@ export const VaccineTracker: React.FC<VaccineTrackerProps> = ({ pet }) => {
         reminder_sent: false
       };
       
-      await createPetVaccination(pet.id, vaccinationData);
+              await createVaccination(pet.id, {
+        petId: pet.id,
+        vaccineName: vaccinationData.vaccine_name,
+        dateAdministered: vaccinationData.date_administered,
+        nextDueDate: vaccinationData.next_due_date,
+        veterinarian: vaccinationData.veterinarian,
+        clinic: vaccinationData.clinic,
+        notes: vaccinationData.notes,
+        isCompleted: vaccinationData.is_completed,
+        reminderSent: vaccinationData.reminder_sent
+      });
       
       // Refresh data
       const updatedData = await getPetVaccinations(pet.id);
@@ -295,7 +308,16 @@ export const VaccineTracker: React.FC<VaccineTrackerProps> = ({ pet }) => {
         notes: formData.notes,
       };
       
-      await updatePetVaccination(parseInt(editingVaccine.id), updates);
+              await updateVaccination(parseInt(editingVaccine.id), {
+        vaccineName: updates.vaccine_name,
+        dateAdministered: updates.date_administered,
+        nextDueDate: updates.next_due_date,
+        veterinarian: updates.veterinarian,
+        clinic: updates.clinic,
+        notes: updates.notes,
+        isCompleted: true,
+        reminderSent: false
+      });
       
       // Refresh data
       const updatedData = await getPetVaccinations(pet.id);
@@ -332,7 +354,7 @@ export const VaccineTracker: React.FC<VaccineTrackerProps> = ({ pet }) => {
     if (!pet?.id) return;
     
     try {
-      await deletePetVaccination(parseInt(vaccineId));
+              await deleteVaccination(parseInt(vaccineId));
       
       // Refresh data
       const updatedData = await getPetVaccinations(pet.id);

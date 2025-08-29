@@ -1,6 +1,7 @@
 import { Avatar, Box, Button, Card, CardActions, CardContent, CardHeader, Chip, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Pets as PetsIcon } from "@mui/icons-material";
 import type { Pet } from "../../../types/pets/pet";
+import { useLocalization } from "../../../contexts/LocalizationContext";
 
 interface PetCardProps {
   pet: Pet;
@@ -9,6 +10,7 @@ interface PetCardProps {
 }
 
 export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
+  const { t } = useLocalization();
   let chipColor: "primary" | "secondary" | "default" = "default";
   // Handle both 'type' and 'breedType' for backward compatibility
   const petType = pet.type || pet.breedType || "other";
@@ -19,7 +21,11 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
   const calculateAge = () => {
     // First try to use the age field directly
     if (pet.age !== undefined && pet.age !== null) {
-      return `${pet.age} years`;
+      if (pet.age < 1) {
+        const months = Math.floor(pet.age * 12);
+        return `${months} ${t('pets.months')}`;
+      }
+      return `${pet.age} ${t('pets.years')}`;
     }
     
     // Then try to calculate from birth date (check both field names)
@@ -27,15 +33,20 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
     if (birthDate) {
       try {
         const birth = new Date(birthDate);
-        if (isNaN(birth.getTime())) return "Unknown age";
+        if (isNaN(birth.getTime())) return t('pets.unknownAge');
         const today = new Date();
-        const ageInYears = Math.floor((today.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24 * 365.25));
-        return `${ageInYears} years`;
+        const ageInYears = (today.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+        
+        if (ageInYears < 1) {
+          const months = Math.floor(ageInYears * 12);
+          return `${months} ${t('pets.months')}`;
+        }
+        return `${Math.floor(ageInYears)} ${t('pets.years')}`;
       } catch {
-        return "Unknown age";
+        return t('pets.unknownAge');
       }
     }
-    return "Unknown age";
+    return t('pets.unknownAge');
   };
 
   // Always show age, regardless of whether birthday is given
@@ -44,19 +55,21 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
   // Format weight display
   const formatWeight = () => {
     const weight = pet.weightKg || pet.weight_kg;
-    if (!weight) return "Not specified";
-    return `${weight} ${pet.weightUnit || 'kg'}`;
+    if (!weight) return t('pets.notSpecified');
+    const unit = pet.weightUnit || 'kg';
+    const localizedUnit = unit === 'kg' ? t('pets.kg') : t('pets.pounds');
+    return `${weight} ${localizedUnit}`;
   };
 
   // Format dates with fallback
   const formatDate = (dateString?: string) => {
-    if (!dateString) return "Not given yet";
+    if (!dateString) return t('pets.notGivenYet');
     try {
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) return "Not given yet";
+      if (isNaN(date.getTime())) return t('pets.notGivenYet');
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     } catch {
-      return "Not given yet";
+      return t('pets.notGivenYet');
     }
   };
 
@@ -107,7 +120,7 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
               {pet.name}
             </Typography>
             <Chip
-              label={petType}
+              label={t(`pets.${petType}`)}
               size="small"
               sx={{ textTransform: "capitalize", flexShrink: 0 }}
               color={chipColor}
@@ -125,7 +138,7 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
         }
         action={
           <Box>
-            <Tooltip title="Edit">
+            <Tooltip title={t('pets.edit')}>
               <IconButton
                 onClick={() => pet.id && onEdit(pet.id)}
                 size="small"
@@ -134,7 +147,7 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
                 <EditIcon />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Delete">
+            <Tooltip title={t('pets.delete')}>
               <IconButton
                 onClick={() => pet.id && onDelete(pet.id)}
                 size="small"
@@ -149,22 +162,22 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
       <CardContent sx={{ flexGrow: 1, pt: 0 }}>
         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            <strong>Age:</strong> {displayAge}
+            <strong>{t('pets.age')}:</strong> {displayAge}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            <strong>Weight:</strong> {formatWeight()}
+            <strong>{t('pets.weight')}:</strong> {formatWeight()}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            <strong>Last Vet Visit:</strong> {formatDate(pet.lastVetVisit || pet.last_vet_visit)}
+            <strong>{t('pets.lastVetVisit')}:</strong> {formatDate(pet.lastVetVisit || pet.last_vet_visit)}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            <strong>Next Vaccination:</strong> {formatDate(pet.nextVetVisit || pet.next_vet_visit)}
+            <strong>{t('pets.nextVaccination')}:</strong> {formatDate(pet.nextVetVisit || pet.next_vet_visit)}
           </Typography>
         </Box>
       </CardContent>
       <CardActions sx={{ mt: "auto", justifyContent: "flex-end" }}>
         <Button size="small" onClick={() => pet.id && onEdit(pet.id)}>
-          View Details
+          {t('pets.viewDetails')}
         </Button>
       </CardActions>
     </Card>

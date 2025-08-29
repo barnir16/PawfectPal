@@ -1,5 +1,6 @@
 import { Button, Paper, Typography } from "@mui/material";
 import { Add as AddIcon, Pets as PetsIcon } from "@mui/icons-material";
+import { useLocalization } from "../../../contexts/LocalizationContext";
 
 interface PetsEmptyStateProps {
   searchTerm: string;
@@ -12,15 +13,16 @@ export const PetsEmptyState = ({
   selectedType,
   onAddPet,
 }: PetsEmptyStateProps) => {
+  const { t } = useLocalization();
   const emptyMessage = searchTerm || selectedType !== "All"
-    ? "Try adjusting your search or filter criteria."
-    : "Get started by adding your first pet!";
+    ? t('pets.tryAdjustingSearch')
+    : t('pets.getStartedAddingFirstPet');
 
   return (
     <Paper sx={{ p: 4, textAlign: "center" }}>
       <PetsIcon sx={{ fontSize: 60, color: "text.secondary", mb: 2 }} />
       <Typography variant="h6" gutterBottom>
-        No pets found
+        {t('pets.noPetsFound')}
       </Typography>
       <Typography color="text.secondary" paragraph>
         {emptyMessage}
@@ -31,7 +33,7 @@ export const PetsEmptyState = ({
         onClick={onAddPet}
         sx={{ mt: 2 }}
       >
-        Add Pet
+        {t('pets.addPet')}
       </Button>
     </Paper>
   );

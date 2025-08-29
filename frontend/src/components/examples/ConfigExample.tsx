@@ -1,12 +1,14 @@
 import React from 'react';
 import { Box, Typography, Chip, Button, Card, CardContent } from '@mui/material';
 import { useConfig, useFeatureFlag, useThemeConfig } from '../../hooks/useConfig';
+import { useLocalization } from '../../contexts/LocalizationContext';
 
 /**
  * Example component showing how to use Firebase Remote Config
  * This demonstrates the new configuration system
  */
 export const ConfigExample: React.FC = () => {
+  const { t } = useLocalization();
   const { config, isLoading, lastUpdated, refreshConfig } = useConfig();
   const isGoogleAuthEnabled = useFeatureFlag('enableGoogleAuth');
   const isAiChatbotEnabled = useFeatureFlag('enableAiChatbot');
@@ -15,23 +17,22 @@ export const ConfigExample: React.FC = () => {
   return (
     <Card sx={{ maxWidth: 600, margin: 'auto', mt: 4 }}>
       <CardContent>
-        <Typography variant="h5" gutterBottom>
-          🔧 Firebase Remote Config Demo
-        </Typography>
-        
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          This component demonstrates the new Firebase-based configuration system.
-          Configuration updates automatically without requiring app restart.
-        </Typography>
+                    <Typography variant="h5" gutterBottom>
+              🔧 {t('config.firebaseRemoteConfigDemo')}
+            </Typography>
+            
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              {t('config.description')}
+            </Typography>
 
         {/* Configuration Status */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="h6" gutterBottom>
-            Configuration Status
+            {t('config.configurationStatus')}
           </Typography>
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
             <Chip 
-              label={isLoading ? 'Loading...' : 'Ready'} 
+              label={isLoading ? t('common.loading') : t('common.ready')} 
               color={isLoading ? 'warning' : 'success'} 
               size="small" 
             />
@@ -48,42 +49,42 @@ export const ConfigExample: React.FC = () => {
               />
             )}
           </Box>
-          <Button 
-            variant="outlined" 
-            size="small" 
-            onClick={refreshConfig}
-            disabled={isLoading}
-          >
-            Refresh Config
-          </Button>
+                      <Button 
+              variant="outlined" 
+              size="small" 
+              onClick={refreshConfig}
+              disabled={isLoading}
+            >
+              {t('config.refreshConfig')}
+            </Button>
         </Box>
 
         {/* Feature Flags */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="h6" gutterBottom>
-            Feature Flags
+            {t('config.featureFlags')}
           </Typography>
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
             <Chip 
-              label="Google Auth" 
+              label={t('config.googleAuth')} 
               color={isGoogleAuthEnabled ? 'success' : 'default'} 
               variant={isGoogleAuthEnabled ? 'filled' : 'outlined'}
               size="small" 
             />
             <Chip 
-              label="AI Chatbot" 
+              label={t('config.aiChatbot')} 
               color={isAiChatbotEnabled ? 'success' : 'default'} 
               variant={isAiChatbotEnabled ? 'filled' : 'outlined'}
               size="small" 
             />
             <Chip 
-              label="GPS Tracking" 
+              label={t('config.gpsTracking')} 
               color={config.enableGpsTracking ? 'success' : 'default'} 
               variant={config.enableGpsTracking ? 'filled' : 'outlined'}
               size="small" 
             />
             <Chip 
-              label="Notifications" 
+              label={t('config.notifications')} 
               color={config.enableNotifications ? 'success' : 'default'} 
               variant={config.enableNotifications ? 'filled' : 'outlined'}
               size="small" 
@@ -94,7 +95,7 @@ export const ConfigExample: React.FC = () => {
         {/* API Configuration */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="h6" gutterBottom>
-            API Configuration
+            {t('config.apiConfiguration')}
           </Typography>
           <Typography variant="body2">
             <strong>Base URL:</strong> {config.apiBaseUrl}
@@ -110,7 +111,7 @@ export const ConfigExample: React.FC = () => {
         {/* Theme Configuration */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="h6" gutterBottom>
-            Theme Configuration
+            {t('config.themeConfiguration')}
           </Typography>
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             <Box 
@@ -144,7 +145,7 @@ export const ConfigExample: React.FC = () => {
         {/* Emergency Contacts */}
         <Box>
           <Typography variant="h6" gutterBottom>
-            Emergency Contacts
+            {t('config.emergencyContacts')}
           </Typography>
           <Typography variant="body2">
             <strong>Veterinary:</strong> {config.emergencyVetContact}

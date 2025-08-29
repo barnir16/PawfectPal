@@ -12,14 +12,16 @@ import { PetsToolbar } from "./../../../features/pets/components/PetsToolbar";
 // API and Types
 import { getPets, deletePet } from "../../../services/pets/petService";
 import type { Pet } from "../../../types/pets/pet";
+import { useLocalization } from "../../../contexts/LocalizationContext";
 
 export const Pets = () => {
   const navigate = useNavigate();
+  const { t } = useLocalization();
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"grid" | "table">("grid");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedType, setSelectedType] = useState("All");
+  const [selectedType, setSelectedType] = useState(t('pets.all'));
 
   const fetchPets = async () => {
     try {
@@ -49,7 +51,7 @@ export const Pets = () => {
   const handleDeletePet = async (id: number) => {
     if (
       window.confirm(
-        "Are you sure you want to delete this pet? This action cannot be undone."
+        t('pets.deleteConfirmation')
       )
     ) {
       try {
@@ -58,7 +60,7 @@ export const Pets = () => {
         await fetchPets();
       } catch (error) {
         console.error("Failed to delete pet:", error);
-        alert("Failed to delete pet. Please try again.");
+        alert(t('pets.failedToDelete'));
       }
     }
   };
@@ -67,7 +69,7 @@ export const Pets = () => {
     (pet) =>
       (pet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         pet.breed.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (selectedType === "All" || (pet.type || pet.breedType) === selectedType)
+      (selectedType === t('pets.all') || (pet.type || pet.breedType) === selectedType)
   );
 
   let content;
@@ -128,14 +130,14 @@ export const Pets = () => {
         }}
       >
         <Typography variant="h4" component="h1">
-          My Pets
+          {t('pets.myPets')}
         </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={handleAddPet}
         >
-          Add Pet
+          {t('pets.addPet')}
         </Button>
       </Box>
 

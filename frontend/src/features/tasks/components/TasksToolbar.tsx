@@ -6,6 +6,7 @@ import {
   Download as DownloadIcon,
   Sync as SyncIcon,
 } from "@mui/icons-material";
+import { useLocalization } from "../../../contexts/LocalizationContext";
 
 interface TasksToolbarProps {
   view: "list" | "grid";
@@ -27,6 +28,8 @@ export const TasksToolbar = ({
   onSyncWithGoogleCalendar,
   children,
 }: TasksToolbarProps) => {
+  const { t } = useLocalization();
+  
   return (
     <div
       style={{
@@ -45,29 +48,29 @@ export const TasksToolbar = ({
           startIcon={<AddIcon />}
           onClick={onAddTask}
         >
-          Add Task
+          {t('tasks.addTask')}
         </Button>
         
         {onExportTasks && (
-          <Tooltip title="Export tasks to iCal file">
+          <Tooltip title={t('tasks.exportToICal')}>
             <Button
               variant="outlined"
               startIcon={<DownloadIcon />}
               onClick={onExportTasks}
             >
-              Export
+              {t('tasks.export')}
             </Button>
           </Tooltip>
         )}
         
         {onSyncWithGoogleCalendar && (
-          <Tooltip title="Sync tasks with Google Calendar">
+          <Tooltip title={t('tasks.syncWithGoogleCalendar')}>
             <Button
               variant="outlined"
               startIcon={<SyncIcon />}
               onClick={onSyncWithGoogleCalendar}
             >
-              Sync Calendar
+              {t('tasks.syncCalendar')}
             </Button>
           </Tooltip>
         )}
@@ -82,10 +85,10 @@ export const TasksToolbar = ({
         aria-label="task view"
         size="small"
       >
-        <ToggleButton value="list" aria-label="list view">
+        <ToggleButton value="list" aria-label={t('tasks.listView')}>
           <ViewListIcon />
         </ToggleButton>
-        <ToggleButton value="grid" aria-label="grid view">
+        <ToggleButton value="grid" aria-label={t('tasks.gridView')}>
           <ViewModuleIcon />
         </ToggleButton>
       </ToggleButtonGroup>

@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { register, initializeGoogleAuth, signInWithGoogle } from "../../../services/auth/authService";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useLocalization } from "../../../contexts/LocalizationContext";
 
 export default function AuthScreen() {
+  const { t } = useLocalization();
   const { login } = useAuth();
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
@@ -29,11 +31,11 @@ export default function AuthScreen() {
 
   let buttonText: string;
   if (loading) {
-    buttonText = "Loading...";
+    buttonText = t('common.loading');
   } else if (isLogin) {
-    buttonText = "Login";
+    buttonText = t('auth.login');
   } else {
-    buttonText = "Register";
+    buttonText = t('auth.register');
   }
 
   const validateInputs = (): boolean => {
@@ -167,7 +169,7 @@ export default function AuthScreen() {
           PawfectPal
         </h1>
         <p style={{ textAlign: "center", color: "#666", marginBottom: 20 }}>
-          {isLogin ? "Welcome back!" : "Create your account"}
+                      {isLogin ? t('auth.welcomeBack') : t('auth.createAccount')}
         </p>
         
         {!isLogin && (

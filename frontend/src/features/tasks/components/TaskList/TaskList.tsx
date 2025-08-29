@@ -57,7 +57,7 @@ const isBefore = (date: string | Date, compareDate: string | Date) => {
 };
 
 // Types
-type Priority = "low" | "medium" | "high";
+type Priority = "low" | "medium" | "high" | "urgent";
 
 type TaskStatus = "pending" | "in_progress" | "completed" | "overdue";
 
@@ -151,6 +151,7 @@ export const PriorityChip = ({ priority }: { priority: Priority }) => {
     low: { label: "Low", color: "success" as const },
     medium: { label: "Medium", color: "warning" as const },
     high: { label: "High", color: "error" as const },
+    urgent: { label: "Urgent", color: "error" as const },
   };
 
   const { label, color } = priorityMap[priority];
@@ -497,6 +498,7 @@ const TaskList = () => {
                    <MenuItem value="high">High</MenuItem>
                    <MenuItem value="medium">Medium</MenuItem>
                    <MenuItem value="low">Low</MenuItem>
+                   <MenuItem value="urgent">Urgent</MenuItem>
                  </Select>
                </FormControl>
              </Box>

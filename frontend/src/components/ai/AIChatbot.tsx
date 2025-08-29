@@ -33,6 +33,7 @@ import {
   Chat as ChatIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useLocalization } from '../../contexts/LocalizationContext';
 
 import { aiChatService, type ChatMessage, type SuggestedAction } from '../../services/ai/aiChatService';
 import { getPets } from '../../services/pets/petService';
@@ -52,6 +53,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
 }) => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const { t } = useLocalization();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -220,7 +222,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
                 <PetsIcon />
               </Avatar>
               <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                PawfectPal AI Assistant
+                {t('chatbot.title')}
               </Typography>
               <IconButton color="inherit" onClick={onClose} size="small">
                 <CloseIcon />
@@ -313,7 +315,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
                   </Avatar>
                   <Paper sx={{ p: 2, borderRadius: 2 }}>
                     <Typography variant="body2" color="text.secondary">
-                      Thinking...
+                      {t('chatbot.thinking')}
                     </Typography>
                   </Paper>
                 </Box>

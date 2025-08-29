@@ -36,6 +36,8 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
 } from '@mui/icons-material';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useLocalization } from '../../contexts/LocalizationContext';
 import type { Pet } from '../../types/pets/pet';
 
 interface WeightRecord {
@@ -62,6 +64,7 @@ interface PetWeightMonitorProps {
 
 export const PetWeightMonitor: React.FC<PetWeightMonitorProps> = ({ pet }) => {
   const theme = useTheme();
+  const { t } = useLocalization();
   const [weightRecords, setWeightRecords] = useState<WeightRecord[]>([]);
   const [weightAlerts, setWeightAlerts] = useState<WeightAlert[]>([]);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -242,6 +245,13 @@ export const PetWeightMonitor: React.FC<PetWeightMonitorProps> = ({ pet }) => {
     setEditDialogOpen(true);
   };
 
+  // Prepare chart data
+  const chartData = weightRecords.map(record => ({
+    date: new Date(record.date).toLocaleDateString(),
+    weight: record.weight,
+    healthy: record.isHealthy ? 1 : 0
+  }));
+
   // Get current weight status
   const getCurrentWeightStatus = () => {
     if (weightRecords.length === 0) return { status: 'No data', color: 'default' as const };
@@ -260,7 +270,7 @@ export const PetWeightMonitor: React.FC<PetWeightMonitorProps> = ({ pet }) => {
         title={
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <WeightIcon color="primary" />
-            <Typography variant="h6">Weight Monitoring</Typography>
+            <Typography variant="h6">{t('pets.weightMonitor')}</Typography>
           </Box>
         }
         action={
@@ -271,7 +281,7 @@ export const PetWeightMonitor: React.FC<PetWeightMonitorProps> = ({ pet }) => {
             variant="contained"
             color="primary"
           >
-            Add Weight Record
+            {t('pets.addWeightRecord')}
           </Button>
         }
       />
@@ -280,13 +290,13 @@ export const PetWeightMonitor: React.FC<PetWeightMonitorProps> = ({ pet }) => {
         {/* Current Weight Status */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="h6" color="primary" sx={{ mb: 2 }}>
-            📊 Current Weight Status
+            📊 {t('pets.weightMonitor')}
           </Typography>
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Alert severity={currentStatus.color} icon={<WeightIcon />}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
-                  Status
+                  {t('common.status')}
                 </Typography>
                 <Typography variant="h6">{currentStatus.status}</Typography>
               </Alert>
@@ -294,7 +304,7 @@ export const PetWeightMonitor: React.FC<PetWeightMonitorProps> = ({ pet }) => {
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Alert severity="info">
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
-                  Current Weight
+                  {t('weight.currentWeight')}
                 </Typography>
                 <Typography variant="h6">
                   {weightRecords.length > 0 ? 
@@ -307,7 +317,7 @@ export const PetWeightMonitor: React.FC<PetWeightMonitorProps> = ({ pet }) => {
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Alert severity="success">
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
-                  Healthy Range
+                  {t('weight.healthyRange')}
                 </Typography>
                 <Typography variant="h6">{thresholds.healthyRange}</Typography>
               </Alert>
@@ -315,7 +325,7 @@ export const PetWeightMonitor: React.FC<PetWeightMonitorProps> = ({ pet }) => {
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Alert severity="info">
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
-                  Records
+                  {t('weight.records')}
                 </Typography>
                 <Typography variant="h6">{weightRecords.length}</Typography>
               </Alert>
@@ -327,7 +337,7 @@ export const PetWeightMonitor: React.FC<PetWeightMonitorProps> = ({ pet }) => {
         {weightAlerts.length > 0 && (
           <Box sx={{ mb: 3 }}>
             <Typography variant="h6" color="primary" sx={{ mb: 2 }}>
-              🚨 Weight Alerts
+              🚨 {t('weight.weightAlerts')}
             </Typography>
             <Grid container spacing={2}>
               {weightAlerts.slice(-3).map((alert) => (
@@ -344,27 +354,28 @@ export const PetWeightMonitor: React.FC<PetWeightMonitorProps> = ({ pet }) => {
           </Box>
         )}
 
-        {/* Weight Trend Summary */}
+        {/* Weight Chart */}
         {weightRecords.length > 1 && (
           <Box sx={{ mb: 3 }}>
             <Typography variant="h6" color="primary" sx={{ mb: 2 }}>
-              📈 Weight Trend Summary
+              📈 Weight Trend Chart
             </Typography>
-            <Box sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 1 }}>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                <strong>Weight History:</strong> {weightRecords.length} measurements recorded
-              </Typography>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                <strong>Latest Weight:</strong> {weightRecords[weightRecords.length - 1].weight} {weightRecords[weightRecords.length - 1].weightUnit}
-              </Typography>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                <strong>Previous Weight:</strong> {weightRecords[weightRecords.length - 2].weight} {weightRecords[weightRecords.length - 2].weightUnit}
-              </Typography>
-              {weightRecords[weightRecords.length - 1].changeFromPrevious && (
-                <Typography variant="body2" color={weightRecords[weightRecords.length - 1].changeFromPrevious > 0 ? 'warning.main' : 'info.main'}>
-                  <strong>Change:</strong> {weightRecords[weightRecords.length - 1].changeFromPrevious > 0 ? '+' : ''}{weightRecords[weightRecords.length - 1].changeFromPrevious.toFixed(1)}%
-                </Typography>
-              )}
+            <Box sx={{ height: 300, width: '100%' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line 
+                    type="monotone" 
+                    dataKey="weight" 
+                    stroke={theme.palette.primary.main} 
+                    strokeWidth={2}
+                    dot={{ fill: theme.palette.primary.main, strokeWidth: 2, r: 4 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </Box>
           </Box>
         )}
@@ -442,7 +453,7 @@ export const PetWeightMonitor: React.FC<PetWeightMonitorProps> = ({ pet }) => {
           <DialogTitle>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <WeightIcon color="primary" />
-              Add Weight Record
+              {t('pets.addWeightRecord')}
             </Box>
           </DialogTitle>
           <DialogContent>
@@ -451,10 +462,10 @@ export const PetWeightMonitor: React.FC<PetWeightMonitorProps> = ({ pet }) => {
                 <TextField
                   fullWidth
                   type="number"
-                  label="Weight"
+                  label={t('pets.weight')}
                   value={formData.weight}
                   onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-                  placeholder="Enter weight"
+                  placeholder={t('pets.weight')}
                   inputProps={{ step: 0.1, min: 0 }}
                 />
               </Grid>
@@ -475,7 +486,7 @@ export const PetWeightMonitor: React.FC<PetWeightMonitorProps> = ({ pet }) => {
                 <TextField
                   fullWidth
                   type="date"
-                  label="Date"
+                  label={t('pets.date')}
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                   InputLabelProps={{ shrink: true }}
@@ -486,18 +497,18 @@ export const PetWeightMonitor: React.FC<PetWeightMonitorProps> = ({ pet }) => {
                   fullWidth
                   multiline
                   rows={3}
-                  label="Notes"
+                  label={t('pets.notes')}
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder="Any notes about this weight measurement..."
+                  placeholder={t('pets.notes')}
                 />
               </Grid>
             </Grid>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setAddDialogOpen(false)}>Cancel</Button>
+            <Button onClick={() => setAddDialogOpen(false)}>{t('common.cancel')}</Button>
             <Button onClick={handleAddWeight} variant="contained" color="primary">
-              Add Weight
+              {t('pets.addWeight')}
             </Button>
           </DialogActions>
         </Dialog>
@@ -507,7 +518,7 @@ export const PetWeightMonitor: React.FC<PetWeightMonitorProps> = ({ pet }) => {
           <DialogTitle>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <EditIcon color="primary" />
-              Edit Weight Record
+              {t('pets.editWeightRecord')}
             </Box>
           </DialogTitle>
           <DialogContent>
@@ -516,7 +527,7 @@ export const PetWeightMonitor: React.FC<PetWeightMonitorProps> = ({ pet }) => {
                 <TextField
                   fullWidth
                   type="number"
-                  label="Weight"
+                  label={t('pets.weight')}
                   value={formData.weight}
                   onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
                   inputProps={{ step: 0.1, min: 0 }}
@@ -539,7 +550,7 @@ export const PetWeightMonitor: React.FC<PetWeightMonitorProps> = ({ pet }) => {
                 <TextField
                   fullWidth
                   type="date"
-                  label="Date"
+                  label={t('pets.date')}
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                   InputLabelProps={{ shrink: true }}
@@ -550,7 +561,7 @@ export const PetWeightMonitor: React.FC<PetWeightMonitorProps> = ({ pet }) => {
                   fullWidth
                   multiline
                   rows={3}
-                  label="Notes"
+                  label={t('pets.notes')}
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 />
@@ -558,9 +569,9 @@ export const PetWeightMonitor: React.FC<PetWeightMonitorProps> = ({ pet }) => {
             </Grid>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+            <Button onClick={() => setEditDialogOpen(false)}>{t('common.cancel')}</Button>
             <Button onClick={handleEditWeight} variant="contained" color="primary">
-              Update Weight
+              {t('pets.updatePet')}
             </Button>
           </DialogActions>
         </Dialog>

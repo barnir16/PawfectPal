@@ -10,17 +10,13 @@ import { getTasks, deleteTask, completeTask, downloadTasksAsICal, syncTasksWithG
 import { getPets } from "../../../services/pets/petService";
 import type { Task } from "../../../types/tasks/task";
 import type { Pet } from "../../../types/pets/pet";
-
-const priorityOptions = [
-  { value: "all", label: "All Priorities" },
-  { value: "high", label: "High" },
-  { value: "medium", label: "Medium" },
-  { value: "low", label: "Low" },
-];
+import { useLocalization } from "../../../contexts/LocalizationContext";
 
 export const Tasks = () => {
   const navigate = useNavigate();
+  const { t } = useLocalization();
   const [view, setView] = useState<"list" | "grid">("grid");
+  
   const [filters, setFilters] = useState({
     status: "all",
     priority: "all",
@@ -31,9 +27,17 @@ export const Tasks = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Create priority options using t() function
+  const priorityOptions = [
+    { value: "all", label: t('tasks.allPriorities') },
+    { value: "high", label: t('tasks.high') },
+    { value: "medium", label: t('tasks.medium') },
+    { value: "low", label: t('tasks.low') },
+  ];
+
   // Create pet options from real pets
   const petOptions = [
-    { value: "all", label: "All Pets" },
+    { value: "all", label: t('tasks.allPets') },
     ...pets.map(pet => ({ value: pet.id?.toString() || '', label: pet.name }))
   ];
 

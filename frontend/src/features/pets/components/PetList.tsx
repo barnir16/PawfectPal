@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { useLocalization } from "../../../contexts/LocalizationContext";
 import type { Pet } from "../../../types/pets/pet";
 import { getPets, deletePet } from "../../../services/pets/petService";
 
@@ -20,6 +21,7 @@ export default function PetListScreen() {
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { t } = useLocalization();
 
   const fetchPets = async () => {
     try {
@@ -27,7 +29,7 @@ export default function PetListScreen() {
       setPets(fetchedPets);
     } catch (error) {
       console.log(error);
-      alert("Failed to fetch pets");
+      alert(t('pets.failedToFetch'));
     } finally {
       setLoading(false);
     }
@@ -38,14 +40,14 @@ export default function PetListScreen() {
   }, []);
 
   const handleDeletePet = async (pet: Pet) => {
-    if (window.confirm(`Are you sure you want to delete ${pet.name}?`)) {
+    if (window.confirm(t('pets.deleteConfirmation').replace('{name}', pet.name))) {
       try {
         await deletePet(pet.id!);
-        alert("Pet deleted successfully");
+        alert(t('pets.petDeleted'));
         fetchPets();
       } catch (error) {
         console.log(error);
-        alert("Failed to delete pet");
+        alert(t('pets.failedToDelete'));
       }
     }
   };
@@ -53,6 +55,10 @@ export default function PetListScreen() {
   const calculateAge = (pet: Pet) => {
     // First try to use the age field directly
     if (pet.age !== undefined && pet.age !== null) {
+      if (pet.age < 1) {
+        const months = Math.floor(pet.age * 12);
+        return `${months} months`;
+      }
       return `${pet.age} years`;
     }
     
@@ -61,22 +67,27 @@ export default function PetListScreen() {
     if (birthDate) {
       try {
         const birth = new Date(birthDate);
-        if (isNaN(birth.getTime())) return "Unknown age";
+        if (isNaN(birth.getTime())) return t('pets.unknownAge');
         const today = new Date();
         const ageInMs = today.getTime() - birth.getTime();
         const ageInYears = ageInMs / (1000 * 60 * 60 * 24 * 365.25);
+        
+        if (ageInYears < 1) {
+          const months = Math.floor(ageInYears * 12);
+          return `${months} months`;
+        }
         return `${Math.floor(ageInYears)} years`;
       } catch {
-        return "Unknown age";
+        return t('pets.unknownAge');
       }
     }
-    return "Unknown age";
+            return t('pets.unknownAge');
   };
 
   const formatWeight = (pet: Pet) => {
     const weight = pet.weightKg || pet.weight_kg;
-    if (!weight) return "Not specified";
-    return `${weight} ${pet.weightUnit || 'kg'}`;
+          if (!weight) return t('pets.notSpecified');
+          return `${weight} ${pet.weightUnit || t('pets.kg')}`;
   };
 
   if (loading) {
@@ -100,22 +111,22 @@ export default function PetListScreen() {
         alignItems="center"
         mb={3}
       >
-        <Typography variant="h4">My Pets</Typography>
+        <Typography variant="h4">{t('pets.myPets')}</Typography>
         <Button variant="contained" onClick={() => navigate("/add-pet")}>
-          + Add Pet
+          + {t('pets.addPet')}
         </Button>
       </Box>
 
       {pets.length === 0 ? (
         <Box textAlign="center" mt={10}>
           <Typography variant="h6" gutterBottom>
-            No pets yet
+            {t('pets.noPetsYet')}
           </Typography>
           <Typography variant="body1" gutterBottom>
-            Add your first pet to start managing their care!
+            {t('pets.addFirstPetToStart')}
           </Typography>
           <Button variant="contained" onClick={() => navigate("/add-pet")}>
-            Add Your First Pet
+            {t('pets.addYourFirstPet')}
           </Button>
         </Box>
       ) : (
@@ -164,7 +175,7 @@ export default function PetListScreen() {
                           fontWeight: 'medium'
                         }}
                       >
-                        {pet.breedType || pet.type || "Unknown type"}
+                        {pet.breedType || pet.type || t('pets.unknownType')}
                       </Typography>
                     </Box>
                     <Box sx={{ display: "flex", gap: 0.5, ml: 1 }}>
