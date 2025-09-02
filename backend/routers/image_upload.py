@@ -98,3 +98,58 @@ async def upload_task_attachment(
         "message": "Attachment uploaded successfully",
         "file_path": f"/uploads/images/{filename}",
     }
+
+
+# image_upload.py
+@router.post("/profile-image")
+async def upload_profile_image(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: UserORM = Depends(get_current_user),
+):
+    """Upload user profile image"""
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
+
+    if file.filename is None:
+        raise ValueError("File path cannot be None")
+
+    try:
+        file_extension = Path(file.filename).suffix
+        filename = f"user_{current_user.id}_{uuid.uuid4()}{file_extension}"
+        file_path = IMAGES_DIR / filename
+
+        # 1. Check if the directory exists and has permissions
+        if not IMAGES_DIR.exists():
+            print(f"Error: IMAGES_DIR does not exist at {IMAGES_DIR}. Creating...")
+            IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+
+        # 2. Log the file save process
+        print(f"Saving file to: {file_path}")
+        save_upload_file(file, str(file_path))
+        print(f"File saved successfully.")
+
+        # 3. Log the database update process
+        old_profile_image = current_user.profile_image
+        new_profile_image_url = f"/uploads/images/{filename}"
+        current_user.profile_image = new_profile_image_url
+        print(
+            f"User {current_user.id}'s profile_image changed from '{old_profile_image}' to '{new_profile_image_url}'"
+        )
+
+        # 4. Commit the changes and log
+        db.commit()
+        print("Database commit successful.")
+
+        db.refresh(current_user)  # Refresh the object from the database
+
+        return {
+            "message": "Profile image uploaded successfully",
+            "profile_image": current_user.profile_image,
+        }
+
+    except Exception as e:
+        # If any error occurs, rollback the database session
+        db.rollback()
+        print(f"An error occurred during image upload: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
