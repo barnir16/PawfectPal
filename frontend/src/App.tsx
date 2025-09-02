@@ -21,6 +21,7 @@ import { PetDetail } from "./features/pets/components/PetDetail/PetDetail";
 import Settings from "./features/settings/components/Settings/Settings";
 import TaskForm from "./features/tasks/components/TaskForm/TaskForm";
 import AuthScreen from "./features/auth/pages/AuthPage";
+import ProfilePage from "./features/profile/pages/ProfilePage";
 import { AIChatbot, ChatToggleButton } from "./components/ai/AIChatbot";
 import { useAIChat } from "./hooks/useAIChat";
 
@@ -105,6 +106,7 @@ const AppContent = () => {
           <Route path="/auth" element={<Navigate to="/dashboard" replace />} />
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/bookservice" element={<BookService />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Box>

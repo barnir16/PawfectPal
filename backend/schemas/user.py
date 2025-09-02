@@ -52,3 +52,26 @@ class UserPublic(UserBase):
 
     class Config:
         from_attributes = True
+
+
+class UserUpdate(ProviderExtras, BaseModel):
+    # UserBase fields
+    username: Optional[str] = None
+    is_active: Optional[bool] = None
+    email: Optional[EmailStr] = None
+    full_name: Optional[str] = None
+
+    # UserContact fields
+    phone: Optional[str] = None
+    profile_image: Optional[str] = None
+
+    # Address fields
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    country: Optional[str] = None
+    postal_code: Optional[str] = None
+
+    # OAuth fields if you want editable
+    google_id: Optional[str] = None
+    profile_picture_url: Optional[str] = None
