@@ -128,18 +128,196 @@ export const israeliAdultDogVaccines: VaccineSchema = {
   ]
 };
 
-// Placeholder for Israeli Puppy Vaccines (to be implemented)
+// Israeli Puppy Vaccines - Complete schedule
 export const israeliPuppyVaccines: VaccineSchema = {
-  mandatory: [],
-  recommended: [],
-  preventative_treatments: []
+  mandatory: [
+    {
+      name: "DHPP (Distemper, Hepatitis, Parvovirus, Parainfluenza)",
+      frequency: "Every 3 weeks until 16 weeks",
+      first_dose_age: "6 weeks",
+      puppy_schedule: ["6 weeks", "9 weeks", "12 weeks", "16 weeks"],
+      description: "Core vaccine protecting against major canine diseases",
+      side_effects: ["Mild lethargy", "Slight fever", "Localized swelling"],
+      age_restriction: {
+        min_weeks: 6,
+        max_years: null
+      },
+      last_updated: "2025-01-01"
+    },
+    {
+      name: "Rabies",
+      frequency: "Annual after first dose",
+      first_dose_age: "12 weeks",
+      puppy_schedule: ["12 weeks"],
+      description: "Required by Israeli law for all dogs",
+      side_effects: ["Mild lethargy", "Localized swelling"],
+      age_restriction: {
+        min_weeks: 12,
+        max_years: null
+      },
+      last_updated: "2025-01-01"
+    }
+  ],
+  recommended: [
+    {
+      name: "Bordetella (Kennel Cough)",
+      frequency: "Annual",
+      first_dose_age: "8 weeks",
+      puppy_schedule: ["8 weeks", "12 weeks"],
+      description: "Protects against kennel cough",
+      side_effects: ["Mild lethargy", "Slight fever"],
+      age_restriction: {
+        min_weeks: 8,
+        max_years: null
+      },
+      last_updated: "2025-01-01"
+    },
+    {
+      name: "Lyme Disease",
+      frequency: "Annual",
+      first_dose_age: "12 weeks",
+      puppy_schedule: ["12 weeks", "16 weeks"],
+      description: "Protects against tick-borne Lyme disease",
+      side_effects: ["Mild lethargy", "Localized swelling"],
+      age_restriction: {
+        min_weeks: 12,
+        max_years: null
+      },
+      last_updated: "2025-01-01"
+    },
+    {
+      name: "Canine Influenza",
+      frequency: "Annual",
+      first_dose_age: "12 weeks",
+      puppy_schedule: ["12 weeks", "16 weeks"],
+      description: "Protects against canine flu",
+      side_effects: ["Mild lethargy", "Slight fever"],
+      age_restriction: {
+        min_weeks: 12,
+        max_years: null
+      },
+      last_updated: "2025-01-01"
+    }
+  ],
+  preventative_treatments: [
+    {
+      name: "Deworming",
+      frequency: "Every 2 weeks until 12 weeks, then monthly",
+      description: "Regular deworming schedule",
+      common_treatments: ["Pyrantel", "Fenbendazole", "Praziquantel"],
+      last_updated: "2025-01-01"
+    },
+    {
+      name: "Flea and Tick Prevention",
+      frequency: "Monthly",
+      description: "Monthly flea and tick prevention",
+      common_treatments: ["Frontline", "Advantage", "Bravecto"],
+      last_updated: "2025-01-01"
+    },
+    {
+      name: "Heartworm Prevention",
+      frequency: "Monthly",
+      description: "Monthly heartworm prevention",
+      common_treatments: ["Heartgard", "Interceptor", "Sentinel"],
+      last_updated: "2025-01-01"
+    }
+  ]
 };
 
-// Placeholder for Israeli Kitten Vaccines (to be implemented)
+// Israeli Kitten Vaccines - Complete schedule
 export const israeliKittenVaccines: VaccineSchema = {
-  mandatory: [],
-  recommended: [],
-  preventative_treatments: []
+  mandatory: [
+    {
+      name: "FVRCP (Feline Viral Rhinotracheitis, Calicivirus, Panleukopenia)",
+      frequency: "Every 3 weeks until 16 weeks",
+      first_dose_age: "6 weeks",
+      kitten_schedule: ["6 weeks", "9 weeks", "12 weeks", "16 weeks"],
+      description: "Core vaccine protecting against major feline diseases",
+      side_effects: ["Mild lethargy", "Slight fever", "Localized swelling"],
+      age_restriction: {
+        min_weeks: 6,
+        max_years: null
+      },
+      last_updated: "2025-01-01"
+    },
+    {
+      name: "Rabies",
+      frequency: "Annual after first dose",
+      first_dose_age: "12 weeks",
+      kitten_schedule: ["12 weeks"],
+      description: "Required by Israeli law for all cats",
+      side_effects: ["Mild lethargy", "Localized swelling"],
+      age_restriction: {
+        min_weeks: 12,
+        max_years: null
+      },
+      last_updated: "2025-01-01"
+    }
+  ],
+  recommended: [
+    {
+      name: "Feline Leukemia (FeLV)",
+      frequency: "Annual",
+      first_dose_age: "8 weeks",
+      kitten_schedule: ["8 weeks", "12 weeks"],
+      description: "Protects against feline leukemia virus",
+      side_effects: ["Mild lethargy", "Slight fever"],
+      age_restriction: {
+        min_weeks: 8,
+        max_years: null
+      },
+      last_updated: "2025-01-01"
+    },
+    {
+      name: "Feline Immunodeficiency Virus (FIV)",
+      frequency: "Annual",
+      first_dose_age: "12 weeks",
+      kitten_schedule: ["12 weeks", "16 weeks"],
+      description: "Protects against feline immunodeficiency virus",
+      side_effects: ["Mild lethargy", "Localized swelling"],
+      age_restriction: {
+        min_weeks: 12,
+        max_years: null
+      },
+      last_updated: "2025-01-01"
+    },
+    {
+      name: "Chlamydia",
+      frequency: "Annual",
+      first_dose_age: "8 weeks",
+      kitten_schedule: ["8 weeks", "12 weeks"],
+      description: "Protects against chlamydial conjunctivitis",
+      side_effects: ["Mild lethargy", "Slight fever"],
+      age_restriction: {
+        min_weeks: 8,
+        max_years: null
+      },
+      last_updated: "2025-01-01"
+    }
+  ],
+  preventative_treatments: [
+    {
+      name: "Deworming",
+      frequency: "Every 2 weeks until 12 weeks, then monthly",
+      description: "Regular deworming schedule",
+      common_treatments: ["Pyrantel", "Fenbendazole", "Praziquantel"],
+      last_updated: "2025-01-01"
+    },
+    {
+      name: "Flea Prevention",
+      frequency: "Monthly",
+      description: "Monthly flea prevention",
+      common_treatments: ["Frontline", "Advantage", "Bravecto"],
+      last_updated: "2025-01-01"
+    },
+    {
+      name: "Ear Mite Treatment",
+      frequency: "As needed",
+      description: "Preventive ear mite treatment",
+      common_treatments: ["Revolution", "Advantage Multi", "Ear drops"],
+      last_updated: "2025-01-01"
+    }
+  ]
 };
 
 // Main export for all Israeli vaccine schemas

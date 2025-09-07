@@ -43,6 +43,7 @@ import {
 } from '@mui/icons-material';
 import { useLocalization } from '../../../../contexts/LocalizationContext';
 import { LanguageSwitcher } from '../../../../components/common/LanguageSwitcher';
+import { PushNotificationManager } from '../../../../components/notifications/PushNotificationManager';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { useTheme as useCustomTheme } from '../../../../contexts/ThemeContext';
 
@@ -275,98 +276,7 @@ const Settings: React.FC = () => {
 
         {/* Notification Settings */}
         <Grid size={{ xs: 12 }}>
-          <Card>
-            <CardHeader
-              title={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <NotificationsIcon color="primary" />
-                  <Typography variant="h6">{t('settings.notifications')}</Typography>
-                </Box>
-              }
-            />
-            <CardContent>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                {t('pets.manageNotifications')}
-              </Typography>
-              
-              <List>
-                <ListItem>
-                  <ListItemIcon>
-                    <NotificationsIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={t('pets.enableNotifications')}
-                    secondary={t('pets.receiveAlerts')}
-                  />
-                  <ListItemSecondaryAction>
-                    <Switch
-                      edge="end"
-                      checked={preferences.notifications}
-                      onChange={handleNotificationsToggle}
-                      color="primary"
-                    />
-                  </ListItemSecondaryAction>
-                </ListItem>
-                
-                <Divider />
-                
-                <ListItem>
-                  <ListItemIcon>
-                    <PetsIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={t('pets.petCareAlerts')}
-                    secondary={t('pets.vaccinationReminders')}
-                  />
-                  <ListItemSecondaryAction>
-                    <Switch
-                      edge="end"
-                      checked={preferences.emailAlerts}
-                      onChange={handleEmailAlertsToggle}
-                      color="primary"
-                      disabled={!preferences.notifications}
-                    />
-                  </ListItemSecondaryAction>
-                </ListItem>
-                
-                <Divider />
-                
-                <ListItem>
-                  <ListItemIcon>
-                    <SecurityIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={t('pets.pushNotifications')}
-                    secondary={t('pets.instantAlerts')}
-                  />
-                  <ListItemSecondaryAction>
-                    <Switch
-                      edge="end"
-                      checked={preferences.pushNotifications}
-                      onChange={handlePushNotificationsToggle}
-                      color="primary"
-                      disabled={!preferences.notifications}
-                    />
-                  </ListItemSecondaryAction>
-                </ListItem>
-              </List>
-
-              <Box sx={{ mt: 2 }}>
-                <FormControl fullWidth>
-                  <InputLabel>{t('pets.reminderFrequency')}</InputLabel>
-                  <Select
-                    value={preferences.reminderFrequency}
-                    onChange={handleReminderFrequencyChange}
-                    label={t('pets.reminderFrequency')}
-                  >
-                    <MenuItem value="daily">{t('tasks.daily')}</MenuItem>
-                    <MenuItem value="weekly">{t('tasks.weekly')}</MenuItem>
-                    <MenuItem value="monthly">{t('tasks.monthly')}</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-            </CardContent>
-          </Card>
+          <PushNotificationManager />
         </Grid>
 
         {/* Emergency Contacts */}
@@ -390,7 +300,7 @@ const Settings: React.FC = () => {
                 label={t('pets.primaryVet')}
                 value={preferences.emergencyContacts.primaryVet}
                 onChange={(e) => handleEmergencyContactChange('primaryVet', e.target.value)}
-                placeholder="Dr. Smith - (555) 123-4567"
+                placeholder={t('settings.primaryVetPlaceholder')}
                 sx={{ mb: 2 }}
                 InputProps={{
                   startAdornment: (
@@ -406,7 +316,7 @@ const Settings: React.FC = () => {
                 label={t('pets.emergencyVet')}
                 value={preferences.emergencyContacts.emergencyVet}
                 onChange={(e) => handleEmergencyContactChange('emergencyVet', e.target.value)}
-                placeholder="24/7 Emergency Hospital - (555) 999-0000"
+                placeholder={t('settings.emergencyVetPlaceholder')}
                 sx={{ mb: 2 }}
                 InputProps={{
                   startAdornment: (
@@ -422,7 +332,7 @@ const Settings: React.FC = () => {
                 label={t('pets.petSitter')}
                 value={preferences.emergencyContacts.petSitter}
                 onChange={(e) => handleEmergencyContactChange('petSitter', e.target.value)}
-                placeholder="Jane Doe - (555) 111-2222"
+                placeholder={t('settings.petSitterPlaceholder')}
                 InputProps={{
                   startAdornment: (
                     <Box sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>

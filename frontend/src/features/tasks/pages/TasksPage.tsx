@@ -1,31 +1,57 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Grid, CircularProgress, Alert } from "@mui/material";
-import TaskList from "../components/TaskList";
+import { 
+  Box, 
+  Grid, 
+  CircularProgress, 
+  Alert, 
+  Card, 
+  CardContent, 
+  Typography, 
+  Button,
+  Container,
+  Stack
+} from "@mui/material";
+import { 
+  Vaccines as VaccinesIcon, 
+  Assignment as TasksIcon,
+  Add as AddIcon 
+} from "@mui/icons-material";
+import { TaskList } from "../components/TaskList";
 import { TasksToolbar } from "./../../../features/tasks/components/TasksToolbar";
 import { TaskFilters } from "./../../../features/tasks/components/TaskFilters";
 import { TasksEmptyState } from "./../../../features/tasks/components/TasksEmptyState";
 import { TaskGridItem } from "./../../../features/tasks/components/TaskGridItem";
-import { getTasks, deleteTask, completeTask, downloadTasksAsICal, syncTasksWithGoogleCalendar } from "../../../services/tasks/taskService";
+import { getTasks, deleteTask, completeTask, updateTask, downloadTasksAsICal, syncTasksWithGoogleCalendar } from "../../../services/tasks/taskService";
 import { getPets } from "../../../services/pets/petService";
+import { type VaccineTask } from "../../../services/tasks/vaccineTaskService";
+import { VaccineTaskCompletionDialog } from "../../../components/tasks/VaccineTaskCompletionDialog";
+import SimpleVaccineList from "../../../components/tasks/SimpleVaccineList";
 import type { Task } from "../../../types/tasks/task";
 import type { Pet } from "../../../types/pets/pet";
 import { useLocalization } from "../../../contexts/LocalizationContext";
+import { testVaccineGeneration } from "../../../utils/testVaccines";
 
 export const Tasks = () => {
   const navigate = useNavigate();
   const { t } = useLocalization();
   const [view, setView] = useState<"list" | "grid">("grid");
+  const [taskType, setTaskType] = useState<"main" | "vaccines" | "custom">("main");
   
   const [filters, setFilters] = useState({
     status: "all",
     priority: "all",
     pet: "all",
+    taskType: "all", // Add task type filter
   });
   const [tasks, setTasks] = useState<Task[]>([]);
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [vaccineCompletionDialog, setVaccineCompletionDialog] = useState<{
+    open: boolean;
+    vaccineTask: VaccineTask | null;
+  }>({ open: false, vaccineTask: null });
 
   // Create priority options using t() function
   const priorityOptions = [
@@ -57,7 +83,7 @@ export const Tasks = () => {
         setPets(petsData);
       } catch (err) {
         console.error('Error loading tasks:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load tasks');
+        setError(err instanceof Error ? err.message : t('errors.failedToLoadTasks'));
       } finally {
         setLoading(false);
       }
@@ -87,6 +113,54 @@ export const Tasks = () => {
     navigate("/tasks/new");
   };
 
+  const handleVaccines = async () => {
+    setTaskType("vaccines");
+  };
+
+
+  const handleCustomTasks = () => {
+    setTaskType("custom");
+  };
+
+  const handleBackToMain = () => {
+    setTaskType("main");
+  };
+
+
+
+  const handleVaccineCompletionClose = () => {
+    setVaccineCompletionDialog({ open: false, vaccineTask: null });
+  };
+
+  const handleVaccineTaskCompleted = async () => {
+    // Refresh tasks after vaccine completion
+    try {
+      const updatedTasks = await getTasks();
+      setTasks(updatedTasks);
+    } catch (error) {
+      console.error('Error refreshing tasks after vaccine completion:', error);
+    }
+  };
+
+  const handleVaccineComplete = (taskId: number) => {
+    // Find the task and open the vaccine completion dialog
+    const task = tasks.find(t => t.id === taskId);
+    if (task && task.description?.includes('חיסון')) {
+      // Convert to VaccineTask format
+      const vaccineTask: VaccineTask = {
+        ...task,
+        vaccineName: task.title,
+        vaccineType: 'vaccination',
+        isOverdue: new Date(task.dateTime) < new Date(),
+        nextDueDate: task.dateTime,
+        veterinarian: '',
+        clinic: '',
+        vaccineNotes: task.description || ''
+      };
+      setVaccineCompletionDialog({ open: true, vaccineTask });
+    }
+  };
+
   const handleEditTask = (id: number | string) => {
     navigate(`/tasks/edit/${id}`);
   };
@@ -99,7 +173,7 @@ export const Tasks = () => {
       setTasks(updatedTasks);
     } catch (err) {
       console.error('Error deleting task:', err);
-      alert('Failed to delete task');
+      setError(t('errors.failedToDeleteTask'));
     }
   };
 
@@ -108,17 +182,18 @@ export const Tasks = () => {
       downloadTasksAsICal(tasks, `pawfectpal-tasks-${new Date().toISOString().split('T')[0]}.ics`);
     } catch (err) {
       console.error('Error exporting tasks:', err);
-      alert('Failed to export tasks');
+      setError(t('errors.failedToExportTasks'));
     }
   };
 
   const handleSyncWithGoogleCalendar = async () => {
     try {
       await syncTasksWithGoogleCalendar(tasks);
-      alert('Tasks synced with Google Calendar successfully!');
+      // Show success message (could be implemented with a snackbar)
+      console.log(t('errors.tasksSyncedSuccessfully'));
     } catch (err) {
       console.error('Error syncing with Google Calendar:', err);
-      alert('Failed to sync with Google Calendar. Check console for details.');
+      setError(t('errors.failedToSyncCalendar'));
     }
   };
 
@@ -127,16 +202,15 @@ export const Tasks = () => {
       if (completed) {
         await completeTask(Number(id));
       } else {
-        // For uncompleting, we need to update the task status
-        // This would require an updateTask call with status: 'pending'
-        console.log(`Mark task ${id} as incomplete`);
+        // Mark task as incomplete
+        await updateTask(Number(id), { isCompleted: false });
       }
       // Refresh tasks after update
       const updatedTasks = await getTasks();
       setTasks(updatedTasks);
     } catch (err) {
       console.error('Error updating task:', err);
-      alert('Failed to update task');
+      setError(t('errors.failedToUpdateTask'));
     }
   };
 
@@ -164,8 +238,16 @@ export const Tasks = () => {
         return false;
       }
     }
+
+    // Task type filter (for vaccines view)
+    if (taskType === "vaccines" && !task.description?.includes('חיסון')) {
+      return false;
+    }
+    if (taskType === "custom" && task.description?.includes('חיסון')) {
+      return false;
+    }
     
-    return true;
+    return true
   });
 
   // Loading state
@@ -188,60 +270,151 @@ export const Tasks = () => {
     );
   }
 
+  // Main task type selection
+  if (taskType === "main") {
+    return (
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <Typography variant="h4" component="h1" gutterBottom align="center">
+          {t('tasks.chooseTaskType')}
+        </Typography>
+        <Typography variant="body1" color="textSecondary" align="center" sx={{ mb: 4 }}>
+          {t('tasks.chooseTaskTypeDescription')}
+        </Typography>
+        
+        <Stack spacing={3} direction={{ xs: 'column', sm: 'row' }} justifyContent="center">
+          <Card sx={{ minWidth: 280, cursor: 'pointer' }} onClick={handleVaccines}>
+            <CardContent sx={{ textAlign: 'center', py: 4 }}>
+              <VaccinesIcon sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
+              <Typography variant="h5" component="h2" gutterBottom>
+                {t('tasks.vaccines')}
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                {t('tasks.vaccinesDescription')}
+              </Typography>
+            </CardContent>
+          </Card>
+          
+          <Card sx={{ minWidth: 280, cursor: 'pointer' }} onClick={handleCustomTasks}>
+            <CardContent sx={{ textAlign: 'center', py: 4 }}>
+              <TasksIcon sx={{ fontSize: 64, color: 'secondary.main', mb: 2 }} />
+              <Typography variant="h5" component="h2" gutterBottom>
+                {t('tasks.customTasks')}
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                {t('tasks.customTasksDescription')}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Stack>
+      </Container>
+    );
+  }
+
+  // Vaccines
+  if (taskType === "vaccines") {
+    return (
+      <Box>
+        <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6">Vaccine Testing</Typography>
+          <Button
+            variant="outlined"
+            onClick={testVaccineGeneration}
+            sx={{ mb: 2 }}
+          >
+            🧪 Test Vaccine Generation
+          </Button>
+        </Box>
+        <SimpleVaccineList
+          onAddVaccine={() => navigate("/tasks/new?type=vaccine")}
+          onBack={handleBackToMain}
+        />
+      </Box>
+    );
+  }
+
+
   // Convert tasks to the format expected by TaskList and TaskGridItem components
   const formattedTasks = filteredTasks.map(task => ({
     id: task.id || 0,
     title: task.title,
-    description: task.description || "No description",
+    description: task.description || t('errors.noDescription'),
     dueDate: task.dateTime,
     pet: task.petIds.length > 0 
-      ? pets.find(p => p.id === task.petIds[0])?.name || "Unknown Pet"
-      : "All Pets",
+      ? pets.find(p => p.id === task.petIds[0])?.name || t('errors.unknownPet')
+      : t('errors.allPets'),
     priority: (task.priority === 'urgent' ? 'high' : task.priority || 'medium') as 'low' | 'medium' | 'high',
     completed: task.isCompleted || false,
+    isVaccine: task.description?.includes('חיסון') || false,
+    isOverdue: new Date(task.dateTime) < new Date() && !task.isCompleted,
   }));
 
   return (
-    <Box>
-      <TasksToolbar
-        view={view}
-        onViewChange={handleViewChange}
-        onAddTask={handleAddTask}
-        onExportTasks={handleExportTasks}
-        onSyncWithGoogleCalendar={handleSyncWithGoogleCalendar}
-      />
+    <>
+      <Box>
+        {(taskType === "custom") && (
+          <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Button 
+              variant="outlined" 
+              onClick={handleBackToMain}
+              startIcon={<AddIcon />}
+            >
+              {t('tasks.backToMain')}
+            </Button>
+            <Typography variant="h6">
+              {t('tasks.customTasks')}
+            </Typography>
+          </Box>
+        )}
 
-      <TaskFilters
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        priorityOptions={priorityOptions}
-        petOptions={petOptions}
-      />
-
-      {formattedTasks.length === 0 ? (
-        <TasksEmptyState hasFilters={false} />
-      ) : view === "list" ? (
-        <TaskList
-          tasks={formattedTasks}
-          onEdit={handleEditTask}
-          onDelete={handleDeleteTask}
-          onToggleComplete={handleToggleComplete}
+        <TasksToolbar
+          view={view}
+          onViewChange={handleViewChange}
+          onAddTask={handleAddTask}
+          onExportTasks={handleExportTasks}
+          onSyncWithGoogleCalendar={handleSyncWithGoogleCalendar}
         />
-      ) : (
-        <Grid container spacing={2} sx={{ mt: 2 }}>
-          {formattedTasks.map((task) => (
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={task.id}>
-              <TaskGridItem
+
+        <TaskFilters
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          priorityOptions={priorityOptions}
+          petOptions={petOptions}
+        />
+
+        {formattedTasks.length === 0 ? (
+          <TasksEmptyState hasFilters={false} />
+        ) : view === "list" ? (
+          <TaskList
+            tasks={formattedTasks}
+            onEdit={handleEditTask}
+            onDelete={handleDeleteTask}
+            onToggleComplete={handleToggleComplete}
+          />
+        ) : (
+          <Grid container spacing={2} sx={{ mt: 2 }}>
+            {formattedTasks.map((task, index) => (
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={`${task.id}-${index}`}>
+                              <TaskGridItem
                 task={task}
                 onEdit={handleEditTask}
                 onDelete={handleDeleteTask}
                 onToggleComplete={handleToggleComplete}
+                onVaccineComplete={handleVaccineComplete}
               />
-            </Grid>
-          ))}
-        </Grid>
-      )}
-    </Box>
+              </Grid>
+            ))}
+          </Grid>
+        )}
+      </Box>
+
+      {/* Vaccine Completion Dialog */}
+      <VaccineTaskCompletionDialog
+        open={vaccineCompletionDialog.open}
+        onClose={handleVaccineCompletionClose}
+        vaccineTask={vaccineCompletionDialog.vaccineTask}
+        onTaskCompleted={handleVaccineTaskCompleted}
+      />
+    </>
   );
 };
 

@@ -197,7 +197,7 @@ export const PetDetail = () => {
         navigate("/pets");
       } catch (error) {
         console.error("Error deleting pet:", error);
-        alert("Failed to delete pet. Please try again.");
+        alert(t('pets.failedToDelete'));
       }
     }
   };

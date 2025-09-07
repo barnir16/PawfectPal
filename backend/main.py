@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from routers import pet, references, image_upload, task, location, service, user, medical_record, vaccination
+from routers import pet, references, image_upload, task, location, service, user, medical_record, vaccination, weight_record, weight_goal, ai
 
 
 app = FastAPI(
@@ -37,6 +37,9 @@ app.include_router(location.router)
 app.include_router(image_upload.router)
 app.include_router(service.router)
 app.include_router(task.router)
+app.include_router(weight_record.router)
+app.include_router(weight_goal.router)
+app.include_router(ai.router)
 
 
 @app.get("/")
@@ -52,6 +55,7 @@ def read_root():
             "Image Upload",
             "Service Booking",
             "Vaccine Tracking",
+            "Weight Tracking",
             "AI Assistant",
         ],
     }

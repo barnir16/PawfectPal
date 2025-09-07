@@ -117,10 +117,16 @@ export class SmartVaccineService {
     
     const birthDate = new Date(pet.birthDate);
     const now = new Date();
-    const diffTime = Math.abs(now.getTime() - birthDate.getTime());
-    const diffWeeks = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7));
     
-    return diffWeeks;
+    // Handle future birthdates (shouldn't happen but just in case)
+    if (birthDate > now) {
+      return 0;
+    }
+    
+    const diffTime = now.getTime() - birthDate.getTime();
+    const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7));
+    
+    return Math.max(0, diffWeeks);
   }
   
   /**
@@ -133,6 +139,12 @@ export class SmartVaccineService {
     reason: string,
     petAgeWeeks: number
   ): VaccineSuggestion | null {
+    // Safety check for age_restriction
+    if (!vaccine.age_restriction) {
+      console.warn('Vaccine missing age_restriction:', vaccine.name);
+      return null;
+    }
+    
     // Check if pet is old enough for this vaccine
     if (petAgeWeeks < vaccine.age_restriction.min_weeks) {
       return null;

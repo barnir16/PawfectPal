@@ -1,5 +1,10 @@
-import { Card, CardContent, Typography, Box, Chip, IconButton } from "@mui/material";
-import { Edit as EditIcon, Delete as DeleteIcon, CheckCircle as CheckCircleIcon } from "@mui/icons-material";
+import { Card, CardContent, Typography, Box, Chip, IconButton, Button } from "@mui/material";
+import { 
+  Edit as EditIcon, 
+  Delete as DeleteIcon, 
+  CheckCircle as CheckCircleIcon,
+  Vaccines as VaccinesIcon 
+} from "@mui/icons-material";
 import { useLocalization } from "../../../contexts/LocalizationContext";
 
 interface TaskGridItemProps {
@@ -11,10 +16,13 @@ interface TaskGridItemProps {
     pet: string;
     priority: 'low' | 'medium' | 'high' | 'urgent';
     completed: boolean;
+    isVaccine?: boolean;
+    isOverdue?: boolean;
   };
   onEdit: (id: number) => void;
   onDelete: (id: number) => void;
   onToggleComplete: (id: number, completed: boolean) => void;
+  onVaccineComplete?: (id: number) => void;
 }
 
 export const TaskGridItem = ({
@@ -22,6 +30,7 @@ export const TaskGridItem = ({
   onEdit,
   onDelete,
   onToggleComplete,
+  onVaccineComplete,
 }: TaskGridItemProps) => {
   const { t } = useLocalization();
   
@@ -87,6 +96,25 @@ export const TaskGridItem = ({
             size="small" 
             variant="outlined"
           />
+          {task.isVaccine && (
+            <Chip 
+              icon={<VaccinesIcon fontSize="small" />}
+              label={t('tasks.vaccination')}
+              size="small" 
+              color="primary"
+              variant="outlined"
+              sx={{ ml: 1 }}
+            />
+          )}
+          {task.isOverdue && (
+            <Chip 
+              label={t('tasks.overdue')}
+              size="small" 
+              color="error"
+              variant="outlined"
+              sx={{ ml: 1 }}
+            />
+          )}
         </Box>
 
         <Typography variant="caption" color="text.secondary" display="block" mb={2}>
@@ -94,7 +122,7 @@ export const TaskGridItem = ({
         </Typography>
       </CardContent>
 
-      <Box display="flex" justifyContent="space-between" p={1} bgcolor="action.hover">
+            <Box display="flex" justifyContent="space-between" p={1} bgcolor="action.hover">
         <Box>
           <IconButton 
             size="small" 
@@ -104,6 +132,18 @@ export const TaskGridItem = ({
           >
             <CheckCircleIcon fontSize="small" />
           </IconButton>
+          {task.isVaccine && !task.completed && onVaccineComplete && (
+            <Button
+              size="small"
+              variant="contained"
+              color="primary"
+              startIcon={<VaccinesIcon />}
+              onClick={() => onVaccineComplete(task.id)}
+              sx={{ ml: 1, minWidth: 'auto', px: 1 }}
+            >
+              {t('vaccines.completeVaccine')}
+            </Button>
+          )}
         </Box>
         <Box>
           <IconButton 

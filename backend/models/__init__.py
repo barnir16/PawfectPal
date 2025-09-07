@@ -6,5 +6,7 @@ from .location import LocationHistoryORM
 from .user import UserORM
 from .medical_record import MedicalRecordORM
 from .vaccination import VaccinationORM
+from .weight_record import WeightRecordORM
+from .weight_goal import WeightGoalORM
 from .references import VaccineORM, AgeRestrictionORM
 from .utils import list_to_str, str_to_list, json_to_list, list_to_json

@@ -349,9 +349,14 @@ export class WeightMonitoringService {
   /**
    * Check if pet weight is outside healthy range and generate warnings
    */
-  static getWeightWarnings(currentWeight: number, healthRange: WeightHealthRange, petName: string, t?: (key: string) => string): WeightAlert[] {
+  static getWeightWarnings(currentWeight: number, healthRange: WeightHealthRange, petName: string, t?: (key: string) => string, petAge?: number): WeightAlert[] {
     const warnings: WeightAlert[] = [];
     const { minWeight, maxWeight, unit } = healthRange;
+    
+    // Skip weight warnings for pets under 1 year old
+    if (petAge !== undefined && petAge < 1) {
+      return warnings;
+    }
     
     // Calculate 20% thresholds
     const belowThreshold = minWeight * 0.8; // 20% below min weight

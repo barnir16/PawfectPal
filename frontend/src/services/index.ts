@@ -62,3 +62,15 @@ export * from './weight/weightMonitoringService';
 
 // External API services
 export * from './external/externalApiService';
+
+// AI services
+export * from './ai/aiService';
+
+// Config services
+export * from './config/firebaseConfigService';
+
+// Notification services
+export * from './notifications/notificationService';
+
+// Reference services
+export * from './references/referenceService';

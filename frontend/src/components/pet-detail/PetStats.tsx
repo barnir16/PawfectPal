@@ -38,7 +38,20 @@ export const PetStats = ({ pet }: PetStatsProps) => {
     
     try {
       const today = new Date();
-      const birth = typeof birthDate === "string" ? new Date(birthDate) : birthDate;
+      let birth;
+      
+      if (typeof birthDate === "string") {
+        // For ISO date strings like '2025-01-01', ensure we parse as local time
+        if (birthDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          // Parse as local date to avoid timezone issues
+          const [year, month, day] = birthDate.split('-').map(Number);
+          birth = new Date(year, month - 1, day); // month is 0-indexed
+        } else {
+          birth = new Date(birthDate);
+        }
+      } else {
+        birth = birthDate;
+      }
 
       const years = differenceInYears(today, birth);
       const months = differenceInMonths(today, birth) % 12;
