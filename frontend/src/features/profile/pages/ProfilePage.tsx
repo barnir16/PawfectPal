@@ -1,388 +1,340 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from "react";
+import { useAuth } from "../../../contexts/AuthContext";
+import { BASE_URL, getToken } from "../../../services";
 import {
   Box,
-  Card,
-  CardContent,
-  CardHeader,
+  Grid,
+  Paper,
   Typography,
   TextField,
   Button,
-  Grid,
   Avatar,
-  IconButton,
-  Divider,
-  Alert,
   CircularProgress,
-} from '@mui/material';
-import { Edit as EditIcon, Save as SaveIcon, Cancel as CancelIcon } from '@mui/icons-material';
-import { useAuth } from '../../../contexts/AuthContext';
-import { useLocalization } from '../../../contexts/LocalizationContext';
-import { useNotifications } from '../../../contexts/NotificationContext';
+  IconButton,
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
+import { Edit as EditIcon, Save as SaveIcon } from "@mui/icons-material";
 
-interface UserProfile {
-  id: string;
+// Helper function to get the absolute image URL
+const getFullImageUrl = (path: string | null | undefined): string => {
+  if (!path) {
+    return "https://placehold.co/150x150/EEEEEE/333333?text=Profile";
+  }
+  // Check if the path is already a full URL
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+  // Otherwise, prepend the base URL to make it an absolute path
+  return `${BASE_URL}${path}`;
+};
+
+interface ProfileFormData {
   username: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
+  email?: string;
   phone?: string;
+  full_name?: string;
+  profile_image?: string;
+  google_id?: string;
+  profile_picture_url?: string;
   address?: string;
   city?: string;
+  state?: string;
   country?: string;
-  timezone?: string;
-  language?: string;
-  notifications?: {
-    email: boolean;
-    push: boolean;
-    taskReminders: boolean;
-    vaccineReminders: boolean;
-  };
+  postal_code?: string;
+  latitude?: string;
+  longitude?: string;
+  services?: string;
+  bio?: string;
+  hourly_rate?: string;
+  rating?: string;
 }
 
-export const ProfilePage: React.FC = () => {
-  const { user, updateUser } = useAuth();
-  const { t } = useLocalization();
-  const { addNotification } = useNotifications();
-  
-  const [profile, setProfile] = useState<UserProfile>({
-    id: user?.id || '',
-    username: user?.username || '',
-    email: user?.email || '',
-    firstName: '',
-    lastName: '',
-    phone: '',
-    address: '',
-    city: '',
-    country: 'Israel',
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    language: 'en',
-    notifications: {
-      email: true,
-      push: true,
-      taskReminders: true,
-      vaccineReminders: true,
-    }
-  });
-  
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(4),
+  marginBottom: theme.spacing(4),
+  borderRadius: theme.shape.borderRadius,
+}));
+
+const ProfilePage: React.FC = () => {
+  const { user, setUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Helper function to get the initial form data from the user object
+  const getInitialFormData = (user: any): ProfileFormData => ({
+    username: user?.username || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    full_name: user?.full_name || "",
+    profile_image: user?.profile_image || "",
+    google_id: user?.google_id || "",
+    profile_picture_url: user?.profile_picture_url || "",
+    address: user?.address || "",
+    city: user?.city || "",
+    state: user?.state || "",
+    country: user?.country || "",
+    postal_code: user?.postal_code || "",
+    latitude: user?.latitude?.toString() || "",
+    longitude: user?.longitude?.toString() || "",
+    services: user?.is_provider
+      ? (user.provider_profile?.services || []).join(", ")
+      : "",
+    bio: user?.is_provider ? user.provider_profile?.bio || "" : "",
+    hourly_rate: user?.is_provider
+      ? user.provider_profile?.hourly_rate?.toString() || ""
+      : "",
+    rating: user?.is_provider
+      ? user.provider_profile?.rating?.toString() || ""
+      : "",
+  });
+
+  const [formData, setFormData] = useState<ProfileFormData>(
+    getInitialFormData(user)
+  );
 
   useEffect(() => {
-    // Load user profile data
-    loadProfile();
+    if (user) {
+      setFormData(getInitialFormData(user));
+      setPreviewImage(user.profile_image || user.profile_picture_url || null);
+    }
   }, [user]);
 
-  const loadProfile = async () => {
-    try {
-      setIsLoading(true);
-      // In a real implementation, this would fetch from the backend
-      // For now, we'll use the user data from auth context
-      setProfile(prev => ({
-        ...prev,
-        id: user?.id || '',
-        username: user?.username || '',
-        email: user?.email || '',
-      }));
-    } catch (error) {
-      console.error('Failed to load profile:', error);
-      setError('Failed to load profile data');
-    } finally {
-      setIsLoading(false);
+  if (!user)
+    return <Typography>Please log in to view your profile.</Typography>;
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPreviewImage(URL.createObjectURL(file));
     }
   };
 
   const handleSave = async () => {
+    setLoading(true);
     try {
-      setIsLoading(true);
-      setError(null);
+      const token = await getToken();
+      const file = fileInputRef.current?.files?.[0];
+      let updatedUserData = { ...user };
+      let newImageUrl = user.profile_image;
 
-      // In a real implementation, this would save to the backend
-      // For now, we'll just update the local state
-      await updateUser(profile);
-      
-      setIsEditing(false);
-      addNotification({
-        type: 'success',
-        title: 'Profile Updated',
-        message: 'Your profile has been updated successfully',
-        duration: 3000
+      // 1. Upload new image if a file is selected
+      if (file) {
+        const formDataToSend = new FormData();
+        formDataToSend.append("file", file);
+        const imageUploadResponse = await fetch(
+          `${BASE_URL}/image_upload/profile-image`,
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+            body: formDataToSend,
+          }
+        );
+
+        if (!imageUploadResponse.ok) throw new Error("Failed to upload image.");
+        const imageData = await imageUploadResponse.json();
+        newImageUrl = imageData.profile_image;
+        updatedUserData.profile_image = newImageUrl;
+      }
+
+      // 2. Prepare and send profile data
+      const updatedPayload: Partial<ProfileFormData> = {};
+      const initial = getInitialFormData(user);
+
+      Object.keys(formData).forEach((key) => {
+        const k = key as keyof ProfileFormData;
+        if (formData[k] !== initial[k]) {
+          updatedPayload[k] = formData[k];
+        }
       });
-    } catch (error) {
-      console.error('Failed to save profile:', error);
-      setError('Failed to save profile. Please try again.');
+
+      // Update the profile_image in the payload if a new image was uploaded
+      if (newImageUrl !== user.profile_image) {
+        updatedPayload.profile_image = newImageUrl;
+      }
+
+      if (Object.keys(updatedPayload).length > 0) {
+        const profileUpdateResponse = await fetch(`${BASE_URL}/auth/me`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(updatedPayload),
+        });
+
+        if (!profileUpdateResponse.ok)
+          throw new Error("Failed to update profile data.");
+        const profileData = await profileUpdateResponse.json();
+        updatedUserData = { ...updatedUserData, ...profileData };
+      }
+
+      setUser(updatedUserData);
+      console.log("Profile and/or image updated successfully!");
+      setIsEditing(false);
+    } catch (err) {
+      console.error(err);
+      // NOTE: Using a custom modal or snackbar is better than alert()
+      alert("Failed to save changes. Please try again.");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleCancel = () => {
-    setIsEditing(false);
-    loadProfile(); // Reset to original data
-  };
-
-  const handleInputChange = (field: keyof UserProfile, value: any) => {
-    setProfile(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleNotificationChange = (field: keyof UserProfile['notifications'], value: boolean) => {
-    setProfile(prev => ({
-      ...prev,
-      notifications: {
-        ...prev.notifications!,
-        [field]: value
+  const getAvatarSrc = () => {
+    if (previewImage) {
+      // If it's a blob URL, return it directly
+      if (previewImage.startsWith("blob:")) {
+        return previewImage;
       }
-    }));
-  };
+      // Otherwise, treat it like a normal image path
+      return getFullImageUrl(previewImage);
+    }
 
-  if (isLoading && !profile.id) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
+    return getFullImageUrl(
+      user.profile_image || user.profile_picture_url || null
     );
-  }
+  };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        {t('profile.title', 'User Profile')}
-      </Typography>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
-
-      <Grid container spacing={3}>
-        {/* Profile Picture and Basic Info */}
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Card>
-            <CardHeader
-              title={t('profile.personalInfo', 'Personal Information')}
-              action={
-                !isEditing ? (
-                  <IconButton onClick={() => setIsEditing(true)}>
-                    <EditIcon />
-                  </IconButton>
-                ) : (
-                  <Box>
-                    <IconButton onClick={handleSave} disabled={isLoading}>
-                      <SaveIcon />
-                    </IconButton>
-                    <IconButton onClick={handleCancel} disabled={isLoading}>
-                      <CancelIcon />
-                    </IconButton>
-                  </Box>
-                )
-              }
-            />
-            <CardContent>
-              <Box display="flex" flexDirection="column" alignItems="center" mb={3}>
-                <Avatar
-                  sx={{ width: 100, height: 100, mb: 2 }}
-                  src={profile.avatar}
-                >
-                  {profile.firstName?.[0] || profile.username[0]}
-                </Avatar>
-                <Typography variant="h6">
-                  {profile.firstName && profile.lastName 
-                    ? `${profile.firstName} ${profile.lastName}`
-                    : profile.username
-                  }
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {profile.email}
-                </Typography>
-              </Box>
-
-              <TextField
-                fullWidth
-                label={t('profile.firstName', 'First Name')}
-                value={profile.firstName || ''}
-                onChange={(e) => handleInputChange('firstName', e.target.value)}
-                disabled={!isEditing}
-                margin="normal"
-              />
-              <TextField
-                fullWidth
-                label={t('profile.lastName', 'Last Name')}
-                value={profile.lastName || ''}
-                onChange={(e) => handleInputChange('lastName', e.target.value)}
-                disabled={!isEditing}
-                margin="normal"
-              />
-              <TextField
-                fullWidth
-                label={t('profile.phone', 'Phone Number')}
-                value={profile.phone || ''}
-                onChange={(e) => handleInputChange('phone', e.target.value)}
-                disabled={!isEditing}
-                margin="normal"
-              />
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Contact Information */}
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Card>
-            <CardHeader title={t('profile.contactInfo', 'Contact Information')} />
-            <CardContent>
-              <TextField
-                fullWidth
-                label={t('profile.email', 'Email Address')}
-                value={profile.email}
-                disabled
-                margin="normal"
-                helperText={t('profile.emailHelper', 'Email cannot be changed')}
-              />
-              <TextField
-                fullWidth
-                label={t('profile.address', 'Address')}
-                value={profile.address || ''}
-                onChange={(e) => handleInputChange('address', e.target.value)}
-                disabled={!isEditing}
-                margin="normal"
-                multiline
-                rows={2}
-              />
-              <TextField
-                fullWidth
-                label={t('profile.city', 'City')}
-                value={profile.city || ''}
-                onChange={(e) => handleInputChange('city', e.target.value)}
-                disabled={!isEditing}
-                margin="normal"
-              />
-              <TextField
-                fullWidth
-                label={t('profile.country', 'Country')}
-                value={profile.country || ''}
-                onChange={(e) => handleInputChange('country', e.target.value)}
-                disabled={!isEditing}
-                margin="normal"
-              />
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Preferences */}
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Card>
-            <CardHeader title={t('profile.preferences', 'Preferences')} />
-            <CardContent>
-              <TextField
-                fullWidth
-                select
-                label={t('profile.language', 'Language')}
-                value={profile.language || 'en'}
-                onChange={(e) => handleInputChange('language', e.target.value)}
-                disabled={!isEditing}
-                margin="normal"
-                SelectProps={{
-                  native: true,
-                }}
-              >
-                <option value="en">English</option>
-                <option value="he">עברית</option>
-              </TextField>
-
-              <TextField
-                fullWidth
-                select
-                label={t('profile.timezone', 'Timezone')}
-                value={profile.timezone || ''}
-                onChange={(e) => handleInputChange('timezone', e.target.value)}
-                disabled={!isEditing}
-                margin="normal"
-                SelectProps={{
-                  native: true,
-                }}
-              >
-                <option value="Asia/Jerusalem">Asia/Jerusalem</option>
-                <option value="UTC">UTC</option>
-                <option value="America/New_York">America/New_York</option>
-                <option value="Europe/London">Europe/London</option>
-              </TextField>
-
-              <Divider sx={{ my: 2 }} />
-
-              <Typography variant="h6" gutterBottom>
-                {t('profile.notifications', 'Notifications')}
-              </Typography>
-
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="body2">
-                    {t('profile.emailNotifications', 'Email Notifications')}
-                  </Typography>
-                  <Button
-                    variant={profile.notifications?.email ? 'contained' : 'outlined'}
-                    size="small"
-                    onClick={() => handleNotificationChange('email', !profile.notifications?.email)}
-                    disabled={!isEditing}
-                  >
-                    {profile.notifications?.email ? 'On' : 'Off'}
-                  </Button>
-                </Box>
-
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="body2">
-                    {t('profile.taskReminders', 'Task Reminders')}
-                  </Typography>
-                  <Button
-                    variant={profile.notifications?.taskReminders ? 'contained' : 'outlined'}
-                    size="small"
-                    onClick={() => handleNotificationChange('taskReminders', !profile.notifications?.taskReminders)}
-                    disabled={!isEditing}
-                  >
-                    {profile.notifications?.taskReminders ? 'On' : 'Off'}
-                  </Button>
-                </Box>
-
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="body2">
-                    {t('profile.vaccineReminders', 'Vaccine Reminders')}
-                  </Typography>
-                  <Button
-                    variant={profile.notifications?.vaccineReminders ? 'contained' : 'outlined'}
-                    size="small"
-                    onClick={() => handleNotificationChange('vaccineReminders', !profile.notifications?.vaccineReminders)}
-                    disabled={!isEditing}
-                  >
-                    {profile.notifications?.vaccineReminders ? 'On' : 'Off'}
-                  </Button>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {isEditing && (
-        <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-          <Button
-            variant="outlined"
-            onClick={handleCancel}
-            disabled={isLoading}
-          >
-            {t('common.cancel', 'Cancel')}
-          </Button>
+    <Box sx={{ p: 4, maxWidth: "md", mx: "auto" }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 4,
+        }}
+      >
+        <Typography variant="h4" component="h1">
+          My Profile
+        </Typography>
+        {!isEditing ? (
           <Button
             variant="contained"
-            onClick={handleSave}
-            disabled={isLoading}
-            startIcon={isLoading ? <CircularProgress size={20} /> : <SaveIcon />}
+            onClick={() => setIsEditing(true)}
+            startIcon={<EditIcon />}
           >
-            {t('common.save', 'Save')}
+            Edit
           </Button>
+        ) : (
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <Button
+              variant="contained"
+              onClick={handleSave}
+              disabled={loading}
+              startIcon={
+                loading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  <SaveIcon />
+                )
+              }
+            >
+              Save
+            </Button>
+            <Button variant="outlined" onClick={() => setIsEditing(false)}>
+              Cancel
+            </Button>
+          </Box>
+        )}
+      </Box>
+
+      <StyledPaper elevation={2}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            mb: 4,
+          }}
+        >
+          <Box sx={{ position: "relative", width: 128, height: 128 }}>
+            <Avatar
+              src={getAvatarSrc()}
+              alt="Profile"
+              sx={{ width: 128, height: 128 }}
+            />
+            {isEditing && (
+              <IconButton
+                onClick={() => fileInputRef.current?.click()}
+                sx={{
+                  position: "absolute",
+                  bottom: 0,
+                  right: 0,
+                  bgcolor: "primary.main",
+                  color: "white",
+                  "&:hover": { bgcolor: "primary.dark" },
+                }}
+              >
+                <EditIcon />
+              </IconButton>
+            )}
+          </Box>
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            onChange={handleImageChange}
+            style={{ display: "none" }}
+          />
         </Box>
-      )}
+
+        <Grid container spacing={3}>
+          {Object.entries(formData).map(([key, value]) => {
+            if (
+              !user.is_provider &&
+              ["services", "bio", "hourly_rate", "rating"].includes(key)
+            )
+              return null;
+            if (
+              ["profile_image", "google_id", "profile_picture_url"].includes(
+                key
+              )
+            )
+              return null;
+
+            return (
+              <Grid size={{ xs: 12, sm: 6 }} key={key}>
+                {isEditing ? (
+                  <TextField
+                    fullWidth
+                    label={key.replace("_", " ").toUpperCase()}
+                    name={key}
+                    value={value}
+                    onChange={handleChange}
+                    variant="outlined"
+                    multiline={key === "bio"}
+                    rows={key === "bio" ? 4 : 1}
+                  />
+                ) : (
+                  <Box>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ textTransform: "uppercase" }}
+                    >
+                      {key.replace("_", " ")}
+                    </Typography>
+                    <Typography variant="body1" sx={{ mt: 0.5 }}>
+                      {value || "Not set"}
+                    </Typography>
+                  </Box>
+                )}
+              </Grid>
+            );
+          })}
+        </Grid>
+      </StyledPaper>
     </Box>
   );
 };
+
+export default ProfilePage;

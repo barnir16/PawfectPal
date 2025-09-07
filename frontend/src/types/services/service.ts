@@ -1,5 +1,6 @@
 import type { Coordinates } from '../location';
-
+import { Pet } from '../pets';
+import { User } from '../auth';
 /**
  * Types of services available in PawfectPal
  */
@@ -32,15 +33,16 @@ export type ServiceStatus =
  */
 export interface Service {
   id?: number;
+  user_id: number; // Added from ORM
   pet_id: number;
   service_type: ServiceType;
   status: ServiceStatus;
   start_datetime: string; // ISO date string
-  end_datetime?: string;  // ISO date string
+  end_datetime?: string; // ISO date string
   duration_hours?: number;
   price?: number;
   currency: string;
-  
+
   // Location information
   pickup_address?: string;
   dropoff_address?: string;
@@ -48,28 +50,32 @@ export interface Service {
   pickup_longitude?: number;
   dropoff_latitude?: number;
   dropoff_longitude?: number;
-  
+
   // Provider information
   provider_id?: number;
   provider_notes?: string;
   customer_notes?: string;
-  
+
   // Media
   before_images: string[];
   after_images: string[];
-  
+
   // Additional details
   service_report?: string;
   rating?: number;
   review?: string;
-  
+
   // Timestamps
   created_at?: string; // ISO date string
   updated_at?: string; // ISO date string
   cancelled_at?: string; // ISO date string
   completed_at?: string; // ISO date string
-}
 
+  // Relationships (added from ORM)
+  user?: User;
+  pet?: Pet;
+  provider?: User;
+}
 /**
  * Service provider information
  */

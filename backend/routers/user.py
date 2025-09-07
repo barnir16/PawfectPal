@@ -3,10 +3,8 @@ from sqlalchemy.orm import Session
 from models.user import (
     UserORM,
 )
-from schemas import (
-    UserRead,
-    UserCreate,
-)
+from models.provider import ProviderORM
+from schemas import UserRead, UserCreate, UserUpdateProvider, UserUpdate
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 from dependencies.db import get_db
@@ -22,6 +20,7 @@ from pydantic import BaseModel
 import jwt
 import requests
 from typing import Optional
+
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -85,56 +84,60 @@ def google_auth(request: GoogleAuthRequest, db: Session = Depends(get_db)):
     try:
         # Handle both JWT and base64-encoded credentials
         decoded_token = None
-        
+
         # First try base64-encoded format (OAuth2 flow)
         try:
             import base64
             import json
-            decoded_data = base64.b64decode(request.credential).decode('utf-8')
+
+            decoded_data = base64.b64decode(request.credential).decode("utf-8")
             decoded_token = json.loads(decoded_data)
             print(f"✅ Decoded OAuth2 credential: {decoded_token}")
         except Exception as e1:
             print(f"❌ Failed to decode as OAuth2: {e1}")
             # Try JWT format (original Google Sign-In)
             try:
-                decoded_token = jwt.decode(request.credential, options={"verify_signature": False})
+                decoded_token = jwt.decode(
+                    request.credential, options={"verify_signature": False}
+                )
                 print(f"✅ Decoded JWT credential: {decoded_token}")
             except Exception as e2:
                 print(f"❌ Failed to decode as JWT: {e2}")
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Invalid credential format. OAuth2 error: {e1}, JWT error: {e2}"
+                    detail=f"Invalid credential format. OAuth2 error: {e1}, JWT error: {e2}",
                 )
-        
+
         # Extract user information
         google_id = decoded_token.get("sub")
         email = decoded_token.get("email")
         name = decoded_token.get("name")
         picture = decoded_token.get("picture")
-        
+
         if not email or not google_id:
-            print(f"❌ Missing required fields - email: {email}, google_id: {google_id}")
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid Google token: missing required fields"
+            print(
+                f"❌ Missing required fields - email: {email}, google_id: {google_id}"
             )
-        
+            raise HTTPException(
+                status_code=400, detail="Invalid Google token: missing required fields"
+            )
+
         print(f"🔍 Looking for user with email: {email}")
-        
+
         # Check if user exists by email
         db_user = db.query(UserORM).filter(UserORM.email == email).first()
         print(f"👤 Found existing user: {db_user.username if db_user else 'None'}")
-        
+
         if not db_user:
             # Create new user from Google account
-            username = email.split('@')[0]  # Use email prefix as username
+            username = email.split("@")[0]  # Use email prefix as username
             # Ensure username is unique
             counter = 1
             original_username = username
             while get_user_by_username(db, username):
                 username = f"{original_username}{counter}"
                 counter += 1
-            
+
             db_user = UserORM(
                 username=username,
                 email=email,
@@ -142,7 +145,7 @@ def google_auth(request: GoogleAuthRequest, db: Session = Depends(get_db)):
                 hashed_password="",  # No password for Google OAuth users
                 is_active=True,
                 google_id=google_id,
-                profile_picture_url=picture
+                profile_picture_url=picture,
             )
             db.add(db_user)
             db.commit()
@@ -154,37 +157,91 @@ def google_auth(request: GoogleAuthRequest, db: Session = Depends(get_db)):
             if picture and not db_user.profile_picture_url:
                 db_user.profile_picture_url = picture
             db.commit()
-        
+
         # Create access token
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
             data={"sub": db_user.username}, expires_delta=access_token_expires
         )
-        
+
         return {
             "access_token": access_token,
             "token_type": "bearer",
-            "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60
+            "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         }
-        
+
     except jwt.InvalidTokenError:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid Google token"
-        )
+        raise HTTPException(status_code=400, detail="Invalid Google token")
     except Exception as e:
         import traceback
+
         print(f"❌ DETAILED ERROR: {str(e)}")
         print(f"📍 TRACEBACK: {traceback.format_exc()}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Authentication failed: {str(e)}"
+        raise HTTPException(status_code=500, detail=f"Authentication failed: {str(e)}")
+
+
+@router.patch("/me", response_model=UserRead)
+def update_user(
+    update: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: UserORM = Depends(get_current_user),
+):
+    # Fetch the current user from the DB
+    user: Optional[UserORM] = (
+        db.query(UserORM).filter(UserORM.id == current_user.id).first()
+    )
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Update basic user fields
+    update_data = update.model_dump(exclude_unset=True)
+    for field in update_data:
+        value = getattr(update, field, None)
+        if value is not None:
+            setattr(user, field, value)
+
+    # Update provider fields if user is a provider
+    if user.is_provider and user.provider_profile:
+        provider_fields = ["services", "bio", "hourly_rate", "rating"]
+        for field in provider_fields:
+            value = getattr(update, field, None)
+            if value is not None:
+                setattr(user.provider_profile, field, value)
+
+    db.commit()
+    db.refresh(user)
+
+    return user
+
+
+@router.patch("/me/provider", response_model=UserUpdateProvider)
+def become_provider(
+    update: UserUpdateProvider,
+    db: Session = Depends(get_db),
+    current_user: UserORM = Depends(get_current_user),
+):
+    # update user fields
+    if update.is_provider is not None:
+        current_user.is_provider = update.is_provider
+
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
+
+    # create provider record if becoming a provider
+    if update.is_provider:
+        existing_provider = (
+            db.query(ProviderORM).filter(ProviderORM.user_id == current_user.id).first()
         )
+        if not existing_provider:
+            provider = ProviderORM(user_id=current_user.id)
+            db.add(provider)
+            db.commit()
+
+    return current_user
 
 
 @user_router.get("/me", response_model=UserRead)
-def get_current_user_info(
-    current_user: UserORM = Depends(get_current_user)
-):
+def get_current_user_info(current_user: UserORM = Depends(get_current_user)):
     """Get current user information"""
     return UserRead.model_validate(current_user)
