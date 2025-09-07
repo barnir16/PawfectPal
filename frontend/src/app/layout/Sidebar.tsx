@@ -23,6 +23,8 @@ import {
   Person as PersonIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
+  EventAvailable as ServicesIcon,
+  PostAdd as BookIcon,
 } from "@mui/icons-material";
 
 type SidebarProps = {
@@ -32,6 +34,16 @@ type SidebarProps = {
 
 const drawerWidth = 240;
 
+const menuItems = [
+  { text: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
+  { text: "Pets", icon: <PetsIcon />, path: "/pets" },
+  { text: "Tasks", icon: <TasksIcon />, path: "/tasks" },
+  { text: "Services", icon: <ServicesIcon />, path: "/services" },
+  { text: "Book a Service", icon: <BookIcon />, path: "/bookservice" },
+  { text: "Weight Tracking", icon: <PersonIcon />, path: "/weight-tracking" },
+  { text: "Profile", icon: <PersonIcon />, path: "/profile" },
+  { text: "Settings", icon: <SettingsIcon />, path: "/settings" },
+];
 export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
   const theme = useTheme();
   const location = useLocation();

@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { Box, CircularProgress } from "@mui/material";
+import {
+  Box,
+  CssBaseline,
+  CircularProgress,
+} from "@mui/material";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LocalizationProvider } from "./contexts/LocalizationContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -10,13 +14,19 @@ import { Sidebar } from "./app/layout/Sidebar";
 import { Dashboard } from "./features/dashboard/pages/DashboardPage";
 import { Tasks } from "./features/tasks/pages/TasksPage";
 import { Pets } from "./features/pets/pages/PetsPage";
+import { ServicesPage } from "./features/services/pages/ServicesPage";
+import { BookService } from "./features/services/pages/BookService";
 import { PetForm } from "./features/pets/components/PetForm/PetForm";
 import { PetDetail } from "./features/pets/components/PetDetail/PetDetail";
 import Settings from "./features/settings/components/Settings/Settings";
 import TaskForm from "./features/tasks/components/TaskForm/TaskForm";
 import { WeightTrackingPage } from "./features/weight/pages/WeightTrackingPage";
 import AuthScreen from "./features/auth/pages/AuthPage";
+<<<<<<< HEAD
 import { ProfilePage } from "./features/profile/pages/ProfilePage";
+=======
+import ProfilePage from "./features/profile/pages/ProfilePage";
+>>>>>>> pet-services-first-sketch
 import { AIChatbot, ChatToggleButton } from "./components/ai/AIChatbot";
 import { useAIChat } from "./hooks/useAIChat";
 import { useLocalization } from "./contexts/LocalizationContext";
@@ -43,8 +53,13 @@ const App = () => {
 const AppContent = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+<<<<<<< HEAD
   const { isChatOpen, selectedPet, openChat, closeChat, toggleChat } = useAIChat();
   const { t } = useLocalization();
+=======
+  const { isChatOpen, selectedPet, openChat, closeChat, toggleChat } =
+    useAIChat();
+>>>>>>> pet-services-first-sketch
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -105,6 +120,8 @@ const AppContent = () => {
           <Route path="/pets/:id" element={<PetDetail />} />
           <Route path="/pets/:id/edit" element={<PetForm />} />
           <Route path="/weight-tracking" element={<WeightTrackingPage />} />
+          <Route path="/services" element={<ServicesPage />} />
+          <Route path="/bookservice" element={<BookService />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/auth" element={<Navigate to="/dashboard" replace />} />
