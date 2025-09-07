@@ -20,7 +20,7 @@ import {
   Pets as PetsIcon,
   Assignment as TasksIcon,
   Settings as SettingsIcon,
-  Vaccines as VaccinesIcon,
+  Person as PersonIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
 } from "@mui/icons-material";
@@ -43,7 +43,7 @@ export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
     { text: t('navigation.dashboard'), icon: <DashboardIcon />, path: "/dashboard" },
     { text: t('navigation.pets'), icon: <PetsIcon />, path: "/pets" },
     { text: t('navigation.tasks'), icon: <TasksIcon />, path: "/tasks" },
-    { text: t('navigation.vaccines'), icon: <VaccinesIcon />, path: "/vaccines" },
+    { text: t('navigation.profile'), icon: <PersonIcon />, path: "/profile" },
     { text: t('navigation.settings'), icon: <SettingsIcon />, path: "/settings" },
   ];
 

@@ -4,6 +4,7 @@ import { Box, CircularProgress } from "@mui/material";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LocalizationProvider } from "./contexts/LocalizationContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { NotificationProvider } from "./contexts/NotificationContext";
 import { Header } from "./app/layout/Header";
 import { Sidebar } from "./app/layout/Sidebar";
 import { Dashboard } from "./features/dashboard/pages/DashboardPage";
@@ -14,19 +15,27 @@ import { PetDetail } from "./features/pets/components/PetDetail/PetDetail";
 import Settings from "./features/settings/components/Settings/Settings";
 import TaskForm from "./features/tasks/components/TaskForm/TaskForm";
 import { WeightTrackingPage } from "./features/weight/pages/WeightTrackingPage";
-import VaccinesPage from "./features/vaccines/pages/VaccinesPage";
 import AuthScreen from "./features/auth/pages/AuthPage";
+import { ProfilePage } from "./features/profile/pages/ProfilePage";
 import { AIChatbot, ChatToggleButton } from "./components/ai/AIChatbot";
 import { useAIChat } from "./hooks/useAIChat";
+import { useLocalization } from "./contexts/LocalizationContext";
+import { NotificationContainer } from "./components/notifications/NotificationContainer";
+import ErrorBoundary from "./components/ErrorBoundary";
+import "./utils/testVaccines"; // Import test utility
 
 const App = () => {
   return (
     <ThemeProvider>
-      <LocalizationProvider>
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
-      </LocalizationProvider>
+      <AuthProvider>
+        <LocalizationProvider>
+          <NotificationProvider>
+            <ErrorBoundary>
+              <AppContent />
+            </ErrorBoundary>
+          </NotificationProvider>
+        </LocalizationProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 };
@@ -35,6 +44,7 @@ const AppContent = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isChatOpen, selectedPet, openChat, closeChat, toggleChat } = useAIChat();
+  const { t } = useLocalization();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -94,8 +104,8 @@ const AppContent = () => {
           <Route path="/pets/new" element={<PetForm />} />
           <Route path="/pets/:id" element={<PetDetail />} />
           <Route path="/pets/:id/edit" element={<PetForm />} />
-          <Route path="/vaccines" element={<VaccinesPage />} />
           <Route path="/weight-tracking" element={<WeightTrackingPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/auth" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
@@ -108,7 +118,10 @@ const AppContent = () => {
         onClose={closeChat}
         selectedPet={selectedPet}
       />
-      <ChatToggleButton onClick={toggleChat} />
+      <ChatToggleButton onClick={toggleChat} t={t} />
+      
+      {/* Notifications */}
+      <NotificationContainer />
     </Box>
   );
 };

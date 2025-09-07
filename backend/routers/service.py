@@ -6,7 +6,7 @@ from models import (
     ServiceORM,
     UserORM,
 )
-from schemas import ServiceCreate, ServiceRead
+from schemas import ServiceCreate, ServiceRead, ServiceUpdate
 from dependencies.db import get_db
 from dependencies.auth import get_current_user
 
@@ -20,6 +20,24 @@ def get_services(
     """Get all services for the authenticated user"""
     services = db.query(ServiceORM).filter(ServiceORM.user_id == current_user.id).all()
     return [ServiceRead.model_validate(s) for s in services]
+
+
+@router.get("/{service_id}", response_model=ServiceRead)
+def get_service(
+    service_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserORM = Depends(get_current_user)
+):
+    """Get a specific service by ID"""
+    service = db.query(ServiceORM).filter(
+        ServiceORM.id == service_id,
+        ServiceORM.user_id == current_user.id
+    ).first()
+    
+    if not service:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    return ServiceRead.model_validate(service)
 
 
 @router.post("/", response_model=ServiceRead)
@@ -66,3 +84,52 @@ def create_service(
     db.refresh(db_service)
 
     return ServiceRead.model_validate(db_service)
+
+
+@router.put("/{service_id}", response_model=ServiceRead)
+def update_service(
+    service_id: int,
+    service_update: ServiceUpdate,
+    db: Session = Depends(get_db),
+    current_user: UserORM = Depends(get_current_user)
+):
+    """Update an existing service"""
+    # Get the service and verify ownership
+    db_service = db.query(ServiceORM).filter(
+        ServiceORM.id == service_id,
+        ServiceORM.user_id == current_user.id
+    ).first()
+    
+    if not db_service:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    # Update fields
+    for field, value in service_update.dict(exclude_unset=True).items():
+        setattr(db_service, field, value)
+    
+    db.commit()
+    db.refresh(db_service)
+    
+    return ServiceRead.model_validate(db_service)
+
+
+@router.delete("/{service_id}")
+def delete_service(
+    service_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserORM = Depends(get_current_user)
+):
+    """Delete a service"""
+    # Get the service and verify ownership
+    db_service = db.query(ServiceORM).filter(
+        ServiceORM.id == service_id,
+        ServiceORM.user_id == current_user.id
+    ).first()
+    
+    if not db_service:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    db.delete(db_service)
+    db.commit()
+    
+    return {"message": "Service deleted successfully"}

@@ -65,6 +65,11 @@ export const transformPetToBackend = (pet: Omit<Pet, 'id'>): BackendPetCreate =>
  * Transform backend pet data to frontend Pet format
  */
 const transformPetFromBackend = (backendPet: any): Pet => {
+  // Debug logging for Nicole
+  if (backendPet.name === 'Nicole') {
+    console.log('🐕 Backend Nicole data:', backendPet);
+  }
+  
   return {
     // Basic information
     id: backendPet.id,
@@ -211,7 +216,7 @@ export const uploadPetImage = async (
   const formData = new FormData();
   formData.append('file', file);
   
-  return apiRequest<UploadResponse>(`/pets/${petId}/image`, {
+  return apiRequest<UploadResponse>(`/image_upload/pet-image/${petId}`, {
     method: 'POST',
     body: formData
   });

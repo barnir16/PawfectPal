@@ -158,7 +158,7 @@ export const LocationTracking: React.FC<LocationTrackingProps> = ({
 
         <Grid container spacing={2}>
           {/* Current Location */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="subtitle2" color="text.secondary" gutterBottom>
               {t('pets.currentLocation')}
             </Typography>
@@ -188,7 +188,7 @@ export const LocationTracking: React.FC<LocationTrackingProps> = ({
           </Grid>
 
           {/* Last Known Location */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="subtitle2" color="text.secondary" gutterBottom>
               {t('pets.lastKnownLocation')}
             </Typography>

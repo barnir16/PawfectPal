@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { StorageHelper } from '../utils/StorageHelper';
 import { login as loginApi, logout as logoutApi } from '../services/auth/authService';
-import { getApiUrl } from '../config';
+import { configService } from '../services/config/firebaseConfigService';
 import type { User, LoginResponse } from '../types/auth';
 
-const API_BASE_URL = getApiUrl();
+const API_BASE_URL = configService.get('apiBaseUrl');
 
 interface AuthContextType {
   user: User | null;

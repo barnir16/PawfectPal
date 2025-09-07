@@ -549,7 +549,7 @@ export const VaccineTracker: React.FC<VaccineTrackerProps> = ({ pet }) => {
               variant="contained"
               color="primary"
             >
-              Add Vaccine
+              {t('vaccines.addVaccine')}
             </Button>
           </Box>
         }
@@ -731,7 +731,7 @@ export const VaccineTracker: React.FC<VaccineTrackerProps> = ({ pet }) => {
           <DialogTitle>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <VaccinesIcon color="primary" />
-              Add New Vaccine Record
+              {t('vaccines.addVaccine')}
             </Box>
           </DialogTitle>
           <DialogContent>
@@ -758,7 +758,7 @@ export const VaccineTracker: React.FC<VaccineTrackerProps> = ({ pet }) => {
                   label="Vaccine Type"
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  placeholder="e.g., Core, Non-core, Required"
+                  placeholder={t('vaccines.vaccineTypePlaceholder')}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
@@ -788,7 +788,7 @@ export const VaccineTracker: React.FC<VaccineTrackerProps> = ({ pet }) => {
                   label="Veterinarian"
                   value={formData.veterinarian}
                   onChange={(e) => setFormData({ ...formData, veterinarian: e.target.value })}
-                  placeholder="Dr. Smith"
+                  placeholder={t('vaccines.veterinarianNamePlaceholder')}
                   InputProps={{
                     startAdornment: (
                       <Box sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
@@ -804,7 +804,7 @@ export const VaccineTracker: React.FC<VaccineTrackerProps> = ({ pet }) => {
                   label="Clinic"
                   value={formData.clinic}
                   onChange={(e) => setFormData({ ...formData, clinic: e.target.value })}
-                  placeholder="Animal Hospital"
+                  placeholder={t('vaccines.clinicNamePlaceholder')}
                   InputProps={{
                     startAdornment: (
                       <Box sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
@@ -822,15 +822,15 @@ export const VaccineTracker: React.FC<VaccineTrackerProps> = ({ pet }) => {
                   label="Notes"
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder="Any additional notes about the vaccination..."
+                  placeholder={t('vaccines.vaccineNotesPlaceholder2')}
                 />
               </Grid>
             </Grid>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setAddDialogOpen(false)}>Cancel</Button>
+            <Button onClick={() => setAddDialogOpen(false)}>{t('vaccines.cancel')}</Button>
             <Button onClick={handleAddVaccine} variant="contained" color="primary">
-              Add Vaccine
+              {t('vaccines.addVaccine')}
             </Button>
           </DialogActions>
         </Dialog>

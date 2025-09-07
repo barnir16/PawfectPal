@@ -19,7 +19,92 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
 
   // Calculate age from birthdate or use provided age
   const calculateAge = () => {
-    // First try to use the age field directly
+    console.log('🔍 PetCard calculateAge called for:', pet.name, 'at', new Date().toISOString());
+    
+    // Debug logging for Nicole
+    if (pet.name === 'Nicole') {
+      console.log('🐕 PetCard Nicole age calculation debug:', {
+        name: pet.name,
+        age: pet.age,
+        birthDate: pet.birthDate,
+        birth_date: pet.birth_date,
+        isBirthdayGiven: pet.isBirthdayGiven,
+        is_birthday_given: pet.is_birthday_given,
+        ageType: pet.age !== undefined ? 'age field' : 'birthdate',
+        fullPetObject: pet,
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    // Always prioritize birthdate calculation if birthday is given
+    const birthDate = pet.birthDate || pet.birth_date;
+    if (birthDate && (pet.isBirthdayGiven || pet.is_birthday_given)) {
+      try {
+        // For ISO date strings like '2025-01-01', ensure we parse as local time
+        let birth;
+        if (typeof birthDate === 'string' && birthDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          // Parse as local date to avoid timezone issues
+          const [year, month, day] = birthDate.split('-').map(Number);
+          birth = new Date(year, month - 1, day); // month is 0-indexed
+          
+          // Debug: Test with hardcoded date for Nicole
+          if (pet.name === 'Nicole') {
+            const testDate = new Date(2025, 0, 1); // January 1, 2025
+            const now = new Date();
+            const testDays = Math.floor((now.getTime() - testDate.getTime()) / (1000 * 60 * 60 * 24));
+            const testMonths = Math.floor(testDays / 30.44);
+            console.log('🧪 PetCard Hardcoded test for Nicole:', {
+              testDate: testDate.toISOString(),
+              now: now.toISOString(),
+              testDays,
+              testMonths,
+              shouldBe: '8 months'
+            });
+          }
+        } else {
+          birth = new Date(birthDate);
+        }
+        
+        if (isNaN(birth.getTime())) return t('pets.unknownAge');
+        const today = new Date();
+        const ageInMilliseconds = today.getTime() - birth.getTime();
+        const ageInDays = Math.floor(ageInMilliseconds / (1000 * 60 * 60 * 24));
+        const ageInMonths = Math.floor(ageInDays / 30.44);
+        const ageInYears = Math.floor(ageInDays / 365.25);
+        
+        // Handle future birthdates
+        if (ageInDays < 0) {
+          return t('pets.futureBirthdate');
+        }
+        
+        if (ageInYears < 1) {
+          const months = Math.max(0, ageInMonths);
+          const result = `${months} ${t('pets.months')}`;
+          
+          // Debug logging for Nicole
+          if (pet.name === 'Nicole') {
+            console.log('🐕 PetCard Nicole age calculation result:', {
+              birthDate,
+              parsedBirth: birth.toISOString(),
+              ageInDays,
+              ageInMonths,
+              ageInYears,
+              currentDate: today.toISOString(),
+              timeDiff: ageInMilliseconds,
+              isFuture: ageInDays < 0,
+              finalResult: result
+            });
+          }
+          
+          return result;
+        }
+        return `${ageInYears} ${t('pets.years')}`;
+      } catch {
+        return t('pets.unknownAge');
+      }
+    }
+    
+    // Fallback to age field if no birthdate or birthday not given
     if (pet.age !== undefined && pet.age !== null) {
       if (pet.age < 1) {
         const months = Math.floor(pet.age * 12);
@@ -28,24 +113,6 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
       return `${pet.age} ${t('pets.years')}`;
     }
     
-    // Then try to calculate from birth date (check both field names)
-    const birthDate = pet.birthDate || pet.birth_date;
-    if (birthDate) {
-      try {
-        const birth = new Date(birthDate);
-        if (isNaN(birth.getTime())) return t('pets.unknownAge');
-        const today = new Date();
-        const ageInYears = (today.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
-        
-        if (ageInYears < 1) {
-          const months = Math.floor(ageInYears * 12);
-          return `${months} ${t('pets.months')}`;
-        }
-        return `${Math.floor(ageInYears)} ${t('pets.years')}`;
-      } catch {
-        return t('pets.unknownAge');
-      }
-    }
     return t('pets.unknownAge');
   };
 

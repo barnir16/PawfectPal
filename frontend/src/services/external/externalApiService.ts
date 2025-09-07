@@ -976,14 +976,6 @@ export const searchBreeds = async (petType: string, query: string): Promise<stri
   return filtered.slice(0, 10); // Return max 10 results
 };
 
-/**
- * Get weather information for location-based features
- */
-export const getWeatherInfo = async (lat: number, lon: number): Promise<any> => {
-  // Placeholder for weather API integration
-  console.log('Weather API not implemented yet', { lat, lon });
-  return null;
-};
 
 /**
  * Calculate distance between two coordinates

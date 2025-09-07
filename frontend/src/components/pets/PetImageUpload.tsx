@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from "react";
+import { useState, useEffect, type ChangeEvent } from "react";
 import { Avatar, Box, Button } from "@mui/material";
 import {
   AddAPhoto as AddPhotoIcon,
@@ -21,6 +21,11 @@ export const PetImageUpload = ({
 }: PetImageUploadProps) => {
   const { t } = useLocalization();
   const [preview, setPreview] = useState<string | null>(imageUrl || null);
+
+  // Update preview when imageUrl prop changes
+  useEffect(() => {
+    setPreview(imageUrl || null);
+  }, [imageUrl]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

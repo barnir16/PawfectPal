@@ -3,16 +3,18 @@ import { Box, Grid, Paper, Typography, CircularProgress, Alert, Chip } from "@mu
 import { styled } from "@mui/material/styles";
 import { Add as AddIcon } from "@mui/icons-material";
 import { Button } from "./../../../components/ui/Button";
-import TaskList from "./../../../features/tasks/components/TaskList";
+import { TaskList } from "./../../../features/tasks/components/TaskList";
 import type { Task as TaskListTask } from "./../../../features/tasks/components/TaskList";
 import { getPets } from "../../../services/pets/petService";
-import { getTasks } from "../../../services/tasks/taskService";
+import { getTasks, deleteTask, completeTask } from "../../../services/tasks/taskService";
 import { getOverdueVaccinationsForAllPets, getVaccinationsDueSoon } from "../../../services/vaccines/vaccineService";
 import { SmartVaccineService } from "../../../services/vaccines/smartVaccineService";
 import { WeightMonitoringService } from "../../../services/weight/weightMonitoringService";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLocalization } from "../../../contexts/LocalizationContext";
+import { useNotifications } from "../../../contexts/NotificationContext";
+import { createTaskNotificationService } from "../../../services/notifications/taskNotificationService";
 
 const Item = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(2),
@@ -47,6 +49,7 @@ export const Dashboard = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { t } = useLocalization();
+  const { addNotification } = useNotifications();
   const [stats, setStats] = useState({
     totalPets: 0,
     tasksDue: 0,
@@ -150,13 +153,35 @@ export const Dashboard = () => {
               // Get weight health data for each pet
               const petWeightHealth = WeightMonitoringService.estimateIdealWeight(pet.type || 'dog', pet.breed);
               if (petWeightHealth) {
-                                 // Get weight warnings for this pet
-                 const weightWarnings = WeightMonitoringService.getWeightWarnings(
-                   pet.weightKg || 0, 
-                   petWeightHealth, 
-                   pet.name,
-                   t
-                 );
+                // Calculate pet age in years
+                let petAge: number | undefined;
+                if (pet.age !== undefined && pet.age !== null) {
+                  petAge = pet.age;
+                } else if (pet.birthDate || pet.birth_date) {
+                  const birthDate = pet.birthDate || pet.birth_date;
+                  if (birthDate) {
+                    try {
+                      const birth = new Date(birthDate);
+                    if (!isNaN(birth.getTime())) {
+                      const now = new Date();
+                      const ageInMilliseconds = now.getTime() - birth.getTime();
+                      const ageInDays = Math.floor(ageInMilliseconds / (1000 * 60 * 60 * 24));
+                      petAge = ageInDays / 365.25; // More accurate age calculation
+                    }
+                    } catch (error) {
+                      console.log('Error calculating pet age:', error);
+                    }
+                  }
+                }
+                
+                // Get weight warnings for this pet
+                const weightWarnings = WeightMonitoringService.getWeightWarnings(
+                  pet.weightKg || 0, 
+                  petWeightHealth, 
+                  pet.name,
+                  t,
+                  petAge
+                );
                 
                 // Add warnings to alerts
                 if (weightWarnings.length > 0) {
@@ -216,16 +241,21 @@ export const Dashboard = () => {
             title: task.title,
             description: task.description,
             dueDate: task.dateTime,
-            pet: petsData.find(p => p.id === task.petIds[0])?.name || 'Unknown',
+            pet: petsData.find(p => p.id === task.petIds[0])?.name || t('pets.unknown'),
             priority: task.priority || 'medium',
             completed: task.isCompleted || false
           } as TaskListTask));
 
         setRecentTasks(recentIncompleteTasks);
         
+        // Check for task notifications
+        const notificationService = createTaskNotificationService(addNotification);
+        notificationService.checkOverdueTasks(tasksData);
+        notificationService.checkUpcomingTasks(tasksData);
+        
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
-        setError('Failed to load dashboard data. Please try again.');
+        setError(t('errors.failedToLoadDashboard'));
       } finally {
         setIsLoading(false);
       }
@@ -313,16 +343,48 @@ export const Dashboard = () => {
           <TaskList
             tasks={recentTasks}
             onEdit={(id) => {
-              // TODO: Add logic for editing a task
-              console.log("Edit task with ID:", id);
+              navigate(`/tasks/edit/${id}`);
             }}
-            onDelete={(id) => {
-              // TODO: Add logic for deleting a task
-              console.log("Delete task with ID:", id);
+            onDelete={async (id) => {
+              try {
+                await deleteTask(Number(id));
+                // Refresh tasks after deletion
+                const updatedTasks = await getTasks();
+                setRecentTasks(updatedTasks.slice(0, 5).map(task => ({
+                  id: task.id || 0,
+                  title: task.title || '',
+                  description: task.description || '',
+                  dueDate: task.dateTime || new Date().toISOString(),
+                  pet: task.petIds?.length > 0 ? t('pets.pet') : t('pets.noPet'),
+                  priority: (task.priority === 'urgent' ? 'high' : task.priority) || 'medium',
+                  completed: task.isCompleted || false
+                })));
+              } catch (error) {
+                console.error('Failed to delete task:', error);
+              }
             }}
-            onToggleComplete={(id, completed) => {
-              // TODO: Add logic for toggling task completion
-              console.log("Toggle task with ID:", id, "to completed:", completed);
+            onToggleComplete={async (id, completed) => {
+              try {
+                if (completed) {
+                  await completeTask(Number(id));
+                } else {
+                  // Handle uncompleting if needed
+                  console.log('Uncompleting task:', id);
+                }
+                // Refresh tasks after completion
+                const updatedTasks = await getTasks();
+                setRecentTasks(updatedTasks.slice(0, 5).map(task => ({
+                  id: task.id || 0,
+                  title: task.title || '',
+                  description: task.description || '',
+                  dueDate: task.dateTime || new Date().toISOString(),
+                  pet: task.petIds?.length > 0 ? t('pets.pet') : t('pets.noPet'),
+                  priority: (task.priority === 'urgent' ? 'high' : task.priority) || 'medium',
+                  completed: task.isCompleted || false
+                })));
+              } catch (error) {
+                console.error('Failed to toggle task completion:', error);
+              }
             }}
           />
         )}
@@ -535,50 +597,6 @@ export const Dashboard = () => {
          </Paper>
        )}
 
-       {/* Pet Health Summary Section */}
-       <Paper sx={{ p: 3, mb: 4 }}>
-                  <Typography variant="h6" component="h2" gutterBottom>
-            🐾 {t('dashboard.petHealthOverview')}
-          </Typography>
-         <Grid container spacing={3}>
-           <Grid size={{ xs: 12, md: 6 }}>
-             <Box sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 1, height: '100%' }}>
-                              <Typography variant="subtitle1" color="primary" sx={{ mb: 1, fontWeight: "bold" }}>
-                  📊 {t('dashboard.weightMonitoring')}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  {t('dashboard.weightMonitoringDesc')}
-                </Typography>
-                <Button 
-                  variant="outlined" 
-                  size="small" 
-                  onClick={() => navigate('/weight-tracking')}
-                  sx={{ mt: 1 }}
-                >
-                  {t('dashboard.viewWeightTracking')}
-                </Button>
-             </Box>
-           </Grid>
-           <Grid size={{ xs: 12, md: 6 }}>
-             <Box sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 1, height: '100%' }}>
-                              <Typography variant="subtitle1" color="primary" sx={{ mb: 1, fontWeight: "bold" }}>
-                  🏥 {t('dashboard.medicalRecords')}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  {t('dashboard.medicalRecordsDesc')}
-                </Typography>
-                <Button 
-                  variant="outlined" 
-                  size="small" 
-                  onClick={() => navigate('/pets')}
-                  sx={{ mt: 1 }}
-                >
-                  {t('dashboard.viewPetDetails')}
-                </Button>
-             </Box>
-           </Grid>
-         </Grid>
-       </Paper>
 
       {/* Upcoming Events Section */}
       <Grid container spacing={3}>

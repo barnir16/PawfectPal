@@ -157,11 +157,11 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
       : currentWeight;
     
     if (normalizedCurrentWeight < min) {
-      return { status: 'underweight', severity: 'warning' as const, message: 'Pet appears to be underweight for this breed' };
+      return { status: 'underweight', severity: 'warning' as const, message: t('pets.weightStatus.underweight') };
     } else if (normalizedCurrentWeight > max) {
-      return { status: 'overweight', severity: 'warning' as const, message: 'Pet appears to be overweight for this breed' };
+      return { status: 'overweight', severity: 'warning' as const, message: t('pets.weightStatus.overweight') };
     } else {
-      return { status: 'healthy', severity: 'success' as const, message: 'Pet weight is within healthy range for this breed' };
+      return { status: 'healthy', severity: 'success' as const, message: t('pets.weightStatus.healthy') };
     }
   };
 
@@ -175,12 +175,12 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
           <Typography>{t('pets.loadingBreedInfo', { breed: breedName })}</Typography>
           {/* Debug info during loading */}
           <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-            <Typography variant="caption" color="text.secondary">Debug Props:</Typography>
-            <Typography variant="body2">Pet Type: {petType}</Typography>
-            <Typography variant="body2">Breed Name: {breedName}</Typography>
-            <Typography variant="body2">Current Weight: {currentWeight} {weightUnit}</Typography>
-            <Typography variant="body2">Normalized Pet Type: {normalizedPetType}</Typography>
-            <Typography variant="body2">Normalized Breed Name: {normalizedBreedName}</Typography>
+            <Typography variant="caption" color="text.secondary">{t('pets.debugProps')}</Typography>
+            <Typography variant="body2">{t('pets.debugPetType')} {petType}</Typography>
+            <Typography variant="body2">{t('pets.debugBreedName')} {breedName}</Typography>
+            <Typography variant="body2">{t('pets.debugCurrentWeight')} {currentWeight} {weightUnit}</Typography>
+            <Typography variant="body2">{t('pets.normalizedPetType')}: {normalizedPetType}</Typography>
+            <Typography variant="body2">{t('pets.normalizedBreedName')}: {normalizedBreedName}</Typography>
           </Box>
           <Skeleton variant="text" width="60%" />
           <Skeleton variant="text" width="40%" />

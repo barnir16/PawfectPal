@@ -248,7 +248,7 @@ export const WeightTrackingPage = () => {
       
              <Paper sx={{ p: 3, mb: 3 }}>
          <Grid container spacing={3} alignItems="center">
-           <Grid item xs={12} md={6}>
+           <Grid size={{ xs: 12, md: 6 }}>
              <Typography variant="h6" gutterBottom>
                {t('weight.trackAllPets')}
              </Typography>
@@ -256,7 +256,7 @@ export const WeightTrackingPage = () => {
                {t('weight.monitorWeightTrends')}
              </Typography>
            </Grid>
-           <Grid item xs={12} md={6}>
+           <Grid size={{ xs: 12, md: 6 }}>
              <FormControl fullWidth>
                <InputLabel>{t('weight.selectPet')}</InputLabel>
                <Select
@@ -348,7 +348,7 @@ export const WeightTrackingPage = () => {
            {/* Summary Stats */}
            <Box sx={{ mb: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
              <Grid container spacing={2}>
-               <Grid item xs={12} sm={4}>
+               <Grid size={{ xs: 12, sm: 4 }}>
                  <Typography variant="h6" color="primary">
                    {pets.length}
                  </Typography>
@@ -356,7 +356,7 @@ export const WeightTrackingPage = () => {
                     {t('weight.totalPets')}
                   </Typography>
                 </Grid>
-                <Grid item xs={12} sm={4}>
+                <Grid size={{ xs: 12, sm: 4 }}>
                   <Typography variant="h6" color="primary">
                     {pets.filter(p => p.weightKg).length}
                   </Typography>
@@ -364,7 +364,7 @@ export const WeightTrackingPage = () => {
                     {t('weight.withWeightData')}
                   </Typography>
                 </Grid>
-                <Grid item xs={12} sm={4}>
+                <Grid size={{ xs: 12, sm: 4 }}>
                   <Typography variant="h6" color="primary">
                     {pets.filter(p => p.weightKg).length > 0 
                       ? (pets.filter(p => p.weightKg).reduce((sum, p) => sum + (p.weightKg || 0), 0) / pets.filter(p => p.weightKg).length).toFixed(1)
@@ -381,7 +381,7 @@ export const WeightTrackingPage = () => {
               const currentWeight = pet.weightKg || 0;
               const weightUnit = pet.weightUnit || 'kg';
               return (
-                <Grid item xs={12} sm={6} md={4} key={pet.id}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={pet.id}>
                   <Card variant="outlined">
                     <CardContent>
                       <Typography variant="h6" gutterBottom>
@@ -414,7 +414,7 @@ export const WeightTrackingPage = () => {
         {weightGoals.length > 0 ? (
           <Grid container spacing={2}>
             {weightGoals.map((goal) => (
-              <Grid item xs={12} sm={6} md={4} key={goal.id}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={goal.id}>
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
@@ -448,7 +448,7 @@ export const WeightTrackingPage = () => {
         <DialogTitle>{t('weight.addWeightRecord')}</DialogTitle>
                  <DialogContent>
            <Grid container spacing={2} sx={{ mt: 1 }}>
-             <Grid item xs={12}>
+             <Grid size={{ xs: 12 }}>
                <FormControl fullWidth>
                  <InputLabel>{t('weight.selectPet')}</InputLabel>
                  <Select
@@ -464,7 +464,7 @@ export const WeightTrackingPage = () => {
                  </Select>
                </FormControl>
              </Grid>
-             <Grid item xs={12} sm={6}>
+             <Grid size={{ xs: 12 }} sm={6}>
                <TextField
                  fullWidth
                  label={t('weight.weight')}
@@ -474,7 +474,7 @@ export const WeightTrackingPage = () => {
                  inputProps={{ step: 0.1, min: 0 }}
                />
              </Grid>
-             <Grid item xs={12} sm={6}>
+             <Grid size={{ xs: 12 }} sm={6}>
                <FormControl fullWidth>
                  <InputLabel>{t('weight.weightUnit')}</InputLabel>
                  <Select
@@ -487,7 +487,7 @@ export const WeightTrackingPage = () => {
                  </Select>
                </FormControl>
              </Grid>
-             <Grid item xs={12}>
+             <Grid size={{ xs: 12 }}>
                <TextField
                  fullWidth
                  label={t('weight.date')}
@@ -497,7 +497,7 @@ export const WeightTrackingPage = () => {
                  InputLabelProps={{ shrink: true }}
                />
              </Grid>
-             <Grid item xs={12}>
+             <Grid size={{ xs: 12 }}>
                <TextField
                  fullWidth
                  label={t('weight.notes')}
@@ -525,7 +525,7 @@ export const WeightTrackingPage = () => {
         <DialogTitle>{t('weight.addWeightGoal')}</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <FormControl fullWidth>
                 <InputLabel>{t('weight.selectPet')}</InputLabel>
                 <Select
@@ -541,7 +541,7 @@ export const WeightTrackingPage = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12 }} sm={6}>
               <TextField
                 fullWidth
                 label={t('weight.targetWeight')}
@@ -551,7 +551,7 @@ export const WeightTrackingPage = () => {
                 inputProps={{ step: 0.1, min: 0 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12 }} sm={6}>
               <FormControl fullWidth>
                 <InputLabel>{t('weight.weightUnit')}</InputLabel>
                 <Select
@@ -564,7 +564,7 @@ export const WeightTrackingPage = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <FormControl fullWidth>
                 <InputLabel>{t('weight.goalType')}</InputLabel>
                 <Select
@@ -578,7 +578,7 @@ export const WeightTrackingPage = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label={t('weight.goalDescription')}
@@ -589,7 +589,7 @@ export const WeightTrackingPage = () => {
                 placeholder={t('weight.goalDescription')}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label={t('weight.targetDate')}

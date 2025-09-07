@@ -159,7 +159,7 @@ export const NotesAndFiles = ({
             multiline
             rows={3}
             variant="outlined"
-            placeholder="Add a new note..."
+            placeholder={t('pets.addNewNotePlaceholder')}
             value={newNote}
             onChange={(e) => setNewNote(e.target.value)}
             sx={{ mb: 1 }}

@@ -1,4 +1,6 @@
 from fastapi import HTTPException, Depends, APIRouter
+from .medical_record import MedicalRecordORM
+from .vaccination import VaccinationORM
 from sqlalchemy.orm import Session
 from typing import List
 from models import (

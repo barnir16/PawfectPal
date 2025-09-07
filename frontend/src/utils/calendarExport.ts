@@ -160,29 +160,37 @@ export const downloadICS = (dataUrl: string, filename: string = 'pet-care-tasks.
 };
 
 /**
- * Sync tasks with Google Calendar
- * Note: This requires Google Calendar API integration
+ * Sync tasks with Google Calendar using real Google Calendar API
  */
 export const syncWithGoogleCalendar = async (
   tasks: Task[],
-  googleApiKey: string
+  googleApiKey?: string
 ): Promise<boolean> => {
   try {
     console.log('Syncing tasks with Google Calendar...');
     
-    // This is a placeholder implementation
-    // In a real app, you would:
-    // 1. Use Google Calendar API v3
-    // 2. Authenticate with OAuth 2.0
-    // 3. Create calendar events for each task
+    // Import the Google Calendar service
+    const { googleCalendarService } = await import('../services/calendar/googleCalendarService');
     
-    const events = tasks.map(taskToCalendarEvent);
+    // Check if Google Calendar is configured
+    const isConfigured = await googleCalendarService.isConfigured();
+    if (!isConfigured) {
+      console.warn('Google Calendar not configured. Please set up Google Calendar integration.');
+      return false;
+    }
+
+    // Authenticate with Google Calendar
+    const isAuthenticated = await googleCalendarService.authenticate();
+    if (!isAuthenticated) {
+      console.error('Failed to authenticate with Google Calendar');
+      return false;
+    }
+
+    // Sync tasks
+    const result = await googleCalendarService.syncTasks(tasks);
     
-    // Placeholder: simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    console.log(`Successfully synced ${events.length} tasks with Google Calendar`);
-    return true;
+    console.log(`Successfully synced ${result.success} tasks with Google Calendar. ${result.failed} failed.`);
+    return result.failed === 0;
   } catch (error) {
     console.error('Error syncing with Google Calendar:', error);
     return false;

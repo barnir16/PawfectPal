@@ -53,8 +53,38 @@ class PetCreate(PetBase):
     pass
 
 
-class PetUpdate(PetBase):
-    pass
+class PetUpdate(BaseModel):
+    """Schema for updating pets - all fields are optional"""
+    name: Optional[str] = None
+    breed_type: Optional[str] = None
+    breed: Optional[str] = None
+    birth_date: Optional[date] = None
+    age: Optional[int] = None
+    is_birthday_given: Optional[bool] = None
+    weight_kg: Optional[float] = None
+    weight_unit: Optional[str] = None
+    gender: Optional[str] = None
+    color: Optional[str] = None
+    is_neutered: Optional[bool] = None
+    is_vaccinated: Optional[bool] = None
+    is_microchipped: Optional[bool] = None
+    health_issues: Optional[str] = None
+    behavior_issues: Optional[str] = None
+    microchip_number: Optional[str] = None
+    last_vet_visit: Optional[date] = None
+    next_vet_visit: Optional[date] = None
+    vet_name: Optional[str] = None
+    vet_phone: Optional[str] = None
+    vet_address: Optional[str] = None
+    medical_notes: Optional[str] = None
+    photo_uri: Optional[str] = None
+    notes: Optional[str] = None
+    last_known_latitude: Optional[float] = None
+    last_known_longitude: Optional[float] = None
+    last_location_update: Optional[datetime] = None
+    is_tracking_enabled: Optional[bool] = None
+    is_lost: Optional[bool] = None
+    is_active: Optional[bool] = None
 
 
 class PetRead(PetBase):
