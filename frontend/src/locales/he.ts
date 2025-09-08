@@ -55,6 +55,7 @@ export const he = {
     dashboard: 'לוח מחוונים',
     pets: 'חיות מחמד',
     tasks: 'משימות',
+    weightTracking: 'מעקב משקל',
     vaccines: 'חיסונים',
     settings: 'הגדרות',
     profile: 'פרופיל',
@@ -65,6 +66,7 @@ export const he = {
   auth: {
     login: 'התחברות',
     logout: 'התנתקות',
+    logoutFailed: 'התנתקות נכשלה. אנא נסה להתחבר שוב.',
     signup: 'הרשמה',
     register: 'הרשמה',
     welcomeBack: 'ברוכים השבים',
@@ -974,6 +976,28 @@ export const he = {
     weightOutsideRange: 'המשקל ({weight}{unit}) מחוץ לטווח הבריא ({range}). התייעץ עם הווטרינר שלך',
     weightStableMessage: 'המשקל יציב. עבודה טובה בשמירה על בריאותו!',
     energy: 'אנרגיה',
+  },
+
+  // Services
+  services: {
+    title: 'שירותים',
+    activeUpcoming: 'פעילים / קרובים',
+    historyCompleted: 'היסטוריה / הושלמו',
+    providers: 'ספקים',
+    becomeProvider: 'הפוך לספק',
+    bookService: 'הזמן שירות',
+    serviceType: 'סוג שירות',
+    status: 'סטטוס',
+    startDate: 'תאריך התחלה',
+    endDate: 'תאריך סיום',
+    provider: 'ספק',
+    rating: 'דירוג',
+    bio: 'ביוגרפיה',
+    hourlyRate: 'תעריף לשעה',
+    somethingWentWrong: 'משהו השתבש',
+    noServicesFound: 'לא נמצאו שירותים',
+    noProvidersFound: 'לא נמצאו ספקים',
+    loading: 'טוען...',
   },
 
 };

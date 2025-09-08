@@ -18,7 +18,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { LanguageSwitcher } from "../../components/common/LanguageSwitcher";
 import { useLocalization } from "../../contexts/LocalizationContext";
-import { BASE_URL } from "../../services";
+import { getBaseUrl } from "../../services/api";
 
 type HeaderProps = {
   onMenuClick: () => void;
@@ -45,7 +45,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
     } catch (error) {
       console.error("Logout failed:", error);
       // Force logout if regular logout fails
-      await forceLogout("Logout failed. Please try logging in again.");
+      await forceLogout(t("auth.logoutFailed"));
       navigate("/auth");
     }
     handleClose();
@@ -61,7 +61,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
       const token = localStorage.getItem("authToken"); // or from context
       if (!token) throw new Error("No auth token found");
 
-      const res = await fetch(`${BASE_URL}/auth/me`, {
+      const res = await fetch(`${getBaseUrl()}/auth/me`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -114,7 +114,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
               size="small"
               onClick={() => handleBecomeProvider()}
             >
-              {t("Become a Provider")}
+              {t("services.becomeProvider")}
             </Button>
           )}
 

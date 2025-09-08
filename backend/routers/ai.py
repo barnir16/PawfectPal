@@ -270,6 +270,40 @@ def handle_local_ai_fallback(user_message: str, pet_context: Dict[str, Any]) -> 
             ]
         )
     
+    # Handle specific pet medical issues
+    if any(keyword in message_lower for keyword in ['bob', 'medical', 'blind', 'eye', 'assist', 'help']):
+        # Look for Bob specifically
+        bob_pet = next((pet for pet in pets if pet.get('name', '').lower() == 'bob'), None)
+        if bob_pet:
+            health_issues = bob_pet.get('health_issues', [])
+            age = bob_pet.get('age', 0)
+            breed = bob_pet.get('breed', 'unknown')
+            
+            response_message = f"I can see that Bob is a {age:.1f}-year-old {breed} with some health concerns. "
+            
+            if 'blind' in str(health_issues).lower() or 'blind' in message_lower:
+                response_message += "For Bob's vision issues:\n\n1. **Environmental Safety**: Keep furniture in consistent places, use baby gates for stairs\n2. **Training**: Use verbal cues and scents to help him navigate\n3. **Vet Consultation**: Regular eye exams to monitor any progression\n4. **Quality of Life**: Many dogs adapt well to vision loss with proper support\n\n"
+            
+            response_message += "Since Bob is a senior dog, I'd recommend:\n- Regular vet check-ups every 6 months\n- Monitoring for any new symptoms\n- Adjusting his environment for his needs\n- Considering joint supplements for mobility\n\nWould you like specific advice about any particular aspect of Bob's care?"
+            
+            return AIChatResponse(
+                message=response_message,
+                suggested_actions=[
+                    {
+                        "id": "bob_health_plan",
+                        "type": "create_task",
+                        "label": "Create Health Plan for Bob",
+                        "description": "Set up a care plan for Bob's specific needs"
+                    },
+                    {
+                        "id": "schedule_vet_visit",
+                        "type": "create_task",
+                        "label": "Schedule Vet Visit for Bob",
+                        "description": "Book a veterinary appointment for Bob"
+                    }
+                ]
+            )
+    
     # Handle health questions
     if any(keyword in message_lower for keyword in ['sick', 'ill', 'vet', 'health', 'medicine', 'medication', 'symptoms']):
         return AIChatResponse(
@@ -326,22 +360,42 @@ def handle_local_ai_fallback(user_message: str, pet_context: Dict[str, Any]) -> 
                 ]
             )
     
-    # Default response
+    # Default response - more context-aware
     pet_names = [pet['name'] for pet in pets]
+    
+    # Check for pets with health issues
+    pets_with_health_issues = [pet for pet in pets if pet.get('health_issues')]
+    pets_with_behavior_issues = [pet for pet in pets if pet.get('behavior_issues')]
+    
+    if pets_with_health_issues:
+        health_pet_names = [pet['name'] for pet in pets_with_health_issues]
+        message = f"I can see you have some pets with health concerns: {', '.join(health_pet_names)}. I'd be happy to help with specific advice for their care. What would you like to know about?"
+    elif pets_with_behavior_issues:
+        behavior_pet_names = [pet['name'] for pet in pets_with_behavior_issues]
+        message = f"I notice some of your pets have behavior issues: {', '.join(behavior_pet_names)}. I can help with training and behavior management strategies. What specific behavior would you like to address?"
+    else:
+        message = f"I'd be happy to help with your pet care questions! You have {len(pets)} pets: {', '.join(pet_names)}. What specific aspect of their care would you like to know about?"
+    
     return AIChatResponse(
-        message=f"I'd be happy to help with your pet care questions! You have {len(pets)} pets: {', '.join(pet_names)}. What specific aspect of their care would you like to know about?",
+        message=message,
         suggested_actions=[
+            {
+                "id": "health_assessment",
+                "type": "view_tips",
+                "label": "Health Assessment",
+                "description": "Review your pet's health status"
+            },
+            {
+                "id": "behavior_help",
+                "type": "view_tips",
+                "label": "Behavior Help",
+                "description": "Get help with pet behavior issues"
+            },
             {
                 "id": "exercise_guide",
                 "type": "view_tips",
                 "label": "Exercise Guidelines",
                 "description": "Get exercise recommendations for all pets"
-            },
-            {
-                "id": "health_check",
-                "type": "view_tips",
-                "label": "Health Assessment",
-                "description": "Review your pet's health status"
             }
         ]
     )

@@ -73,4 +73,4 @@ export * from './config/firebaseConfigService';
 export * from './notifications/notificationService';
 
 // Reference services
-export * from './references/referenceService';
+export * from './references/referencesService';

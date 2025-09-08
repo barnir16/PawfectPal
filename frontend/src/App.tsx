@@ -22,11 +22,7 @@ import Settings from "./features/settings/components/Settings/Settings";
 import TaskForm from "./features/tasks/components/TaskForm/TaskForm";
 import { WeightTrackingPage } from "./features/weight/pages/WeightTrackingPage";
 import AuthScreen from "./features/auth/pages/AuthPage";
-<<<<<<< HEAD
-import { ProfilePage } from "./features/profile/pages/ProfilePage";
-=======
 import ProfilePage from "./features/profile/pages/ProfilePage";
->>>>>>> pet-services-first-sketch
 import { AIChatbot, ChatToggleButton } from "./components/ai/AIChatbot";
 import { useAIChat } from "./hooks/useAIChat";
 import { useLocalization } from "./contexts/LocalizationContext";
@@ -53,13 +49,8 @@ const App = () => {
 const AppContent = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
-<<<<<<< HEAD
   const { isChatOpen, selectedPet, openChat, closeChat, toggleChat } = useAIChat();
   const { t } = useLocalization();
-=======
-  const { isChatOpen, selectedPet, openChat, closeChat, toggleChat } =
-    useAIChat();
->>>>>>> pet-services-first-sketch
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);

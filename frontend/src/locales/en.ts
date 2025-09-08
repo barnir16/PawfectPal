@@ -36,6 +36,7 @@ export const en = {
     dashboard: 'Dashboard',
     pets: 'Pets',
     tasks: 'Tasks',
+    weightTracking: 'Weight Tracking',
     settings: 'Settings',
     profile: 'Profile',
     logout: 'Logout',
@@ -45,6 +46,7 @@ export const en = {
   auth: {
     login: 'Login',
     logout: 'Logout',
+    logoutFailed: 'Logout failed. Please try logging in again.',
     signup: 'Sign Up',
     register: 'Register',
     welcomeBack: 'Welcome Back',
@@ -955,5 +957,27 @@ export const en = {
     vetRecommended: 'Vet Recommended',
     goalDescription: 'Goal Description',
     targetDate: 'Target Date',
+  },
+
+  // Services
+  services: {
+    title: 'Services',
+    activeUpcoming: 'Active / Upcoming',
+    historyCompleted: 'History / Completed',
+    providers: 'Providers',
+    becomeProvider: 'Become a Provider',
+    bookService: 'Book Service',
+    serviceType: 'Service Type',
+    status: 'Status',
+    startDate: 'Start Date',
+    endDate: 'End Date',
+    provider: 'Provider',
+    rating: 'Rating',
+    bio: 'Bio',
+    hourlyRate: 'Hourly Rate',
+    somethingWentWrong: 'Something went wrong',
+    noServicesFound: 'No services found',
+    noProvidersFound: 'No providers found',
+    loading: 'Loading...',
   },
 };

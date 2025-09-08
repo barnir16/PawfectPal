@@ -10,6 +10,20 @@ export interface NotificationData {
   data?: Record<string, any>;
 }
 
+export interface NotificationSettings {
+  vaccineReminders: boolean;
+  weightAlerts: boolean;
+  healthMilestones: boolean;
+  generalUpdates: boolean;
+  emailNotifications: boolean;
+  pushNotifications: boolean;
+  quietHours: {
+    enabled: boolean;
+    start: string;
+    end: string;
+  };
+}
+
 export interface PushNotificationPayload {
   title: string;
   body: string;
@@ -27,6 +41,7 @@ export interface PushNotificationPayload {
 export class NotificationService {
   private static readonly VAPID_PUBLIC_KEY = 'YOUR_VAPID_PUBLIC_KEY'; // Replace with actual key
   private static readonly NOTIFICATION_STORAGE_KEY = 'pawfectpal_notifications';
+  private static readonly SETTINGS_STORAGE_KEY = 'pawfectpal_notification_settings';
   
   /**
    * Request notification permission
@@ -388,6 +403,33 @@ export class NotificationService {
         }, delayMs);
       }
     });
+  }
+
+  /**
+   * Get notification settings
+   */
+  static async getNotificationSettings(): Promise<NotificationSettings | null> {
+    try {
+      const stored = localStorage.getItem(this.SETTINGS_STORAGE_KEY);
+      if (!stored) return null;
+      
+      return JSON.parse(stored);
+    } catch (error) {
+      console.error('Failed to get notification settings:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Save notification settings
+   */
+  static async saveNotificationSettings(settings: NotificationSettings): Promise<void> {
+    try {
+      localStorage.setItem(this.SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+    } catch (error) {
+      console.error('Failed to save notification settings:', error);
+      throw error;
+    }
   }
 }
 
