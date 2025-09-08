@@ -34,16 +34,6 @@ type SidebarProps = {
 
 const drawerWidth = 240;
 
-const menuItems = [
-  { text: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
-  { text: "Pets", icon: <PetsIcon />, path: "/pets" },
-  { text: "Tasks", icon: <TasksIcon />, path: "/tasks" },
-  { text: "Services", icon: <ServicesIcon />, path: "/services" },
-  { text: "Book a Service", icon: <BookIcon />, path: "/bookservice" },
-  { text: "Weight Tracking", icon: <PersonIcon />, path: "/weight-tracking" },
-  { text: "Profile", icon: <PersonIcon />, path: "/profile" },
-  { text: "Settings", icon: <SettingsIcon />, path: "/settings" },
-];
 export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
   const theme = useTheme();
   const location = useLocation();
@@ -55,6 +45,9 @@ export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
     { text: t('navigation.dashboard'), icon: <DashboardIcon />, path: "/dashboard" },
     { text: t('navigation.pets'), icon: <PetsIcon />, path: "/pets" },
     { text: t('navigation.tasks'), icon: <TasksIcon />, path: "/tasks" },
+    { text: t('services.title'), icon: <ServicesIcon />, path: "/services" },
+    { text: t('services.bookService'), icon: <BookIcon />, path: "/bookservice" },
+    { text: t('navigation.weightTracking'), icon: <PersonIcon />, path: "/weight-tracking" },
     { text: t('navigation.profile'), icon: <PersonIcon />, path: "/profile" },
     { text: t('navigation.settings'), icon: <SettingsIcon />, path: "/settings" },
   ];

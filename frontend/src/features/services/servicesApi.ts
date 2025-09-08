@@ -1,42 +1,38 @@
-import { BASE_URL } from "../../services";
+import { getBaseUrl, getToken } from "../../services/api";
+import type { Service } from "../../types/services";
 
-export interface Service {
-  id: number;
-  petName: string;
-  serviceType: string;
-  start_datetime: string;
-  end_datetime: string;
-  status: string;
-}
-
-export interface Provider {
-  id: number;
-  full_name: string;
-  profile_image?: string;
-  provider_services?: string[]; 
-  provider_rating?: number; 
-  provider_bio?: string;
-  provider_hourly_rate?: number;
-  city?: string;
-  state?: string;
-  country?: string;
-}
+import type { ServiceProvider } from "../../types/services";
 
 export async function getServices(status: "active" | "history"): Promise<Service[]> {
-  const response = await fetch(`${BASE_URL}/service_booking/?status=${status}`);
+  const token = await getToken();
+  console.log('🔑 Token for services API:', token ? 'Present' : 'Missing');
+  
+  const response = await fetch(`${getBaseUrl()}/service_booking/?status=${status}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   const data: Service[] = await response.json();
   return data;
 }
 
-export async function getProviders(filter: string[]): Promise<Provider[]> {
+export async function getProviders(filter: string[]): Promise<ServiceProvider[]> {
+  const token = await getToken();
+  console.log('🔑 Token for providers API:', token ? 'Present' : 'Missing');
   const query = filter.map(f => `filter=${encodeURIComponent(f)}`).join("&");
-  const response = await fetch(`${BASE_URL}/providers/?${query}`);
+  const response = await fetch(`${getBaseUrl()}/providers/?${query}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
   
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
 
-  const data: Provider[] = await response.json();
+  const data: ServiceProvider[] = await response.json();
   return data;
 }

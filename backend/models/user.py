@@ -33,6 +33,10 @@ class UserORM(Base):
 
     # Provider relationship
     is_provider: Mapped[bool] = mapped_column(Boolean, default=False)
+    provider_services: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON array
+    provider_rating: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    provider_bio: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    provider_hourly_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     provider_profile: Mapped[Optional["ProviderORM"]] = relationship(
         "ProviderORM", back_populates="user", uselist=False
     )

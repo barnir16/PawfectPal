@@ -9,10 +9,15 @@ import {
   Rating,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import { getProviders, Provider } from "../servicesApi";
+import { getProviders } from "../servicesApi";
+import type { ServiceProvider } from "../../../types/services";
+import { useLocalization } from "../../../contexts/LocalizationContext";
+import { ServiceProviderCard } from "../components/ServiceProviderCard";
+import { ServiceErrorBoundary } from "../components/ServiceErrorBoundary";
 
 export const BookService = () => {
-  const [providers, setProviders] = useState<Provider[]>([]);
+  const { t } = useLocalization();
+  const [providers, setProviders] = useState<ServiceProvider[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,7 +29,7 @@ export const BookService = () => {
         const data = await getProviders([]);
         setProviders(data);
       } catch (err: any) {
-        setError(err.message || "Something went wrong");
+        setError(err.message || t('services.somethingWentWrong'));
       } finally {
         setLoading(false);
       }
@@ -34,27 +39,42 @@ export const BookService = () => {
   }, []);
 
   const renderContent = () => {
-    if (loading) return <CircularProgress />;
-    if (error) return <Typography color="error">{error}</Typography>;
+    if (loading) {
+      return (
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 4 }}>
+          <CircularProgress />
+          <Typography sx={{ ml: 2 }}>{t('services.loading')}</Typography>
+        </Box>
+      );
+    }
+    
+    if (error) {
+      return (
+        <Typography color="error" sx={{ textAlign: 'center', p: 4 }}>
+          {error}
+        </Typography>
+      );
+    }
+
+    if (providers.length === 0) {
+      return (
+        <Typography sx={{ textAlign: 'center', p: 4, color: 'text.secondary' }}>
+          {t('services.noProvidersFound')}
+        </Typography>
+      );
+    }
 
     return (
-      <Grid container spacing={2}>
-        {providers.map((p) => (
-          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={p.id}>
-            <Card>
-              <CardContent
-                sx={{ display: "flex", alignItems: "center", gap: 2 }}
-              >
-                <Avatar src={p.profile_image} alt={p.full_name} />
-                <Box>
-                  <Typography variant="h6">{p.full_name}</Typography>
-                  <Typography variant="body2">{p.provider_bio}</Typography>
-                  {p.provider_rating && (
-                    <Rating value={p.provider_rating} readOnly size="small" />
-                  )}
-                </Box>
-              </CardContent>
-            </Card>
+      <Grid container spacing={3}>
+        {providers.map((provider) => (
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={provider.id}>
+            <ServiceProviderCard 
+              provider={provider} 
+              onBook={(provider) => {
+                console.log('Booking service with provider:', provider);
+                // TODO: Implement booking logic
+              }}
+            />
           </Grid>
         ))}
       </Grid>
@@ -62,13 +82,15 @@ export const BookService = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        Providers
-      </Typography>
-      {/* Search bar and filters can go here */}
+    <ServiceErrorBoundary>
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h4" gutterBottom>
+          {t('services.providers')}
+        </Typography>
+        {/* Search bar and filters can go here */}
 
-      {renderContent()}
-    </Box>
+        {renderContent()}
+      </Box>
+    </ServiceErrorBoundary>
   );
 };

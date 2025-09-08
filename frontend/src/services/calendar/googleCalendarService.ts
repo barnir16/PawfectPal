@@ -37,15 +37,23 @@ class GoogleCalendarService {
 
   private async loadConfig() {
     try {
-      // In a real implementation, this would come from Firebase Remote Config
-      // or environment variables
+      // Load configuration from Firebase Remote Config
+      const { configService } = await import('../config/firebaseConfigService');
+      const apiConfig = configService.getApiConfig();
+      
       this.config = {
-        apiKey: 'AIzaSyBvOkBwJcJjJjJjJjJjJjJjJjJjJjJjJjJ', // Placeholder
+        apiKey: apiConfig.googleMapsApiKey || '', // Will be empty if not configured
         calendarId: 'primary',
-        clientId: 'your-client-id.apps.googleusercontent.com'
+        clientId: apiConfig.googleClientId || ''
       };
     } catch (error) {
       console.error('Failed to load Google Calendar config:', error);
+      // Fallback to empty config to prevent errors
+      this.config = {
+        apiKey: '',
+        calendarId: 'primary',
+        clientId: ''
+      };
     }
   }
 

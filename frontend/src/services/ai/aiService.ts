@@ -5,6 +5,7 @@
 
 import { Pet } from '../../types/pet';
 import { configService } from '../config/firebaseConfigService';
+import { getToken } from '../api';
 
 interface AIServiceResponse {
   message: string;
@@ -44,35 +45,58 @@ class AIService {
       // Add user message to conversation history
       this.conversationHistory.push({ content: userMessage, isUser: true });
       
+      // Limit conversation history to prevent it from growing too large
+      if (this.conversationHistory.length > 20) {
+        this.conversationHistory = this.conversationHistory.slice(-20);
+      }
+      
       // Prepare pet data for AI context (similar to Python version)
       const petContext = this.preparePetContext(pets, selectedPet);
       
       // Create the prompt with pet data injected
       const prompt = this.createPrompt(userMessage, petContext);
       
+      // Get authentication token
+      const token = await getToken();
+      console.log('🔑 AI Service Token:', token ? 'Present' : 'Missing');
+      
+      // Prepare request data with proper format
+      const requestData = {
+        message: userMessage,
+        pet_context: petContext,
+        prompt: prompt,
+        conversation_history: this.conversationHistory.map(msg => ({
+          content: msg.content,
+          isUser: msg.isUser ? "true" : "false"
+        }))
+      };
+      
+      console.log('🤖 AI Request Data:', JSON.stringify(requestData, null, 2));
+      
       // Call the backend AI endpoint
       const response = await fetch(`${this.apiUrl}/ai/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          // Note: AI endpoint might not require authentication
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
-        body: JSON.stringify({
-          message: userMessage,
-          pet_context: petContext,
-          prompt: prompt,
-          conversation_history: this.conversationHistory
-        })
+        body: JSON.stringify(requestData)
       });
 
       if (!response.ok) {
-        throw new Error(`AI service error: ${response.status}`);
+        const errorText = await response.text();
+        console.error('🤖 AI Service Error Response:', errorText);
+        throw new Error(`AI service error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
       
       // Add AI response to conversation history
-      this.conversationHistory.push({ content: data.message || data.response || 'I apologize, but I had trouble processing your request.', isUser: false });
+      const aiResponse = data.message || data.response || 'I apologize, but I had trouble processing your request.';
+      this.conversationHistory.push({ content: aiResponse, isUser: false });
+      
+      console.log('🤖 AI Response received:', aiResponse.substring(0, 100) + '...');
       
       return {
         message: data.message || data.response || 'I apologize, but I had trouble processing your request.',
@@ -92,18 +116,18 @@ class AIService {
    */
   private preparePetContext(pets: Pet[], selectedPet?: Pet): any {
     const petData = pets.map(pet => ({
-      name: pet.name,
-      type: pet.type || pet.breedType,
-      breed: pet.breed,
+      name: pet.name || 'Unknown',
+      type: pet.type || pet.breedType || 'pet',
+      breed: pet.breed || 'Unknown',
       age: this.calculateAge(pet),
-      weight: pet.weightKg || pet.weight_kg,
-      gender: pet.gender,
+      weight: pet.weightKg || pet.weight_kg || 0,
+      gender: pet.gender || 'Unknown',
       health_issues: pet.healthIssues || pet.health_issues || [],
       behavior_issues: pet.behaviorIssues || pet.behavior_issues || [],
-      is_vaccinated: pet.isVaccinated || pet.is_vaccinated,
-      is_neutered: pet.isNeutered || pet.is_neutered,
-      last_vet_visit: pet.lastVetVisit || pet.last_vet_visit,
-      next_vet_visit: pet.nextVetVisit || pet.next_vet_visit
+      is_vaccinated: Boolean(pet.isVaccinated || pet.is_vaccinated),
+      is_neutered: Boolean(pet.isNeutered || pet.is_neutered),
+      last_vet_visit: pet.lastVetVisit || pet.last_vet_visit || null,
+      next_vet_visit: pet.nextVetVisit || pet.next_vet_visit || null
     }));
 
     return {
