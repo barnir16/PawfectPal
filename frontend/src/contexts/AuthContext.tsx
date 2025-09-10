@@ -98,18 +98,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Store the token
       await StorageHelper.setItem("authToken", response.access_token);
 
-      // Create a minimal user object from the login data
-      const user: User = {
-        id: 1, // We'll get this from the backend later
-        username: username,
-        is_active: true,
-        is_provider: false,
-        is_email_verified: false,
-        is_phone_verified: false,
-        date_joined: new Date().toISOString(),
-      };
+      // Fetch full user info from backend
+      const userRes = await fetch(`${API_BASE_URL}/users/me`, {
+        headers: {
+          Authorization: `Bearer ${response.access_token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-      setUser(user);
+      if (!userRes.ok) throw new Error("Failed to fetch user data");
+
+      const fullUser: User = await userRes.json();
+      setUser(fullUser);
     } catch (error) {
       console.error("Login failed:", error);
       throw error;

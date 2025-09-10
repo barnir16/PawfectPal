@@ -14,19 +14,7 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { Edit as EditIcon, Save as SaveIcon } from "@mui/icons-material";
-
-// Helper function to get the absolute image URL
-const getFullImageUrl = (path: string | null | undefined): string => {
-  if (!path) {
-    return "https://placehold.co/150x150/EEEEEE/333333?text=Profile";
-  }
-  // Check if the path is already a full URL
-  if (path.startsWith("http://") || path.startsWith("https://")) {
-    return path;
-  }
-  // Otherwise, prepend the base URL to make it an absolute path
-  return `${BASE_URL}${path}`;
-};
+import { getFullImageUrl } from "../../../utils/image";
 
 interface ProfileFormData {
   username: string;

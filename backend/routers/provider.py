@@ -39,9 +39,10 @@ def get_providers(
     filter: Optional[List[str]] = Query(None),
     db: Session = Depends(get_db),
 ):
-    query = db.query(UserORM).filter(UserORM.is_provider == True)
+    query = db.query(UserORM).filter(UserORM.is_provider)
 
     providers = query.all()
+    print(providers)
     if not providers:
         raise HTTPException(status_code=404, detail="Providers not found")
 
@@ -60,5 +61,6 @@ def get_providers(
                 }
             )
         results.append(user_data)
+    print(results)
 
     return results
