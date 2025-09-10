@@ -13,6 +13,7 @@ export interface Provider {
   id: number;
   full_name: string;
   profile_image?: string;
+  profile_picture_url?: string;
   provider_services?: string[]; 
   provider_rating?: number; 
   provider_bio?: string;

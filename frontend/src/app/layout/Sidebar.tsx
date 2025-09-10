@@ -23,6 +23,7 @@ import {
   ChevronRight as ChevronRightIcon,
   EventAvailable as ServicesIcon,
   PostAdd as BookIcon,
+  Person as ProfileIcon,
 } from "@mui/icons-material";
 
 type SidebarProps = {
@@ -38,6 +39,7 @@ const menuItems = [
   { text: "Tasks", icon: <TasksIcon />, path: "/tasks" },
   { text: "Services", icon: <ServicesIcon />, path: "/services" },
   { text: "Book a Service", icon: <BookIcon />, path: "/bookservice" },
+  { text: "Profile", icon: <ProfileIcon />, path: "/profile" },
   { text: "Settings", icon: <SettingsIcon />, path: "/settings" },
 ];
 

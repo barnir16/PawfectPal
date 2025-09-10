@@ -64,6 +64,12 @@ def login(
 ):
     """Login user and return access token"""
     user = get_user_by_username(db, username=form_data.username)
+    print(f"Trying login for username: {form_data.username}")
+    print(f"User found: {user}")
+    print(
+        f"Password matches: {verify_password(form_data.password, user.hashed_password) if user else 'N/A'}"
+    )
+
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -214,30 +220,37 @@ def update_user(
     return current_user
 
 
-@router.patch("/me/provider", response_model=UserUpdateProvider)
-def become_provider(
-    update: UserUpdateProvider,
+@router.patch("/me/provider", response_model=UserRead)
+def toggle_provider_status(
     db: Session = Depends(get_db),
     current_user: UserORM = Depends(get_current_user),
 ):
-    # update user fields
-    if update.is_provider is not None:
-        current_user.is_provider = update.is_provider
+    # Flip current value
+    current_user.is_provider = not current_user.is_provider
 
-    db.add(current_user)
-    db.commit()
-    db.refresh(current_user)
-
-    # create provider record if becoming a provider
-    if update.is_provider:
+    if current_user.is_provider:
+        # Becoming a provider: create provider record if not exists
+        if (
+            not db.query(ProviderORM)
+            .filter(ProviderORM.user_id == current_user.id)
+            .first()
+        ):
+            db.add(ProviderORM(user_id=current_user.id))
+    else:
+        # Unbecoming a provider: remove provider record
         existing_provider = (
             db.query(ProviderORM).filter(ProviderORM.user_id == current_user.id).first()
         )
-        if not existing_provider:
-            provider = ProviderORM(user_id=current_user.id)
-            db.add(provider)
-            db.commit()
+        if existing_provider:
+            db.delete(existing_provider)
+            # Clear provider-related fields if needed
+            current_user.provider_bio = None
+            current_user.provider_hourly_rate = None
+            current_user.provider_rating = None
+            current_user.provider_services = None
 
+    db.commit()
+    db.refresh(current_user)
     return current_user
 
 

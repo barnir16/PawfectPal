@@ -56,21 +56,20 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
     handleClose();
   };
 
-  const handleBecomeProvider = async () => {
+  const handleToggleProvider = async () => {
     try {
-      const token = localStorage.getItem("authToken"); // or from context
+      const token = localStorage.getItem("authToken");
       if (!token) throw new Error("No auth token found");
 
-      const res = await fetch(`${BASE_URL}/auth/me`, {
+      const res = await fetch(`${BASE_URL}/auth/me/provider`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // <-- add this
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ is_provider: true }),
       });
 
-      if (!res.ok) throw new Error("Failed to become provider");
+      if (!res.ok) throw new Error("Failed to toggle provider status");
 
       const updatedUser = await res.json();
       setUser(updatedUser);
@@ -107,16 +106,16 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
             {user?.username || "User"}
           </Typography>
 
-          {!user?.is_provider && (
-            <Button
-              color="white"
-              variant="outlined"
-              size="small"
-              onClick={() => handleBecomeProvider()}
-            >
-              {t("Become a Provider")}
-            </Button>
-          )}
+          <Button
+            color="white"
+            variant="outlined"
+            size="small"
+            onClick={() => handleToggleProvider()}
+          >
+            {user?.is_provider
+              ? t("You are a Provider")
+              : t("Become a Provider")}
+          </Button>
 
           <LanguageSwitcher variant="compact" />
 
