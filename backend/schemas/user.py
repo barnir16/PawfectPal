@@ -43,6 +43,23 @@ class UserRead(ProviderExtras, UserContact, UserBase):
     country: Optional[str] = None
     postal_code: Optional[str] = None
 
+    latitude: Optional[str] = None
+    longitude: Optional[str] = None
+
+    @classmethod
+    def model_validate(cls, obj, **kwargs):
+        data = obj.__dict__.copy()
+        if obj.provider_profile:
+            data["provider_services"] = (
+                obj.provider_profile.services.split(",")
+                if obj.provider_profile.services
+                else None
+            )
+            data["provider_bio"] = obj.provider_profile.bio
+            data["provider_hourly_rate"] = obj.provider_profile.hourly_rate
+            data["provider_rating"] = obj.provider_profile.rating
+        return super().model_validate(data, **kwargs)
+
     class Config:
         from_attributes = True
 
@@ -75,3 +92,6 @@ class UserUpdate(ProviderExtras, BaseModel):
     # OAuth fields if you want editable
     google_id: Optional[str] = None
     profile_picture_url: Optional[str] = None
+
+    latitude: Optional[str] = None
+    longitude: Optional[str] = None

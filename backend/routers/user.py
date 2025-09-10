@@ -186,32 +186,32 @@ def update_user(
     db: Session = Depends(get_db),
     current_user: UserORM = Depends(get_current_user),
 ):
-    # Fetch the current user from the DB
-    user: Optional[UserORM] = (
-        db.query(UserORM).filter(UserORM.id == current_user.id).first()
-    )
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
+    print(update)
     # Update basic user fields
     update_data = update.model_dump(exclude_unset=True)
+    print(update_data)
     for field in update_data:
         value = getattr(update, field, None)
         if value is not None:
-            setattr(user, field, value)
+            setattr(current_user, field, value)
 
-    # Update provider fields if user is a provider
-    if user.is_provider and user.provider_profile:
-        provider_fields = ["services", "bio", "hourly_rate", "rating"]
-        for field in provider_fields:
-            value = getattr(update, field, None)
+    provider_map = {
+        "provider_services": "services",
+        "provider_bio": "bio",
+        "provider_hourly_rate": "hourly_rate",
+        "provider_rating": "rating",
+    }
+
+    if current_user.is_provider and current_user.provider_profile:
+        for schema_field, orm_field in provider_map.items():
+            value = getattr(update, schema_field, None)
             if value is not None:
-                setattr(user.provider_profile, field, value)
+                setattr(current_user.provider_profile, orm_field, value)
 
     db.commit()
-    db.refresh(user)
+    db.refresh(current_user)
 
-    return user
+    return current_user
 
 
 @router.patch("/me/provider", response_model=UserUpdateProvider)
