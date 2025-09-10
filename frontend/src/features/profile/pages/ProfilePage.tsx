@@ -43,10 +43,10 @@ interface ProfileFormData {
   postal_code?: string;
   latitude?: string;
   longitude?: string;
-  services?: string;
-  bio?: string;
-  hourly_rate?: string;
-  rating?: string;
+  provider_services?: string;
+  provider_bio?: string;
+  provider_hourly_rate?: string;
+  provider_rating?: string;
 }
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -78,15 +78,15 @@ const ProfilePage: React.FC = () => {
     postal_code: user?.postal_code || "",
     latitude: user?.latitude?.toString() || "",
     longitude: user?.longitude?.toString() || "",
-    services: user?.is_provider
-      ? (user.provider_profile?.services || []).join(", ")
+    provider_services: user?.is_provider
+      ? (user.provider_services || []).join(", ")
       : "",
-    bio: user?.is_provider ? user.provider_profile?.bio || "" : "",
-    hourly_rate: user?.is_provider
-      ? user.provider_profile?.hourly_rate?.toString() || ""
+    provider_bio: user?.is_provider ? user.provider_bio || "" : "",
+    provider_hourly_rate: user?.is_provider
+      ? user.provider_hourly_rate?.toString() || ""
       : "",
-    rating: user?.is_provider
-      ? user.provider_profile?.rating?.toString() || ""
+    provider_rating: user?.is_provider
+      ? user.provider_rating?.toString() || ""
       : "",
   });
 
