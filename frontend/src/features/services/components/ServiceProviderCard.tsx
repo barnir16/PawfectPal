@@ -174,3 +174,4 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
     </Card>
   );
 };
+
