@@ -36,6 +36,7 @@ class AIService {
   ): Promise<AIServiceResponse> {
     try {
       console.log('🤖 AI Service: Sending message with pets:', pets.length);
+      console.log('🤖 AI Service: Current conversation history length:', this.conversationHistory.length);
       
       // Ensure Firebase config is initialized
       if (!configService.isInitialized) {
@@ -53,18 +54,14 @@ class AIService {
       // Prepare pet data for AI context (similar to Python version)
       const petContext = this.preparePetContext(pets, selectedPet);
       
-      // Create the prompt with pet data injected
-      const prompt = this.createPrompt(userMessage, petContext);
-      
       // Get authentication token
       const token = await getToken();
       console.log('🔑 AI Service Token:', token ? 'Present' : 'Missing');
       
-      // Prepare request data with proper format
+      // Prepare request data with proper format - let backend create the prompt
       const requestData = {
         message: userMessage,
         pet_context: petContext,
-        prompt: prompt,
         conversation_history: this.conversationHistory.map(msg => ({
           content: msg.content,
           isUser: msg.isUser ? "true" : "false"
@@ -97,6 +94,7 @@ class AIService {
       this.conversationHistory.push({ content: aiResponse, isUser: false });
       
       console.log('🤖 AI Response received:', aiResponse.substring(0, 100) + '...');
+      console.log('🤖 AI Service: Updated conversation history length:', this.conversationHistory.length);
       
       return {
         message: data.message || data.response || 'I apologize, but I had trouble processing your request.',
@@ -180,6 +178,21 @@ ${petContext.selected_pet ? `\nCURRENT FOCUS: ${petContext.selected_pet.name} ($
 USER QUESTION: ${userMessage}
 
 Please provide helpful, specific advice based on the pet information provided. Be conversational and practical.`;
+  }
+
+  /**
+   * Reset conversation history (useful for starting fresh)
+   */
+  resetConversation(): void {
+    this.conversationHistory = [];
+    console.log('🤖 AI Service: Conversation history reset');
+  }
+
+  /**
+   * Get current conversation history length
+   */
+  getConversationLength(): number {
+    return this.conversationHistory.length;
   }
 
   /**

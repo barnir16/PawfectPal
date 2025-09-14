@@ -93,6 +93,9 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
   useEffect(() => {
     const initializeChat = async () => {
       try {
+        // Reset conversation history when opening chat
+        aiService.resetConversation();
+        
         const [petsData, tasksData] = await Promise.all([
           getPets(),
           getTasks()
@@ -107,7 +110,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
         // Add welcome message
         const welcomeMessage: ChatMessage = {
           id: 'welcome',
-          content: `${t('ai.welcome')} ${t('ai.helpWith')} ${t('ai.healthConcerns')}, ${t('ai.behaviorIssues')}, ${t('ai.feedingQuestions')}, ${t('ai.exercisePlanning')}, ${t('ai.groomingAdvice')}, ${t('ai.careReminders')}. ${selectedPet ? `${t('ai.viewPetDetails')} ${selectedPet.name}!` : t('ai.askAboutPetCare')}`,
+          content: `Hi! I'm your AI pet care assistant. I can help you with: Health concerns, Behavior issues, Feeding questions, Exercise planning, Grooming advice, Care reminders. Ask me about your pet's care...`,
           isUser: false,
           timestamp: new Date(),
           suggestedActions: [
