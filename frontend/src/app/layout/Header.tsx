@@ -18,7 +18,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { LanguageSwitcher } from "../../components/common/LanguageSwitcher";
 import { useLocalization } from "../../contexts/LocalizationContext";
-import { getBaseUrl } from "../../services/api";
+import { getBaseUrl, getToken } from "../../services/api";
 
 type HeaderProps = {
   onMenuClick: () => void;
@@ -58,24 +58,36 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
 
   const handleBecomeProvider = async () => {
     try {
-      const token = localStorage.getItem("authToken"); // or from context
+      console.log("🔄 Attempting to become a provider...");
+      console.log("Current user:", user);
+      
+      const token = await getToken();
       if (!token) throw new Error("No auth token found");
 
-      const res = await fetch(`${getBaseUrl()}/auth/me`, {
+      console.log("🔑 Token found, making API call...");
+      const res = await fetch(`${getBaseUrl()}/auth/me/provider`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // <-- add this
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ is_provider: true }),
       });
 
-      if (!res.ok) throw new Error("Failed to become provider");
+      console.log("📡 API response status:", res.status);
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("❌ API error:", errorText);
+        throw new Error(`Failed to become provider: ${res.status} ${errorText}`);
+      }
 
       const updatedUser = await res.json();
+      console.log("✅ Updated user:", updatedUser);
       setUser(updatedUser);
+      console.log("🎉 Successfully became a provider!");
     } catch (err) {
-      console.error(err);
+      console.error("❌ Error becoming provider:", err);
+      alert(`Error becoming provider: ${err.message}`);
     }
   };
 
@@ -107,12 +119,21 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
             {user?.username || "User"}
           </Typography>
 
+          {/* Debug info */}
+          <Typography variant="caption" sx={{ color: "inherit", fontSize: "10px" }}>
+            Provider: {user?.is_provider ? "Yes" : "No"}
+          </Typography>
+
           {!user?.is_provider && (
             <Button
-              color="white"
-              variant="outlined"
+              color="inherit"
+              variant="contained"
               size="small"
               onClick={() => handleBecomeProvider()}
+              sx={{ 
+                bgcolor: "rgba(255,255,255,0.2)",
+                "&:hover": { bgcolor: "rgba(255,255,255,0.3)" }
+              }}
             >
               {t("services.becomeProvider")}
             </Button>

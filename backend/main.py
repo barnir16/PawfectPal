@@ -13,7 +13,7 @@ from routers import (
     vaccination,
     weight_record,
     weight_goal,
-    ai,
+    ai_simple as ai,
     provider,
 )
 
