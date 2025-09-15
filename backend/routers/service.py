@@ -1,7 +1,7 @@
 from fastapi import HTTPException, Depends, APIRouter, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from models import PetORM, ServiceORM, UserORM, ServiceStatus
+from models import PetORM, ServiceORM, UserORM, ServiceStatus, ServiceTypeORM
 from schemas import ServiceCreate, ServiceRead
 from dependencies.db import get_db
 from dependencies.auth import get_current_user
@@ -71,6 +71,12 @@ def create_service(
     )
     if not pet:
         raise HTTPException(status_code=404, detail="Pet not found")
+
+    service_type = (
+        db.query(ServiceTypeORM).filter_by(id=service.service_type_id).first()
+    )
+    if not service_type:
+        raise HTTPException(status_code=404, detail="Service type not found")
 
     db_service = ServiceORM(user_id=current_user.id, **service.model_dump())
 

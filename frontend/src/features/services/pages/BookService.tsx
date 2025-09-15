@@ -42,7 +42,7 @@ export const BookService = () => {
     return (
       <Grid container spacing={2}>
         {providers.map((p) => (
-          <Grid xs={12} sm={6} md={4} key={p.id}>
+          <Grid size={{ xs: 12, sm: 6, md: 12 }} key={p.id}>
             <Card
               sx={{ display: "flex", flexDirection: "row", height: "100%" }}
             >

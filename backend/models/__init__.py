@@ -2,6 +2,7 @@ from .base import Base, ServiceStatus, ServiceType
 from .pet import PetORM
 from .task import TaskORM
 from .service import ServiceORM
+from .service_type import ServiceTypeORM
 from .location import LocationHistoryORM
 from .user import UserORM
 from .medical_record import MedicalRecordORM

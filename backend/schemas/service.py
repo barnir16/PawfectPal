@@ -7,7 +7,7 @@ import json
 
 class ServiceBase(BaseModel):
     pet_id: int
-    service_type: ServiceType
+    service_type_id: int
     status: ServiceStatus = ServiceStatus.PENDING
     start_datetime: datetime  # ISO datetime string
     end_datetime: Optional[datetime] = None  # ISO datetime string
@@ -40,6 +40,7 @@ class ServiceCreate(ServiceBase):
 
 class ServiceRead(ServiceBase):
     id: int
+    service_type: Optional[str] = None
 
     @field_validator("before_images", "after_images", mode="before")
     @classmethod
