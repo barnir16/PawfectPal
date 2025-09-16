@@ -22,7 +22,7 @@ class AIService {
   private conversationHistory: Array<{ content: string; isUser: boolean }> = [];
 
   constructor() {
-    this.apiUrl = 'http://127.0.0.1:8000'; // Backend API URL
+    this.apiUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
   }
 
   /**

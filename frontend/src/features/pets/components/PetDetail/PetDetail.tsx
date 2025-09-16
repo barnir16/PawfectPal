@@ -19,7 +19,7 @@ import { Appointments } from "../../../../components/pet-detail/Appointments";
 import { NotesAndFiles } from "../../../../components/pet-detail/NotesAndFiles";
 import { ActionButtons } from "../../../../components/pet-detail/ActionButtons";
 import { BreedInfoCard } from "../../../../components/pets/BreedInfoCard";
-import { VaccineTracker } from "../../../../components/pets/VaccineTracker";
+import RealVaccineTracker from "../../../../components/tasks/RealVaccineTracker";
 import { PetWeightMonitor } from "../../../../components/pets/PetWeightMonitor";
 import LocationTracking from "../../../../components/pet-detail/LocationTracking";
 import type { Task } from "../../../../components/pet-detail/Appointments";
@@ -325,7 +325,7 @@ export const PetDetail = () => {
         </TabPanel>
 
         <TabPanel value={tabValue} index={4}>
-          <VaccineTracker pet={pet} />
+          <RealVaccineTracker />
         </TabPanel>
 
         <TabPanel value={tabValue} index={5}>

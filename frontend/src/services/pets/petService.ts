@@ -67,7 +67,6 @@ export const transformPetToBackend = (pet: Omit<Pet, 'id'>): BackendPetCreate =>
 const transformPetFromBackend = (backendPet: any): Pet => {
   // Debug logging for Nicole
   if (backendPet.name === 'Nicole') {
-    console.log('🐕 Backend Nicole data:', backendPet);
   }
   
   return {

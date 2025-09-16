@@ -26,7 +26,8 @@ import { getTasks, deleteTask, completeTask, updateTask, downloadTasksAsICal, sy
 import { getPets } from "../../../services/pets/petService";
 import { type VaccineTask } from "../../../services/tasks/vaccineTaskService";
 import { VaccineTaskCompletionDialog } from "../../../components/tasks/VaccineTaskCompletionDialog";
-import SimpleVaccineList from "../../../components/tasks/SimpleVaccineList";
+import RealVaccineTracker from "../../../components/tasks/RealVaccineTracker";
+import BeautifulTaskManager from "../../../components/tasks/BeautifulTaskManager";
 import type { Task } from "../../../types/tasks/task";
 import type { Pet } from "../../../types/pets/pet";
 import { useLocalization } from "../../../contexts/LocalizationContext";
@@ -190,7 +191,6 @@ export const Tasks = () => {
     try {
       await syncTasksWithGoogleCalendar(tasks);
       // Show success message (could be implemented with a snackbar)
-      console.log(t('errors.tasksSyncedSuccessfully'));
     } catch (err) {
       console.error('Error syncing with Google Calendar:', err);
       setError(t('errors.failedToSyncCalendar'));
@@ -273,7 +273,7 @@ export const Tasks = () => {
   // Main task type selection
   if (taskType === "main") {
     return (
-      <Container maxWidth="md" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: 2 }}>
         <Typography variant="h4" component="h1" gutterBottom align="center">
           {t('tasks.chooseTaskType')}
         </Typography>
@@ -281,7 +281,7 @@ export const Tasks = () => {
           {t('tasks.chooseTaskTypeDescription')}
         </Typography>
         
-        <Stack spacing={3} direction={{ xs: 'column', sm: 'row' }} justifyContent="center">
+        <Stack spacing={3} direction={{ xs: 'column', sm: 'row' }} justifyContent="center" sx={{ mb: 4 }}>
           <Card sx={{ minWidth: 280, cursor: 'pointer' }} onClick={handleVaccines}>
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
               <VaccinesIcon sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
@@ -306,6 +306,21 @@ export const Tasks = () => {
             </CardContent>
           </Card>
         </Stack>
+        
+        {/* Show both vaccines and custom tasks below */}
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 3 }}>
+            {t('tasks.vaccines')}
+          </Typography>
+          <RealVaccineTracker />
+        </Box>
+        
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 3 }}>
+            {t('tasks.customTasks')}
+          </Typography>
+          <BeautifulTaskManager />
+        </Box>
       </Container>
     );
   }
@@ -315,7 +330,7 @@ export const Tasks = () => {
     return (
       <Box>
         <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6">Vaccine Testing</Typography>
+          <Typography variant="h6">Vaccine Tracking</Typography>
           <Button
             variant="outlined"
             onClick={testVaccineGeneration}
@@ -324,7 +339,7 @@ export const Tasks = () => {
             🧪 Test Vaccine Generation
           </Button>
         </Box>
-        <SimpleVaccineList
+        <RealVaccineTracker
           onAddVaccine={() => navigate("/tasks/new?type=vaccine")}
           onBack={handleBackToMain}
         />

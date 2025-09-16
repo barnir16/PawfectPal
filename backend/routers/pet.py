@@ -1,11 +1,11 @@
 from fastapi import HTTPException, Depends, APIRouter
 from .medical_record import MedicalRecordORM
-from .vaccination import VaccinationORM
 from sqlalchemy.orm import Session
 from typing import List
 from models import (
     PetORM,
     UserORM,
+    VaccinationORM,
 )
 from schemas.pet import PetCreate, PetRead, PetUpdate
 from dependencies.db import get_db
@@ -78,8 +78,6 @@ def create_pet(
             is_tracking_enabled=pet.is_tracking_enabled or False,
         )
     except Exception as e:
-        print(f"Error creating pet: {e}")
-        print(f"Pet data: {pet}")
         raise HTTPException(status_code=400, detail=f"Error creating pet: {str(e)}")
     db.add(db_pet)
     db.commit()

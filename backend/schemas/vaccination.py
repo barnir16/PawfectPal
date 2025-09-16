@@ -1,47 +1,35 @@
+from pydantic import BaseModel, Field
 from typing import Optional, List
-from pydantic import BaseModel
 from datetime import date, datetime
 
-
 class VaccinationBase(BaseModel):
-    vaccine_name: str
+    vaccine_name: str = Field(..., min_length=1, max_length=255)
+    vaccine_type: Optional[str] = Field(default="Core", max_length=100)
     date_administered: date
     next_due_date: Optional[date] = None
-    batch_number: Optional[str] = None
-    manufacturer: Optional[str] = None
-    veterinarian: str
-    clinic: str
-    dose_number: Optional[int] = None
+    batch_number: Optional[str] = Field(None, max_length=100)
+    manufacturer: Optional[str] = Field(None, max_length=255)
+    veterinarian: str = Field(..., min_length=1, max_length=255)
+    clinic: str = Field(..., min_length=1, max_length=255)
+    dose_number: Optional[int] = Field(default=1, ge=1)
     notes: Optional[str] = None
-    is_completed: bool = True
-    reminder_sent: bool = False
-
+    is_completed: bool = Field(default=True)
+    reminder_sent: bool = Field(default=False)
 
 class VaccinationCreate(VaccinationBase):
     pet_id: int
 
-
 class VaccinationUpdate(VaccinationBase):
     pass
 
-
-class VaccinationRead(VaccinationBase):
+class VaccinationResponse(VaccinationBase):
     id: int
     pet_id: int
     created_at: datetime
-    updated_at: datetime
-
+    updated_at: Optional[datetime] = None
+    
     class Config:
         from_attributes = True
-
-
-# Response models
-class VaccinationListResponse(BaseModel):
-    vaccinations: List[VaccinationRead]
-    total: int
-    page: int
-    page_size: int
-
 
 class VaccinationSummary(BaseModel):
     pet_id: int
@@ -49,8 +37,14 @@ class VaccinationSummary(BaseModel):
     up_to_date: bool
     next_due_date: Optional[date] = None
     overdue_count: int
-    completed_series: List[str]  # Completed vaccination series
+    due_soon_count: int
+    completed_series: List[str]
 
+class VaccinationListResponse(BaseModel):
+    vaccinations: List[VaccinationResponse]
+    total: int
+    page: int
+    page_size: int
 
 class VaccinationReminder(BaseModel):
     vaccination_id: int
@@ -60,10 +54,3 @@ class VaccinationReminder(BaseModel):
     due_date: date
     days_until_due: int
     is_overdue: bool
-
-
-class VaccinationSchedule(BaseModel):
-    """Standard vaccination schedule for different pet types"""
-    pet_type: str  # dog, cat, etc.
-    vaccines: List[dict]  # List of vaccines with timing info
-

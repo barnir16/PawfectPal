@@ -380,6 +380,57 @@ export const WeightTrackingPage = () => {
             {pets.map((pet) => {
               const currentWeight = pet.weightKg || 0;
               const weightUnit = pet.weightUnit || 'kg';
+              
+              // Calculate age using the same logic as other components
+              const calculateAge = () => {
+                const birthDate = pet.birthDate || pet.birth_date;
+                if (birthDate && (pet.isBirthdayGiven || pet.is_birthday_given)) {
+                  try {
+                    let birth;
+                    if (typeof birthDate === 'string' && birthDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                      const [year, month, day] = birthDate.split('-').map(Number);
+                      birth = new Date(year, month - 1, day);
+                    } else {
+                      birth = new Date(birthDate);
+                    }
+                    
+                    if (isNaN(birth.getTime())) {
+                      return t('pets.unknownAge');
+                    }
+                    
+                    const now = new Date();
+                    const ageInMilliseconds = now.getTime() - birth.getTime();
+                    const ageInDays = Math.floor(ageInMilliseconds / (1000 * 60 * 60 * 24));
+                    const ageInMonths = Math.floor(ageInDays / 30.44);
+                    const ageInYears = Math.floor(ageInDays / 365.25);
+                    
+                    if (ageInDays < 0) {
+                      return t('pets.futureBirthdate');
+                    }
+                    
+                    if (ageInYears < 1) {
+                      const months = Math.max(0, ageInMonths);
+                      return `${months} ${t('pets.months')}`;
+                    }
+                    return `${ageInYears} ${t('pets.years')}`;
+                  } catch (error) {
+                    console.log('Error calculating age from birthdate:', birthDate, error);
+                    return t('pets.unknownAge');
+                  }
+                }
+                
+                // Fallback to age field if no birthdate
+                if (pet.age !== undefined && pet.age !== null) {
+                  if (pet.age < 1) {
+                    const months = Math.floor(pet.age * 12);
+                    return `${months} ${t('pets.months')}`;
+                  }
+                  return `${pet.age} ${t('pets.years')}`;
+                }
+                
+                return t('pets.unknownAge');
+              };
+              
               return (
                 <Grid size={{ xs: 12, sm: 6, md: 4 }} key={pet.id}>
                   <Card variant="outlined">
@@ -388,13 +439,13 @@ export const WeightTrackingPage = () => {
                         {pet.name}
                       </Typography>
                       <Typography variant="h4" color="primary" gutterBottom>
-                        {currentWeight} {weightUnit}
+                        {currentWeight} {weightUnit === 'kg' ? t('pets.kg') : t('pets.pounds')}
                       </Typography>
                                              <Typography variant="body2" color="text.secondary">
                          {pet.breed || pet.breedType || t('pets.notSpecified')}
                        </Typography>
                        <Typography variant="body2" color="text.secondary">
-                         {t('pets.age')}: {pet.age ? (pet.age < 1 ? `${Math.floor(pet.age * 12)} ${t('pets.months')}` : `${pet.age} ${t('pets.years')}`) : t('pets.unknownAge')}
+                         {t('pets.age')}: {calculateAge()}
                        </Typography>
                     </CardContent>
                   </Card>
