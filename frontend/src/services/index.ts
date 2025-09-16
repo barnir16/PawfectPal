@@ -29,15 +29,14 @@ export * from './tasks/taskService';
 
 // Vaccine services - export specific functions to avoid conflicts
 export {
-  getVaccines,
-  getVaccine,
-  createVaccine,
-  updateVaccine,
-  deleteVaccine,
+  getAllVaccinations,
   getPetVaccinations,
-  getOverdueVaccinations,
+  getVaccinationSummary,
   getVaccinationsDueSoon,
-  getPetVaccinationSummary
+  getOverdueVaccinations,
+  createVaccination,
+  updateVaccination,
+  deleteVaccination
 } from './vaccines/vaccineService';
 
 // Service booking services

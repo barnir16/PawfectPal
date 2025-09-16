@@ -29,6 +29,19 @@ export interface VaccineSchema {
   preventative_treatments: PreventativeTreatment[];
 }
 
+// Hebrew translations for vaccine names
+export const vaccineNameTranslations: Record<string, string> = {
+  "Rabies": "כלבת",
+  "Quadrivalent Vaccine": "חיסון מרובע",
+  "Hexavalent Vaccine": "חיסון משושה",
+  "Feline Leukemia Virus (FeLV)": "וירוס לוקמיה חתולית",
+  "Kennel Cough": "שיעול כלביות",
+  "Lyme Disease": "מחלת ליים",
+  "Spirocerca Lupi (Park Worm) Prevention": "מניעת תולעת הפארק",
+  "Fleas & Ticks Prevention": "מניעת פרעושים וקרציות",
+  "Internal Parasites": "מניעת תולעים פנימיות"
+};
+
 // Israeli Adult Cat Vaccines
 export const israeliAdultCatVaccines: VaccineSchema = {
   mandatory: [],

@@ -28,10 +28,8 @@ def get_gemini_model():
             genai.configure(api_key=api_key)
             return genai.GenerativeModel('gemini-pro')
         else:
-            print("⚠️ Gemini API key not found in Firebase Remote Config")
             return None
     except Exception as e:
-        print(f"❌ Error getting Gemini API key from Firebase: {str(e)}")
         return None
 
 # Initialize model
@@ -67,20 +65,15 @@ async def chat_with_ai(request: AIChatRequest):
     Simple AI chat endpoint - inspired by successful PawfectPlanner versions
     """
     try:
-        print(f"🤖 AI Chat: Received message: '{request.message}'")
-        print(f"🤖 AI Chat: Pet context: {len(request.pet_context.get('pets', []))} pets")
         
         # Try to get model, refresh if needed
         current_model = model
         if not current_model:
-            print("🔄 AI Chat: Model not initialized, attempting to get Gemini model...")
             current_model = get_gemini_model()
         
         if not current_model:
-            print("⚠️ AI Chat: Using fallback AI logic (Gemini not available)")
             return handle_simple_fallback(request.message, request.pet_context, request.conversation_history or [])
         
-        print("✅ AI Chat: Using Gemini API for response generation")
         
         # Create simple prompt
         prompt = create_simple_prompt(request.message, request.pet_context, request.conversation_history or [])

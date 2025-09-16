@@ -7,7 +7,7 @@ import { TaskList } from "./../../../features/tasks/components/TaskList";
 import type { Task as TaskListTask } from "./../../../features/tasks/components/TaskList";
 import { getPets } from "../../../services/pets/petService";
 import { getTasks, deleteTask, completeTask } from "../../../services/tasks/taskService";
-import { getOverdueVaccinationsForAllPets, getVaccinationsDueSoon } from "../../../services/vaccines/vaccineService";
+import { getOverdueVaccinations, getVaccinationsDueSoon } from "../../../services/vaccines/vaccineService";
 import { SmartVaccineService } from "../../../services/vaccines/smartVaccineService";
 import { WeightMonitoringService } from "../../../services/weight/weightMonitoringService";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +15,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { useLocalization } from "../../../contexts/LocalizationContext";
 import { useNotifications } from "../../../contexts/NotificationContext";
 import { createTaskNotificationService } from "../../../services/notifications/taskNotificationService";
+import { vaccineNameTranslations } from "../../../data/vaccines/israeliVaccines";
 
 const Item = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(2),
@@ -48,7 +49,7 @@ const StatCard = ({ title, value, description }: StatCardProps) => (
 export const Dashboard = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const { t } = useLocalization();
+  const { t, currentLanguage } = useLocalization();
   const { addNotification } = useNotifications();
   const [stats, setStats] = useState({
     totalPets: 0,
@@ -65,6 +66,14 @@ export const Dashboard = () => {
   const [weightHealthData, setWeightHealthData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Get translated vaccine name
+  const getTranslatedVaccineName = (name: string): string => {
+    if (currentLanguage === 'he' && vaccineNameTranslations[name]) {
+      return `${name} (${vaccineNameTranslations[name]})`;
+    }
+    return name;
+  };
 
   // Fetch dashboard data
   useEffect(() => {
@@ -95,11 +104,11 @@ export const Dashboard = () => {
           console.log('🔍 Dashboard: Fetching vaccination data for', petsData.length, 'pets');
           try {
             const [overdueData, upcomingData] = await Promise.all([
-              getOverdueVaccinationsForAllPets().catch(err => {
+              getOverdueVaccinations().catch((err: any) => {
                 console.warn('Could not fetch overdue vaccinations:', err);
                 return [];
               }),
-              getVaccinationsDueSoon(30).catch(err => {
+              getVaccinationsDueSoon(30).catch((err: any) => {
                 console.warn('Could not fetch upcoming vaccinations:', err);
                 return [];
               })
@@ -288,27 +297,27 @@ export const Dashboard = () => {
 
                                                                                    {/* Stats Grid */}
          <Grid container spacing={3} sx={{ mb: 4 }}>
-                       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                       <Grid key="pets-stat" size={{ xs: 12, sm: 6, md: 3 }}>
               <StatCard title={t('pets.title')} value={stats.totalPets} />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid key="tasks-stat" size={{ xs: 12, sm: 6, md: 3 }}>
               <StatCard title={t('tasks.title')} value={stats.tasksDue} />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid key="vet-visits-stat" size={{ xs: 12, sm: 6, md: 3 }}>
               <StatCard
                 title={t('dashboard.upcomingVetVisits')}
                 value={stats.upcomingVetVisits}
                 description={t('dashboard.thisMonth')}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid key="overdue-vaccines-stat" size={{ xs: 12, sm: 6, md: 3 }}>
               <StatCard
                 title={t('dashboard.overdueVaccinations')}
                 value={stats.overdueVaccinations}
                 description={t('dashboard.needAttention')}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid key="upcoming-vaccines-stat" size={{ xs: 12, sm: 6, md: 3 }}>
               <StatCard
                 title={t('dashboard.upcomingVaccinations')}
                 value={stats.upcomingVaccinations}
@@ -411,10 +420,10 @@ export const Dashboard = () => {
                          {vaccine.pet_name}
                        </Typography>
                        <Typography variant="body2">
-                         {vaccine.vaccine_name}
+                         {getTranslatedVaccineName(vaccine.vaccine_name)}
                        </Typography>
                        <Typography variant="caption" color="text.secondary">
-                         Due: {new Date(vaccine.next_due_date).toLocaleDateString()}
+                         {t('dashboard.due')}: {vaccine.due_date ? new Date(vaccine.due_date).toLocaleDateString() : t('dashboard.noDateSet')}
                        </Typography>
                      </Alert>
                    </Grid>
@@ -437,10 +446,10 @@ export const Dashboard = () => {
                          {vaccine.pet_name}
                        </Typography>
                        <Typography variant="body2">
-                         {vaccine.vaccine_name}
+                         {getTranslatedVaccineName(vaccine.vaccine_name)}
                        </Typography>
                        <Typography variant="caption" color="text.secondary">
-                         Due: {new Date(vaccine.next_due_date).toLocaleDateString()}
+                         {t('dashboard.due')}: {vaccine.due_date ? new Date(vaccine.due_date).toLocaleDateString() : t('dashboard.noDateSet')}
                        </Typography>
                      </Alert>
                    </Grid>

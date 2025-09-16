@@ -28,6 +28,7 @@ import { useAIChat } from "./hooks/useAIChat";
 import { useLocalization } from "./contexts/LocalizationContext";
 import { NotificationContainer } from "./components/notifications/NotificationContainer";
 import ErrorBoundary from "./components/ErrorBoundary";
+import RealVaccineTracker from "./components/tasks/RealVaccineTracker";
 import "./utils/testVaccines"; // Import test utility
 
 const App = () => {
@@ -115,6 +116,7 @@ const AppContent = () => {
           <Route path="/bookservice" element={<BookService />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/test-vaccines" element={<RealVaccineTracker />} />
           <Route path="/auth" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

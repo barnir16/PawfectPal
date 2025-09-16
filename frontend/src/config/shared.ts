@@ -24,7 +24,7 @@ export const SHARED_CONFIG = {
 
   // Development Settings
   development: {
-    apiBaseUrl: "http://127.0.0.1:8000",
+    apiBaseUrl: import.meta.env.VITE_API_URL || "http://127.0.0.1:8000",
     enableDebugMode: true,
     enableMockData: false,
   },
