@@ -8,7 +8,9 @@ if TYPE_CHECKING:
     from .pet import PetORM
     from .task import TaskORM
     from .service import ServiceORM
-    from .provider import ProviderORM  # new import
+    from .provider import ProviderORM
+    from .service_request import ServiceRequestORM
+    from .chat_message import ChatMessageORM
 
 
 class UserORM(Base):
@@ -56,3 +58,5 @@ class UserORM(Base):
     booked_services: Mapped[List["ServiceORM"]] = relationship(
         "ServiceORM", foreign_keys="ServiceORM.user_id", back_populates="user"
     )
+    service_requests: Mapped[List["ServiceRequestORM"]] = relationship("ServiceRequestORM", back_populates="user")
+    chat_messages: Mapped[List["ChatMessageORM"]] = relationship("ChatMessageORM", back_populates="sender")

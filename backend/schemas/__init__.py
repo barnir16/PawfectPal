@@ -7,3 +7,5 @@ from .weight_record import WeightRecordBase, WeightRecordCreate, WeightRecordUpd
 from .weight_goal import WeightGoalBase, WeightGoalCreate, WeightGoalUpdate, WeightGoalResponse
 from .references import Vaccine, AgeRestriction
 from .provider import UserUpdateProvider
+from .service_request import ServiceRequestCreate, ServiceRequestRead, ServiceRequestUpdate, ServiceRequestSummary
+from .chat_message import ChatMessageCreate, ChatMessageRead, ChatMessageUpdate, ChatConversation
