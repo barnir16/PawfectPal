@@ -246,3 +246,35 @@ export function clearLocationWatch(): void {
     watchId = null;
   }
 }
+
+/**
+ * API Client object for easy HTTP requests
+ */
+export const apiClient = {
+  get: <T>(endpoint: string, options: RequestInit = {}): Promise<T> => 
+    apiRequest<T>(endpoint, { ...options, method: 'GET' }),
+  
+  post: <T>(endpoint: string, data?: any, options: RequestInit = {}): Promise<T> => 
+    apiRequest<T>(endpoint, { 
+      ...options, 
+      method: 'POST', 
+      body: data ? JSON.stringify(data) : undefined 
+    }),
+  
+  put: <T>(endpoint: string, data?: any, options: RequestInit = {}): Promise<T> => 
+    apiRequest<T>(endpoint, { 
+      ...options, 
+      method: 'PUT', 
+      body: data ? JSON.stringify(data) : undefined 
+    }),
+  
+  patch: <T>(endpoint: string, data?: any, options: RequestInit = {}): Promise<T> => 
+    apiRequest<T>(endpoint, { 
+      ...options, 
+      method: 'PATCH', 
+      body: data ? JSON.stringify(data) : undefined 
+    }),
+  
+  delete: <T>(endpoint: string, options: RequestInit = {}): Promise<T> => 
+    apiRequest<T>(endpoint, { ...options, method: 'DELETE' }),
+};
