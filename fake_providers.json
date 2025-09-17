@@ -1,0 +1,553 @@
+[
+  {
+    "id": 1,
+    "username": "david_cohen_1",
+    "full_name": "דוד כהן",
+    "email": "david.cohen@example.com",
+    "phone": "0555517733",
+    "profile_image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+    "is_provider": true,
+    "provider_services": [
+      "walking"
+    ],
+    "provider_rating": 4.5,
+    "provider_bio": "מקצועי בהליכות כלבים, מתמחה בכלבים גדולים וקטנים. זמין בבוקר ובערב.",
+    "provider_hourly_rate": 52,
+    "address": "רחוב הרצל 9, חיפה",
+    "city": "חיפה",
+    "state": "ישראל",
+    "country": "ישראל",
+    "postal_code": "40146",
+    "location": {
+      "latitude": 32.862229,
+      "longitude": 34.240869
+    },
+    "distance_km": 2.2,
+    "is_available": true,
+    "languages": [
+      "עברית",
+      "אנגלית"
+    ],
+    "experience_years": 5,
+    "response_time_minutes": 50,
+    "completed_bookings": 11,
+    "last_online": "2024-01-15T10:30:00Z",
+    "verified": true,
+    "reviews_count": 14,
+    "average_rating": 4.5
+  },
+  {
+    "id": 2,
+    "username": "sarah_levy_2",
+    "full_name": "שרה לוי",
+    "email": "sarah.levy@example.com",
+    "phone": "0599664708",
+    "profile_image": "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
+    "is_provider": true,
+    "provider_services": [
+      "walking"
+    ],
+    "provider_rating": 5.0,
+    "provider_bio": "מטפל מנוסה בהליכות כלבים עם 5+ שנות ניסיון. אוהב בעלי חיים ומבין את הצרכים שלהם.",
+    "provider_hourly_rate": 53,
+    "address": "רחוב רוטשילד 110, אשדוד",
+    "city": "אשדוד",
+    "state": "ישראל",
+    "country": "ישראל",
+    "postal_code": "45480",
+    "location": {
+      "latitude": 31.639502,
+      "longitude": 34.71115
+    },
+    "distance_km": 13.4,
+    "is_available": false,
+    "languages": [
+      "עברית",
+      "אנגלית",
+      "רוסית"
+    ],
+    "experience_years": 6,
+    "response_time_minutes": 12,
+    "completed_bookings": 199,
+    "last_online": "2024-01-15T10:30:00Z",
+    "verified": true,
+    "reviews_count": 12,
+    "average_rating": 5.0
+  },
+  {
+    "id": 3,
+    "username": "michal_abraham_3",
+    "full_name": "מיכל אברהם",
+    "email": "michal.abraham@example.com",
+    "phone": "0534905915",
+    "profile_image": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+    "is_provider": true,
+    "provider_services": [
+      "walking"
+    ],
+    "provider_rating": 4.9,
+    "provider_bio": "מקצועי בהליכות כלבים, מתמחה בכלבים גדולים וקטנים. זמין בבוקר ובערב.",
+    "provider_hourly_rate": 56,
+    "address": "רחוב בן גוריון 123, אשדוד",
+    "city": "אשדוד",
+    "state": "ישראל",
+    "country": "ישראל",
+    "postal_code": "39842",
+    "location": {
+      "latitude": 32.814849,
+      "longitude": 34.311142
+    },
+    "distance_km": 8.4,
+    "is_available": true,
+    "languages": [
+      "עברית"
+    ],
+    "experience_years": 6,
+    "response_time_minutes": 15,
+    "completed_bookings": 178,
+    "last_online": "2024-01-15T10:30:00Z",
+    "verified": true,
+    "reviews_count": 23,
+    "average_rating": 4.9
+  },
+  {
+    "id": 4,
+    "username": "yossi_israeli_4",
+    "full_name": "יוסי ישראלי",
+    "email": "yossi.israeli@example.com",
+    "phone": "0592768602",
+    "profile_image": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
+    "is_provider": true,
+    "provider_services": [
+      "sitting"
+    ],
+    "provider_rating": 4.9,
+    "provider_bio": "מטפלת מקצועית בשמירה על חיות מחמד. ניסיון עם כלבים, חתולים ובעלי חיים אחרים.",
+    "provider_hourly_rate": 59,
+    "address": "רחוב הרצל 130, ראשון לציון",
+    "city": "ראשון לציון",
+    "state": "ישראל",
+    "country": "ישראל",
+    "postal_code": "14870",
+    "location": {
+      "latitude": 31.851682,
+      "longitude": 34.166178
+    },
+    "distance_km": 1.1,
+    "is_available": true,
+    "languages": [
+      "עברית"
+    ],
+    "experience_years": 1,
+    "response_time_minutes": 47,
+    "completed_bookings": 19,
+    "last_online": "2024-01-15T10:30:00Z",
+    "verified": true,
+    "reviews_count": 29,
+    "average_rating": 4.9
+  },
+  {
+    "id": 5,
+    "username": "rachel_goldberg_5",
+    "full_name": "רחל גולדברג",
+    "email": "rachel.goldberg@example.com",
+    "phone": "0591013146",
+    "profile_image": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
+    "is_provider": true,
+    "provider_services": [
+      "sitting"
+    ],
+    "provider_rating": 4.6,
+    "provider_bio": "מטפלת מסורה עם 3+ שנות ניסיון. מבטיחה טיפול אוהב ומקצועי לחיית המחמד שלך.",
+    "provider_hourly_rate": 52,
+    "address": "רחוב הרצל 70, חיפה",
+    "city": "חיפה",
+    "state": "ישראל",
+    "country": "ישראל",
+    "postal_code": "47041",
+    "location": {
+      "latitude": 32.370271,
+      "longitude": 35.018499
+    },
+    "distance_km": 2.7,
+    "is_available": false,
+    "languages": [
+      "עברית"
+    ],
+    "experience_years": 5,
+    "response_time_minutes": 39,
+    "completed_bookings": 141,
+    "last_online": "2024-01-15T10:30:00Z",
+    "verified": true,
+    "reviews_count": 11,
+    "average_rating": 4.6
+  },
+  {
+    "id": 6,
+    "username": "avi_rosen_6",
+    "full_name": "אבי רוזן",
+    "email": "avi.rosen@example.com",
+    "phone": "0524199069",
+    "profile_image": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=face",
+    "is_provider": true,
+    "provider_services": [
+      "sitting"
+    ],
+    "provider_rating": 4.1,
+    "provider_bio": "מטפלת מסורה עם 3+ שנות ניסיון. מבטיחה טיפול אוהב ומקצועי לחיית המחמד שלך.",
+    "provider_hourly_rate": 98,
+    "address": "רחוב בן גוריון 34, חיפה",
+    "city": "חיפה",
+    "state": "ישראל",
+    "country": "ישראל",
+    "postal_code": "96045",
+    "location": {
+      "latitude": 32.236452,
+      "longitude": 35.00843
+    },
+    "distance_km": 3.0,
+    "is_available": false,
+    "languages": [
+      "עברית"
+    ],
+    "experience_years": 6,
+    "response_time_minutes": 53,
+    "completed_bookings": 90,
+    "last_online": "2024-01-15T10:30:00Z",
+    "verified": true,
+    "reviews_count": 20,
+    "average_rating": 4.1
+  },
+  {
+    "id": 7,
+    "username": "michal_stern_7",
+    "full_name": "מיכל שטרן",
+    "email": "michal.stern@example.com",
+    "phone": "0590831124",
+    "profile_image": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face",
+    "is_provider": true,
+    "provider_services": [
+      "boarding"
+    ],
+    "provider_rating": 4.5,
+    "provider_bio": "מפעיל פנסיון מנוסה עם צוות מקצועי. מתמחה בכלבים וחתולים.",
+    "provider_hourly_rate": 97,
+    "address": "רחוב הרצל 9, פתח תקווה",
+    "city": "פתח תקווה",
+    "state": "ישראל",
+    "country": "ישראל",
+    "postal_code": "21598",
+    "location": {
+      "latitude": 32.095624,
+      "longitude": 34.051044
+    },
+    "distance_km": 8.6,
+    "is_available": false,
+    "languages": [
+      "עברית",
+      "אנגלית",
+      "רוסית"
+    ],
+    "experience_years": 3,
+    "response_time_minutes": 34,
+    "completed_bookings": 163,
+    "last_online": "2024-01-15T10:30:00Z",
+    "verified": true,
+    "reviews_count": 50,
+    "average_rating": 4.5
+  },
+  {
+    "id": 8,
+    "username": "danny_katz_8",
+    "full_name": "דני כץ",
+    "email": "danny.katz@example.com",
+    "phone": "0585160408",
+    "profile_image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+    "is_provider": true,
+    "provider_services": [
+      "boarding"
+    ],
+    "provider_rating": 4.5,
+    "provider_bio": "מפעיל פנסיון מקצועי עם מתקנים מודרניים. ניסיון של 7+ שנים בטיפול בחיות מחמד.",
+    "provider_hourly_rate": 81,
+    "address": "רחוב בן גוריון 177, חיפה",
+    "city": "חיפה",
+    "state": "ישראל",
+    "country": "ישראל",
+    "postal_code": "35385",
+    "location": {
+      "latitude": 32.225013,
+      "longitude": 34.804598
+    },
+    "distance_km": 4.8,
+    "is_available": true,
+    "languages": [
+      "עברית"
+    ],
+    "experience_years": 10,
+    "response_time_minutes": 37,
+    "completed_bookings": 113,
+    "last_online": "2024-01-15T10:30:00Z",
+    "verified": true,
+    "reviews_count": 30,
+    "average_rating": 4.5
+  },
+  {
+    "id": 9,
+    "username": "noa_barak_9",
+    "full_name": "נועה ברק",
+    "email": "noa.barak@example.com",
+    "phone": "0524882863",
+    "profile_image": "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
+    "is_provider": true,
+    "provider_services": [
+      "boarding"
+    ],
+    "provider_rating": 4.3,
+    "provider_bio": "פנסיון ביתי חם ומסור. מבטיח טיפול אישי ונוח לכל חיית מחמד.",
+    "provider_hourly_rate": 108,
+    "address": "רחוב רוטשילד 158, חיפה",
+    "city": "חיפה",
+    "state": "ישראל",
+    "country": "ישראל",
+    "postal_code": "54139",
+    "location": {
+      "latitude": 32.032095,
+      "longitude": 34.991309
+    },
+    "distance_km": 2.4,
+    "is_available": false,
+    "languages": [
+      "עברית"
+    ],
+    "experience_years": 10,
+    "response_time_minutes": 46,
+    "completed_bookings": 169,
+    "last_online": "2024-01-15T10:30:00Z",
+    "verified": true,
+    "reviews_count": 9,
+    "average_rating": 4.3
+  },
+  {
+    "id": 10,
+    "username": "alon_david_10",
+    "full_name": "אלון דוד",
+    "email": "alon.david@example.com",
+    "phone": "0518044846",
+    "profile_image": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+    "is_provider": true,
+    "provider_services": [
+      "grooming"
+    ],
+    "provider_rating": 4.8,
+    "provider_bio": "מטפלת מקצועית בטיפוח עם ציוד מודרני. ניסיון עם כל סוגי הפרווה.",
+    "provider_hourly_rate": 125,
+    "address": "רחוב הרצל 143, ירושלים",
+    "city": "ירושלים",
+    "state": "ישראל",
+    "country": "ישראל",
+    "postal_code": "31627",
+    "location": {
+      "latitude": 31.790543,
+      "longitude": 34.911505
+    },
+    "distance_km": 13.2,
+    "is_available": true,
+    "languages": [
+      "עברית"
+    ],
+    "experience_years": 4,
+    "response_time_minutes": 51,
+    "completed_bookings": 37,
+    "last_online": "2024-01-15T10:30:00Z",
+    "verified": true,
+    "reviews_count": 5,
+    "average_rating": 4.8
+  },
+  {
+    "id": 11,
+    "username": "michal_zohar_11",
+    "full_name": "מיכל זוהר",
+    "email": "michal.zohar@example.com",
+    "phone": "0597922282",
+    "profile_image": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
+    "is_provider": true,
+    "provider_services": [
+      "grooming"
+    ],
+    "provider_rating": 4.7,
+    "provider_bio": "מטפלת מנוסה בטיפוח כלבים וחתולים. מבטיחה טיפול עדין ומקצועי.",
+    "provider_hourly_rate": 155,
+    "address": "רחוב הרצל 155, ירושלים",
+    "city": "ירושלים",
+    "state": "ישראל",
+    "country": "ישראל",
+    "postal_code": "26829",
+    "location": {
+      "latitude": 32.853191,
+      "longitude": 34.395088
+    },
+    "distance_km": 8.7,
+    "is_available": true,
+    "languages": [
+      "עברית"
+    ],
+    "experience_years": 6,
+    "response_time_minutes": 30,
+    "completed_bookings": 102,
+    "last_online": "2024-01-15T10:30:00Z",
+    "verified": true,
+    "reviews_count": 38,
+    "average_rating": 4.7
+  },
+  {
+    "id": 12,
+    "username": "yonatan_cohen_12",
+    "full_name": "יונתן כהן",
+    "email": "yonatan.cohen@example.com",
+    "phone": "0518759355",
+    "profile_image": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
+    "is_provider": true,
+    "provider_services": [
+      "grooming"
+    ],
+    "provider_rating": 5.0,
+    "provider_bio": "מטפלת מקצועית בטיפוח חיות מחמד עם 6+ שנות ניסיון. מתמחה בכל הגזעים.",
+    "provider_hourly_rate": 164,
+    "address": "רחוב בן גוריון 103, ירושלים",
+    "city": "ירושלים",
+    "state": "ישראל",
+    "country": "ישראל",
+    "postal_code": "82363",
+    "location": {
+      "latitude": 32.780659,
+      "longitude": 34.52614
+    },
+    "distance_km": 0.6,
+    "is_available": true,
+    "languages": [
+      "עברית",
+      "אנגלית"
+    ],
+    "experience_years": 10,
+    "response_time_minutes": 59,
+    "completed_bookings": 34,
+    "last_online": "2024-01-15T10:30:00Z",
+    "verified": false,
+    "reviews_count": 12,
+    "average_rating": 5.0
+  },
+  {
+    "id": 13,
+    "username": "shira_levy_13",
+    "full_name": "שירה לוי",
+    "email": "shira.levy@example.com",
+    "phone": "0524687758",
+    "profile_image": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=face",
+    "is_provider": true,
+    "provider_services": [
+      "veterinary"
+    ],
+    "provider_rating": 4.6,
+    "provider_bio": "דוקטור וטרינר מקצועי עם ניסיון רב. מבטיח טיפול רפואי מעולה.",
+    "provider_hourly_rate": 289,
+    "address": "רחוב בן גוריון 22, תל אביב",
+    "city": "תל אביב",
+    "state": "ישראל",
+    "country": "ישראל",
+    "postal_code": "89692",
+    "location": {
+      "latitude": 31.773381,
+      "longitude": 35.440669
+    },
+    "distance_km": 10.9,
+    "is_available": true,
+    "languages": [
+      "עברית",
+      "אנגלית",
+      "רוסית"
+    ],
+    "experience_years": 4,
+    "response_time_minutes": 25,
+    "completed_bookings": 169,
+    "last_online": "2024-01-15T10:30:00Z",
+    "verified": true,
+    "reviews_count": 35,
+    "average_rating": 4.6
+  },
+  {
+    "id": 14,
+    "username": "uriel_abraham_14",
+    "full_name": "אוריאל אברהם",
+    "email": "uriel.abraham@example.com",
+    "phone": "0593587019",
+    "profile_image": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face",
+    "is_provider": true,
+    "provider_services": [
+      "veterinary"
+    ],
+    "provider_rating": 4.5,
+    "provider_bio": "דוקטור וטרינר מקצועי עם ניסיון רב. מבטיח טיפול רפואי מעולה.",
+    "provider_hourly_rate": 322,
+    "address": "רחוב דיזנגוף 154, באר שבע",
+    "city": "באר שבע",
+    "state": "ישראל",
+    "country": "ישראל",
+    "postal_code": "66643",
+    "location": {
+      "latitude": 31.990753,
+      "longitude": 34.046696
+    },
+    "distance_km": 3.0,
+    "is_available": false,
+    "languages": [
+      "עברית",
+      "אנגלית"
+    ],
+    "experience_years": 4,
+    "response_time_minutes": 36,
+    "completed_bookings": 189,
+    "last_online": "2024-01-15T10:30:00Z",
+    "verified": true,
+    "reviews_count": 36,
+    "average_rating": 4.5
+  },
+  {
+    "id": 15,
+    "username": "michal_israeli_15",
+    "full_name": "מיכל ישראלי",
+    "email": "michal.israeli@example.com",
+    "phone": "0580962442",
+    "profile_image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+    "is_provider": true,
+    "provider_services": [
+      "veterinary"
+    ],
+    "provider_rating": 4.8,
+    "provider_bio": "וטרינר מנוסה עם התמחות בבעלי חיים קטנים. זמין לטיפולים דחופים.",
+    "provider_hourly_rate": 439,
+    "address": "רחוב דיזנגוף 104, ירושלים",
+    "city": "ירושלים",
+    "state": "ישראל",
+    "country": "ישראל",
+    "postal_code": "52746",
+    "location": {
+      "latitude": 31.570017,
+      "longitude": 34.265395
+    },
+    "distance_km": 14.8,
+    "is_available": true,
+    "languages": [
+      "עברית",
+      "אנגלית",
+      "רוסית"
+    ],
+    "experience_years": 4,
+    "response_time_minutes": 14,
+    "completed_bookings": 99,
+    "last_online": "2024-01-15T10:30:00Z",
+    "verified": true,
+    "reviews_count": 40,
+    "average_rating": 4.8
+  }
+]

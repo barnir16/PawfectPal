@@ -9,6 +9,7 @@ import {
   ListItem,
   ListItemText,
   CircularProgress,
+  Chip,
 } from "@mui/material";
 import { getServices } from "../servicesApi";
 import type { Service } from "../../../types/services";
@@ -80,8 +81,36 @@ export const ServicesPage = () => {
               {services.map((service) => (
                 <ListItem key={service.id}>
                   <ListItemText
-                    primary={`${service.service_type} for Pet ${service.pet_id}`}
-                    secondary={`${t('services.startDate')}: ${new Date(service.start_datetime).toLocaleDateString()} ${service.end_datetime ? `- ${t('services.endDate')}: ${new Date(service.end_datetime).toLocaleDateString()}` : ''}`}
+                    primary={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Chip 
+                          label={t(`services.${service.service_type}`)} 
+                          color="primary" 
+                          size="small" 
+                        />
+                        <Typography variant="body1">
+                          {t('services.forPet')} {service.pet_id}
+                        </Typography>
+                      </Box>
+                    }
+                    secondary={
+                      <Box>
+                        <Typography variant="body2" color="text.secondary">
+                          {t('services.startDate')}: {new Date(service.start_datetime).toLocaleDateString()}
+                        </Typography>
+                        {service.end_datetime && (
+                          <Typography variant="body2" color="text.secondary">
+                            {t('services.endDate')}: {new Date(service.end_datetime).toLocaleDateString()}
+                          </Typography>
+                        )}
+                        <Chip 
+                          label={t(`services.${service.status}`)} 
+                          color={service.status === 'completed' ? 'success' : service.status === 'cancelled' ? 'error' : 'default'}
+                          size="small"
+                          sx={{ mt: 1 }}
+                        />
+                      </Box>
+                    }
                   />
                 </ListItem>
               ))}

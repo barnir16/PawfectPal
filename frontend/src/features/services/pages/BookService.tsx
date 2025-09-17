@@ -7,27 +7,37 @@ import {
   Typography,
   CircularProgress,
   Rating,
+  Paper,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  SelectChangeEvent,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { getProviders } from "../servicesApi";
-import type { ServiceProvider } from "../../../types/services";
+import type { ServiceProvider, ServiceType } from "../../../types/services";
 import { useLocalization } from "../../../contexts/LocalizationContext";
-import { ServiceProviderCard } from "../components/ServiceProviderCard";
+import { ServiceProviderCard } from "../../../components/services/ServiceProviderCard";
 import { ServiceErrorBoundary } from "../components/ServiceErrorBoundary";
+import { ServiceTypeDropdown } from "../../../components/services/ServiceTypeDropdown";
 
 export const BookService = () => {
   const { t } = useLocalization();
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
+  const [filteredProviders, setFilteredProviders] = useState<ServiceProvider[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedServiceType, setSelectedServiceType] = useState<ServiceType | ''>('');
 
   useEffect(() => {
     const fetchProviders = async () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await getProviders([]);
+        const data = await getProviders();
         setProviders(data);
+        setFilteredProviders(data);
       } catch (err: any) {
         setError(err.message || t('services.somethingWentWrong'));
       } finally {
@@ -37,6 +47,18 @@ export const BookService = () => {
 
     fetchProviders();
   }, []);
+
+  // Filter providers based on selected service type
+  useEffect(() => {
+    if (selectedServiceType === '') {
+      setFilteredProviders(providers);
+    } else {
+      const filtered = providers.filter(provider => 
+        provider.provider_services.includes(selectedServiceType)
+      );
+      setFilteredProviders(filtered);
+    }
+  }, [selectedServiceType, providers]);
 
   const renderContent = () => {
     if (loading) {
@@ -56,18 +78,21 @@ export const BookService = () => {
       );
     }
 
-    if (providers.length === 0) {
+    if (filteredProviders.length === 0) {
       return (
         <Typography sx={{ textAlign: 'center', p: 4, color: 'text.secondary' }}>
-          {t('services.noProvidersFound')}
+          {selectedServiceType ? 
+            t('services.noProvidersFound') : 
+            t('services.noProvidersFound')
+          }
         </Typography>
       );
     }
 
     return (
       <Grid container spacing={3}>
-        {providers.map((provider) => (
-          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={provider.id}>
+        {filteredProviders.map((provider) => (
+          <Grid key={provider.id} size={{ xs: 12, sm: 6, md: 4 }}>
             <ServiceProviderCard 
               provider={provider} 
               onBook={(provider) => {
@@ -87,7 +112,21 @@ export const BookService = () => {
         <Typography variant="h4" gutterBottom>
           {t('services.providers')}
         </Typography>
-        {/* Search bar and filters can go here */}
+        
+        {/* Service Type Filter */}
+        <Paper sx={{ p: 2, mb: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            {t('services.filterByType')}
+          </Typography>
+          <Box sx={{ maxWidth: 300 }}>
+            <ServiceTypeDropdown
+              value={selectedServiceType}
+              onChange={setSelectedServiceType}
+              fullWidth={true}
+              size="medium"
+            />
+          </Box>
+        </Paper>
 
         {renderContent()}
       </Box>
