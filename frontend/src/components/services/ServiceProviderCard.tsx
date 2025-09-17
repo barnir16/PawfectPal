@@ -10,6 +10,10 @@ import {
   Avatar,
   Grid,
   Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import {
   LocationOn,
@@ -17,26 +21,28 @@ import {
   Work,
   Phone,
   Email,
+  Message,
+  Visibility,
 } from '@mui/icons-material';
 import { useLocalization } from '../../contexts/LocalizationContext';
-import { ServiceBookingModal } from './ServiceBookingModal';
+import { ServiceRequestForm } from './ServiceRequestForm';
 import type { ServiceProvider } from '../../types/services';
 
 interface ServiceProviderCardProps {
   provider: ServiceProvider;
-  onBook: (provider: ServiceProvider) => void;
+  onRequestService?: (provider: ServiceProvider) => void;
   onContact?: (provider: ServiceProvider) => void;
   onViewProfile?: (provider: ServiceProvider) => void;
 }
 
 export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
   provider,
-  onBook,
+  onRequestService,
   onContact,
   onViewProfile,
 }) => {
   const { t } = useLocalization();
-  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [requestModalOpen, setRequestModalOpen] = useState(false);
 
   const getServiceTypeColor = (serviceType: string) => {
     const colors: { [key: string]: 'primary' | 'secondary' | 'success' | 'warning' | 'error' } = {
@@ -203,30 +209,20 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
           <Button
             variant="contained"
             fullWidth
-            onClick={() => setBookingModalOpen(true)}
+            startIcon={<Message />}
+            onClick={() => setRequestModalOpen(true)}
             disabled={!provider.is_available}
           >
-            {t('services.bookNow')}
+            {t('services.contactProvider')}
           </Button>
         </Box>
         
         <Box sx={{ display: 'flex', gap: 1 }}>
-          {onContact && (
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<Phone />}
-              onClick={() => onContact(provider)}
-              sx={{ flex: 1 }}
-            >
-              {t('services.contact')}
-            </Button>
-          )}
-          
           {onViewProfile && (
             <Button
               variant="outlined"
               size="small"
+              startIcon={<Visibility />}
               onClick={() => onViewProfile(provider)}
               sx={{ flex: 1 }}
             >
@@ -236,17 +232,29 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
         </Box>
       </Box>
 
-      {/* Booking Modal */}
-      <ServiceBookingModal
-        open={bookingModalOpen}
-        onClose={() => setBookingModalOpen(false)}
-        provider={provider}
-        onConfirm={(bookingData) => {
-          console.log('Booking confirmed:', bookingData);
-          onBook(provider);
-          setBookingModalOpen(false);
-        }}
-      />
+      {/* Service Request Modal */}
+      <Dialog
+        open={requestModalOpen}
+        onClose={() => setRequestModalOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          {t('services.contactProvider')} - {provider.full_name}
+        </DialogTitle>
+        <DialogContent>
+          <ServiceRequestForm
+            onSuccess={(requestId) => {
+              console.log('Service request created:', requestId);
+              if (onRequestService) {
+                onRequestService(provider);
+              }
+              setRequestModalOpen(false);
+            }}
+            onCancel={() => setRequestModalOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

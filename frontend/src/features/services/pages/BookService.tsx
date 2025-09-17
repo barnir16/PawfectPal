@@ -95,9 +95,13 @@ export const BookService = () => {
           <Grid key={provider.id} size={{ xs: 12, sm: 6, md: 4 }}>
             <ServiceProviderCard 
               provider={provider} 
-              onBook={(provider) => {
-                console.log('Booking service with provider:', provider);
-                // TODO: Implement booking logic
+              onRequestService={(provider) => {
+                console.log('Service request created for provider:', provider);
+                // TODO: Navigate to chat or show success message
+              }}
+              onViewProfile={(provider) => {
+                console.log('Viewing profile for provider:', provider);
+                // TODO: Navigate to provider profile page
               }}
             />
           </Grid>

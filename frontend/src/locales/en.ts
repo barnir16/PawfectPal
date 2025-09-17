@@ -1055,24 +1055,19 @@ export const en = {
     price: 'Price',
     pickupLocation: 'Pickup Location',
     dropoffLocation: 'Dropoff Location',
-    notes: 'Notes',
-    specialRequests: 'Special Requests',
-    bookingSummary: 'Booking Summary',
-    totalCost: 'Total Cost',
-    confirmBooking: 'Confirm Booking',
     
-    // Service Requests
+    // Service request and chat
     createRequest: 'Create Service Request',
     requestTitle: 'Request Title',
-    requestDescription: 'Description',
+    requestDescription: 'Describe what you need',
     selectPets: 'Select Pets to Share',
-    locationPlaceholder: 'e.g., Tel Aviv, Jerusalem',
+    locationPlaceholder: 'Enter preferred location',
     budgetMin: 'Min Budget (₪)',
     budgetMax: 'Max Budget (₪)',
     experienceYears: 'Min Experience (Years)',
     requiredLanguages: 'Required Languages',
     specialRequirements: 'Special Requirements',
-    specialRequirementsPlaceholder: 'Any specific requirements or preferences...',
+    specialRequirementsPlaceholder: 'Any special requirements or notes...',
     isUrgent: 'Urgent Request',
     myRequests: 'My Requests',
     browseRequests: 'Browse Requests',
@@ -1082,6 +1077,11 @@ export const en = {
     sendMessage: 'Send Message',
     messagePlaceholder: 'Type your message...',
     conversation: 'Conversation',
-    unreadMessages: 'Unread Messages'
+    unreadMessages: 'Unread Messages',
+    notes: 'Notes',
+    specialRequests: 'Special Requests',
+    bookingSummary: 'Booking Summary',
+    totalCost: 'Total Cost',
+    confirmBooking: 'Confirm Booking'
   },
 };
