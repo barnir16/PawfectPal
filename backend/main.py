@@ -15,6 +15,8 @@ from routers import (
     weight_goal,
     ai_simple as ai,
     provider,
+    service_requests,
+    chat,
 )
 
 
@@ -55,6 +57,8 @@ app.include_router(weight_record.router)
 app.include_router(weight_goal.router)
 app.include_router(ai.router)
 app.include_router(provider.router)
+app.include_router(service_requests.router)
+app.include_router(chat.router)
 
 
 @app.get("/")

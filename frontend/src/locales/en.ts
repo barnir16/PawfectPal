@@ -1060,5 +1060,28 @@ export const en = {
     bookingSummary: 'Booking Summary',
     totalCost: 'Total Cost',
     confirmBooking: 'Confirm Booking',
+    
+    // Service Requests
+    createRequest: 'Create Service Request',
+    requestTitle: 'Request Title',
+    requestDescription: 'Description',
+    selectPets: 'Select Pets to Share',
+    locationPlaceholder: 'e.g., Tel Aviv, Jerusalem',
+    budgetMin: 'Min Budget (₪)',
+    budgetMax: 'Max Budget (₪)',
+    experienceYears: 'Min Experience (Years)',
+    requiredLanguages: 'Required Languages',
+    specialRequirements: 'Special Requirements',
+    specialRequirementsPlaceholder: 'Any specific requirements or preferences...',
+    isUrgent: 'Urgent Request',
+    myRequests: 'My Requests',
+    browseRequests: 'Browse Requests',
+    noRequestsFound: 'No service requests found',
+    requestDetails: 'Request Details',
+    contactProvider: 'Contact Provider',
+    sendMessage: 'Send Message',
+    messagePlaceholder: 'Type your message...',
+    conversation: 'Conversation',
+    unreadMessages: 'Unread Messages'
   },
 };

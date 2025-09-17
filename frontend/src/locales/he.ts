@@ -1150,13 +1150,35 @@ export const he = {
     price: 'מחיר',
     pickupLocation: 'מיקום איסוף',
     dropoffLocation: 'מיקום החזרה',
+    
+    // Service request and chat
+    createRequest: 'צור בקשת שירות',
+    requestTitle: 'כותרת הבקשה',
+    requestDescription: 'תאר מה אתה צריך',
+    selectPets: 'בחר חיות מחמד לשתף',
+    locationPlaceholder: 'הזן מיקום מועדף',
+    budgetMin: 'תקציב מינימלי (₪)',
+    budgetMax: 'תקציב מקסימלי (₪)',
+    experienceYears: 'ניסיון מינימלי (שנים)',
+    requiredLanguages: 'שפות נדרשות',
+    specialRequirements: 'דרישות מיוחדות',
+    specialRequirementsPlaceholder: 'כל דרישות או הערות מיוחדות...',
+    isUrgent: 'בקשה דחופה',
+    myRequests: 'הבקשות שלי',
+    browseRequests: 'עיין בבקשות',
+    noRequestsFound: 'לא נמצאו בקשות שירות',
+    requestDetails: 'פרטי הבקשה',
+    contactProvider: 'צור קשר עם הספק',
+    sendMessage: 'שלח הודעה',
+    messagePlaceholder: 'הקלד את ההודעה שלך...',
+    conversation: 'שיחה',
+    unreadMessages: 'הודעות לא נקראו',
     notes: 'הערות',
     specialRequests: 'בקשות מיוחדות',
     bookingSummary: 'סיכום הזמנה',
     totalCost: 'עלות כוללת',
-    confirmBooking: 'אשר הזמנה',
-  },
-
+    confirmBooking: 'אשר הזמנה'
+  }
 };
 
 export default he;
