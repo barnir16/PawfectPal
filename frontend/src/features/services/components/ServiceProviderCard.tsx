@@ -5,7 +5,6 @@ import {
   Typography,
   Avatar,
   Box,
-  Rating,
   Chip,
   Button,
 } from '@mui/material';
@@ -55,20 +54,6 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
           </Box>
         </Box>
 
-        {/* Rating */}
-        {provider.provider_rating && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-            <Rating value={provider.provider_rating} readOnly size="small" />
-            <Typography variant="caption">
-              ({provider.provider_rating.toFixed(1)})
-            </Typography>
-            {provider.reviews_count && (
-              <Typography variant="caption" color="text.secondary">
-                • {provider.reviews_count} reviews
-              </Typography>
-            )}
-          </Box>
-        )}
 
         {/* Bio */}
         {provider.provider_bio && (
