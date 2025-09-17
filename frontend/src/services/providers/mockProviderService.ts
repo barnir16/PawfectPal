@@ -5,31 +5,68 @@ export class MockProviderService {
   private static loaded = false;
 
   /**
-   * Load providers from JSON file
+   * Load providers from database via API
    */
   private static async loadProviders(forceReload: boolean = false): Promise<void> {
     if (this.loaded && !forceReload) return;
     
     try {
-      const response = await fetch('/fake_providers.json');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // Try to fetch from backend API first
+      const response = await fetch('/api/providers/');
+      if (response.ok) {
+        this.providers = await response.json();
+        this.loaded = true;
+        console.log(`📊 Loaded ${this.providers.length} providers from database`);
+        return;
       }
-      this.providers = await response.json();
-      this.loaded = true;
-      console.log(`📊 Loaded ${this.providers.length} mock providers`);
     } catch (error) {
-      console.error('Error loading mock providers:', error);
-      this.providers = [];
+      console.log('Backend API not available, using fallback data');
     }
+    
+    // Fallback to sample data if backend is not available
+    this.providers = this.getFallbackProviders();
+    this.loaded = true;
+    console.log(`📊 Loaded ${this.providers.length} fallback providers`);
   }
 
   /**
-   * Force reload providers from JSON file
+   * Force reload providers from database
    */
   static async reloadProviders(): Promise<void> {
     this.loaded = false;
     await this.loadProviders(true);
+  }
+
+  /**
+   * Get fallback providers when database is not available
+   */
+  private static getFallbackProviders(): ServiceProvider[] {
+    return [
+      {
+        id: 1,
+        username: "demo_walking_1",
+        full_name: "דוד כהן",
+        profile_image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face&seed=1001",
+        provider_services: ["walking"],
+        provider_rating: 4.5,
+        provider_bio: "מקצועי בהליכות כלבים, מתמחה בכלבים גדולים וקטנים. אוהב בעלי חיים ומבין את הצרכים שלהם",
+        provider_hourly_rate: 52,
+        location: {
+          latitude: 32.0853,
+          longitude: 34.7818
+        },
+        distance_km: 2.3,
+        is_available: true,
+        languages: ["עברית", "אנגלית"],
+        experience_years: 5,
+        response_time_minutes: 15,
+        completed_bookings: 127,
+        last_online: "2024-01-15T10:30:00Z",
+        verified: true,
+        reviews_count: 23,
+        average_rating: 4.5
+      }
+    ];
   }
 
   /**
