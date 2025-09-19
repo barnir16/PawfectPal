@@ -18,7 +18,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { LanguageSwitcher } from "../../components/common/LanguageSwitcher";
 import { useLocalization } from "../../contexts/LocalizationContext";
-import { BASE_URL } from "../../services";
+import { getBaseUrl, getToken } from "../../services/api";
 
 type HeaderProps = {
   onMenuClick: () => void;
@@ -45,7 +45,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
     } catch (error) {
       console.error("Logout failed:", error);
       // Force logout if regular logout fails
-      await forceLogout("Logout failed. Please try logging in again.");
+      await forceLogout(t("auth.logoutFailed"));
       navigate("/auth");
     }
     handleClose();
@@ -58,10 +58,14 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
 
   const handleToggleProvider = async () => {
     try {
-      const token = localStorage.getItem("authToken");
+      console.log("🔄 Attempting to become a provider...");
+      console.log("Current user:", user);
+
+      const token = await getToken();
       if (!token) throw new Error("No auth token found");
 
-      const res = await fetch(`${BASE_URL}/auth/me/provider`, {
+      console.log("🔑 Token found, making API call...");
+      const res = await fetch(`${getBaseUrl()}/auth/me/provider`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -69,12 +73,22 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
         },
       });
 
-      if (!res.ok) throw new Error("Failed to toggle provider status");
+      console.log("📡 API response status:", res.status);
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("❌ API error:", errorText);
+        throw new Error(
+          `Failed to become provider: ${res.status} ${errorText}`
+        );
+      }
 
       const updatedUser = await res.json();
+      console.log("✅ Updated user:", updatedUser);
       setUser(updatedUser);
+      console.log("🎉 Successfully became a provider!");
     } catch (err) {
-      console.error(err);
+      console.error("❌ Error becoming provider:", err);
+      alert(`Error becoming provider: ${err.message}`);
     }
   };
 
@@ -106,16 +120,28 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
             {user?.username || "User"}
           </Typography>
 
-          <Button
-            color="white"
-            variant="outlined"
-            size="small"
-            onClick={() => handleToggleProvider()}
+          {/* Debug info */}
+          <Typography
+            variant="caption"
+            sx={{ color: "inherit", fontSize: "10px" }}
           >
-            {user?.is_provider
-              ? t("You are a Provider")
-              : t("Become a Provider")}
-          </Button>
+            Provider: {user?.is_provider ? "Yes" : "No"}
+          </Typography>
+
+          {!user?.is_provider && (
+            <Button
+              color="inherit"
+              variant="contained"
+              size="small"
+              onClick={() => handleBecomeProvider()}
+              sx={{
+                bgcolor: "rgba(255,255,255,0.2)",
+                "&:hover": { bgcolor: "rgba(255,255,255,0.3)" },
+              }}
+            >
+              {t("services.becomeProvider")}
+            </Button>
+          )}
 
           <LanguageSwitcher variant="compact" />
 

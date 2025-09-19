@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Button, Grid, Typography, CircularProgress } from "@mui/material";
-import { Add as AddIcon } from "@mui/icons-material";
+import { Box, Button, Grid, Typography, CircularProgress, Menu, MenuItem, ListItemIcon, ListItemText, Dialog, DialogTitle, DialogContent, DialogActions, Checkbox, List, ListItem, ListItemButton, ListItemText as MuiListItemText, ListItemIcon as MuiListItemIcon } from "@mui/material";
+import { Add as AddIcon, Download as DownloadIcon, PictureAsPdf as PdfIcon } from "@mui/icons-material";
 
 // Components
 import { PetCard } from "./../../../features/pets/components/PetCard";
@@ -11,20 +11,30 @@ import { PetsToolbar } from "./../../../features/pets/components/PetsToolbar";
 
 // API and Types
 import { getPets, deletePet } from "../../../services/pets/petService";
+import { getTasks } from "../../../services/tasks/taskService";
 import type { Pet } from "../../../types/pets/pet";
+import { useLocalization } from "../../../contexts/LocalizationContext";
+import { generateAndDownloadMultiPetPDF, type PetData } from "../../../services/pdfService";
 
 export const Pets = () => {
   const navigate = useNavigate();
+  const { t } = useLocalization();
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"grid" | "table">("grid");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedType, setSelectedType] = useState("All");
+  const [selectedType, setSelectedType] = useState(t('pets.all'));
+  const [pdfMenuAnchor, setPdfMenuAnchor] = useState<null | HTMLElement>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [showPetSelection, setShowPetSelection] = useState(false);
+  const [selectedPetsForPDF, setSelectedPetsForPDF] = useState<number[]>([]);
 
   const fetchPets = async () => {
     try {
       setLoading(true);
+      console.log('🔄 PetsPage: Fetching pets...');
       const fetchedPets = await getPets();
+      console.log('🔄 PetsPage: Fetched pets:', fetchedPets);
       setPets(fetchedPets);
     } catch (error) {
       console.error("Failed to fetch pets:", error);
@@ -49,7 +59,7 @@ export const Pets = () => {
   const handleDeletePet = async (id: number) => {
     if (
       window.confirm(
-        "Are you sure you want to delete this pet? This action cannot be undone."
+        t('pets.deleteConfirmation')
       )
     ) {
       try {
@@ -58,16 +68,85 @@ export const Pets = () => {
         await fetchPets();
       } catch (error) {
         console.error("Failed to delete pet:", error);
-        alert("Failed to delete pet. Please try again.");
+        alert(t('pets.failedToDelete'));
       }
     }
   };
+
+  const handlePdfMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setPdfMenuAnchor(event.currentTarget);
+  };
+
+  const handlePdfMenuClose = () => {
+    setPdfMenuAnchor(null);
+  };
+
+  const handleDownloadAllPetsPDF = async () => {
+    try {
+      setPdfLoading(true);
+      const tasks = await getTasks();
+      
+      const petsData: PetData[] = pets.map(pet => ({
+        pet,
+        tasks: tasks.filter(task => task.petIds.includes(pet.id!))
+      }));
+
+      await generateAndDownloadMultiPetPDF(petsData);
+    } catch (error) {
+      console.error("Failed to generate PDF:", error);
+      alert(t('errors.generalError'));
+    } finally {
+      setPdfLoading(false);
+      handlePdfMenuClose();
+    }
+  };
+
+  const handleDownloadSelectedPetsPDF = () => {
+    setShowPetSelection(true);
+    handlePdfMenuClose();
+  };
+
+  const handlePetSelectionToggle = (petId: number) => {
+    setSelectedPetsForPDF(prev => 
+      prev.includes(petId) 
+        ? prev.filter(id => id !== petId)
+        : [...prev, petId]
+    );
+  };
+
+  const handleConfirmSelectedPetsPDF = async () => {
+    if (selectedPetsForPDF.length === 0) {
+      alert(t('pets.selectAtLeastOnePet'));
+      return;
+    }
+
+    try {
+      setPdfLoading(true);
+      const tasks = await getTasks();
+      
+      const selectedPets = pets.filter(pet => selectedPetsForPDF.includes(pet.id!));
+      const petsData: PetData[] = selectedPets.map(pet => ({
+        pet,
+        tasks: tasks.filter(task => task.petIds.includes(pet.id!))
+      }));
+
+      await generateAndDownloadMultiPetPDF(petsData);
+      setShowPetSelection(false);
+      setSelectedPetsForPDF([]);
+    } catch (error) {
+      console.error("Failed to generate PDF:", error);
+      alert(t('errors.generalError'));
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
 
   const filteredPets = pets.filter(
     (pet) =>
       (pet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         pet.breed.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (selectedType === "All" || (pet.type || pet.breedType) === selectedType)
+      (selectedType === t('pets.all') || (pet.type || pet.breedType) === selectedType)
   );
 
   let content;
@@ -128,15 +207,25 @@ export const Pets = () => {
         }}
       >
         <Typography variant="h4" component="h1">
-          My Pets
+          {t('pets.myPets')}
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleAddPet}
-        >
-          Add Pet
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant="outlined"
+            startIcon={pdfLoading ? <CircularProgress size={20} /> : <DownloadIcon />}
+            onClick={handlePdfMenuOpen}
+            disabled={pets.length === 0 || pdfLoading}
+          >
+            {t('pets.downloadPDF')}
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleAddPet}
+          >
+            {t('pets.addPet')}
+          </Button>
+        </Box>
       </Box>
 
       <PetsToolbar
@@ -150,6 +239,74 @@ export const Pets = () => {
       />
 
       {content}
+
+      {/* PDF Download Menu */}
+      <Menu
+        anchorEl={pdfMenuAnchor}
+        open={Boolean(pdfMenuAnchor)}
+        onClose={handlePdfMenuClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'left',
+        }}
+      >
+        <MenuItem onClick={handleDownloadAllPetsPDF} disabled={pdfLoading}>
+          <ListItemIcon>
+            <PdfIcon />
+          </ListItemIcon>
+          <ListItemText primary={t('pets.downloadAllPets')} />
+        </MenuItem>
+        <MenuItem onClick={handleDownloadSelectedPetsPDF} disabled={pdfLoading || filteredPets.length === 0}>
+          <ListItemIcon>
+            <PdfIcon />
+          </ListItemIcon>
+          <ListItemText primary={t('pets.downloadSelectedPets')} />
+        </MenuItem>
+      </Menu>
+
+      {/* Pet Selection Modal */}
+      <Dialog open={showPetSelection} onClose={() => setShowPetSelection(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('pets.selectPetsForPDF')}</DialogTitle>
+        <DialogContent>
+          <List>
+            {pets.map((pet) => (
+              <ListItem key={pet.id} disablePadding>
+                <ListItemButton
+                  onClick={() => handlePetSelectionToggle(pet.id!)}
+                  dense
+                >
+                  <MuiListItemIcon>
+                    <Checkbox
+                      checked={selectedPetsForPDF.includes(pet.id!)}
+                      onChange={() => handlePetSelectionToggle(pet.id!)}
+                    />
+                  </MuiListItemIcon>
+                  <MuiListItemText 
+                    primary={pet.name}
+                    secondary={`${pet.breed} • ${pet.gender}`}
+                  />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowPetSelection(false)}>
+            {t('common.cancel')}
+          </Button>
+          <Button 
+            onClick={handleConfirmSelectedPetsPDF} 
+            variant="contained"
+            disabled={selectedPetsForPDF.length === 0 || pdfLoading}
+          >
+            {pdfLoading ? <CircularProgress size={20} /> : t('pets.downloadSelectedPets')}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

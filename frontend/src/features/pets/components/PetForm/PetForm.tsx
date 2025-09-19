@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useAuth } from "../../../../contexts/AuthContext";
+import { useLocalization } from "../../../../contexts/LocalizationContext";
 import {
   Box,
   Card,
@@ -23,9 +24,10 @@ import { PetBasicInfoForm } from "../../../../components/pets/PetBasicInfoForm";
 import { PetDetailsForm } from "../../../../components/pets/PetDetailsForm";
 import { PetMedicalInfo } from "../../../../components/pets/PetMedicalInfo";
 import { FormActionButtons } from "../../../../components/pets/FormActionButtons";
+import { BreedInfoCard } from "../../../../components/pets/BreedInfoCard";
 
 // Import API services
-import { createPet, updatePet, getPet } from "../../../../services/pets/petService";
+import { createPet, updatePet, getPet, uploadPetImage } from "../../../../services/pets/petService";
 
 // Import types
 import type { Pet, PetType, PetGender } from "../../../../types/pets/pet";
@@ -45,7 +47,14 @@ const schema = z.object({
   breed: z.string().min(1, "Please select or enter a breed"),
   gender: z.string().min(1, "Please select a gender"),
   ageType: z.enum(["birthday", "age"]),
-  birthDate: z.date().optional(),
+  birthDate: z.date()
+    .optional()
+    .refine((date) => {
+      if (!date) return true; // Optional field
+      const today = new Date();
+      today.setHours(23, 59, 59, 999); // End of today
+      return date <= today;
+    }, "Birth date cannot be in the future"),
   age: z.number().min(0).max(30).optional(),
   weight: z
     .number({
@@ -81,11 +90,15 @@ export const PetForm = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
   const { forceLogout } = useAuth();
+  const { t } = useLocalization();
   const isEditing = !!id;
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [breeds, setBreeds] = useState<string[]>([]);
   const [loadingBreeds, setLoadingBreeds] = useState(false);
   const [breedError, setBreedError] = useState<string | null>(null);
+  const [petData, setPetData] = useState<Pet | null>(null);
 
   const {
     control,
@@ -185,6 +198,7 @@ export const PetForm = () => {
       const fetchPet = async () => {
         try {
           const petData = await getPet(parseInt(id));
+          setPetData(petData); // Store pet data for later use
           
           reset({
             name: petData.name,
@@ -205,12 +219,15 @@ export const PetForm = () => {
             image: petData.imageUrl,
           });
 
+          // Set image preview for display
           if (petData.imageUrl) {
-            setImagePreview(petData.imageUrl);
+            setImagePreview(petData.imageUrl || null);
+          } else {
+            setImagePreview(null);
           }
         } catch (error) {
           console.error("Error loading pet:", error);
-          alert("Failed to load pet data for editing.");
+          alert(t('pets.failedToLoad'));
         }
       };
       fetchPet();
@@ -219,16 +236,16 @@ export const PetForm = () => {
 
   const handleImageUpload = (file: File | null) => {
     if (file) {
+      setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         const imageUrl = reader.result as string;
         setImagePreview(imageUrl);
-        setValue("image", imageUrl);
       };
       reader.readAsDataURL(file);
     } else {
+      setImageFile(null);
       setImagePreview(null);
-      setValue("image", "");
     }
   };
 
@@ -247,7 +264,7 @@ export const PetForm = () => {
         microchipNumber: data.microchipNumber,
         isNeutered: data.isNeutered,
         notes: data.notes,
-        imageUrl: data.image,
+        imageUrl: imagePreview || petData?.imageUrl || "", // Preserve existing image or use new one
         // Health and behavior issues are already arrays
         healthIssues: Array.isArray(data.healthIssues) ? data.healthIssues : (data.healthIssues ? [data.healthIssues] : []),
         behaviorIssues: Array.isArray(data.behaviorIssues) ? data.behaviorIssues : (data.behaviorIssues ? [data.behaviorIssues] : []),
@@ -262,12 +279,31 @@ export const PetForm = () => {
 
       console.log("Submitting pet:", formattedData);
       
+      let petId: number;
       if (isEditing && id) {
-        await updatePet(parseInt(id), formattedData);
-        alert("Pet updated successfully!");
+        const updatedPet = await updatePet(parseInt(id), formattedData);
+        petId = updatedPet.id;
+        alert(t('pets.petUpdated'));
       } else {
-        await createPet(formattedData);
-        alert("Pet created successfully!");
+        const newPet = await createPet(formattedData);
+        petId = newPet.id;
+        alert(t('pets.petCreated'));
+      }
+
+      // Upload image if provided
+      if (imageFile) {
+        try {
+          setIsUploadingImage(true);
+          const uploadResponse = await uploadPetImage(petId, imageFile);
+          console.log("Image uploaded successfully:", uploadResponse);
+          // The backend already updates the pet's photo URI, no need to call updatePet again
+        } catch (uploadError) {
+          console.error("Error uploading image:", uploadError);
+          alert(t('pets.imageUploadFailed'));
+          // Don't fail the entire operation if image upload fails
+        } finally {
+          setIsUploadingImage(false);
+        }
       }
 
       navigate("/pets");
@@ -276,19 +312,19 @@ export const PetForm = () => {
       
       // Handle authentication errors
       if (error?.isAuthError) {
-        await forceLogout("Your session has expired. Please log in again.");
+        await forceLogout(t('pets.sessionExpired'));
         navigate("/auth");
         return;
       }
       
-      alert(`Error saving pet: ${error.message || "Unknown error occurred"}`);
+      alert(t('pets.errorSavingPet', { error: error.message || "Unknown error occurred" }));
     }
   };
 
   const handleDelete = () => {
     if (
       window.confirm(
-        "Are you sure you want to delete this pet? This action cannot be undone."
+        t('pets.deleteConfirmation')
       )
     ) {
       try {
@@ -321,17 +357,17 @@ export const PetForm = () => {
               <ArrowBackIcon />
             </IconButton>
             <Typography variant="h4" component="h1">
-              {isEditing ? "Edit Pet" : "Add New Pet"}
+              {isEditing ? t('pets.editPet') : t('pets.addNewPet')}
             </Typography>
           </Box>
         </Box>
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={3}>
-            {/* Left column - Image upload */}
+            {/* Left column - Image upload and breed info */}
             <Grid size={{ xs: 12, md: 4, lg: 3 }}>
               <Card>
-                <CardHeader title="Pet Photo" />
+                <CardHeader title={t('pets.petPhoto')} />
                 <Divider />
                 <CardContent>
                   <PetImageUpload
@@ -340,6 +376,38 @@ export const PetForm = () => {
                     onRemove={() => handleImageUpload(null)}
                     disabled={isSubmitting}
                   />
+                  
+                  {/* Breed Information */}
+                  <Box sx={{ mt: 3 }}>
+                    <Typography variant="h6" gutterBottom>
+                      {t('pets.breedInfo')}
+                    </Typography>
+                    {watch('type') && watch('type') !== 'other' && watch('breed') && (
+                      <BreedInfoCard
+                        petType={watch('type')}
+                        breedName={watch('breed')}
+                        currentWeight={watch('weight')}
+                        weightUnit={watch('weightUnit') as 'kg' | 'lb'}
+                      />
+                    )}
+                    {(!watch('type') || watch('type') === 'other' || !watch('breed')) && (
+                      <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                          <strong>{t('pets.type')}:</strong> {watch('type') || t('pets.notSpecified')}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                          <strong>{t('pets.breed')}:</strong> {watch('breed') || t('pets.notSpecified')}
+                        </Typography>
+                        {watch('type') && watch('type') !== 'other' && (
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 1, p: 1, bgcolor: 'primary.50', borderRadius: 1 }}>
+                            💡 <strong>Tip:</strong> {watch('type') === 'dog' 
+                              ? 'Dogs need regular exercise, training, and socialization. Consider their energy level and size when planning activities.'
+                              : 'Cats are independent but need mental stimulation, proper nutrition, and regular veterinary care.'}
+                          </Typography>
+                        )}
+                      </Box>
+                    )}
+                  </Box>
                 </CardContent>
               </Card>
             </Grid>
@@ -347,7 +415,7 @@ export const PetForm = () => {
             {/* Right column - Form fields */}
             <Grid size={{ xs: 12, md: 8, lg: 9 }}>
               <Card>
-                <CardHeader title="Basic Information" />
+                                  <CardHeader title={t('pets.basicInformation')} />
                 <Divider />
                 <CardContent>
                   <PetBasicInfoForm
@@ -364,7 +432,7 @@ export const PetForm = () => {
 
               <Box mt={3}>
                 <Card>
-                  <CardHeader title="Physical Details" />
+                  <CardHeader title={t('pets.physicalDetails')} />
                   <Divider />
                   <CardContent>
                     <PetDetailsForm
@@ -378,7 +446,7 @@ export const PetForm = () => {
 
               <Box mt={3}>
                 <Card>
-                  <CardHeader title="Medical Information" />
+                  <CardHeader title={t('pets.medicalInformation')} />
                   <Divider />
                   <CardContent>
                     <PetMedicalInfo
@@ -394,10 +462,10 @@ export const PetForm = () => {
               <Box mt={3}>
                 <FormActionButtons
                   isEditing={isEditing}
-                  isSubmitting={isSubmitting}
+                  isSubmitting={isSubmitting || isUploadingImage}
                   onCancel={handleCancel}
                   onDelete={handleDelete}
-                  submitButtonText={isEditing ? "Update Pet" : "Add Pet"}
+                  submitButtonText={isUploadingImage ? t('pets.uploadingImage') : (isEditing ? t('pets.updatePet') : t('pets.addPet'))}
                 />
               </Box>
             </Grid>

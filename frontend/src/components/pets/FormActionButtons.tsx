@@ -1,5 +1,6 @@
 import { Box, Button } from '@mui/material';
 import { Save as SaveIcon, Cancel as CancelIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { useLocalization } from '../../contexts/LocalizationContext';
 
 interface FormActionButtonsProps {
   isEditing: boolean;
@@ -17,11 +18,17 @@ export const FormActionButtons = ({
   isSubmitting,
   onCancel,
   onDelete,
-  deleteButtonText = 'Delete',
-  submitButtonText = 'Save Changes',
-  cancelButtonText = 'Cancel',
+  deleteButtonText,
+  submitButtonText,
+  cancelButtonText,
   showDelete = true,
 }: FormActionButtonsProps) => {
+  const { t } = useLocalization();
+  
+  // Set default values after getting the t function
+  const defaultDeleteText = deleteButtonText || t('common.delete');
+  const defaultSubmitText = submitButtonText || t('common.save');
+  const defaultCancelText = cancelButtonText || t('common.cancel');
   return (
     <Box
       sx={{
@@ -44,7 +51,7 @@ export const FormActionButtons = ({
             disabled={isSubmitting}
             sx={{ mr: 2 }}
           >
-            {deleteButtonText}
+            {defaultDeleteText}
           </Button>
         )}
       </Box>
@@ -57,7 +64,7 @@ export const FormActionButtons = ({
           sx={{ mr: 2 }}
           startIcon={<CancelIcon />}
         >
-          {cancelButtonText}
+          {defaultCancelText}
         </Button>
         <Button
           type="submit"
@@ -66,7 +73,7 @@ export const FormActionButtons = ({
           disabled={isSubmitting}
           startIcon={<SaveIcon />}
         >
-          {isSubmitting ? 'Saving...' : submitButtonText}
+                      {isSubmitting ? t('pets.saving') : defaultSubmitText}
         </Button>
       </Box>
     </Box>

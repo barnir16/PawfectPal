@@ -10,6 +10,7 @@ import {
   Typography,
   IconButton,
 } from "@mui/material";
+import { useLocalization } from "../../../contexts/LocalizationContext";
 import { styled } from "@mui/material/styles";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -50,6 +51,7 @@ export const TaskList = ({
   onTaskToggle,
   onTaskClick,
 }: TaskListProps) => {
+  const { t } = useLocalization();
   const handleToggle =
     (taskId: number | string, currentStatus: boolean) =>
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,7 +78,7 @@ export const TaskList = ({
   if (tasks.length === 0) {
     return (
       <Box sx={{ py: 4, textAlign: "center" }}>
-        <Typography color="text.secondary">No tasks found</Typography>
+        <Typography color="text.secondary">{t('tasks.noTasks')}</Typography>
       </Box>
     );
   }
@@ -135,9 +137,9 @@ export const TaskList = ({
                   <Typography variant="caption" component="span" sx={{ mr: 2 }}>
                     {new Date(task.dueDate).toLocaleDateString()}
                   </Typography>
-                  <Typography variant="caption" component="span" sx={{ mr: 2 }}>
-                    Priority: {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
-                  </Typography>
+                                  <Typography variant="caption" component="span" sx={{ mr: 2 }}>
+                  {t('tasks.priority')}: {t(`tasks.${task.priority}`)}
+                </Typography>
                   <Typography variant="caption" component="span">
                     {task.pet}
                   </Typography>

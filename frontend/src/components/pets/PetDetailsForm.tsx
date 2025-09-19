@@ -11,6 +11,7 @@ import {
   ColorLens as ColorIcon,
 } from "@mui/icons-material";
 import type { PetFormData } from "./../../features/pets/components/PetForm/PetForm.tsx";
+import { useLocalization } from "../../contexts/LocalizationContext";
 
 interface PetDetailsFormProps {
   control: Control<PetFormData>;
@@ -23,6 +24,8 @@ export const PetDetailsForm = ({
   errors,
   isSubmitting = false,
 }: PetDetailsFormProps) => {
+  const { t } = useLocalization();
+  
   return (
     <Grid container spacing={3}>
       <Grid size={{ xs: 12, sm: 6, md: 4 }}>
@@ -34,9 +37,9 @@ export const PetDetailsForm = ({
               {...field}
               fullWidth
               type="number"
-              label="Weight (optional)"
+              label={t('pets.weightOptional')}
               error={!!errors.weight}
-              helperText={errors.weight?.message || "Enter weight greater than 0"}
+              helperText={errors.weight?.message || t('pets.enterWeightGreaterThan0')}
               disabled={isSubmitting}
               inputProps={{ 
                 min: 0.1, 
@@ -63,8 +66,8 @@ export const PetDetailsForm = ({
                           }}
                           disabled={isSubmitting}
                         >
-                          <option value="kg">kg</option>
-                          <option value="lb">lb</option>
+                          <option value="kg">{t('pets.kg')}</option>
+                          <option value="lb">{t('pets.pounds')}</option>
                         </select>
                       )}
                     />
@@ -91,7 +94,7 @@ export const PetDetailsForm = ({
             <TextField
               {...field}
               fullWidth
-              label="Color/Markings"
+              label={t('pets.colorMarkings')}
               error={!!errors.color}
               helperText={errors.color?.message}
               disabled={isSubmitting}
@@ -115,7 +118,7 @@ export const PetDetailsForm = ({
             <TextField
               {...field}
               fullWidth
-              label="Microchip Number"
+              label={t('pets.microchipNumber')}
               error={!!errors.microchipNumber}
               helperText={errors.microchipNumber?.message}
               disabled={isSubmitting}
@@ -137,7 +140,7 @@ export const PetDetailsForm = ({
                   disabled={isSubmitting}
                 />
               }
-              label="Spayed/Neutered"
+              label={t('pets.spayedNeutered')}
             />
           )}
         />

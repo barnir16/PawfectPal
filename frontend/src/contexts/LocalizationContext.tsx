@@ -21,10 +21,12 @@ interface LocalizationProviderProps {
 
 export const LocalizationProvider: React.FC<LocalizationProviderProps> = ({ children }) => {
   const [currentLanguage, setCurrentLanguageState] = useState<Language>('en');
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const savedLanguage = LocaleHelper.getCurrentLanguage() as Language;
     setCurrentLanguageState(savedLanguage);
+    setIsInitialized(true);
   }, []);
 
   const setLanguage = (language: Language) => {
@@ -72,6 +74,10 @@ export const LocalizationProvider: React.FC<LocalizationProviderProps> = ({ chil
     t,
     getSupportedLanguages,
   };
+
+  if (!isInitialized) {
+    return null; // Don't render children until initialized
+  }
 
   return (
     <LocalizationContext.Provider value={value}>

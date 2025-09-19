@@ -11,7 +11,12 @@ from routers import (
     user,
     medical_record,
     vaccination,
+    weight_record,
+    weight_goal,
+    ai_simple as ai,
     provider,
+    service_requests,
+    chat,
 )
 
 
@@ -48,7 +53,12 @@ app.include_router(location.router)
 app.include_router(image_upload.router)
 app.include_router(service.router)
 app.include_router(task.router)
+app.include_router(weight_record.router)
+app.include_router(weight_goal.router)
+app.include_router(ai.router)
 app.include_router(provider.router)
+app.include_router(service_requests.router)
+app.include_router(chat.router)
 
 
 @app.get("/")
@@ -64,6 +74,7 @@ def read_root():
             "Image Upload",
             "Service Booking",
             "Vaccine Tracking",
+            "Weight Tracking",
             "AI Assistant",
         ],
     }

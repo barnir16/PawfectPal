@@ -5,7 +5,8 @@ import { login, register } from '../services/auth/authService';
 import { getPets, createPet, updatePet, deletePet } from '../services/pets/petService';
 import { getTasks, createTask, updateTask, deleteTask } from '../services/tasks/taskService';
 import { getServices, createService, updateServiceStatus } from '../services/services/serviceService';
-import { getVaccines, getAgeRestrictions } from '../services/vaccines/vaccineService';
+import { getAllVaccinations } from '../services/vaccines/vaccineService';
+import { getAgeRestrictions } from '../services/references/referencesService';
 import { StorageHelper } from './StorageHelper';
 import { ApiKeyManager } from './ApiKeyManager';
 
@@ -289,7 +290,7 @@ private static async testTaskManagement(): Promise<void> {
   private static async testVaccineData(): Promise<void> {
     try {
       try {
-        const vaccines = await getVaccines();
+        const vaccines = await getAllVaccinations();
         this.addTestResult('Get Vaccines', 'PASS', `Retrieved ${vaccines.length} vaccines`);
       } catch (error) {
         this.addTestResult('Get Vaccines', 'FAIL', `Get vaccines failed: ${(error as Error).message}`);

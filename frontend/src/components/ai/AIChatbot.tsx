@@ -33,11 +33,28 @@ import {
   Chat as ChatIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useLocalization } from '../../contexts/LocalizationContext';
 
-import { aiChatService, type ChatMessage, type SuggestedAction } from '../../services/ai/aiChatService';
+import { aiService } from '../../services/ai/aiService';
 import { getPets } from '../../services/pets/petService';
 import { getTasks } from '../../services/tasks/taskService';
-import type { Pet } from '../../types/pets/pet';
+import type { Pet } from '../../types/pet';
+
+// Simplified types for the new AI service
+interface ChatMessage {
+  id: string;
+  content: string;
+  isUser: boolean;
+  timestamp: Date;
+  suggestedActions?: SuggestedAction[];
+}
+
+interface SuggestedAction {
+  id: string;
+  type: string;
+  label: string;
+  description: string;
+}
 
 interface AIChatbotProps {
   isOpen: boolean;
@@ -52,16 +69,33 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
 }) => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const { t } = useLocalization();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [pets, setPets] = useState<Pet[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Generate unique message ID
+  const generateMessageId = () => {
+    return `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  };
+
+  // Simple markdown renderer for basic formatting
+  const renderMarkdown = (text: string) => {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+      .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
+      .replace(/\n/g, '<br />'); // Line breaks
+  };
+
   // Initialize chatbot context
   useEffect(() => {
     const initializeChat = async () => {
       try {
+        // Reset conversation history when opening chat
+        aiService.resetConversation();
+        
         const [petsData, tasksData] = await Promise.all([
           getPets(),
           getTasks()
@@ -72,25 +106,29 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
         console.log('🤖 Chatbot: Selected pet:', selectedPet);
         
         setPets(petsData);
-        await aiChatService.initializeContext(petsData, tasksData);
         
         // Add welcome message
         const welcomeMessage: ChatMessage = {
           id: 'welcome',
-          content: `Hi! I'm your AI pet care assistant. I can help you with health concerns, behavior issues, feeding questions, exercise planning, grooming advice, and creating care reminders. ${selectedPet ? `I see you're asking about ${selectedPet.name}!` : 'How can I help you today?'}`,
+          content: `Hi! I'm your AI pet care assistant. I can help you with: Health concerns, Behavior issues, Feeding questions, Exercise planning, Grooming advice, Care reminders. Ask me about your pet's care...`,
           isUser: false,
           timestamp: new Date(),
-          suggestedActions: aiChatService.getQuickSuggestions(selectedPet).map((suggestion, index) => ({
-            id: `suggestion-${index}`,
-            type: 'view_tips' as const,
-            label: suggestion,
-            description: ''
-          }))
+          suggestedActions: [
+            {
+              id: 'exercise_guide',
+              type: 'view_tips',
+              label: 'Exercise Guidelines',
+              description: 'Get exercise recommendations for all pets'
+            },
+            {
+              id: 'health_check',
+              type: 'view_tips',
+              label: 'Health Assessment',
+              description: 'Review your pet\'s health status'
+            }
+          ]
         };
         setMessages([welcomeMessage]);
-        
-        // Debug: Check context after initialization
-        console.log('🤖 Chatbot: Context after initialization:', aiChatService.getCurrentContext());
       } catch (error) {
         console.error('Error initializing chat:', error);
       }
@@ -116,9 +154,26 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
     try {
       console.log('🤖 Chatbot: Sending message with selectedPet:', selectedPet);
       console.log('🤖 Chatbot: Current pets state:', pets);
-      const response = await aiChatService.sendMessage(userMessage, selectedPet);
+      const response = await aiService.sendMessage(userMessage, pets, selectedPet);
       console.log('🤖 Chatbot: AI response:', response);
-      setMessages(aiChatService.getConversationHistory());
+      // Add user message
+      const userMessageObj: ChatMessage = {
+        id: generateMessageId(),
+        content: userMessage,
+        isUser: true,
+        timestamp: new Date()
+      };
+      
+      // Add AI response
+      const aiMessageObj: ChatMessage = {
+        id: generateMessageId(),
+        content: response.message,
+        isUser: false,
+        timestamp: new Date(),
+        suggestedActions: response.suggestedActions
+      };
+      
+      setMessages(prev => [...prev, userMessageObj, aiMessageObj]);
     } catch (error) {
       console.error('Error sending message:', error);
     } finally {
@@ -159,13 +214,6 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
     setTimeout(() => handleSendMessage(), 100);
   };
 
-  const handleDebugContext = () => {
-    console.log('🤖 Chatbot: Debug - Current context:', aiChatService.getCurrentContext());
-    console.log('🤖 Chatbot: Debug - Has pets:', aiChatService.hasPets());
-    console.log('🤖 Chatbot: Debug - Pet count:', aiChatService.getPetCount());
-    console.log('🤖 Chatbot: Debug - Current pets state:', pets);
-    console.log('🤖 Chatbot: Debug - Selected pet:', selectedPet);
-  };
 
   const getActionIcon = (type: SuggestedAction['type']) => {
     switch (type) {
@@ -220,7 +268,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
                 <PetsIcon />
               </Avatar>
               <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                PawfectPal AI Assistant
+                {t('chatbot.title')}
               </Typography>
               <IconButton color="inherit" onClick={onClose} size="small">
                 <CloseIcon />
@@ -277,9 +325,11 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
                         maxWidth: '100%',
                       }}
                     >
-                      <Typography variant="body2">
-                        {message.content}
-                      </Typography>
+                      <Typography 
+                        variant="body2" 
+                        component="div"
+                        dangerouslySetInnerHTML={{ __html: renderMarkdown(message.content) }}
+                      />
                     </Paper>
 
                     {/* Suggested Actions */}
@@ -313,7 +363,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
                   </Avatar>
                   <Paper sx={{ p: 2, borderRadius: 2 }}>
                     <Typography variant="body2" color="text.secondary">
-                      Thinking...
+                      {t('ai.thinking')}
                     </Typography>
                   </Paper>
                 </Box>
@@ -328,7 +378,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
               <TextField
                 fullWidth
                 size="small"
-                placeholder="Ask me about your pet's care..."
+                placeholder={t('ai.askAboutPetCare')}
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={(e) => {
@@ -348,15 +398,6 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
               >
                 <SendIcon />
               </IconButton>
-              {/* Debug button - remove after testing */}
-              <IconButton
-                color="secondary"
-                onClick={handleDebugContext}
-                size="small"
-                title="Debug Context"
-              >
-                <BotIcon />
-              </IconButton>
             </Box>
           </Box>
         </Paper>
@@ -368,16 +409,18 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
 interface ChatToggleButtonProps {
   onClick: () => void;
   unreadCount?: number;
+  t: (key: string) => string;
 }
 
 export const ChatToggleButton: React.FC<ChatToggleButtonProps> = ({
   onClick,
   unreadCount = 0,
+  t,
 }) => {
   return (
     <Fab
       color="primary"
-      aria-label="Chat with AI assistant"
+      aria-label={t('ai.title')}
       onClick={onClick}
       sx={{
         position: 'fixed',
