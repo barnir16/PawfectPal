@@ -11,9 +11,7 @@ router = APIRouter(prefix="/providers", tags=["providers"])
 @router.get("/{provider_id}", response_model=UserRead)
 def get_provider_by_id(provider_id: int, db: Session = Depends(get_db)):
     provider = (
-        db.query(UserORM)
-        .filter(UserORM.id == provider_id, UserORM.is_provider == True)
-        .first()
+        db.query(UserORM).filter(UserORM.id == provider_id, UserORM.is_provider).first()
     )
     if not provider:
         raise HTTPException(status_code=404, detail="Provider not found")
