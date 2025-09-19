@@ -8,9 +8,12 @@ import {
   Warning as WarningIcon,
 } from "@mui/icons-material";
 import { differenceInYears, differenceInMonths, format } from "date-fns";
+import { useState, useEffect } from "react";
+import { getPetVaccinations } from "../../services/vaccines/vaccineService";
 
 interface PetStatsProps {
   pet: {
+    id?: number;
     name?: string;
     birthDate?: string | Date;
     weightKg?: number;
@@ -25,12 +28,41 @@ interface PetStatsProps {
 
 export const PetStats = ({ pet }: PetStatsProps) => {
   const theme = useTheme();
-  const { name, birthDate, weightKg, weight_kg, weightUnit, lastVetVisit, nextVetVisit, type, breed } = pet;
+  const { id, name, birthDate, weightKg, weight_kg, weightUnit, lastVetVisit, nextVetVisit, type, breed } = pet;
   const petName = name || 'Your pet';
+  const [nextVaccination, setNextVaccination] = useState<string | null>(null);
+  const [isLoadingVaccines, setIsLoadingVaccines] = useState(false);
 
   // Get the actual weight value
   const currentWeight = weightKg || weight_kg || 0;
   const weightUnitDisplay = weightUnit || 'kg';
+
+  // Fetch next vaccination
+  useEffect(() => {
+    const fetchNextVaccination = async () => {
+      if (!id) return;
+      
+      try {
+        setIsLoadingVaccines(true);
+        const vaccinationData = await getPetVaccinations(id);
+        
+        // Find the next upcoming vaccination
+        const upcomingVaccines = vaccinationData.vaccinations
+          .filter((v: any) => v.next_due_date && !v.is_completed)
+          .sort((a: any, b: any) => new Date(a.next_due_date).getTime() - new Date(b.next_due_date).getTime());
+        
+        if (upcomingVaccines.length > 0) {
+          setNextVaccination(upcomingVaccines[0].next_due_date);
+        }
+      } catch (error) {
+        console.log('Error fetching vaccination data:', error);
+      } finally {
+        setIsLoadingVaccines(false);
+      }
+    };
+
+    fetchNextVaccination();
+  }, [id]);
 
   // Calculate age
   const calculateAge = (birthDate: string | Date) => {
@@ -38,7 +70,20 @@ export const PetStats = ({ pet }: PetStatsProps) => {
     
     try {
       const today = new Date();
-      const birth = typeof birthDate === "string" ? new Date(birthDate) : birthDate;
+      let birth;
+      
+      if (typeof birthDate === "string") {
+        // For ISO date strings like '2025-01-01', ensure we parse as local time
+        if (birthDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          // Parse as local date to avoid timezone issues
+          const [year, month, day] = birthDate.split('-').map(Number);
+          birth = new Date(year, month - 1, day); // month is 0-indexed
+        } else {
+          birth = new Date(birthDate);
+        }
+      } else {
+        birth = birthDate;
+      }
 
       const years = differenceInYears(today, birth);
       const months = differenceInMonths(today, birth) % 12;
@@ -163,10 +208,20 @@ export const PetStats = ({ pet }: PetStatsProps) => {
     {
       icon: <EventIcon color="primary" />,
       label: "Next Vaccination",
-      value: nextVetVisit
+      value: isLoadingVaccines 
+        ? "Loading..." 
+        : nextVaccination
+        ? format(new Date(nextVaccination), "MMM d, yyyy")
+        : nextVetVisit
         ? format(new Date(nextVetVisit), "MMM d, yyyy")
         : "Not scheduled",
-      description: nextVetVisit ? "Due soon" : "No upcoming vaccinations",
+      description: isLoadingVaccines 
+        ? "Loading vaccination data..." 
+        : nextVaccination 
+        ? "Due soon" 
+        : nextVetVisit 
+        ? "Due soon" 
+        : "No upcoming vaccinations",
     },
   ];
 

@@ -99,7 +99,16 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
           startIcon={<TranslateIcon />}
           size="small"
           variant="outlined"
-          sx={{ minWidth: 'auto', px: 1 }}
+          sx={{ 
+            minWidth: 'auto', 
+            px: 1,
+            color: theme.palette.mode === 'dark' ? theme.palette.common.white : theme.palette.text.primary,
+            borderColor: theme.palette.mode === 'dark' ? theme.palette.common.white : theme.palette.divider,
+            '&:hover': {
+              borderColor: theme.palette.mode === 'dark' ? theme.palette.grey[300] : theme.palette.primary.main,
+              backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)'
+            }
+          }}
         >
           {currentLangInfo?.flag}
         </Button>

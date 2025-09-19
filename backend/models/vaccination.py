@@ -1,43 +1,30 @@
-from __future__ import annotations
-from sqlalchemy import (
-    Integer,
-    String,
-    Text,
-    Date,
-    DateTime,
-    ForeignKey,
-    Boolean,
-)
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Column, Integer, String, Date, Boolean, Text, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 from .base import Base
-from typing import Optional
-from datetime import date, datetime
-
 
 class VaccinationORM(Base):
-    """Vaccination record entity for tracking pet vaccinations"""
-
     __tablename__ = "vaccinations"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    pet_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("pets.id"), nullable=False
-    )
-    vaccine_name: Mapped[str] = mapped_column(String, nullable=False)
-    date_administered: Mapped[date] = mapped_column(Date, nullable=False)
-    next_due_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    batch_number: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    manufacturer: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    veterinarian: Mapped[str] = mapped_column(String, nullable=False)
-    clinic: Mapped[str] = mapped_column(String, nullable=False)
-    dose_number: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # For multi-dose vaccines
-    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    is_completed: Mapped[bool] = mapped_column(Boolean, default=True)
-    reminder_sent: Mapped[bool] = mapped_column(Boolean, default=False)
     
-    # Timestamps
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    # Relationships
-    pet: Mapped["PetORM"] = relationship("PetORM", back_populates="vaccinations", lazy="selectin")
+    id = Column(Integer, primary_key=True, index=True)
+    pet_id = Column(Integer, ForeignKey("pets.id"), nullable=False)
+    vaccine_name = Column(String(255), nullable=False)
+    vaccine_type = Column(String(100), default="Core")  # Core, Non-Core, Optional
+    date_administered = Column(Date, nullable=False)
+    next_due_date = Column(Date)
+    batch_number = Column(String(100))
+    manufacturer = Column(String(255))
+    veterinarian = Column(String(255), nullable=False)
+    clinic = Column(String(255), nullable=False)
+    dose_number = Column(Integer, default=1)
+    notes = Column(Text)
+    is_completed = Column(Boolean, default=True)
+    reminder_sent = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationship
+    pet = relationship("PetORM", back_populates="vaccinations")
+    
+    def __repr__(self):
+        return f"<Vaccination(id={self.id}, pet_id={self.pet_id}, vaccine_name='{self.vaccine_name}')>"

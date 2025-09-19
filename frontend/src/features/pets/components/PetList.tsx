@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { useLocalization } from "../../../contexts/LocalizationContext";
 import type { Pet } from "../../../types/pets/pet";
 import { getPets, deletePet } from "../../../services/pets/petService";
 
@@ -20,14 +21,17 @@ export default function PetListScreen() {
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { t } = useLocalization();
 
   const fetchPets = async () => {
     try {
+      console.log('🔄 Fetching pets...');
       const fetchedPets = await getPets();
+      console.log('🔄 Fetched pets:', fetchedPets);
       setPets(fetchedPets);
     } catch (error) {
       console.log(error);
-      alert("Failed to fetch pets");
+      alert(t('pets.failedToFetch'));
     } finally {
       setLoading(false);
     }
@@ -38,45 +42,145 @@ export default function PetListScreen() {
   }, []);
 
   const handleDeletePet = async (pet: Pet) => {
-    if (window.confirm(`Are you sure you want to delete ${pet.name}?`)) {
+    if (window.confirm(t('pets.deleteConfirmation').replace('{name}', pet.name))) {
       try {
         await deletePet(pet.id!);
-        alert("Pet deleted successfully");
+        alert(t('pets.petDeleted'));
         fetchPets();
       } catch (error) {
         console.log(error);
-        alert("Failed to delete pet");
+        alert(t('pets.failedToDelete'));
       }
     }
   };
 
   const calculateAge = (pet: Pet) => {
-    // First try to use the age field directly
-    if (pet.age !== undefined && pet.age !== null) {
-      return `${pet.age} years`;
+    console.log('🔍 calculateAge called for:', pet.name, 'at', new Date().toISOString());
+    
+    // Debug logging for Nicole
+    if (pet.name === 'Nicole') {
+      console.log('🐕 Nicole age calculation debug:', {
+        name: pet.name,
+        age: pet.age,
+        birthDate: pet.birthDate,
+        birth_date: pet.birth_date,
+        isBirthdayGiven: pet.isBirthdayGiven,
+        is_birthday_given: pet.is_birthday_given,
+        ageType: pet.age !== undefined ? 'age field' : 'birthdate',
+        fullPetObject: pet,
+        timestamp: new Date().toISOString()
+      });
     }
     
-    // Then try to calculate from birth date
+    // Always try birthdate first if available - it's more accurate
     const birthDate = pet.birthDate || pet.birth_date;
     if (birthDate) {
       try {
-        const birth = new Date(birthDate);
-        if (isNaN(birth.getTime())) return "Unknown age";
-        const today = new Date();
-        const ageInMs = today.getTime() - birth.getTime();
-        const ageInYears = ageInMs / (1000 * 60 * 60 * 24 * 365.25);
-        return `${Math.floor(ageInYears)} years`;
-      } catch {
-        return "Unknown age";
+        // Handle different date formats
+        let birth;
+        if (typeof birthDate === 'string') {
+          // For ISO date strings like '2025-01-01', ensure we parse as local time
+          if (birthDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            // Parse as local date to avoid timezone issues
+            const [year, month, day] = birthDate.split('-').map(Number);
+            birth = new Date(year, month - 1, day); // month is 0-indexed
+            
+            // Debug: Test with hardcoded date for Nicole
+            if (pet.name === 'Nicole') {
+              const testDate = new Date(2025, 0, 1); // January 1, 2025
+              const now = new Date();
+              const testDays = Math.floor((now.getTime() - testDate.getTime()) / (1000 * 60 * 60 * 24));
+              const testMonths = Math.floor(testDays / 30.44);
+              console.log('🧪 Hardcoded test for Nicole:', {
+                testDate: testDate.toISOString(),
+                now: now.toISOString(),
+                testDays,
+                testMonths,
+                shouldBe: '8 months'
+              });
+            }
+          } else {
+            // Try parsing as ISO string first
+            birth = new Date(birthDate);
+            // If that fails, try parsing as DD/MM/YYYY, MM/DD/YYYY, DD.MM.YYYY, or MM.DD.YYYY
+            if (isNaN(birth.getTime()) && (birthDate.includes('/') || birthDate.includes('.'))) {
+              const separator = birthDate.includes('/') ? '/' : '.';
+              const parts = birthDate.split(separator);
+              if (parts.length === 3) {
+                // Try DD/MM/YYYY or DD.MM.YYYY format first
+                birth = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+                if (isNaN(birth.getTime())) {
+                  // Try MM/DD/YYYY or MM.DD.YYYY format
+                  birth = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
+                }
+              }
+            }
+          }
+        } else {
+          birth = new Date(birthDate);
+        }
+        
+        if (isNaN(birth.getTime())) {
+          console.log('Invalid birthdate format:', birthDate);
+          return t('pets.unknownAge');
+        }
+        
+        const now = new Date();
+        const ageInMilliseconds = now.getTime() - birth.getTime();
+        
+        // Calculate age more accurately
+        const ageInDays = Math.floor(ageInMilliseconds / (1000 * 60 * 60 * 24));
+        const ageInMonths = Math.floor(ageInDays / 30.44); // Average days per month
+        const ageInYears = Math.floor(ageInDays / 365.25);
+        
+        // Debug logging for Nicole
+        if (pet.name === 'Nicole') {
+          console.log('🐕 Nicole age calculation result:', {
+            birthDate,
+            parsedBirth: birth.toISOString(),
+            ageInDays,
+            ageInMonths,
+            ageInYears,
+            currentDate: now.toISOString(),
+            timeDiff: ageInMilliseconds,
+            isFuture: ageInDays < 0,
+            finalResult: ageInYears < 1 ? `${Math.max(0, ageInMonths)} ${t('pets.months')}` : `${ageInYears} ${t('pets.years')}`
+          });
+        }
+        
+        // Handle future birthdates
+        if (ageInDays < 0) {
+          return t('pets.futureBirthdate');
+        }
+        
+        if (ageInYears < 1) {
+          // For pets under 1 year, show months
+          const months = Math.max(0, ageInMonths);
+          return `${months} ${t('pets.months')}`;
+        }
+        return `${ageInYears} ${t('pets.years')}`;
+      } catch (error) {
+        console.log('Error calculating age from birthdate:', birthDate, error);
+        return t('pets.unknownAge');
       }
     }
-    return "Unknown age";
+    
+    // Fallback to age field if no birthdate
+    if (pet.age !== undefined && pet.age !== null) {
+      if (pet.age < 1) {
+        const months = Math.floor(pet.age * 12);
+        return `${months} ${t('pets.months')}`;
+      }
+      return `${pet.age} ${t('pets.years')}`;
+    }
+    
+    return t('pets.unknownAge');
   };
 
   const formatWeight = (pet: Pet) => {
     const weight = pet.weightKg || pet.weight_kg;
-    if (!weight) return "Not specified";
-    return `${weight} ${pet.weightUnit || 'kg'}`;
+          if (!weight) return t('pets.notSpecified');
+          return `${weight} ${pet.weightUnit || t('pets.kg')}`;
   };
 
   if (loading) {
@@ -100,22 +204,22 @@ export default function PetListScreen() {
         alignItems="center"
         mb={3}
       >
-        <Typography variant="h4">My Pets</Typography>
+        <Typography variant="h4">{t('pets.myPets')}</Typography>
         <Button variant="contained" onClick={() => navigate("/add-pet")}>
-          + Add Pet
+          + {t('pets.addPet')}
         </Button>
       </Box>
 
       {pets.length === 0 ? (
         <Box textAlign="center" mt={10}>
           <Typography variant="h6" gutterBottom>
-            No pets yet
+            {t('pets.noPetsYet')}
           </Typography>
           <Typography variant="body1" gutterBottom>
-            Add your first pet to start managing their care!
+            {t('pets.addFirstPetToStart')}
           </Typography>
           <Button variant="contained" onClick={() => navigate("/add-pet")}>
-            Add Your First Pet
+            {t('pets.addYourFirstPet')}
           </Button>
         </Box>
       ) : (
@@ -164,7 +268,7 @@ export default function PetListScreen() {
                           fontWeight: 'medium'
                         }}
                       >
-                        {pet.breedType || pet.type || "Unknown type"}
+                        {pet.breedType || pet.type || t('pets.unknownType')}
                       </Typography>
                     </Box>
                     <Box sx={{ display: "flex", gap: 0.5, ml: 1 }}>
@@ -203,7 +307,12 @@ export default function PetListScreen() {
 
                   <Box sx={{ flexGrow: 1, mb: 2 }}>
                     <Typography variant="body2" sx={{ mb: 1, fontSize: '0.9rem' }}>
-                      <strong>Age:</strong> {calculateAge(pet)}
+                      <strong>Age:</strong> {calculateAge(pet)} 
+                      {pet.name === 'Nicole' && (
+                        <span style={{fontSize: '10px', color: 'gray'}}>
+                          (Debug: {new Date().toLocaleTimeString()})
+                        </span>
+                      )}
                     </Typography>
                     <Typography variant="body2" sx={{ mb: 1, fontSize: '0.9rem' }}>
                       <strong>Weight:</strong> {formatWeight(pet)}

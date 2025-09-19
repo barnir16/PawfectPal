@@ -15,6 +15,7 @@ import {
 import { CalendarToday as CalendarIcon } from "@mui/icons-material";
 
 import type { PetFormData } from "./../../features/pets/components/PetForm/PetForm.tsx";
+import { useLocalization } from "../../contexts/LocalizationContext";
 
 interface PetBasicInfoFormProps {
   control: Control<PetFormData>;
@@ -35,6 +36,8 @@ export const PetBasicInfoForm = ({
   loadingBreeds = false,
   breedError = null,
 }: PetBasicInfoFormProps) => {
+  const { t } = useLocalization();
+  
   return (
     <Grid container spacing={3}>
         <Grid size={{ xs: 12, sm: 6 }}>
@@ -45,7 +48,7 @@ export const PetBasicInfoForm = ({
               <TextField
                 {...field}
                 fullWidth
-                label="Pet Name"
+                label={t('pets.petName')}
                 error={!!errors.name}
                 helperText={errors.name?.message}
                 disabled={isSubmitting}
@@ -60,10 +63,10 @@ export const PetBasicInfoForm = ({
             control={control}
             render={({ field }) => (
               <FormControl fullWidth error={!!errors.type}>
-                <InputLabel>Pet Type</InputLabel>
-                <Select {...field} label="Pet Type" disabled={isSubmitting}>
+                <InputLabel>{t('pets.type')}</InputLabel>
+                <Select {...field} label={t('pets.type')} disabled={isSubmitting}>
                   <MenuItem value="">
-                    <em>Select a type</em>
+                    <em>{t('pets.selectType')}</em>
                   </MenuItem>
                   {petTypes.map((type) => (
                     <MenuItem key={type} value={type}>
@@ -92,10 +95,10 @@ export const PetBasicInfoForm = ({
                   <TextField
                     {...field}
                     fullWidth
-                    label="Custom Pet Type & Breed"
-                    placeholder="Enter your pet's type and breed (e.g., Guinea Pig, Cockatiel)"
+                    label={t('pets.breed')}
+                    placeholder={t('pets.enterCustomBreed')}
                     error={!!errors.breed}
-                    helperText={errors.breed?.message || "Enter the specific type and breed of your pet"}
+                    helperText={errors.breed?.message || t('pets.enterCustomBreed')}
                     disabled={isSubmitting}
                   />
                 );
@@ -122,26 +125,26 @@ export const PetBasicInfoForm = ({
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Breed"
+                      label={t('pets.breed')}
                       error={!!errors.breed}
                       helperText={
                         errors.breed?.message || 
                         breedError ||
                         (!petType 
-                          ? "Select pet type first" 
+                          ? t('pets.selectPetTypeFirst')
                           : field.value && field.value.length < 3
-                          ? "Type at least 3 characters to search breeds"
+                          ? t('pets.typeAtLeast3Chars')
                           : loadingBreeds 
-                          ? "Searching breeds..." 
-                          : "Type to search breeds or enter custom breed"
+                          ? t('pets.searchingBreeds')
+                          : t('pets.typeToSearchBreeds')
                         )
                       }
                       placeholder={
                         !petType 
-                          ? "Select pet type first" 
+                          ? t('pets.selectPetTypeFirst')
                           : field.value && field.value.length < 3
-                          ? "Type at least 3 characters..."
-                          : "Type to search breeds..."
+                          ? t('pets.typeAtLeast3Chars')
+                          : t('pets.typeToSearchBreeds')
                       }
                     />
                   )}
@@ -152,12 +155,12 @@ export const PetBasicInfoForm = ({
                   )}
                   noOptionsText={
                     !petType 
-                      ? "Select pet type first"
+                      ? t('pets.selectPetTypeFirst')
                       : field.value && field.value.length < 3
-                      ? "Type at least 3 characters to search breeds"
+                      ? t('pets.typeAtLeast3Chars')
                       : loadingBreeds 
-                      ? "Searching breeds..."
-                      : "No breeds found - you can enter a custom breed"
+                      ? t('pets.searchingBreeds')
+                      : t('pets.noBreedsFound')
                   }
                 />
               );
@@ -171,14 +174,14 @@ export const PetBasicInfoForm = ({
             control={control}
             render={({ field }) => (
               <FormControl fullWidth error={!!errors.gender}>
-                <InputLabel>Gender</InputLabel>
-                <Select {...field} label="Gender" disabled={isSubmitting}>
+                <InputLabel>{t('pets.gender')}</InputLabel>
+                <Select {...field} label={t('pets.gender')} disabled={isSubmitting}>
                   <MenuItem value="">
-                    <em>Select a gender</em>
+                    <em>{t('pets.selectGender')}</em>
                   </MenuItem>
-                  <MenuItem value="male">Male</MenuItem>
-                  <MenuItem value="female">Female</MenuItem>
-                  <MenuItem value="unknown">Unknown</MenuItem>
+                  <MenuItem value="male">{t('pets.male')}</MenuItem>
+                  <MenuItem value="female">{t('pets.female')}</MenuItem>
+                  <MenuItem value="unknown">{t('pets.unknown')}</MenuItem>
                 </Select>
                 {errors.gender && (
                   <FormHelperText>{errors.gender.message}</FormHelperText>
@@ -194,10 +197,10 @@ export const PetBasicInfoForm = ({
             control={control}
             render={({ field }) => (
               <FormControl fullWidth error={!!errors.ageType}>
-                <InputLabel>Age Information</InputLabel>
-                <Select {...field} label="Age Information" disabled={isSubmitting}>
-                  <MenuItem value="birthday">Exact Birthday</MenuItem>
-                  <MenuItem value="age">Approximate Age</MenuItem>
+                <InputLabel>{t('pets.ageInformation')}</InputLabel>
+                <Select {...field} label={t('pets.ageInformation')} disabled={isSubmitting}>
+                  <MenuItem value="birthday">{t('pets.exactBirthday')}</MenuItem>
+                  <MenuItem value="age">{t('pets.approximateAge')}</MenuItem>
                 </Select>
                 {errors.ageType && (
                   <FormHelperText>{errors.ageType.message}</FormHelperText>
@@ -234,7 +237,7 @@ export const PetBasicInfoForm = ({
                   <TextField
                     {...field}
                     fullWidth
-                    label="Birth Date"
+                    label={t('pets.birthDate')}
                     type="date"
                     InputLabelProps={{ shrink: true }}
                     error={!!errors.birthDate}
@@ -285,10 +288,10 @@ export const PetBasicInfoForm = ({
                 <TextField
                   {...field}
                   fullWidth
-                  label="Age (years)"
+                                      label={t('pets.age')}
                   type="number"
                   error={!!errors.age}
-                  helperText={errors.age?.message || "Enter age between 0 and 30 years"}
+                  helperText={errors.age?.message || t('pets.enterAgeBetween0And30')}
                   disabled={isSubmitting}
                   value={field.value || ''}
                   onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}

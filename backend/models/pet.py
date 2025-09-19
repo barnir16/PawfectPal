@@ -15,6 +15,8 @@ from typing import Optional
 from .user import UserORM
 from .service import ServiceORM
 from .location import LocationHistoryORM
+from .weight_record import WeightRecordORM
+from .weight_goal import WeightGoalORM
 from datetime import date, datetime
 
 
@@ -93,4 +95,10 @@ class PetORM(Base):
     )
     vaccinations: Mapped[list["VaccinationORM"]] = relationship(
         "VaccinationORM", back_populates="pet", lazy="selectin"
+    )
+    weight_records: Mapped[list["WeightRecordORM"]] = relationship(
+        "WeightRecordORM", back_populates="pet", lazy="selectin"
+    )
+    weight_goals: Mapped[list["WeightGoalORM"]] = relationship(
+        "WeightGoalORM", back_populates="pet", lazy="selectin"
     )

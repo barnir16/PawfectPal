@@ -3,19 +3,14 @@ import { Pet } from '../pets';
 import { User } from '../auth';
 /**
  * Types of services available in PawfectPal
+ * Matches backend ServiceType enum exactly
  */
 export type ServiceType =
   | 'walking'
   | 'sitting'
   | 'boarding'
   | 'grooming'
-  | 'veterinary'
-  | 'training'
-  | 'daycare'
-  | 'pet_taxi'
-  | 'pet_sitting'
-  | 'pet_hotel'
-  | 'other';
+  | 'veterinary';
 
 /**
  * Possible statuses for a service

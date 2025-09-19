@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { register, initializeGoogleAuth, signInWithGoogle } from "../../../services/auth/authService";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useLocalization } from "../../../contexts/LocalizationContext";
 
 export default function AuthScreen() {
+  const { t } = useLocalization();
   const { login } = useAuth();
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
@@ -29,50 +31,50 @@ export default function AuthScreen() {
 
   let buttonText: string;
   if (loading) {
-    buttonText = "Loading...";
+    buttonText = t('common.loading');
   } else if (isLogin) {
-    buttonText = "Login";
+    buttonText = t('auth.login');
   } else {
-    buttonText = "Register";
+    buttonText = t('auth.register');
   }
 
   const validateInputs = (): boolean => {
     if (!username.trim()) {
-      alert("Please enter a username");
+      alert(t('auth.usernameRequired'));
       return false;
     }
 
     if (!password.trim()) {
-      alert("Please enter a password");
+      alert(t('auth.passwordRequired'));
       return false;
     }
 
     if (!isLogin) {
       // Registration validation - stricter password requirements
       if (password.length < 8) {
-        alert("Password must be at least 8 characters long");
+        alert(t('auth.passwordMinLength8'));
         return false;
       }
       
       if (!/\d/.test(password)) {
-        alert("Password must contain at least one digit");
+        alert(t('auth.passwordContainsDigit'));
         return false;
       }
       
       if (!/[A-Z]/.test(password)) {
-        alert("Password must contain at least one uppercase letter");
+        alert(t('auth.passwordContainsUppercase'));
         return false;
       }
     } else {
       // Login validation - more lenient for existing users
       if (password.length < 6) {
-        alert("Password must be at least 6 characters long");
+        alert(t('auth.passwordMinLength6'));
         return false;
       }
     }
 
     if (username.length < 3) {
-      alert("Username must be at least 3 characters long");
+      alert(t('auth.usernameMinLength3'));
       return false;
     }
 
@@ -89,7 +91,7 @@ export default function AuthScreen() {
         navigate("/dashboard");
       } else {
         await register(username.trim(), password);
-        alert("Registration successful! Please login with your new account.");
+        alert(t('auth.registrationSuccess'));
         setIsLogin(true);
         setPassword("");
       }
@@ -97,7 +99,7 @@ export default function AuthScreen() {
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "Authentication failed. Please try again.";
+          : t('auth.authenticationFailed');
       alert(errorMessage);
     } finally {
       setLoading(false);
@@ -119,7 +121,7 @@ export default function AuthScreen() {
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "Google Sign-In failed. Please try again.";
+          : t('auth.googleSignInFailed');
       alert(errorMessage);
     } finally {
       setGoogleLoading(false);
@@ -167,21 +169,21 @@ export default function AuthScreen() {
           PawfectPal
         </h1>
         <p style={{ textAlign: "center", color: "#666", marginBottom: 20 }}>
-          {isLogin ? "Welcome back!" : "Create your account"}
+          {isLogin ? t('auth.welcomeBack') : t('auth.createAccount')}
         </p>
         
         {!isLogin && (
           <div style={{ fontSize: 12, color: "#888", marginBottom: 20, lineHeight: 1.4 }}>
-            <strong>Password requirements:</strong><br/>
-            • At least 8 characters<br/>
-            • At least one uppercase letter<br/>
-            • At least one digit
+            <strong>{t('auth.passwordRequirements')}</strong><br/>
+            • {t('auth.passwordRequirementLength')}<br/>
+            • {t('auth.passwordRequirementUppercase')}<br/>
+            • {t('auth.passwordRequirementDigit')}
           </div>
         )}
 
         <input
           type="text"
-          placeholder="Username"
+          placeholder={t('auth.username')}
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           autoComplete="username"
@@ -196,7 +198,7 @@ export default function AuthScreen() {
         />
         <input
           type="password"
-          placeholder="Password"
+          placeholder={t('auth.password')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoComplete="current-password"
@@ -238,7 +240,7 @@ export default function AuthScreen() {
               fontSize: 14
             }}>
               <div style={{ flex: 1, height: '1px', backgroundColor: '#ddd' }}></div>
-              <span style={{ margin: '0 15px' }}>or</span>
+              <span style={{ margin: '0 15px' }}>{t('auth.or')}</span>
               <div style={{ flex: 1, height: '1px', backgroundColor: '#ddd' }}></div>
             </div>
             
@@ -269,7 +271,7 @@ export default function AuthScreen() {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
-              {googleLoading ? "Signing in..." : `Sign ${isLogin ? 'in' : 'up'} with Google`}
+              {googleLoading ? t('auth.signingIn') : (isLogin ? t('auth.signInWithGoogle') : t('auth.signUpWithGoogle'))}
             </button>
           </div>
         )}
@@ -307,8 +309,8 @@ export default function AuthScreen() {
           }}
         >
           {isLogin
-            ? "Don't have an account? Register"
-            : "Already have an account? Login"}
+            ? t('auth.dontHaveAccountRegister')
+            : t('auth.alreadyHaveAccountLogin')}
         </button>
       </form>
     </div>

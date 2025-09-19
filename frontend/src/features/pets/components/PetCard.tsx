@@ -1,6 +1,7 @@
 import { Avatar, Box, Button, Card, CardActions, CardContent, CardHeader, Chip, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, Pets as PetsIcon } from "@mui/icons-material";
 import type { Pet } from "../../../types/pets/pet";
+import { useLocalization } from "../../../contexts/LocalizationContext";
 
 interface PetCardProps {
   pet: Pet;
@@ -9,6 +10,7 @@ interface PetCardProps {
 }
 
 export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
+  const { t } = useLocalization();
   let chipColor: "primary" | "secondary" | "default" = "default";
   // Handle both 'type' and 'breedType' for backward compatibility
   const petType = pet.type || pet.breedType || "other";
@@ -17,25 +19,101 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
 
   // Calculate age from birthdate or use provided age
   const calculateAge = () => {
-    // First try to use the age field directly
-    if (pet.age !== undefined && pet.age !== null) {
-      return `${pet.age} years`;
+    console.log('🔍 PetCard calculateAge called for:', pet.name, 'at', new Date().toISOString());
+    
+    // Debug logging for Nicole
+    if (pet.name === 'Nicole') {
+      console.log('🐕 PetCard Nicole age calculation debug:', {
+        name: pet.name,
+        age: pet.age,
+        birthDate: pet.birthDate,
+        birth_date: pet.birth_date,
+        isBirthdayGiven: pet.isBirthdayGiven,
+        is_birthday_given: pet.is_birthday_given,
+        ageType: pet.age !== undefined ? 'age field' : 'birthdate',
+        fullPetObject: pet,
+        timestamp: new Date().toISOString()
+      });
     }
     
-    // Then try to calculate from birth date (check both field names)
+    // Always prioritize birthdate calculation if birthday is given
     const birthDate = pet.birthDate || pet.birth_date;
-    if (birthDate) {
+    if (birthDate && (pet.isBirthdayGiven || pet.is_birthday_given)) {
       try {
-        const birth = new Date(birthDate);
-        if (isNaN(birth.getTime())) return "Unknown age";
+        // For ISO date strings like '2025-01-01', ensure we parse as local time
+        let birth;
+        if (typeof birthDate === 'string' && birthDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          // Parse as local date to avoid timezone issues
+          const [year, month, day] = birthDate.split('-').map(Number);
+          birth = new Date(year, month - 1, day); // month is 0-indexed
+          
+          // Debug: Test with hardcoded date for Nicole
+          if (pet.name === 'Nicole') {
+            const testDate = new Date(2025, 0, 1); // January 1, 2025
+            const now = new Date();
+            const testDays = Math.floor((now.getTime() - testDate.getTime()) / (1000 * 60 * 60 * 24));
+            const testMonths = Math.floor(testDays / 30.44);
+            console.log('🧪 PetCard Hardcoded test for Nicole:', {
+              testDate: testDate.toISOString(),
+              now: now.toISOString(),
+              testDays,
+              testMonths,
+              shouldBe: '8 months'
+            });
+          }
+        } else {
+          birth = new Date(birthDate);
+        }
+        
+        if (isNaN(birth.getTime())) return t('pets.unknownAge');
         const today = new Date();
-        const ageInYears = Math.floor((today.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24 * 365.25));
-        return `${ageInYears} years`;
+        const ageInMilliseconds = today.getTime() - birth.getTime();
+        const ageInDays = Math.floor(ageInMilliseconds / (1000 * 60 * 60 * 24));
+        const ageInMonths = Math.floor(ageInDays / 30.44);
+        const ageInYears = Math.floor(ageInDays / 365.25);
+        
+        // Handle future birthdates
+        if (ageInDays < 0) {
+          return t('pets.futureBirthdate');
+        }
+        
+        if (ageInYears < 1) {
+          const months = Math.max(0, ageInMonths);
+          const result = `${months} ${t('pets.months')}`;
+          
+          // Debug logging for Nicole
+          if (pet.name === 'Nicole') {
+            console.log('🐕 PetCard Nicole age calculation result:', {
+              birthDate,
+              parsedBirth: birth.toISOString(),
+              ageInDays,
+              ageInMonths,
+              ageInYears,
+              currentDate: today.toISOString(),
+              timeDiff: ageInMilliseconds,
+              isFuture: ageInDays < 0,
+              finalResult: result
+            });
+          }
+          
+          return result;
+        }
+        return `${ageInYears} ${t('pets.years')}`;
       } catch {
-        return "Unknown age";
+        return t('pets.unknownAge');
       }
     }
-    return "Unknown age";
+    
+    // Fallback to age field if no birthdate or birthday not given
+    if (pet.age !== undefined && pet.age !== null) {
+      if (pet.age < 1) {
+        const months = Math.floor(pet.age * 12);
+        return `${months} ${t('pets.months')}`;
+      }
+      return `${pet.age} ${t('pets.years')}`;
+    }
+    
+    return t('pets.unknownAge');
   };
 
   // Always show age, regardless of whether birthday is given
@@ -44,19 +122,21 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
   // Format weight display
   const formatWeight = () => {
     const weight = pet.weightKg || pet.weight_kg;
-    if (!weight) return "Not specified";
-    return `${weight} ${pet.weightUnit || 'kg'}`;
+    if (!weight) return t('pets.notSpecified');
+    const unit = pet.weightUnit || 'kg';
+    const localizedUnit = unit === 'kg' ? t('pets.kg') : t('pets.pounds');
+    return `${weight} ${localizedUnit}`;
   };
 
   // Format dates with fallback
   const formatDate = (dateString?: string) => {
-    if (!dateString) return "Not given yet";
+    if (!dateString) return t('pets.notGivenYet');
     try {
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) return "Not given yet";
+      if (isNaN(date.getTime())) return t('pets.notGivenYet');
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     } catch {
-      return "Not given yet";
+      return t('pets.notGivenYet');
     }
   };
 
@@ -107,7 +187,7 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
               {pet.name}
             </Typography>
             <Chip
-              label={petType}
+              label={t(`pets.${petType}`)}
               size="small"
               sx={{ textTransform: "capitalize", flexShrink: 0 }}
               color={chipColor}
@@ -125,7 +205,7 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
         }
         action={
           <Box>
-            <Tooltip title="Edit">
+            <Tooltip title={t('pets.edit')}>
               <IconButton
                 onClick={() => pet.id && onEdit(pet.id)}
                 size="small"
@@ -134,7 +214,7 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
                 <EditIcon />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Delete">
+            <Tooltip title={t('pets.delete')}>
               <IconButton
                 onClick={() => pet.id && onDelete(pet.id)}
                 size="small"
@@ -149,22 +229,22 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
       <CardContent sx={{ flexGrow: 1, pt: 0 }}>
         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            <strong>Age:</strong> {displayAge}
+            <strong>{t('pets.age')}:</strong> {displayAge}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            <strong>Weight:</strong> {formatWeight()}
+            <strong>{t('pets.weight')}:</strong> {formatWeight()}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            <strong>Last Vet Visit:</strong> {formatDate(pet.lastVetVisit || pet.last_vet_visit)}
+            <strong>{t('pets.lastVetVisit')}:</strong> {formatDate(pet.lastVetVisit || pet.last_vet_visit)}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            <strong>Next Vaccination:</strong> {formatDate(pet.nextVetVisit || pet.next_vet_visit)}
+            <strong>{t('pets.nextVaccination')}:</strong> {formatDate(pet.nextVetVisit || pet.next_vet_visit)}
           </Typography>
         </Box>
       </CardContent>
       <CardActions sx={{ mt: "auto", justifyContent: "flex-end" }}>
         <Button size="small" onClick={() => pet.id && onEdit(pet.id)}>
-          View Details
+          {t('pets.viewDetails')}
         </Button>
       </CardActions>
     </Card>

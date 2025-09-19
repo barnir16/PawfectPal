@@ -8,7 +8,7 @@ from models import (
 )
 from schemas.vaccination import (
     VaccinationCreate, 
-    VaccinationRead, 
+    VaccinationResponse, 
     VaccinationUpdate,
     VaccinationListResponse,
     VaccinationSummary,
@@ -53,14 +53,14 @@ def get_pet_vaccinations(
     )
     
     return VaccinationListResponse(
-        vaccinations=[VaccinationRead.model_validate(v) for v in vaccinations],
+        vaccinations=[VaccinationResponse.model_validate(v) for v in vaccinations],
         total=total,
         page=page,
         page_size=page_size
     )
 
 
-@router.post("/pet/{pet_id}", response_model=VaccinationRead)
+@router.post("/pet/{pet_id}", response_model=VaccinationResponse)
 def create_vaccination(
     pet_id: int,
     vaccination: VaccinationCreate,
@@ -93,10 +93,10 @@ def create_vaccination(
     db.add(db_vaccination)
     db.commit()
     db.refresh(db_vaccination)
-    return VaccinationRead.model_validate(db_vaccination)
+    return VaccinationResponse.model_validate(db_vaccination)
 
 
-@router.put("/{vaccination_id}", response_model=VaccinationRead)
+@router.put("/{vaccination_id}", response_model=VaccinationResponse)
 def update_vaccination(
     vaccination_id: int,
     vaccination: VaccinationUpdate,
@@ -128,7 +128,7 @@ def update_vaccination(
     
     db.commit()
     db.refresh(db_vaccination)
-    return VaccinationRead.model_validate(db_vaccination)
+    return VaccinationResponse.model_validate(db_vaccination)
 
 
 @router.delete("/{vaccination_id}")
@@ -271,4 +271,22 @@ def get_overdue_vaccinations(
         ))
     
     return reminders
+
+
+@router.get("/all", response_model=List[VaccinationResponse])
+def get_all_vaccinations(
+    db: Session = Depends(get_db),
+    current_user: UserORM = Depends(get_current_user)
+):
+    """Get all vaccinations for all user's pets"""
+    # Get all vaccinations for user's pets
+    vaccinations = (
+        db.query(VaccinationORM)
+        .join(PetORM)
+        .filter(PetORM.user_id == current_user.id)
+        .order_by(VaccinationORM.date_administered.desc())
+        .all()
+    )
+    
+    return [VaccinationResponse.model_validate(v) for v in vaccinations]
 

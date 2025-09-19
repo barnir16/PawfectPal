@@ -22,6 +22,7 @@ import { ArrowBack as ArrowBackIcon, CalendarToday as CalendarIcon, AccessTime a
 import { useForm, type SubmitHandler, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useLocalization } from "../../../../contexts/LocalizationContext";
 
 // Services and types
 import { getPets } from "../../../../services/pets/petService";
@@ -45,28 +46,29 @@ const schema = z.object({
 
 export type TaskFormData = z.infer<typeof schema>;
 
-const priorities = [
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
-  { value: "urgent", label: "Urgent" },
-];
-
-const repeatUnits = [
-  { value: "daily", label: "Daily" },
-  { value: "weekly", label: "Weekly" },
-  { value: "monthly", label: "Monthly" },
-  { value: "yearly", label: "Yearly" },
-];
-
 export const TaskForm = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
+  const { t } = useLocalization();
   const isEditing = !!id;
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const priorities = [
+    { value: "low", label: t('taskPriorities.low') },
+    { value: "medium", label: t('taskPriorities.medium') },
+    { value: "high", label: t('taskPriorities.high') },
+    { value: "urgent", label: t('taskPriorities.urgent') },
+  ];
+
+  const repeatUnits = [
+    { value: "daily", label: t('tasks.daily') },
+    { value: "weekly", label: t('tasks.weekly') },
+    { value: "monthly", label: t('tasks.monthly') },
+    { value: "yearly", label: t('tasks.yearly') },
+  ];
 
   // Form setup
   const {
@@ -151,10 +153,10 @@ export const TaskForm = () => {
 
       if (isEditing && id) {
         await updateTask(parseInt(id), taskData);
-        alert("Task updated successfully!");
+        alert(t('tasks.taskUpdated'));
       } else {
         await createTask(taskData);
-        alert("Task created successfully!");
+        alert(t('tasks.taskCreated'));
       }
 
       navigate("/tasks");
@@ -185,7 +187,7 @@ export const TaskForm = () => {
           <ArrowBackIcon />
         </IconButton>
         <Typography variant="h4" component="h1">
-          {isEditing ? "Edit Task" : "Add New Task"}
+          {isEditing ? t('tasks.editTaskTitle') : t('tasks.addNewTask')}
         </Typography>
       </Box>
 
@@ -196,7 +198,7 @@ export const TaskForm = () => {
       )}
 
       <Card>
-        <CardHeader title="Task Details" />
+        <CardHeader title={t('tasks.taskDetails')} />
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)}>
             <Grid container spacing={3}>
@@ -207,7 +209,7 @@ export const TaskForm = () => {
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Task Title"
+                      label={t('tasks.taskTitle')}
                       fullWidth
                       required
                       error={!!errors.title}
@@ -224,7 +226,7 @@ export const TaskForm = () => {
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Description"
+                      label={t('tasks.description')}
                       fullWidth
                       multiline
                       rows={3}
@@ -241,11 +243,11 @@ export const TaskForm = () => {
                   control={control}
                   render={({ field }) => (
                     <FormControl fullWidth error={!!errors.petIds}>
-                      <InputLabel>Select Pets</InputLabel>
+                      <InputLabel>{t('tasks.selectPets')}</InputLabel>
                       <Select
                         {...field}
                         multiple
-                        label="Select Pets"
+                        label={t('tasks.selectPets')}
                         value={field.value || []}
                       >
                         {pets.map((pet) => (
@@ -270,8 +272,8 @@ export const TaskForm = () => {
                   control={control}
                   render={({ field }) => (
                     <FormControl fullWidth>
-                      <InputLabel>Priority</InputLabel>
-                      <Select {...field} label="Priority" value={field.value || "medium"}>
+                      <InputLabel>{t('tasks.priority')}</InputLabel>
+                      <Select {...field} label={t('tasks.priority')} value={field.value || "medium"}>
                         {priorities.map((priority) => (
                           <MenuItem key={priority.value} value={priority.value}>
                             {priority.label}
@@ -290,7 +292,7 @@ export const TaskForm = () => {
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Date"
+                      label={t('tasks.date')}
                       type="date"
                       fullWidth
                       required
@@ -328,7 +330,7 @@ export const TaskForm = () => {
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Time"
+                      label={t('tasks.time')}
                       type="time"
                       fullWidth
                       required
@@ -386,7 +388,7 @@ export const TaskForm = () => {
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Repeat Every (Number)"
+                      label={t('tasks.repeatInterval')}
                       type="number"
                       fullWidth
                       disabled={!watch('repeatUnit')}
@@ -409,7 +411,7 @@ export const TaskForm = () => {
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Repeat Until (Optional)"
+                      label={t('tasks.repeatEndDate')}
                       type="date"
                       fullWidth
                       disabled={!watch('repeatUnit')}
@@ -445,7 +447,7 @@ export const TaskForm = () => {
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Additional Notes"
+                      label={t('tasks.notes')}
                       fullWidth
                       multiline
                       rows={2}
@@ -461,7 +463,7 @@ export const TaskForm = () => {
                     onClick={handleCancel}
                     disabled={isSubmitting}
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </Button>
                   <Button
                     type="submit"
@@ -471,7 +473,7 @@ export const TaskForm = () => {
                     {isSubmitting ? (
                       <CircularProgress size={24} />
                     ) : (
-                      isEditing ? "Update Task" : "Create Task"
+                      isEditing ? t('tasks.updateTask') : t('tasks.createTask')
                     )}
                   </Button>
                 </Box>

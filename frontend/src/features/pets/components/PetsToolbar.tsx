@@ -5,6 +5,7 @@ import {
   GridView as GridViewIcon,
   ViewList as ViewListIcon,
 } from "@mui/icons-material";
+import { useLocalization } from "../../../contexts/LocalizationContext";
 
 interface PetsToolbarProps {
   searchTerm: string;
@@ -16,8 +17,6 @@ interface PetsToolbarProps {
   onAddPet: () => void;
 }
 
-const petTypes = ["All", "Dog", "Cat", "Bird", "Rabbit", "Other"];
-
 export const PetsToolbar = ({
   searchTerm,
   selectedType,
@@ -26,6 +25,17 @@ export const PetsToolbar = ({
   onTypeChange,
   onViewChange,
 }: PetsToolbarProps) => {
+  const { t } = useLocalization();
+  
+  const petTypes = [
+    t('pets.all'), 
+    t('pets.dog'), 
+    t('pets.cat'), 
+    t('pets.bird'), 
+    t('pets.rabbit'), 
+    t('pets.other')
+  ];
+  
   return (
     <Box
       sx={{
@@ -37,7 +47,7 @@ export const PetsToolbar = ({
       }}
     >
       <TextField
-        placeholder="Search pets..."
+        placeholder={t('pets.searchPets')}
         variant="outlined"
         size="small"
         value={searchTerm}

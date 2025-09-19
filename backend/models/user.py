@@ -8,7 +8,9 @@ if TYPE_CHECKING:
     from .pet import PetORM
     from .task import TaskORM
     from .service import ServiceORM
-    from .provider import ProviderORM  # new import
+    from .provider import ProviderORM
+    from .service_request import ServiceRequestORM
+    from .chat_message import ChatMessageORM
 
 
 class UserORM(Base):
@@ -33,6 +35,10 @@ class UserORM(Base):
 
     # Provider relationship
     is_provider: Mapped[bool] = mapped_column(Boolean, default=False)
+    provider_services: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON array
+    provider_rating: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    provider_bio: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    provider_hourly_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     provider_profile: Mapped[Optional["ProviderORM"]] = relationship(
         "ProviderORM", back_populates="user", uselist=False
     )
@@ -52,3 +58,5 @@ class UserORM(Base):
     booked_services: Mapped[List["ServiceORM"]] = relationship(
         "ServiceORM", foreign_keys="ServiceORM.user_id", back_populates="user"
     )
+    service_requests: Mapped[List["ServiceRequestORM"]] = relationship("ServiceRequestORM", back_populates="user")
+    chat_messages: Mapped[List["ChatMessageORM"]] = relationship("ChatMessageORM", back_populates="sender")

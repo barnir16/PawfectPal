@@ -11,14 +11,8 @@ export const FirebaseTest: React.FC = () => {
 
     try {
       // Test 1: Check if Firebase config is accessible
-      const firebaseConfig = {
-        apiKey: "AIzaSybNsVE_ZmgBBuVJ3IKZpAAZRz9HS-67s8",
-        authDomain: "pawfectpal-ac5d7.firebaseapp.com",
-        projectId: "pawfectpal-ac5d7",
-        storageBucket: "pawfectpal-ac5d7.firebasestorage.app",
-        messagingSenderId: "204752166323",
-        appId: "1:204752166323:web:4efd89fff62af150343fc6",
-      };
+      const { SHARED_CONFIG } = await import('../../config/shared');
+      const firebaseConfig = SHARED_CONFIG.firebase;
 
       setTestResult('✅ Firebase config loaded\n');
 

@@ -10,10 +10,10 @@ import {
   login as loginApi,
   logout as logoutApi,
 } from "../services/auth/authService";
-import { getApiUrl } from "../config";
+import { getBaseUrl } from "../services/api";
 import type { User, LoginResponse } from "../types/auth";
 
-const API_BASE_URL = getApiUrl();
+const API_BASE_URL = getBaseUrl();
 
 interface AuthContextType {
   user: User | null;

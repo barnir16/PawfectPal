@@ -11,6 +11,7 @@ import {
   Pets as PetsIcon,
 } from "@mui/icons-material";
 import { useState } from "react";
+import { useLocalization } from "../../../contexts/LocalizationContext";
 import type { Pet } from "../../../types/pets/pet";
 
 interface PetsTableProps {
@@ -20,6 +21,7 @@ interface PetsTableProps {
 }
 
 export const PetsTable = ({ pets, onEdit, onDelete }: PetsTableProps) => {
+  const { t } = useLocalization();
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
     pageSize: 10,
@@ -28,7 +30,7 @@ export const PetsTable = ({ pets, onEdit, onDelete }: PetsTableProps) => {
   const columns: GridColDef<Pet>[] = [
     {
       field: "name",
-      headerName: "Name",
+      headerName: t('pets.name'),
       flex: 1.5,
       minWidth: 200,
       renderCell: (params: GridRenderCellParams<Pet>) => (
@@ -46,14 +48,14 @@ export const PetsTable = ({ pets, onEdit, onDelete }: PetsTableProps) => {
     },
     { 
       field: "type", 
-      headerName: "Type", 
+      headerName: t('pets.type'), 
       flex: 0.8,
       minWidth: 100,
-      valueGetter: (_, row) => row.type || row.breedType || "Unknown"
+      valueGetter: (_, row) => row.type || row.breedType || t('pets.unknown')
     },
     { 
       field: "breed", 
-      headerName: "Breed", 
+      headerName: t('pets.breed'), 
       flex: 1.2,
       minWidth: 150,
       renderCell: (params: GridRenderCellParams<Pet>) => (
@@ -69,36 +71,111 @@ export const PetsTable = ({ pets, onEdit, onDelete }: PetsTableProps) => {
     },
     {
       field: "age",
-      headerName: "Age",
+      headerName: t('pets.age'),
       flex: 0.8,
       minWidth: 120,
       valueGetter: (_, row) => {
-        // First try to use the age field directly
-        if (row.age !== undefined && row.age !== null) {
-          return `${row.age} years`;
+        // Debug logging for Nicole
+        if (row.name === 'Nicole') {
+          console.log('🐕 Nicole age calculation debug (table):', {
+            name: row.name,
+            age: row.age,
+            birthDate: row.birthDate,
+            birth_date: row.birth_date,
+            isBirthdayGiven: row.isBirthdayGiven,
+            is_birthday_given: row.is_birthday_given,
+            ageType: row.age !== undefined ? 'age field' : 'birthdate'
+          });
         }
         
-        // Then try to calculate from birth date (check both field names)
+        // Always try birthdate first if available - it's more accurate
         const birthDate = row.birthDate || row.birth_date;
         if (birthDate) {
           try {
-            const birth = new Date(birthDate);
-            if (isNaN(birth.getTime())) {
-              return "Unknown age";
+            // Handle different date formats
+            let birth;
+            if (typeof birthDate === 'string') {
+              // For ISO date strings like '2025-01-01', ensure we parse as local time
+              if (birthDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                // Parse as local date to avoid timezone issues
+                const [year, month, day] = birthDate.split('-').map(Number);
+                birth = new Date(year, month - 1, day); // month is 0-indexed
+              } else {
+                // Try parsing as ISO string first
+                birth = new Date(birthDate);
+                // If that fails, try parsing as DD/MM/YYYY, MM/DD/YYYY, DD.MM.YYYY, or MM.DD.YYYY
+                if (isNaN(birth.getTime()) && (birthDate.includes('/') || birthDate.includes('.'))) {
+                  const separator = birthDate.includes('/') ? '/' : '.';
+                  const parts = birthDate.split(separator);
+                  if (parts.length === 3) {
+                    // Try DD/MM/YYYY or DD.MM.YYYY format first
+                    birth = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+                    if (isNaN(birth.getTime())) {
+                      // Try MM/DD/YYYY or MM.DD.YYYY format
+                      birth = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
+                    }
+                  }
+                }
+              }
+            } else {
+              birth = new Date(birthDate);
             }
-            const ageInMilliseconds = Date.now() - birth.getTime();
-            const ageInYears = ageInMilliseconds / (1000 * 60 * 60 * 24 * 365.25);
-            return `${Math.floor(ageInYears)} years`;
-          } catch {
-            return "Unknown age";
+            
+            if (isNaN(birth.getTime())) {
+              console.log('Invalid birthdate format:', birthDate);
+              return t('pets.unknownAge');
+            }
+            
+            const now = new Date();
+            const ageInMilliseconds = now.getTime() - birth.getTime();
+            
+            // Calculate age more accurately
+            const ageInDays = Math.floor(ageInMilliseconds / (1000 * 60 * 60 * 24));
+            const ageInMonths = Math.floor(ageInDays / 30.44); // Average days per month
+            const ageInYears = Math.floor(ageInDays / 365.25);
+            
+            // Debug logging
+            console.log('Age calculation debug:', {
+              birthDate,
+              parsedBirth: birth.toISOString(),
+              ageInDays,
+              ageInMonths,
+              ageInYears,
+              currentDate: now.toISOString()
+            });
+            
+            // Handle future birthdates
+            if (ageInDays < 0) {
+              return t('pets.futureBirthdate');
+            }
+            
+            if (ageInYears < 1) {
+              // For pets under 1 year, show months
+              const months = Math.max(0, ageInMonths);
+              return `${months} ${t('pets.months')}`;
+            }
+            return `${ageInYears} ${t('pets.years')}`;
+          } catch (error) {
+            console.log('Error calculating age from birthdate:', birthDate, error);
+            return t('pets.unknownAge');
           }
         }
-        return "Unknown age";
+        
+        // Fallback to age field if no birthdate
+        if (row.age !== undefined && row.age !== null) {
+          if (row.age < 1) {
+            const months = Math.floor(row.age * 12);
+            return `${months} ${t('pets.months')}`;
+          }
+          return `${row.age} ${t('pets.years')}`;
+        }
+        
+        return t('pets.unknownAge');
       },
     },
     { 
       field: "gender", 
-      headerName: "Gender", 
+      headerName: t('pets.gender'), 
       flex: 0.6,
       minWidth: 80
     },

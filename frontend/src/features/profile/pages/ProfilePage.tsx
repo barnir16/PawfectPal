@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
-import { BASE_URL, getToken } from "../../../services";
+import { getBaseUrl, getToken } from "../../../services";
 import {
   Box,
   Grid,
@@ -118,7 +118,7 @@ const ProfilePage: React.FC = () => {
         const formDataToSend = new FormData();
         formDataToSend.append("file", file);
         const imageUploadResponse = await fetch(
-          `${BASE_URL}/image_upload/profile-image`,
+          `${getBaseUrl()}/image_upload/profile-image`,
           {
             method: "POST",
             headers: { Authorization: `Bearer ${token}` },
@@ -149,7 +149,7 @@ const ProfilePage: React.FC = () => {
       }
 
       if (Object.keys(updatedPayload).length > 0) {
-        const profileUpdateResponse = await fetch(`${BASE_URL}/auth/me`, {
+        const profileUpdateResponse = await fetch(`${getBaseUrl()}/auth/me`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",

@@ -7,6 +7,7 @@ import {
 } from "@mui/icons-material";
 import type { PetFormData } from "./../../features/pets/components/PetForm/PetForm.tsx";
 import { IssuesList } from "./IssuesList";
+import { useLocalization } from "../../contexts/LocalizationContext";
 
 interface PetMedicalInfoProps {
   control: Control<PetFormData>;
@@ -19,6 +20,8 @@ export const PetMedicalInfo = ({
   errors,
   isSubmitting = false,
 }: PetMedicalInfoProps) => {
+  const { t } = useLocalization();
+  
   return (
     <Grid container spacing={3}>
       <Grid size={{ xs: 12, sm: 6 }}>
@@ -27,13 +30,13 @@ export const PetMedicalInfo = ({
           control={control}
           render={({ field }) => (
             <IssuesList
-              label="Health Issues"
-              placeholder="Enter a health issue (e.g., blind, allergic to cats)"
+              label={t('pets.healthIssues')}
+              placeholder={t('pets.enterHealthIssue')}
               value={field.value || []}
               onChange={field.onChange}
               disabled={isSubmitting}
               error={!!errors.healthIssues}
-              helperText={errors.healthIssues?.message || "Add health conditions, allergies, or medical concerns one by one"}
+              helperText={errors.healthIssues?.message || t('pets.addHealthConditions')}
             />
           )}
         />
@@ -45,13 +48,13 @@ export const PetMedicalInfo = ({
           control={control}
           render={({ field }) => (
             <IssuesList
-              label="Behavior Issues"
-              placeholder="Enter a behavior issue (e.g., aggressive, anxious)"
+              label={t('pets.behaviorIssues')}
+              placeholder={t('pets.enterBehaviorIssue')}
               value={field.value || []}
               onChange={field.onChange}
               disabled={isSubmitting}
               error={!!errors.behaviorIssues}
-              helperText={errors.behaviorIssues?.message || "Add behavioral concerns or training needs one by one"}
+              helperText={errors.behaviorIssues?.message || t('pets.addBehavioralConcerns')}
             />
           )}
         />
@@ -67,10 +70,10 @@ export const PetMedicalInfo = ({
               fullWidth
               multiline
               rows={4}
-              label="Additional Notes"
-              placeholder="Any other important information about your pet"
+              label={t('pets.additionalNotes')}
+              placeholder={t('pets.anyOtherImportantInfo')}
               error={!!errors.notes}
-              helperText={errors.notes?.message || "Include any other relevant information about your pet's care, preferences, or special needs"}
+              helperText={errors.notes?.message || t('pets.includeOtherRelevant')}
               disabled={isSubmitting}
               InputProps={{
                 startAdornment: (
