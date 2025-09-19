@@ -1082,6 +1082,34 @@ export const en = {
     specialRequests: 'Special Requests',
     bookingSummary: 'Booking Summary',
     totalCost: 'Total Cost',
-    confirmBooking: 'Confirm Booking'
+    confirmBooking: 'Confirm Booking',
+    
+    // Chat interface
+    noConversationFound: 'No conversation found',
+    unknownUser: 'Unknown User',
+    serviceRequest: 'Service Request',
+    noMessagesYet: 'No messages yet',
+    startConversation: 'Start the conversation by sending a message',
+    
+    // Service request browser
+    filters: 'Filters',
+    searchRequests: 'Search requests...',
+    urgency: 'Urgency',
+    all: 'All',
+    urgentOnly: 'Urgent Only',
+    nonUrgentOnly: 'Non-Urgent Only',
+    viewDetails: 'View Details',
+    contactUser: 'Contact User',
+    noMatchingRequests: 'No matching requests found',
+    
+    // Service request details
+    description: 'Description',
+    requestedBy: 'Requested By',
+    startChat: 'Start Chat',
+    pets: 'Pets',
+    budget: 'Budget',
+    posted: 'Posted',
+    views: 'views',
+    responses: 'responses',
   },
 };

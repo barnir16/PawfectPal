@@ -1177,7 +1177,35 @@ export const he = {
     specialRequests: 'בקשות מיוחדות',
     bookingSummary: 'סיכום הזמנה',
     totalCost: 'עלות כוללת',
-    confirmBooking: 'אשר הזמנה'
+    confirmBooking: 'אשר הזמנה',
+    
+    // Chat interface
+    noConversationFound: 'לא נמצאה שיחה',
+    unknownUser: 'משתמש לא ידוע',
+    serviceRequest: 'בקשת שירות',
+    noMessagesYet: 'אין הודעות עדיין',
+    startConversation: 'התחל את השיחה על ידי שליחת הודעה',
+    
+    // Service request browser
+    filters: 'מסננים',
+    searchRequests: 'חפש בקשות...',
+    urgency: 'דחיפות',
+    all: 'הכל',
+    urgentOnly: 'דחוף בלבד',
+    nonUrgentOnly: 'לא דחוף בלבד',
+    viewDetails: 'צפה בפרטים',
+    contactUser: 'צור קשר עם המשתמש',
+    noMatchingRequests: 'לא נמצאו בקשות תואמות',
+    
+    // Service request details
+    description: 'תיאור',
+    requestedBy: 'נדרש על ידי',
+    startChat: 'התחל שיחה',
+    pets: 'חיות מחמד',
+    budget: 'תקציב',
+    posted: 'פורסם',
+    views: 'צפיות',
+    responses: 'תגובות',
   }
 };
 
