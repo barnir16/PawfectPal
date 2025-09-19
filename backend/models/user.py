@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import List, Optional, TYPE_CHECKING
-from sqlalchemy import String, Integer, Boolean, Float, Text, ForeignKey
+from sqlalchemy import String, Integer, Boolean, Float, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base import Base
 
@@ -35,7 +35,9 @@ class UserORM(Base):
 
     # Provider relationship
     is_provider: Mapped[bool] = mapped_column(Boolean, default=False)
-    provider_services: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON array
+    provider_services: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True
+    )  # JSON array
     provider_rating: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     provider_bio: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     provider_hourly_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
@@ -58,5 +60,9 @@ class UserORM(Base):
     booked_services: Mapped[List["ServiceORM"]] = relationship(
         "ServiceORM", foreign_keys="ServiceORM.user_id", back_populates="user"
     )
-    service_requests: Mapped[List["ServiceRequestORM"]] = relationship("ServiceRequestORM", back_populates="user")
-    chat_messages: Mapped[List["ChatMessageORM"]] = relationship("ChatMessageORM", back_populates="sender")
+    service_requests: Mapped[List["ServiceRequestORM"]] = relationship(
+        "ServiceRequestORM", back_populates="user"
+    )
+    chat_messages: Mapped[List["ChatMessageORM"]] = relationship(
+        "ChatMessageORM", back_populates="sender"
+    )

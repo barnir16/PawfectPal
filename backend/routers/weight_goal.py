@@ -10,7 +10,7 @@ from schemas.weight_goal import (
     WeightGoalCreate,
     WeightGoalUpdate,
     WeightGoalResponse,
-    WeightGoalWithPet
+    WeightGoalWithPet,
 )
 from dependencies.auth import get_current_user
 from models.user import UserORM
@@ -23,17 +23,17 @@ async def get_all_weight_goals(
     db: Session = Depends(get_db),
     current_user: UserORM = Depends(get_current_user),
     limit: Optional[int] = 100,
-    offset: Optional[int] = 0
+    offset: Optional[int] = 0,
 ):
     """Get all weight goals for the current user's pets"""
     try:
         # Get all pets owned by the current user
         user_pets = db.query(PetORM).filter(PetORM.user_id == current_user.id).all()
         pet_ids = [pet.id for pet in user_pets]
-        
+
         if not pet_ids:
             return []
-        
+
         # Get weight goals for user's pets
         weight_goals = (
             db.query(WeightGoalORM)
@@ -43,32 +43,34 @@ async def get_all_weight_goals(
             .offset(offset)
             .all()
         )
-        
+
         # Convert to response format with pet information
         result = []
         for goal in weight_goals:
             pet = next((p for p in user_pets if p.id == goal.pet_id), None)
             if pet:
-                result.append(WeightGoalWithPet(
-                    id=goal.id,
-                    pet_id=goal.pet_id,
-                    target_weight=goal.target_weight,
-                    weight_unit=goal.weight_unit,
-                    goal_type=goal.goal_type,
-                    description=goal.description,
-                    is_active=goal.is_active,
-                    target_date=goal.target_date,
-                    created_at=goal.created_at,
-                    updated_at=goal.updated_at,
-                    pet_name=pet.name,
-                    pet_type=pet.breed_type
-                ))
-        
+                result.append(
+                    WeightGoalWithPet(
+                        id=goal.id,
+                        pet_id=goal.pet_id,
+                        target_weight=goal.target_weight,
+                        weight_unit=goal.weight_unit,
+                        goal_type=goal.goal_type,
+                        description=goal.description,
+                        is_active=goal.is_active,
+                        target_date=goal.target_date,
+                        created_at=goal.created_at,
+                        updated_at=goal.updated_at,
+                        pet_name=pet.name,
+                        pet_type=pet.breed_type,
+                    )
+                )
+
         return result
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch weight goals: {str(e)}"
+            detail=f"Failed to fetch weight goals: {str(e)}",
         )
 
 
@@ -76,22 +78,23 @@ async def get_all_weight_goals(
 async def get_weight_goals_by_pet(
     pet_id: int,
     db: Session = Depends(get_db),
-    current_user: UserORM = Depends(get_current_user)
+    current_user: UserORM = Depends(get_current_user),
 ):
     """Get weight goals for a specific pet"""
     try:
         # Verify the pet belongs to the current user
-        pet = db.query(PetORM).filter(
-            PetORM.id == pet_id,
-            PetORM.user_id == current_user.id
-        ).first()
-        
+        pet = (
+            db.query(PetORM)
+            .filter(PetORM.id == pet_id, PetORM.user_id == current_user.id)
+            .first()
+        )
+
         if not pet:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Pet not found or access denied"
+                detail="Pet not found or access denied",
             )
-        
+
         # Get weight goals for the pet
         weight_goals = (
             db.query(WeightGoalORM)
@@ -99,37 +102,40 @@ async def get_weight_goals_by_pet(
             .order_by(WeightGoalORM.created_at.desc())
             .all()
         )
-        
+
         return weight_goals
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch weight goals: {str(e)}"
+            detail=f"Failed to fetch weight goals: {str(e)}",
         )
 
 
-@router.post("/", response_model=WeightGoalResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/", response_model=WeightGoalResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_weight_goal(
     weight_goal: WeightGoalCreate,
     db: Session = Depends(get_db),
-    current_user: UserORM = Depends(get_current_user)
+    current_user: UserORM = Depends(get_current_user),
 ):
     """Create a new weight goal"""
     try:
         # Verify the pet belongs to the current user
-        pet = db.query(PetORM).filter(
-            PetORM.id == weight_goal.pet_id,
-            PetORM.user_id == current_user.id
-        ).first()
-        
+        pet = (
+            db.query(PetORM)
+            .filter(PetORM.id == weight_goal.pet_id, PetORM.user_id == current_user.id)
+            .first()
+        )
+
         if not pet:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Pet not found or access denied"
+                detail="Pet not found or access denied",
             )
-        
+
         # Create the weight goal
         db_weight_goal = WeightGoalORM(
             pet_id=weight_goal.pet_id,
@@ -138,13 +144,13 @@ async def create_weight_goal(
             goal_type=weight_goal.goal_type,
             description=weight_goal.description,
             is_active=weight_goal.is_active,
-            target_date=weight_goal.target_date
+            target_date=weight_goal.target_date,
         )
-        
+
         db.add(db_weight_goal)
         db.commit()
         db.refresh(db_weight_goal)
-        
+
         return db_weight_goal
     except HTTPException:
         raise
@@ -152,7 +158,7 @@ async def create_weight_goal(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create weight goal: {str(e)}"
+            detail=f"Failed to create weight goal: {str(e)}",
         )
 
 
@@ -161,42 +167,44 @@ async def update_weight_goal(
     goal_id: int,
     weight_goal_update: WeightGoalUpdate,
     db: Session = Depends(get_db),
-    current_user: UserORM = Depends(get_current_user)
+    current_user: UserORM = Depends(get_current_user),
 ):
     """Update an existing weight goal"""
     try:
         # Get the weight goal and verify ownership
-        db_weight_goal = db.query(WeightGoalORM).filter(
-            WeightGoalORM.id == goal_id
-        ).first()
-        
+        db_weight_goal = (
+            db.query(WeightGoalORM).filter(WeightGoalORM.id == goal_id).first()
+        )
+
         if not db_weight_goal:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Weight goal not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Weight goal not found"
             )
-        
+
         # Verify the pet belongs to the current user
-        pet = db.query(PetORM).filter(
-            PetORM.id == db_weight_goal.pet_id,
-            PetORM.user_id == current_user.id
-        ).first()
-        
+        pet = (
+            db.query(PetORM)
+            .filter(
+                PetORM.id == db_weight_goal.pet_id, PetORM.user_id == current_user.id
+            )
+            .first()
+        )
+
         if not pet:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied to this weight goal"
+                detail="Access denied to this weight goal",
             )
-        
+
         # Update the weight goal
-        update_data = weight_goal_update.dict(exclude_unset=True)
+        update_data = weight_goal_update.model_dump(exclude_unset=True)
         for field, value in update_data.items():
             setattr(db_weight_goal, field, value)
-        
+
         db_weight_goal.updated_at = datetime.utcnow()
         db.commit()
         db.refresh(db_weight_goal)
-        
+
         return db_weight_goal
     except HTTPException:
         raise
@@ -204,7 +212,7 @@ async def update_weight_goal(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update weight goal: {str(e)}"
+            detail=f"Failed to update weight goal: {str(e)}",
         )
 
 
@@ -212,37 +220,39 @@ async def update_weight_goal(
 async def delete_weight_goal(
     goal_id: int,
     db: Session = Depends(get_db),
-    current_user: UserORM = Depends(get_current_user)
+    current_user: UserORM = Depends(get_current_user),
 ):
     """Delete a weight goal"""
     try:
         # Get the weight goal and verify ownership
-        db_weight_goal = db.query(WeightGoalORM).filter(
-            WeightGoalORM.id == goal_id
-        ).first()
-        
+        db_weight_goal = (
+            db.query(WeightGoalORM).filter(WeightGoalORM.id == goal_id).first()
+        )
+
         if not db_weight_goal:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Weight goal not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Weight goal not found"
             )
-        
+
         # Verify the pet belongs to the current user
-        pet = db.query(PetORM).filter(
-            PetORM.id == db_weight_goal.pet_id,
-            PetORM.user_id == current_user.id
-        ).first()
-        
+        pet = (
+            db.query(PetORM)
+            .filter(
+                PetORM.id == db_weight_goal.pet_id, PetORM.user_id == current_user.id
+            )
+            .first()
+        )
+
         if not pet:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied to this weight goal"
+                detail="Access denied to this weight goal",
             )
-        
+
         # Delete the weight goal
         db.delete(db_weight_goal)
         db.commit()
-        
+
         return None
     except HTTPException:
         raise
@@ -250,5 +260,5 @@ async def delete_weight_goal(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete weight goal: {str(e)}"
+            detail=f"Failed to delete weight goal: {str(e)}",
         )
