@@ -4,7 +4,7 @@ from models.user import (
     UserORM,
 )
 from models.provider import ProviderORM
-from schemas import UserRead, UserCreate, UserUpdateProvider, UserUpdate
+from schemas import UserRead, UserCreate, UserUpdate
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 from dependencies.db import get_db
@@ -18,8 +18,6 @@ from auth.utils import (
 from config import ACCESS_TOKEN_EXPIRE_MINUTES
 from pydantic import BaseModel
 import jwt
-import requests
-from typing import Optional
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])

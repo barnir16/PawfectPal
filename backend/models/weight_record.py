@@ -9,8 +9,11 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base import Base
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from datetime import datetime
+
+if TYPE_CHECKING:
+    from .pet import PetORM
 
 
 class WeightRecordORM(Base):
@@ -19,9 +22,7 @@ class WeightRecordORM(Base):
     __tablename__ = "weight_records"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    pet_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("pets.id"), nullable=False
-    )
+    pet_id: Mapped[int] = mapped_column(Integer, ForeignKey("pets.id"), nullable=False)
     weight: Mapped[float] = mapped_column(Float, nullable=False)
     weight_unit: Mapped[str] = mapped_column(String, nullable=False, default="kg")
     date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
@@ -29,10 +30,14 @@ class WeightRecordORM(Base):
     source: Mapped[str] = mapped_column(
         String, nullable=False, default="manual"
     )  # manual, vet, auto
-    
+
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
 
     # Relationships
-    pet: Mapped["PetORM"] = relationship("PetORM", back_populates="weight_records", lazy="selectin")
+    pet: Mapped["PetORM"] = relationship(
+        "PetORM", back_populates="weight_records", lazy="selectin"
+    )
