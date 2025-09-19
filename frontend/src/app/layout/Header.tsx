@@ -133,7 +133,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
               color="inherit"
               variant="contained"
               size="small"
-              onClick={() => handleBecomeProvider()}
+              onClick={() => handleToggleProvider()}
               sx={{
                 bgcolor: "rgba(255,255,255,0.2)",
                 "&:hover": { bgcolor: "rgba(255,255,255,0.3)" },

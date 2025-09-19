@@ -1,12 +1,7 @@
 from fastapi import HTTPException, Depends, APIRouter, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from models import (
-    PetORM,
-    ServiceORM,
-    UserORM,
-    ServiceStatus,
-), ServiceTypeORM
+from models import PetORM, ServiceORM, UserORM, ServiceStatus, ServiceTypeORM
 from schemas import ServiceCreate, ServiceRead, ServiceUpdate
 from dependencies.db import get_db
 from dependencies.auth import get_current_user
@@ -97,25 +92,26 @@ def update_service(
     service_id: int,
     service_update: ServiceUpdate,
     db: Session = Depends(get_db),
-    current_user: UserORM = Depends(get_current_user)
+    current_user: UserORM = Depends(get_current_user),
 ):
     """Update an existing service"""
     # Get the service and verify ownership
-    db_service = db.query(ServiceORM).filter(
-        ServiceORM.id == service_id,
-        ServiceORM.user_id == current_user.id
-    ).first()
-    
+    db_service = (
+        db.query(ServiceORM)
+        .filter(ServiceORM.id == service_id, ServiceORM.user_id == current_user.id)
+        .first()
+    )
+
     if not db_service:
         raise HTTPException(status_code=404, detail="Service not found")
-    
+
     # Update fields
     for field, value in service_update.model_dump(exclude_unset=True).items():
         setattr(db_service, field, value)
-    
+
     db.commit()
     db.refresh(db_service)
-    
+
     return ServiceRead.model_validate(db_service)
 
 

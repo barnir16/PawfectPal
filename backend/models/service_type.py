@@ -21,3 +21,10 @@ class ServiceTypeORM(Base):
     services: Mapped[List["ServiceORM"]] = relationship(
         "ServiceORM", back_populates="service_type_obj"
     )
+    
+    # Many-to-many relationship with providers
+    providers: Mapped[List["ProviderORM"]] = relationship(
+        "ProviderORM",
+        secondary="provider_services_link",
+        back_populates="services"
+    )
