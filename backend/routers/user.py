@@ -1,8 +1,6 @@
 from fastapi import HTTPException, Depends, status, APIRouter
 from sqlalchemy.orm import Session
-from models.user import (
-    UserORM,
-)
+from models import UserORM, ServiceTypeORM
 from models.provider import ProviderORM
 from schemas import UserRead, UserCreate, UserUpdate
 from fastapi.security import OAuth2PasswordRequestForm
@@ -190,15 +188,14 @@ def update_user(
     db: Session = Depends(get_db),
     current_user: UserORM = Depends(get_current_user),
 ):
-    print(update)
-    # Update basic user fields
     update_data = update.model_dump(exclude_unset=True)
-    print(update_data)
-    for field in update_data:
-        value = getattr(update, field, None)
-        if value is not None:
+
+    # Update basic user fields
+    for field, value in update_data.items():
+        if value is not None and not field.startswith("provider_"):
             setattr(current_user, field, value)
 
+    # Update provider-related fields
     provider_map = {
         "provider_services": "services",
         "provider_bio": "bio",
@@ -206,15 +203,25 @@ def update_user(
         "provider_rating": "rating",
     }
 
-    if current_user.is_provider and current_user.provider_profile:
-        for schema_field, orm_field in provider_map.items():
-            value = getattr(update, schema_field, None)
-            if value is not None:
-                setattr(current_user.provider_profile, orm_field, value)
+    if current_user.is_provider:
+        profile = current_user.provider_profile
+        if profile:
+            for schema_field, orm_field in provider_map.items():
+                value = getattr(update, schema_field, None)
+                if value is None:
+                    continue
+                if schema_field == "provider_services":
+                    service_objs = (
+                        db.query(ServiceTypeORM)
+                        .filter(ServiceTypeORM.id.in_(value))
+                        .all()
+                    )
+                    setattr(profile, orm_field, service_objs)  # can be empty list
+                else:
+                    setattr(profile, orm_field, value)
 
     db.commit()
     db.refresh(current_user)
-
     return current_user
 
 

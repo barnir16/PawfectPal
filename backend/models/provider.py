@@ -7,6 +7,16 @@ from .base import Base
 if TYPE_CHECKING:
     from .service_type import ServiceTypeORM
 
+# Correctly define the association table at module level
+provider_services_link = Table(
+    "provider_services_link",
+    Base.metadata,
+    Column("provider_id", Integer, ForeignKey("providers.id"), primary_key=True),
+    Column(
+        "service_type_id", Integer, ForeignKey("service_types.id"), primary_key=True
+    ),
+)
+
 
 class ProviderORM(Base):
     __tablename__ = "providers"
@@ -16,18 +26,12 @@ class ProviderORM(Base):
 
     services: Mapped[List["ServiceTypeORM"]] = relationship(
         "ServiceTypeORM",
-        secondary="provider_services_link",
+        secondary=provider_services_link,  # use the module-level table
         back_populates="providers",
     )
     bio: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     hourly_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     rating: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 
-    provider_services_link = Table(
-        "provider_services_link",
-        Base.metadata,
-        Column("provider_id", Integer, ForeignKey("providers.id")),
-        Column("service_type_id", Integer, ForeignKey("service_types.id")),
-    )
     # Relationship back to User
     user = relationship("UserORM", back_populates="provider_profile")
