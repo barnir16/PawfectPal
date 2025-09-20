@@ -1,20 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Box,
   Tabs,
   Tab,
   Typography,
   Paper,
-  List,
-  ListItem,
-  ListItemText,
   CircularProgress,
   Chip,
+  Card,
+  CardContent,
+  CardActions,
+  Button,
 } from "@mui/material";
-import { getServices } from "../servicesApi";
-import type { Service } from "../../../types/services";
 import { useLocalization } from "../../../contexts/LocalizationContext";
 import { ServiceErrorBoundary } from "../components/ServiceErrorBoundary";
+import MockServiceService from "../../../services/services/mockServices";
+import type { Service, ServiceStatus } from "../../../types/services/service";
 
 export const ServicesPage = () => {
   const { t } = useLocalization();
@@ -23,22 +24,39 @@ export const ServicesPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const status = tab === 0 ? "active" : "history";
-        const data = await getServices(status);
-        setServices(data);
-      } catch (err: any) {
-        setError(err.message || t('services.somethingWentWrong'));
-      } finally {
-        setLoading(false);
+  const fetchServices = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      let services: Service[] = [];
+
+      if (tab === 0) {
+        // For active tab, get services that are not completed or cancelled
+        const allServices = await MockServiceService.getServices();
+        services = allServices.filter(
+          (service) =>
+            service.status !== "completed" && service.status !== "cancelled"
+        );
+      } else {
+        // For history tab, get completed and cancelled services
+        const completedServices =
+          await MockServiceService.getServicesByStatus("completed");
+        const cancelledServices =
+          await MockServiceService.getServicesByStatus("cancelled");
+        services = [...completedServices, ...cancelledServices];
       }
-    };
-    fetchData();
-  }, [tab]);
+
+      setServices(services);
+    } catch (err: any) {
+      setError(err.message || t("services.somethingWentWrong"));
+    } finally {
+      setLoading(false);
+    }
+  }, [tab, t]);
+
+  useEffect(() => {
+    fetchServices();
+  }, [fetchServices]);
 
   const handleChange = (_: React.SyntheticEvent, newValue: number) => {
     setTab(newValue);
@@ -48,73 +66,108 @@ export const ServicesPage = () => {
     <ServiceErrorBoundary>
       <Box sx={{ p: 3 }}>
         <Typography variant="h4" gutterBottom>
-          {t('services.title')}
+          {t("services.title")}
         </Typography>
 
         <Tabs value={tab} onChange={handleChange}>
-          <Tab label={t('services.activeUpcoming')} />
-          <Tab label={t('services.historyCompleted')} />
+          <Tab label={t("services.activeUpcoming")} />
+          <Tab label={t("services.historyCompleted")} />
         </Tabs>
 
         <Paper sx={{ mt: 2, p: 2 }}>
           {loading && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+            <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
               <CircularProgress />
-              <Typography sx={{ ml: 2 }}>{t('services.loading')}</Typography>
+              <Typography sx={{ ml: 2 }}>{t("services.loading")}</Typography>
             </Box>
           )}
-          
+
           {error && (
-            <Typography color="error" sx={{ textAlign: 'center', p: 3 }}>
+            <Typography color="error" sx={{ textAlign: "center", p: 3 }}>
               {error}
             </Typography>
           )}
-          
+
           {!loading && !error && services.length === 0 && (
-            <Typography sx={{ textAlign: 'center', p: 3, color: 'text.secondary' }}>
-              {t('services.noServicesFound')}
+            <Typography
+              sx={{ textAlign: "center", p: 3, color: "text.secondary" }}
+            >
+              {t("services.noServicesFound")}
             </Typography>
           )}
-          
+
           {!loading && !error && services.length > 0 && (
-            <List>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  sm: "1fr 1fr",
+                  md: "repeat(3, 1fr)", // bigger cards, 2 per row on medium
+                },
+                gap: 3,
+              }}
+            >
               {services.map((service) => (
-                <ListItem key={service.id}>
-                  <ListItemText
-                    primary={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Chip 
-                          label={t(`services.${service.service_type}`)} 
-                          color="primary" 
-                          size="small" 
-                        />
-                        <Typography variant="body1">
-                          {t('services.forPet')} {service.pet_id}
-                        </Typography>
-                      </Box>
-                    }
-                    secondary={
-                      <Box>
+                <Card
+                  key={service.id}
+                  elevation={6}
+                  sx={{
+                    borderRadius: 3,
+                    p: 2,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    minHeight: 180,
+                  }}
+                >
+                  <CardContent>
+                    <Typography variant="h6" sx={{ mb: 1 }}>
+                      {t(`${service.service_type}`)}
+                    </Typography>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ fontWeight: 500, mb: 1 }}
+                    >
+                      {t("for")} {service.pet_name}
+                    </Typography>
+
+                    <Box sx={{ mt: 1 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        {t("services.startDate")}:{" "}
+                        {new Date(service.start_datetime).toLocaleDateString()}
+                      </Typography>
+                      {service.end_datetime && (
                         <Typography variant="body2" color="text.secondary">
-                          {t('services.startDate')}: {new Date(service.start_datetime).toLocaleDateString()}
+                          {t("services.endDate")}:{" "}
+                          {new Date(service.end_datetime).toLocaleDateString()}
                         </Typography>
-                        {service.end_datetime && (
-                          <Typography variant="body2" color="text.secondary">
-                            {t('services.endDate')}: {new Date(service.end_datetime).toLocaleDateString()}
-                          </Typography>
-                        )}
-                        <Chip 
-                          label={t(`services.${service.status}`)} 
-                          color={service.status === 'completed' ? 'success' : service.status === 'cancelled' ? 'error' : 'default'}
-                          size="small"
-                          sx={{ mt: 1 }}
-                        />
-                      </Box>
-                    }
-                  />
-                </ListItem>
+                      )}
+                    </Box>
+                  </CardContent>
+
+                  <CardActions
+                    sx={{ justifyContent: "space-between", mt: "auto" }}
+                  >
+                    <Chip
+                      label={t(`${service.status}`)}
+                      color={
+                        service.status === "completed"
+                          ? "success"
+                          : service.status === "cancelled"
+                            ? "error"
+                            : "warning"
+                      }
+                      size="medium"
+                      sx={{ fontWeight: "bold" }}
+                    />
+                    <Button size="small" variant="outlined">
+                      {t("Details")}
+                    </Button>
+                  </CardActions>
+                </Card>
               ))}
-            </List>
+            </Box>
           )}
         </Paper>
       </Box>

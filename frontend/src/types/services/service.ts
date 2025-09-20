@@ -30,6 +30,7 @@ export interface Service {
   id?: number;
   user_id: number; // Added from ORM
   pet_id: number;
+  pet_name: string;
   service_type: ServiceType;
   status: ServiceStatus;
   start_datetime: string; // ISO date string
