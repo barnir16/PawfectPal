@@ -11,6 +11,12 @@ import {
   Avatar,
   CircularProgress,
   IconButton,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
+  Checkbox,
+  ListItemText,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { Edit as EditIcon, Save as SaveIcon } from "@mui/icons-material";
@@ -31,7 +37,7 @@ interface ProfileFormData {
   postal_code?: string;
   latitude?: string;
   longitude?: string;
-  provider_services?: string;
+  provider_services?: number[];
   provider_bio?: string;
   provider_hourly_rate?: string;
   provider_rating?: string;
@@ -50,7 +56,6 @@ const ProfilePage: React.FC = () => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Helper function to get the initial form data from the user object
   const getInitialFormData = (user: any): ProfileFormData => ({
     username: user?.username || "",
     email: user?.email || "",
@@ -67,8 +72,8 @@ const ProfilePage: React.FC = () => {
     latitude: user?.latitude?.toString() || "",
     longitude: user?.longitude?.toString() || "",
     provider_services: user?.is_provider
-      ? (user.provider_services || []).join(", ")
-      : "",
+      ? user.provider_services?.map((s: any) => s.id) || []
+      : [],
     provider_bio: user?.is_provider ? user.provider_bio || "" : "",
     provider_hourly_rate: user?.is_provider
       ? user.provider_hourly_rate?.toString() || ""
@@ -88,6 +93,33 @@ const ProfilePage: React.FC = () => {
       setPreviewImage(user.profile_image || user.profile_picture_url || null);
     }
   }, [user]);
+
+  const [serviceOptions, setServiceOptions] = useState<
+    { id: number; name: string }[]
+  >([
+    { id: 1, name: "Dog Walking" },
+    { id: 2, name: "Pet Sitting" },
+    { id: 3, name: "Grooming" },
+  ]);
+
+  // useEffect(() => {
+  //   const fetchServices = async () => {
+  //     try {
+  //       const token = await getToken();
+  //       const res = await fetch(`${getBaseUrl()}/service-types`, {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       });
+  //       if (res.ok) {
+  //         const data = await res.json();
+  //         setServiceOptions(data);
+  //       }
+  //     } catch (err) {
+  //       console.warn("Could not fetch services, using local list.");
+  //     }
+  //   };
+
+  //   if (serviceOptions.length === 0) fetchServices();
+  // }, []);
 
   if (!user)
     return <Typography>Please log in to view your profile.</Typography>;
@@ -113,7 +145,6 @@ const ProfilePage: React.FC = () => {
       let updatedUserData = { ...user };
       let newImageUrl = user.profile_image;
 
-      // 1. Upload new image if a file is selected
       if (file) {
         const formDataToSend = new FormData();
         formDataToSend.append("file", file);
@@ -132,18 +163,24 @@ const ProfilePage: React.FC = () => {
         updatedUserData.profile_image = newImageUrl;
       }
 
-      // 2. Prepare and send profile data
       const updatedPayload: Partial<ProfileFormData> = {};
       const initial = getInitialFormData(user);
 
-      Object.keys(formData).forEach((key) => {
-        const k = key as keyof ProfileFormData;
-        if (formData[k] !== initial[k]) {
-          updatedPayload[k] = formData[k];
+      (Object.keys(formData) as (keyof ProfileFormData)[]).forEach((key) => {
+        const newValue = formData[key];
+        const initialValue = initial[key];
+
+        // Only update if value changed
+        if (newValue !== initialValue) {
+          // Narrow types explicitly
+          if (key === "provider_services") {
+            updatedPayload[key] = newValue as number[];
+          } else {
+            updatedPayload[key] = newValue as string;
+          }
         }
       });
 
-      // Update the profile_image in the payload if a new image was uploaded
       if (newImageUrl !== user.profile_image) {
         updatedPayload.profile_image = newImageUrl;
       }
@@ -165,11 +202,9 @@ const ProfilePage: React.FC = () => {
       }
 
       setUser(updatedUserData);
-      console.log("Profile and/or image updated successfully!");
       setIsEditing(false);
     } catch (err) {
       console.error(err);
-      // NOTE: Using a custom modal or snackbar is better than alert()
       alert("Failed to save changes. Please try again.");
     } finally {
       setLoading(false);
@@ -178,16 +213,87 @@ const ProfilePage: React.FC = () => {
 
   const getAvatarSrc = () => {
     if (previewImage) {
-      // If it's a blob URL, return it directly
       if (previewImage.startsWith("blob:")) {
         return previewImage;
       }
-      // Otherwise, treat it like a normal image path
       return getFullImageUrl(previewImage);
     }
 
     return getFullImageUrl(
       user.profile_image || user.profile_picture_url || null
+    );
+  };
+
+  const renderField = (key: string, value: any) => {
+    if (isEditing) {
+      if (key === "provider_services") {
+        return (
+          <FormControl fullWidth>
+            <InputLabel>Services</InputLabel>
+            <Select
+              multiple
+              name="provider_services"
+              value={formData.provider_services ?? []}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  provider_services: e.target.value as number[],
+                })
+              }
+              renderValue={(selected) => {
+                const selectedIds = selected;
+                return serviceOptions
+                  .filter((opt) => selectedIds.includes(opt.id))
+                  .map((opt) => opt.name)
+                  .join(", ");
+              }}
+            >
+              {serviceOptions.map((service) => (
+                <MenuItem key={service.id} value={service.id}>
+                  <Checkbox
+                    checked={(formData.provider_services ?? []).includes(
+                      service.id
+                    )}
+                  />
+                  <ListItemText primary={service.name} />
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        );
+      }
+      return (
+        <TextField
+          fullWidth
+          label={key.replace("_", " ").toUpperCase()}
+          name={key}
+          value={value}
+          onChange={handleChange}
+          variant="outlined"
+          multiline={key === "bio"}
+          rows={key === "bio" ? 4 : 1}
+        />
+      );
+    }
+
+    return (
+      <Box>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ textTransform: "uppercase" }}
+        >
+          {key.replace("_", " ")}
+        </Typography>
+        <Typography variant="body1" sx={{ mt: 0.5 }}>
+          {key === "provider_services"
+            ? serviceOptions
+                .filter((opt) => (value as number[]).includes(opt.id))
+                .map((opt) => opt.name)
+                .join(", ") || "Not set"
+            : value || "Not set"}
+        </Typography>
+      </Box>
     );
   };
 
@@ -291,31 +397,7 @@ const ProfilePage: React.FC = () => {
 
             return (
               <Grid size={{ xs: 12, sm: 6 }} key={key}>
-                {isEditing ? (
-                  <TextField
-                    fullWidth
-                    label={key.replace("_", " ").toUpperCase()}
-                    name={key}
-                    value={value}
-                    onChange={handleChange}
-                    variant="outlined"
-                    multiline={key === "bio"}
-                    rows={key === "bio" ? 4 : 1}
-                  />
-                ) : (
-                  <Box>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ textTransform: "uppercase" }}
-                    >
-                      {key.replace("_", " ")}
-                    </Typography>
-                    <Typography variant="body1" sx={{ mt: 0.5 }}>
-                      {value || "Not set"}
-                    </Typography>
-                  </Box>
-                )}
+                {renderField(key, value)}
               </Grid>
             );
           })}
