@@ -29,7 +29,7 @@ app = FastAPI(
 # Health check endpoint for Railway
 @app.get("/health")
 def health_check():
-    return {"status": "healthy", "message": "PawfectPal API is running"}
+    return {"status": "healthy", "message": "PawfectPal API is running", "version": "1.0.1"}
 
 # CORS configuration
 app.add_middleware(
