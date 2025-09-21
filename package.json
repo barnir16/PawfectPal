@@ -1,0 +1,13 @@
+{
+  "name": "pawfectpal",
+  "version": "1.0.0",
+  "description": "PawfectPal - Pet Care Management App",
+  "scripts": {
+    "start": "bash start.sh",
+    "build": "cd frontend && npm ci && npm run build",
+    "dev": "concurrently \"cd backend && python -m uvicorn main:app --reload\" \"cd frontend && npm run dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  }
+}
