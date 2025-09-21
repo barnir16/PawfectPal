@@ -41,8 +41,17 @@ def health_check():
 def test_endpoint():
     return {
         "message": "This is the NEW version with Firebase fixes!",
-        "version": "1.0.2",
-        "firebase_status": "disabled_but_working"
+        "version": "1.0.3",
+        "firebase_status": "disabled_but_working",
+        "railway_detection": "FORCE_REDEPLOY_2025_01_21"
+    }
+
+@app.get("/railway-test")
+def railway_test():
+    return {
+        "status": "Railway is using NEW code!",
+        "timestamp": "2025-01-21T23:45:00Z",
+        "version": "1.0.3"
     }
 
 # CORS configuration
