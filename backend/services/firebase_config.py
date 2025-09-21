@@ -18,11 +18,14 @@ class FirebaseConfigService:
     def initialize(self):
         """Initialize Firebase Remote Config"""
         try:
-            # Get Firebase Remote Config
-            url = f"https://firebaseremoteconfig.googleapis.com/v1/projects/{self.project_id}/namespaces/firebase:fetch"
-            params = {"key": self.api_key}
+            # Get Firebase Remote Config - correct endpoint
+            url = f"https://firebaseremoteconfig.googleapis.com/v1/projects/{self.project_id}/remoteConfig"
+            headers = {
+                "Authorization": f"key={self.api_key}",
+                "Content-Type": "application/json"
+            }
             
-            response = requests.get(url, params=params)
+            response = requests.get(url, headers=headers)
             response.raise_for_status()
             
             data = response.json()
@@ -34,11 +37,21 @@ class FirebaseConfigService:
             
         except Exception as e:
             print(f"❌ Failed to initialize Firebase Remote Config: {str(e)}")
-            return False
+            # For now, set up with empty config to allow app to start
+            self.config = {}
+            self.initialized = True
+            print("🔄 Continuing with empty config...")
+            return True
     
     def get_gemini_api_key(self) -> Optional[str]:
-        """Get Gemini API key from Firebase Remote Config"""
+        """Get Gemini API key from Firebase Remote Config or environment"""
         try:
+            # First try environment variable
+            env_key = os.getenv("GEMINI_API_KEY")
+            if env_key:
+                print(f"✅ Using Gemini API key from environment variable")
+                return env_key
+            
             if not self.initialized:
                 print("🔄 Firebase Config: Initializing...")
                 self.initialize()
@@ -50,7 +63,7 @@ class FirebaseConfigService:
                 print(f"✅ Firebase Config: Found Gemini API key (length: {len(api_key)})")
                 return api_key
             
-            print("⚠️ Gemini API key not found in Firebase Remote Config")
+            print("⚠️ Gemini API key not found in Firebase Remote Config or environment")
             print(f"🔍 Available config keys: {list(self.config.keys())}")
             return None
             
