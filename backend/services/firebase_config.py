@@ -41,6 +41,7 @@ class FirebaseConfigService:
             self.config = {}
             self.initialized = True
             print("🔄 Continuing with empty config...")
+            print("🚀 Firebase Remote Config disabled - app will start without it")
             return True
     
     def get_gemini_api_key(self) -> Optional[str]:
