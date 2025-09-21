@@ -29,7 +29,21 @@ app = FastAPI(
 # Health check endpoint for Railway
 @app.get("/health")
 def health_check():
-    return {"status": "healthy", "message": "PawfectPal API is running", "version": "1.0.1"}
+    return {
+        "status": "healthy", 
+        "message": "PawfectPal API is running", 
+        "version": "1.0.2",
+        "firebase_fixed": True,
+        "deployment_time": "2025-01-21T23:30:00Z"
+    }
+
+@app.get("/test")
+def test_endpoint():
+    return {
+        "message": "This is the NEW version with Firebase fixes!",
+        "version": "1.0.2",
+        "firebase_status": "disabled_but_working"
+    }
 
 # CORS configuration
 app.add_middleware(
