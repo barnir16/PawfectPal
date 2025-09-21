@@ -1,16 +1,11 @@
 [phases.setup]
-nixPkgs = ["python39", "nodejs", "npm", "pip"]
+nixPkgs = ["python39", "python39Packages.pip"]
 
 [phases.install]
-cmds = [
-  "cd backend && pip install -r requirements.txt",
-  "cd frontend && npm ci"
-]
+cmds = ["pip install -r requirements.txt"]
 
 [phases.build]
-cmds = [
-  "cd frontend && npm run build"
-]
+cmds = ["echo 'No build step needed for Python'"]
 
 [start]
-cmd = "bash start.sh"
+cmd = "python -m uvicorn main:app --host 0.0.0.0 --port $PORT"
