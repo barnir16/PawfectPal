@@ -99,9 +99,9 @@ const AppContent = () => {
         sx={{
           flexGrow: 1,
           p: 3,
-          width: { sm: desktopOpen ? `calc(100% - ${240}px)` : '100%' },
-          ml: { sm: isRTL ? "0px" : (desktopOpen ? `${240}px` : "0px") },
-          mr: { sm: isRTL ? (desktopOpen ? `${240}px` : "0px") : "0px" },
+          width: { sm: desktopOpen ? `calc(100% - 240px)` : `calc(100% - 64px)` },
+          ml: { sm: isRTL ? "0px" : (desktopOpen ? "240px" : "64px") },
+          mr: { sm: isRTL ? (desktopOpen ? "240px" : "64px") : "0px" },
           mt: "64px",
           overflow: "auto",
           height: "calc(100vh - 64px)",

@@ -35,6 +35,7 @@ type SidebarProps = {
 };
 
 const drawerWidth = 240;
+const minimizedWidth = 64;
 
 export const Sidebar = ({ mobileOpen, onClose, onDesktopToggle }: SidebarProps) => {
   const theme = useTheme();
@@ -75,46 +76,54 @@ export const Sidebar = ({ mobileOpen, onClose, onDesktopToggle }: SidebarProps) 
           justifyContent: "space-between",
         }}
       >
-        <Typography variant="h6" noWrap component="div">
-          PawfectPal
-        </Typography>
+        {open && (
+          <Typography variant="h6" noWrap component="div">
+            PawfectPal
+          </Typography>
+        )}
         <IconButton 
           onClick={handleDrawerToggle}
           sx={{ 
             color: 'white',
-            '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
+            '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' },
+            ml: open ? 0 : 'auto',
+            mr: open ? 0 : 'auto'
           }}
         >
           <MenuIcon fontSize="small" />
         </IconButton>
       </Box>
-      <Divider />
-      <List>
-        {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <ListItemButton
-              component={RouterLink}
-              to={item.path}
-              selected={location.pathname === item.path}
-              onClick={onClose}
-              sx={{
-                flexDirection: isRTL ? 'row-reverse' : 'row',
-              }}
-            >
-              <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
-              <ListItemText 
-                primary={item.text} 
-                sx={{ 
-                  textAlign: isRTL ? 'right' : 'left',
-                  '& .MuiListItemText-primary': {
-                    textAlign: isRTL ? 'right' : 'left'
-                  }
-                }}
-              />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
+      {open && (
+        <>
+          <Divider />
+          <List>
+            {menuItems.map((item) => (
+              <ListItem key={item.text} disablePadding>
+                <ListItemButton
+                  component={RouterLink}
+                  to={item.path}
+                  selected={location.pathname === item.path}
+                  onClick={onClose}
+                  sx={{
+                    flexDirection: isRTL ? 'row-reverse' : 'row',
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
+                  <ListItemText 
+                    primary={item.text} 
+                    sx={{ 
+                      textAlign: isRTL ? 'right' : 'left',
+                      '& .MuiListItemText-primary': {
+                        textAlign: isRTL ? 'right' : 'left'
+                      }
+                    }}
+                  />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </>
+      )}
     </div>
   );
 
@@ -150,11 +159,12 @@ export const Sidebar = ({ mobileOpen, onClose, onDesktopToggle }: SidebarProps) 
           display: { xs: "none", sm: "block" },
           "& .MuiDrawer-paper": { 
             boxSizing: "border-box", 
-            width: drawerWidth,
+            width: open ? drawerWidth : minimizedWidth,
             transition: theme.transitions.create('width', {
               easing: theme.transitions.easing.sharp,
               duration: theme.transitions.duration.enteringScreen,
             }),
+            overflow: 'hidden',
           },
         }}
       >
