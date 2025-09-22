@@ -93,37 +93,57 @@ export const Sidebar = ({ mobileOpen, onClose, onDesktopToggle }: SidebarProps) 
           <MenuIcon fontSize="small" />
         </IconButton>
       </Box>
-      {open && (
-        <>
-          <Divider />
-          <List>
-            {menuItems.map((item) => (
-              <ListItem key={item.text} disablePadding>
-                <ListItemButton
-                  component={RouterLink}
-                  to={item.path}
-                  selected={location.pathname === item.path}
-                  onClick={onClose}
-                  sx={{
-                    flexDirection: isRTL ? 'row-reverse' : 'row',
-                  }}
-                >
-                  <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
-                  <ListItemText 
-                    primary={item.text} 
-                    sx={{ 
+      <Divider />
+      <List>
+        {menuItems.map((item) => (
+          <ListItem key={item.text} disablePadding>
+            <ListItemButton
+              component={RouterLink}
+              to={item.path}
+              selected={location.pathname === item.path}
+              onClick={onClose}
+              sx={{
+                flexDirection: isRTL ? 'row-reverse' : 'row',
+                minHeight: 48,
+                px: open ? 2 : 1.5,
+                justifyContent: open ? 'flex-start' : 'center',
+                '&.Mui-selected': {
+                  backgroundColor: 'rgba(255,255,255,0.1)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,255,255,0.15)',
+                  },
+                },
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.05)',
+                },
+              }}
+              title={!open ? item.text : undefined} // Show tooltip when minimized
+            >
+              <ListItemIcon 
+                sx={{ 
+                  minWidth: open ? 40 : 'auto',
+                  justifyContent: 'center',
+                  color: location.pathname === item.path ? 'primary.main' : 'inherit'
+                }}
+              >
+                {item.icon}
+              </ListItemIcon>
+              {open && (
+                <ListItemText 
+                  primary={item.text} 
+                  sx={{ 
+                    textAlign: isRTL ? 'right' : 'left',
+                    '& .MuiListItemText-primary': {
                       textAlign: isRTL ? 'right' : 'left',
-                      '& .MuiListItemText-primary': {
-                        textAlign: isRTL ? 'right' : 'left'
-                      }
-                    }}
-                  />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-        </>
-      )}
+                      color: location.pathname === item.path ? 'primary.main' : 'inherit'
+                    }
+                  }}
+                />
+              )}
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
     </div>
   );
 

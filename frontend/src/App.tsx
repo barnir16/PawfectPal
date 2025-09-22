@@ -142,23 +142,6 @@ const AppContent = () => {
       {/* Notifications */}
       <NotificationContainer />
       
-      {/* Floating sidebar toggle button when minimized */}
-      {!desktopOpen && (
-        <Fab
-          color="primary"
-          aria-label="open sidebar"
-          onClick={() => setDesktopOpen(true)}
-          sx={{
-            position: 'fixed',
-            top: 80,
-            left: isRTL ? 'auto' : 16,
-            right: isRTL ? 16 : 'auto',
-            zIndex: 1000,
-          }}
-        >
-          <MenuIcon />
-        </Fab>
-      )}
     </Box>
   );
 };
