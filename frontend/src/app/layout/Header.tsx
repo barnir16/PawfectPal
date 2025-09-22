@@ -27,7 +27,7 @@ type HeaderProps = {
 export const Header = ({ onMenuClick }: HeaderProps) => {
   const { user, setUser, logout, forceLogout } = useAuth();
   const navigate = useNavigate();
-  const { t } = useLocalization();
+  const { t, isRTL } = useLocalization();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleAccountClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -98,7 +98,8 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
       position="fixed"
       sx={{
         width: { sm: `calc(100% - 240px)` },
-        ml: { sm: "240px" },
+        ml: { sm: isRTL ? "0px" : "240px" },
+        mr: { sm: isRTL ? "240px" : "0px" },
         boxShadow: "none",
         borderBottom: "1px solid rgba(0, 0, 0, 0.12)",
       }}
@@ -107,9 +108,13 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
         <IconButton
           color="inherit"
           aria-label="open drawer"
-          edge="start"
+          edge={isRTL ? "end" : "start"}
           onClick={onMenuClick}
-          sx={{ mr: 2, display: { sm: "none" } }}
+          sx={{ 
+            mr: isRTL ? 0 : 2, 
+            ml: isRTL ? 2 : 0, 
+            display: { sm: "none" } 
+          }}
         >
           <MenuIcon />
         </IconButton>

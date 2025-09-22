@@ -51,7 +51,7 @@ const AppContent = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isChatOpen, selectedPet, openChat, closeChat, toggleChat } = useAIChat();
-  const { t } = useLocalization();
+  const { t, isRTL } = useLocalization();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -95,7 +95,8 @@ const AppContent = () => {
           flexGrow: 1,
           p: 3,
           width: { sm: `calc(100% - ${240}px)` },
-          ml: { sm: `${240}px` },
+          ml: { sm: isRTL ? "0px" : `${240}px` },
+          mr: { sm: isRTL ? `${240}px` : "0px" },
           mt: "64px",
           overflow: "auto",
           height: "calc(100vh - 64px)",
