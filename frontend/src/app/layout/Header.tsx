@@ -119,13 +119,25 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
           <MenuIcon />
         </IconButton>
         <Box sx={{ flexGrow: 1 }} />
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Typography variant="body2" sx={{ color: "inherit" }}>
+        <Box sx={{ 
+          display: "flex", 
+          alignItems: "center", 
+          gap: 1,
+          flexDirection: isRTL ? 'row-reverse' : 'row'
+        }}>
+          <Typography variant="body2" sx={{ 
+            color: "inherit",
+            textAlign: isRTL ? 'right' : 'left'
+          }}>
             {user?.username || "User"}
           </Typography>
 
           {/* Debug info */}
-          <Typography variant="caption" sx={{ color: "inherit", fontSize: "10px" }}>
+          <Typography variant="caption" sx={{ 
+            color: "inherit", 
+            fontSize: "10px",
+            textAlign: isRTL ? 'right' : 'left'
+          }}>
             Provider: {user?.is_provider ? "Yes" : "No"}
           </Typography>
 
