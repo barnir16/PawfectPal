@@ -151,7 +151,7 @@ export const Sidebar = ({ mobileOpen, onClose, onDesktopToggle }: SidebarProps) 
     <Box
       component="nav"
       sx={{ 
-        width: { sm: open ? drawerWidth : minimizedWidth }, 
+        width: { sm: minimizedWidth }, 
         flexShrink: { sm: 0 },
         transition: 'width 0.3s ease'
       }}
@@ -178,7 +178,7 @@ export const Sidebar = ({ mobileOpen, onClose, onDesktopToggle }: SidebarProps) 
       <Drawer
         variant="persistent"
         anchor={isRTL ? "right" : "left"}
-        open={open}
+        open={true}
         sx={{
           display: { xs: "none", sm: "block" },
           "& .MuiDrawer-paper": { 
@@ -188,7 +188,7 @@ export const Sidebar = ({ mobileOpen, onClose, onDesktopToggle }: SidebarProps) 
               easing: theme.transitions.easing.sharp,
               duration: theme.transitions.duration.enteringScreen,
             }),
-            overflow: 'hidden',
+            overflow: 'visible',
           },
         }}
       >

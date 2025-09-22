@@ -101,7 +101,7 @@ const AppContent = () => {
         sx={{
           flexGrow: 1,
           p: 3,
-          width: { sm: desktopOpen ? `calc(100% - 240px)` : `calc(100% - 64px)` },
+          width: { sm: `calc(100% - 64px)` },
           ml: { sm: isRTL ? "0px" : "64px" },
           mr: { sm: isRTL ? "64px" : "0px" },
           mt: "64px",
