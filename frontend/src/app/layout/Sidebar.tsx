@@ -75,9 +75,9 @@ export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
         </Typography>
         <IconButton onClick={handleDrawerToggle}>
           {isRTL ? (
-            <ChevronRightIcon />
-          ) : (
             <ChevronLeftIcon />
+          ) : (
+            <ChevronRightIcon />
           )}
         </IconButton>
       </Box>
@@ -90,9 +90,20 @@ export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
               to={item.path}
               selected={location.pathname === item.path}
               onClick={onClose}
+              sx={{
+                flexDirection: isRTL ? 'row-reverse' : 'row',
+              }}
             >
               <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
+              <ListItemText 
+                primary={item.text} 
+                sx={{ 
+                  textAlign: isRTL ? 'right' : 'left',
+                  '& .MuiListItemText-primary': {
+                    textAlign: isRTL ? 'right' : 'left'
+                  }
+                }}
+              />
             </ListItemButton>
           </ListItem>
         ))}
