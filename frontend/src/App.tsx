@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import {
-  Box,
-  CssBaseline,
-  CircularProgress,
-} from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import { LocalizationProvider } from "./contexts/LocalizationContext";
+import {
+  LocalizationProvider,
+  useLocalization,
+} from "./contexts/LocalizationContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { Header } from "./app/layout/Header";
@@ -16,6 +15,7 @@ import { Tasks } from "./features/tasks/pages/TasksPage";
 import { Pets } from "./features/pets/pages/PetsPage";
 import { ServicesPage } from "./features/services/pages/ServicesPage";
 import { BookService } from "./features/services/pages/BookService";
+import ServiceDetailsPage from "./features/services/pages/ServiceDetailsPage";
 import { PetForm } from "./features/pets/components/PetForm/PetForm";
 import { PetDetail } from "./features/pets/components/PetDetail/PetDetail";
 import Settings from "./features/settings/components/Settings/Settings";
@@ -25,7 +25,6 @@ import AuthScreen from "./features/auth/pages/AuthPage";
 import ProfilePage from "./features/profile/pages/ProfilePage";
 import { AIChatbot, ChatToggleButton } from "./components/ai/AIChatbot";
 import { useAIChat } from "./hooks/useAIChat";
-import { useLocalization } from "./contexts/LocalizationContext";
 import { NotificationContainer } from "./components/notifications/NotificationContainer";
 import ErrorBoundary from "./components/ErrorBoundary";
 import RealVaccineTracker from "./components/tasks/RealVaccineTracker";
@@ -50,7 +49,8 @@ const App = () => {
 const AppContent = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { isChatOpen, selectedPet, openChat, closeChat, toggleChat } = useAIChat();
+  const { isChatOpen, selectedPet, openChat, closeChat, toggleChat } =
+    useAIChat();
   const { t } = useLocalization();
 
   const handleDrawerToggle = () => {
@@ -113,6 +113,7 @@ const AppContent = () => {
           <Route path="/pets/:id/edit" element={<PetForm />} />
           <Route path="/weight-tracking" element={<WeightTrackingPage />} />
           <Route path="/services" element={<ServicesPage />} />
+          <Route path="/services/:id" element={<ServiceDetailsPage />} />
           <Route path="/bookservice" element={<BookService />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<Settings />} />
@@ -129,7 +130,7 @@ const AppContent = () => {
         selectedPet={selectedPet}
       />
       <ChatToggleButton onClick={toggleChat} t={t} />
-      
+
       {/* Notifications */}
       <NotificationContainer />
     </Box>

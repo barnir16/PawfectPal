@@ -14,8 +14,9 @@ import {
 } from "@mui/material";
 import { useLocalization } from "../../../contexts/LocalizationContext";
 import { ServiceErrorBoundary } from "../components/ServiceErrorBoundary";
-import MockServiceService from "../../../services/services/mockServices";
-import type { Service, ServiceStatus } from "../../../types/services/service";
+import MockService from "../../../services/services/mockServices";
+import type { Service } from "../../../types/services/service";
+import { Link as RouterLink } from "react-router-dom";
 
 export const ServicesPage = () => {
   const { t } = useLocalization();
@@ -32,7 +33,7 @@ export const ServicesPage = () => {
 
       if (tab === 0) {
         // For active tab, get services that are not completed or cancelled
-        const allServices = await MockServiceService.getServices();
+        const allServices = await MockService.getServices();
         services = allServices.filter(
           (service) =>
             service.status !== "completed" && service.status !== "cancelled"
@@ -40,9 +41,9 @@ export const ServicesPage = () => {
       } else {
         // For history tab, get completed and cancelled services
         const completedServices =
-          await MockServiceService.getServicesByStatus("completed");
+          await MockService.getServicesByStatus("completed");
         const cancelledServices =
-          await MockServiceService.getServicesByStatus("cancelled");
+          await MockService.getServicesByStatus("cancelled");
         services = [...completedServices, ...cancelledServices];
       }
 
@@ -103,70 +104,84 @@ export const ServicesPage = () => {
                 gridTemplateColumns: {
                   xs: "1fr",
                   sm: "1fr 1fr",
-                  md: "repeat(3, 1fr)", // bigger cards, 2 per row on medium
+                  md: "repeat(3, 1fr)",
                 },
                 gap: 3,
               }}
             >
-              {services.map((service) => (
-                <Card
-                  key={service.id}
-                  elevation={6}
-                  sx={{
-                    borderRadius: 3,
-                    p: 2,
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                    minHeight: 180,
-                  }}
-                >
-                  <CardContent>
-                    <Typography variant="h6" sx={{ mb: 1 }}>
-                      {t(`${service.service_type}`)}
-                    </Typography>
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ fontWeight: 500, mb: 1 }}
-                    >
-                      {t("for")} {service.pet_name}
-                    </Typography>
+              {services.map((service) => {
+                let statusColor: "success" | "error" | "warning";
+                if (service.status === "completed") {
+                  statusColor = "success";
+                } else if (service.status === "cancelled") {
+                  statusColor = "error";
+                } else {
+                  statusColor = "warning";
+                }
 
-                    <Box sx={{ mt: 1 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        {t("services.startDate")}:{" "}
-                        {new Date(service.start_datetime).toLocaleDateString()}
-                      </Typography>
-                      {service.end_datetime && (
-                        <Typography variant="body2" color="text.secondary">
-                          {t("services.endDate")}:{" "}
-                          {new Date(service.end_datetime).toLocaleDateString()}
-                        </Typography>
-                      )}
-                    </Box>
-                  </CardContent>
-
-                  <CardActions
-                    sx={{ justifyContent: "space-between", mt: "auto" }}
+                return (
+                  <Card
+                    key={service.id}
+                    elevation={6}
+                    sx={{
+                      borderRadius: 3,
+                      p: 2,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                      minHeight: 180,
+                    }}
                   >
-                    <Chip
-                      label={t(`${service.status}`)}
-                      color={
-                        service.status === "completed"
-                          ? "success"
-                          : service.status === "cancelled"
-                            ? "error"
-                            : "warning"
-                      }
-                      size="medium"
-                      sx={{ fontWeight: "bold" }}
-                    />
-                    <Button size="small" variant="outlined">
-                      {t("Details")}
-                    </Button>
-                  </CardActions>
-                </Card>
-              ))}
+                    <CardContent>
+                      <Typography variant="h6" sx={{ mb: 1 }}>
+                        {t(`${service.service_type}`)}
+                      </Typography>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{ fontWeight: 500, mb: 1 }}
+                      >
+                        {t("for")} {service.pet_name}
+                      </Typography>
+
+                      <Box sx={{ mt: 1 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          {t("services.startDate")}:{" "}
+                          {new Date(
+                            service.start_datetime
+                          ).toLocaleDateString()}
+                        </Typography>
+                        {service.end_datetime && (
+                          <Typography variant="body2" color="text.secondary">
+                            {t("services.endDate")}:{" "}
+                            {new Date(
+                              service.end_datetime
+                            ).toLocaleDateString()}
+                          </Typography>
+                        )}
+                      </Box>
+                    </CardContent>
+
+                    <CardActions
+                      sx={{ justifyContent: "space-between", mt: "auto" }}
+                    >
+                      <Chip
+                        label={t(`${service.status}`)}
+                        color={statusColor}
+                        size="medium"
+                        sx={{ fontWeight: "bold" }}
+                      />
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        component={RouterLink}
+                        to={`/services/${service.id}`}
+                      >
+                        {t("Details")}
+                      </Button>
+                    </CardActions>
+                  </Card>
+                );
+              })}
             </Box>
           )}
         </Paper>

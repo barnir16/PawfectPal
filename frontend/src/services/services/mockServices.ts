@@ -1,6 +1,6 @@
 import type { Service } from "../../types/services";
 
-export class MockServiceService {
+export class MockService {
   private static services: Service[] = [];
   private static loaded = false;
 
@@ -197,4 +197,4 @@ export class MockServiceService {
   }
 }
 
-export default MockServiceService;
+export default MockService;
