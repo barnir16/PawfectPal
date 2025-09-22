@@ -37,7 +37,7 @@ const drawerWidth = 240;
 export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
   const theme = useTheme();
   const location = useLocation();
-  const { t } = useLocalization();
+  const { t, isRTL } = useLocalization();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [open, setOpen] = useState(!isMobile);
 
@@ -74,7 +74,7 @@ export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
           PawfectPal
         </Typography>
         <IconButton onClick={handleDrawerToggle}>
-          {theme.direction === "rtl" ? (
+          {isRTL ? (
             <ChevronRightIcon />
           ) : (
             <ChevronLeftIcon />
@@ -111,6 +111,7 @@ export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
         variant="temporary"
         open={mobileOpen}
         onClose={onClose}
+        anchor={isRTL ? "right" : "left"}
         ModalProps={{
           keepMounted: true, // Better open performance on mobile.
         }}
@@ -125,6 +126,7 @@ export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
       {/* Desktop drawer */}
       <Drawer
         variant="permanent"
+        anchor={isRTL ? "right" : "left"}
         sx={{
           display: { xs: "none", sm: "block" },
           "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
