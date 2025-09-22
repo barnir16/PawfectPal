@@ -75,12 +75,14 @@ export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
         <Typography variant="h6" noWrap component="div">
           PawfectPal
         </Typography>
-        <IconButton onClick={handleDrawerToggle}>
-          {isRTL ? (
-            <ChevronRightIcon />
-          ) : (
-            <ChevronLeftIcon />
-          )}
+        <IconButton 
+          onClick={handleDrawerToggle}
+          sx={{ 
+            color: 'white',
+            '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
+          }}
+        >
+          <MenuIcon fontSize="small" />
         </IconButton>
       </Box>
       <Divider />
