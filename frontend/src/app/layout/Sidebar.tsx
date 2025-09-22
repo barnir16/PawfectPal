@@ -25,6 +25,7 @@ import {
   ChevronRight as ChevronRightIcon,
   EventAvailable as ServicesIcon,
   PostAdd as BookIcon,
+  Menu as MenuIcon,
 } from "@mui/icons-material";
 
 type SidebarProps = {
@@ -53,6 +54,7 @@ export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
   ];
 
   const handleDrawerToggle = () => {
+    console.log('Drawer toggle clicked', { isMobile, open, isRTL });
     if (isMobile) {
       onClose();
     } else {
@@ -75,9 +77,9 @@ export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
         </Typography>
         <IconButton onClick={handleDrawerToggle}>
           {isRTL ? (
-            <ChevronLeftIcon />
-          ) : (
             <ChevronRightIcon />
+          ) : (
+            <ChevronLeftIcon />
           )}
         </IconButton>
       </Box>
