@@ -97,11 +97,12 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
     <AppBar
       position="fixed"
       sx={{
-        width: { sm: `calc(100% - 240px)` },
-        ml: { sm: isRTL ? "0px" : "240px" },
-        mr: { sm: isRTL ? "240px" : "0px" },
+        width: { sm: `calc(100% - 64px)` },
+        ml: { sm: isRTL ? "0px" : "64px" },
+        mr: { sm: isRTL ? "64px" : "0px" },
         boxShadow: "none",
         borderBottom: "1px solid rgba(0, 0, 0, 0.12)",
+        transition: 'width 0.3s ease, margin 0.3s ease',
       }}
     >
       <Toolbar>
