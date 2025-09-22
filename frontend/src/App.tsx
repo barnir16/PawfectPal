@@ -4,7 +4,9 @@ import {
   Box,
   CssBaseline,
   CircularProgress,
+  Fab,
 } from "@mui/material";
+import { Menu as MenuIcon } from "@mui/icons-material";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LocalizationProvider } from "./contexts/LocalizationContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -100,8 +102,8 @@ const AppContent = () => {
           flexGrow: 1,
           p: 3,
           width: { sm: desktopOpen ? `calc(100% - 240px)` : `calc(100% - 64px)` },
-          ml: { sm: isRTL ? "0px" : (desktopOpen ? "240px" : "64px") },
-          mr: { sm: isRTL ? (desktopOpen ? "240px" : "64px") : "0px" },
+          ml: { sm: isRTL ? "0px" : "64px" },
+          mr: { sm: isRTL ? "64px" : "0px" },
           mt: "64px",
           overflow: "auto",
           height: "calc(100vh - 64px)",
@@ -139,6 +141,24 @@ const AppContent = () => {
       
       {/* Notifications */}
       <NotificationContainer />
+      
+      {/* Floating sidebar toggle button when minimized */}
+      {!desktopOpen && (
+        <Fab
+          color="primary"
+          aria-label="open sidebar"
+          onClick={() => setDesktopOpen(true)}
+          sx={{
+            position: 'fixed',
+            top: 80,
+            left: isRTL ? 'auto' : 16,
+            right: isRTL ? 16 : 'auto',
+            zIndex: 1000,
+          }}
+        >
+          <MenuIcon />
+        </Fab>
+      )}
     </Box>
   );
 };
