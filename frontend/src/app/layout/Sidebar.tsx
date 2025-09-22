@@ -31,11 +31,12 @@ import {
 type SidebarProps = {
   mobileOpen: boolean;
   onClose: () => void;
+  onDesktopToggle?: (open: boolean) => void;
 };
 
 const drawerWidth = 240;
 
-export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
+export const Sidebar = ({ mobileOpen, onClose, onDesktopToggle }: SidebarProps) => {
   const theme = useTheme();
   const location = useLocation();
   const { t, isRTL } = useLocalization();
@@ -58,7 +59,9 @@ export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
     if (isMobile) {
       onClose();
     } else {
-      setOpen(!open);
+      const newOpen = !open;
+      setOpen(newOpen);
+      onDesktopToggle?.(newOpen);
     }
   };
 
@@ -140,13 +143,20 @@ export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
 
       {/* Desktop drawer */}
       <Drawer
-        variant="permanent"
+        variant="persistent"
         anchor={isRTL ? "right" : "left"}
+        open={open}
         sx={{
           display: { xs: "none", sm: "block" },
-          "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
+          "& .MuiDrawer-paper": { 
+            boxSizing: "border-box", 
+            width: drawerWidth,
+            transition: theme.transitions.create('width', {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
+          },
         }}
-        open={open}
       >
         {drawer}
       </Drawer>

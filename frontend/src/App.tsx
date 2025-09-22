@@ -50,6 +50,7 @@ const App = () => {
 const AppContent = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [desktopOpen, setDesktopOpen] = useState(true);
   const { isChatOpen, selectedPet, openChat, closeChat, toggleChat } = useAIChat();
   const { t, isRTL } = useLocalization();
 
@@ -88,18 +89,23 @@ const AppContent = () => {
   return (
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
       <Header onMenuClick={handleDrawerToggle} />
-      <Sidebar mobileOpen={mobileOpen} onClose={handleDrawerToggle} />
+      <Sidebar 
+        mobileOpen={mobileOpen} 
+        onClose={handleDrawerToggle} 
+        onDesktopToggle={setDesktopOpen}
+      />
       <Box
         component="main"
         sx={{
           flexGrow: 1,
           p: 3,
-          width: { sm: `calc(100% - ${240}px)` },
-          ml: { sm: isRTL ? "0px" : `${240}px` },
-          mr: { sm: isRTL ? `${240}px` : "0px" },
+          width: { sm: desktopOpen ? `calc(100% - ${240}px)` : '100%' },
+          ml: { sm: isRTL ? "0px" : (desktopOpen ? `${240}px` : "0px") },
+          mr: { sm: isRTL ? (desktopOpen ? `${240}px` : "0px") : "0px" },
           mt: "64px",
           overflow: "auto",
           height: "calc(100vh - 64px)",
+          transition: 'margin 0.3s ease',
         }}
       >
         <Routes>
