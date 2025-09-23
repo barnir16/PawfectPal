@@ -127,7 +127,7 @@ const transformPetFromBackend = (backendPet: any): Pet => {
  * Get all pets for the current user
  */
 export const getPets = async (): Promise<Pet[]> => {
-  const backendPets = await apiRequest<any[]>('/pets');
+  const backendPets = await apiRequest<any[]>('/pets/');
   return backendPets.map(transformPetFromBackend);
 };
 
@@ -135,7 +135,7 @@ export const getPets = async (): Promise<Pet[]> => {
  * Get a single pet by ID
  */
 export const getPet = async (petId: number): Promise<Pet> => {
-  const backendPet = await apiRequest<any>(`/pets/${petId}`);
+  const backendPet = await apiRequest<any>(`/pets/${petId}/`);
   return transformPetFromBackend(backendPet);
 };
 
@@ -144,7 +144,7 @@ export const getPet = async (petId: number): Promise<Pet> => {
  */
 export const createPet = async (pet: Omit<Pet, 'id'>): Promise<Pet> => {
   const backendPet = transformPetToBackend(pet);
-  const createdPet = await apiRequest<any>('/pets', {
+  const createdPet = await apiRequest<any>('/pets/', {
     method: 'POST',
     body: JSON.stringify(backendPet)
   });
@@ -156,7 +156,7 @@ export const createPet = async (pet: Omit<Pet, 'id'>): Promise<Pet> => {
  */
 export const updatePet = async (petId: number, pet: Omit<Pet, 'id'>): Promise<Pet> => {
   const backendPet = transformPetToBackend(pet);
-  const updatedPet = await apiRequest<any>(`/pets/${petId}`, {
+  const updatedPet = await apiRequest<any>(`/pets/${petId}/`, {
     method: 'PUT',
     body: JSON.stringify(backendPet)
   });
@@ -167,7 +167,7 @@ export const updatePet = async (petId: number, pet: Omit<Pet, 'id'>): Promise<Pe
  * Partially update a pet
  */
 export const patchPet = async (petId: number, updates: Partial<Pet>): Promise<Pet> => {
-  return apiRequest<Pet>(`/pets/${petId}`, {
+  return apiRequest<Pet>(`/pets/${petId}/`, {
     method: 'PATCH',
     body: JSON.stringify(updates)
   });
@@ -177,7 +177,7 @@ export const patchPet = async (petId: number, updates: Partial<Pet>): Promise<Pe
  * Delete a pet
  */
 export const deletePet = async (petId: number): Promise<void> => {
-  return apiRequest(`/pets/${petId}`, {
+  return apiRequest(`/pets/${petId}/`, {
     method: 'DELETE'
   });
 };
@@ -189,7 +189,7 @@ export const updatePetLocation = async (
   petId: number, 
   location: Omit<LocationHistory, 'id'>
 ): Promise<LocationHistory> => {
-  return apiRequest<LocationHistory>(`/pets/${petId}/location`, {
+  return apiRequest<LocationHistory>(`/pets/${petId}/location/`, {
     method: 'POST',
     body: JSON.stringify(location)
   });
@@ -202,7 +202,7 @@ export const getPetLocationHistory = async (
   petId: number, 
   limit: number = 100
 ): Promise<LocationHistory[]> => {
-  return apiRequest<LocationHistory[]>(`/pets/${petId}/location?limit=${limit}`);
+  return apiRequest<LocationHistory[]>(`/pets/${petId}/location/?limit=${limit}`);
 };
 
 /**
@@ -215,7 +215,7 @@ export const uploadPetImage = async (
   const formData = new FormData();
   formData.append('file', file);
   
-  return apiRequest<UploadResponse>(`/image_upload/pet-image/${petId}`, {
+  return apiRequest<UploadResponse>(`/image_upload/pet-image/${petId}/`, {
     method: 'POST',
     body: formData
   });
@@ -266,6 +266,6 @@ export const getPetsNearLocation = async (
   radius: number = 1000 // in meters
 ): Promise<Pet[]> => {
   return apiRequest<Pet[]>(
-    `/pets/nearby?lat=${latitude}&lng=${longitude}&radius=${radius}`
+    `/pets/nearby/?lat=${latitude}&lng=${longitude}&radius=${radius}`
   );
 };

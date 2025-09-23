@@ -47,7 +47,7 @@ const transformTaskToBackend = (task: TaskCreateData | TaskUpdateData): any => {
  * Get all tasks for the current user
  */
 export const getTasks = async (filters?: TaskFilters): Promise<Task[]> => {
-  let endpoint = '/task';
+  let endpoint = '/task/';
   
   // Add query parameters if filters are provided
   if (filters) {
@@ -90,7 +90,7 @@ export const getTasks = async (filters?: TaskFilters): Promise<Task[]> => {
  * Get a single task by ID
  */
 export const getTask = async (taskId: number): Promise<Task> => {
-  const backendTask = await apiRequest<any>(`/task/${taskId}`);
+  const backendTask = await apiRequest<any>(`/task/${taskId}/`);
   return transformTaskFromBackend(backendTask);
 };
 
@@ -99,7 +99,7 @@ export const getTask = async (taskId: number): Promise<Task> => {
  */
 export const createTask = async (task: TaskCreateData): Promise<Task> => {
   const backendTask = transformTaskToBackend(task);
-  const createdTask = await apiRequest<any>('/task', {
+  const createdTask = await apiRequest<any>('/task/', {
     method: 'POST',
     body: JSON.stringify(backendTask)
   });
@@ -111,7 +111,7 @@ export const createTask = async (task: TaskCreateData): Promise<Task> => {
  */
 export const updateTask = async (taskId: number, task: TaskUpdateData): Promise<Task> => {
   const backendTask = transformTaskToBackend(task);
-  const updatedTask = await apiRequest<any>(`/task/${taskId}`, {
+  const updatedTask = await apiRequest<any>(`/task/${taskId}/`, {
     method: 'PUT',
     body: JSON.stringify(backendTask)
   });
@@ -122,7 +122,7 @@ export const updateTask = async (taskId: number, task: TaskUpdateData): Promise<
  * Delete a task
  */
 export const deleteTask = async (taskId: number): Promise<void> => {
-  return apiRequest(`/task/${taskId}`, {
+  return apiRequest(`/task/${taskId}/`, {
     method: 'DELETE'
   });
 };

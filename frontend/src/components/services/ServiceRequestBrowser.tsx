@@ -401,7 +401,7 @@ export const ServiceRequestBrowser: React.FC = () => {
         </Box>
       ) : error ? (
         <Alert severity="error">{error}</Alert>
-      ) : filteredRequests.length === 0 ? (
+      ) : !filteredRequests || filteredRequests.length === 0 ? (
         <Alert severity="info">
           {searchQuery ? t('services.noMatchingRequests') : t('services.noRequestsFound')}
         </Alert>

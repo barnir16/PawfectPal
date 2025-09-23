@@ -256,7 +256,7 @@ export class NotificationService {
       priority: 'medium',
       timestamp: new Date(),
       read: false,
-      actionUrl: '/pets',
+      actionUrl: '/pets/',
       data: {
         petName,
         reminderType,

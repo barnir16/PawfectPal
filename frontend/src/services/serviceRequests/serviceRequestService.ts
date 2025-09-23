@@ -13,7 +13,7 @@ export class ServiceRequestService {
    */
   static async createServiceRequest(request: ServiceRequestCreate): Promise<ServiceRequest> {
     const response = await apiClient.post('/service-requests/', request);
-    return response.data;
+    return response;
   }
 
   /**
@@ -31,37 +31,37 @@ export class ServiceRequestService {
     if (filters.offset) params.append('offset', filters.offset.toString());
 
     const response = await apiClient.get(`/service-requests/?${params.toString()}`);
-    return response.data;
+    return response || [];
   }
 
   /**
    * Get current user's service requests
    */
   static async getMyServiceRequests(): Promise<ServiceRequest[]> {
-    const response = await apiClient.get('/service-requests/my-requests');
-    return response.data;
+    const response = await apiClient.get('/service-requests/my-requests/');
+    return response || [];
   }
 
   /**
    * Get a specific service request
    */
   static async getServiceRequest(requestId: number): Promise<ServiceRequest> {
-    const response = await apiClient.get(`/service-requests/${requestId}`);
-    return response.data;
+    const response = await apiClient.get(`/service-requests/${requestId}/`);
+    return response;
   }
 
   /**
    * Update a service request
    */
   static async updateServiceRequest(requestId: number, updates: ServiceRequestUpdate): Promise<ServiceRequest> {
-    const response = await apiClient.put(`/service-requests/${requestId}`, updates);
-    return response.data;
+    const response = await apiClient.put(`/service-requests/${requestId}/`, updates);
+    return response;
   }
 
   /**
    * Delete a service request
    */
   static async deleteServiceRequest(requestId: number): Promise<void> {
-    await apiClient.delete(`/service-requests/${requestId}`);
+    await apiClient.delete(`/service-requests/${requestId}/`);
   }
 }
