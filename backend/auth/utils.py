@@ -34,6 +34,6 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 
-def get_user_by_username(db: Session, username: str) -> UserORM | None:
+def get_user_by_username(db: Session, username: str) -> Optional[UserORM]:
     """Get user by username"""
     return db.query(UserORM).filter(UserORM.username == username).first()
