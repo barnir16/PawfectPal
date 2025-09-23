@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Expose port
-EXPOSE 8000
+EXPOSE 8080
 
 # Start the application with Railway-compatible port handling
-CMD ["sh", "-c", "python -m uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "PORT=${PORT:-8080} && echo \"Starting on port $PORT\" && python -m uvicorn main:app --host 0.0.0.0 --port $PORT"]
