@@ -50,7 +50,7 @@ export interface VaccinationListResponse {
 export const getPetVaccinations = async (petId: number): Promise<VaccinationListResponse> => {
   try {
     const token = await getToken();
-    const response = await fetch(`${getBaseUrl()}/vaccinations/pet/${petId}`, {
+    const response = await fetch(`${getBaseUrl()}/vaccinations/pet/${petId}/`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -72,7 +72,7 @@ export const getPetVaccinations = async (petId: number): Promise<VaccinationList
 export const getAllVaccinations = async (): Promise<VaccinationRecord[]> => {
   try {
     const token = await getToken();
-    const response = await fetch(`${getBaseUrl()}/vaccinations/all`, {
+    const response = await fetch(`${getBaseUrl()}/vaccinations/all/`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -94,7 +94,7 @@ export const getAllVaccinations = async (): Promise<VaccinationRecord[]> => {
 export const getVaccinationSummary = async (petId: number): Promise<VaccinationSummary> => {
   try {
     const token = await getToken();
-    const response = await fetch(`${getBaseUrl()}/vaccinations/pet/${petId}/summary`, {
+    const response = await fetch(`${getBaseUrl()}/vaccinations/pet/${petId}/summary/`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -116,7 +116,7 @@ export const getVaccinationSummary = async (petId: number): Promise<VaccinationS
 export const getVaccinationsDueSoon = async (daysAhead: number = 30): Promise<VaccinationReminder[]> => {
   try {
     const token = await getToken();
-    const response = await fetch(`${getBaseUrl()}/vaccinations/due-soon?days_ahead=${daysAhead}`, {
+    const response = await fetch(`${getBaseUrl()}/vaccinations/due-soon/?days_ahead=${daysAhead}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -138,7 +138,7 @@ export const getVaccinationsDueSoon = async (daysAhead: number = 30): Promise<Va
 export const getOverdueVaccinations = async (): Promise<VaccinationReminder[]> => {
   try {
     const token = await getToken();
-    const response = await fetch(`${getBaseUrl()}/vaccinations/overdue`, {
+    const response = await fetch(`${getBaseUrl()}/vaccinations/overdue/`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -160,7 +160,7 @@ export const getOverdueVaccinations = async (): Promise<VaccinationReminder[]> =
 export const createVaccination = async (petId: number, vaccination: Partial<VaccinationRecord>): Promise<VaccinationRecord> => {
   try {
     const token = await getToken();
-    const response = await fetch(`${getBaseUrl()}/vaccinations/pet/${petId}`, {
+    const response = await fetch(`${getBaseUrl()}/vaccinations/pet/${petId}/`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -184,7 +184,7 @@ export const createVaccination = async (petId: number, vaccination: Partial<Vacc
 export const updateVaccination = async (vaccinationId: number, vaccination: Partial<VaccinationRecord>): Promise<VaccinationRecord> => {
   try {
     const token = await getToken();
-    const response = await fetch(`${getBaseUrl()}/vaccinations/${vaccinationId}`, {
+    const response = await fetch(`${getBaseUrl()}/vaccinations/${vaccinationId}/`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -208,7 +208,7 @@ export const updateVaccination = async (vaccinationId: number, vaccination: Part
 export const deleteVaccination = async (vaccinationId: number): Promise<void> => {
   try {
     const token = await getToken();
-    const response = await fetch(`${getBaseUrl()}/vaccinations/${vaccinationId}`, {
+    const response = await fetch(`${getBaseUrl()}/vaccinations/${vaccinationId}/`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
