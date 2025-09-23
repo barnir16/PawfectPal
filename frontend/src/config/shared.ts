@@ -24,7 +24,7 @@ export const SHARED_CONFIG = {
 
   // Development Settings
   development: {
-    apiBaseUrl: import.meta.env.VITE_API_URL || "http://127.0.0.1:8000",
+    apiBaseUrl: import.meta.env.VITE_API_URL || "https://pawfectpal-production.up.railway.app",
     enableDebugMode: true,
     enableMockData: false,
   },
