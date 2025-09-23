@@ -3,8 +3,21 @@ import { configService } from './config/firebaseConfigService';
 
 // Get API URL from Firebase config with fallback
 export const getBaseUrl = (): string => {
-  const apiConfig = configService.getApiConfig();
-  return apiConfig.baseUrl;
+  try {
+    const apiConfig = configService.getApiConfig();
+    const baseUrl = apiConfig.baseUrl;
+    
+    // Force Railway URL if localhost is detected
+    if (baseUrl.includes('127.0.0.1') || baseUrl.includes('localhost')) {
+      console.warn('Localhost detected in API URL, forcing Railway URL');
+      return "https://pawfectpal-production.up.railway.app";
+    }
+    
+    return baseUrl;
+  } catch (error) {
+    console.warn('Error getting API config, using Railway URL:', error);
+    return "https://pawfectpal-production.up.railway.app";
+  }
 };
 
 // Don't set BASE_URL at module load time - get it dynamically
