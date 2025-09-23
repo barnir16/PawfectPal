@@ -48,7 +48,7 @@ def create_task(
     return TaskRead.model_validate(db_task)
 
 
-@router.get("/{task_id}", response_model=TaskRead)
+@router.get("/{task_id}/", response_model=TaskRead)
 def get_task(
     task_id: int,
     db: Session = Depends(get_db),
@@ -65,7 +65,7 @@ def get_task(
     return TaskRead.model_validate(db_task)
 
 
-@router.put("/{task_id}", response_model=TaskRead)
+@router.put("/{task_id}/", response_model=TaskRead)
 def update_task(
     task_id: int,
     task: TaskUpdate,
@@ -110,7 +110,7 @@ def update_task(
     return TaskRead.model_validate(db_task)
 
 
-@router.delete("/{task_id}")
+@router.delete("/{task_id}/")
 def delete_task(
     task_id: int,
     db: Session = Depends(get_db),

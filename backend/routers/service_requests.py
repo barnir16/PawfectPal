@@ -69,7 +69,7 @@ def get_service_requests(
     requests = query.offset(offset).limit(limit).all()
     return requests
 
-@router.get("/my-requests", response_model=List[ServiceRequestRead])
+@router.get("/my-requests/", response_model=List[ServiceRequestRead])
 def get_my_service_requests(
     db: Session = Depends(get_db),
     current_user: UserORM = Depends(get_current_user)
@@ -81,7 +81,7 @@ def get_my_service_requests(
     
     return requests
 
-@router.get("/{request_id}", response_model=ServiceRequestRead)
+@router.get("/{request_id}/", response_model=ServiceRequestRead)
 def get_service_request(
     request_id: int,
     db: Session = Depends(get_db),
@@ -101,7 +101,7 @@ def get_service_request(
     
     return request
 
-@router.put("/{request_id}", response_model=ServiceRequestRead)
+@router.put("/{request_id}/", response_model=ServiceRequestRead)
 def update_service_request(
     request_id: int,
     request_update: ServiceRequestUpdate,
@@ -126,7 +126,7 @@ def update_service_request(
     
     return request
 
-@router.delete("/{request_id}")
+@router.delete("/{request_id}/")
 def delete_service_request(
     request_id: int,
     db: Session = Depends(get_db),
