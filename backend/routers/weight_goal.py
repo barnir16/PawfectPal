@@ -72,7 +72,7 @@ async def get_all_weight_goals(
         )
 
 
-@router.get("/pet/{pet_id}", response_model=List[WeightGoalResponse])
+@router.get("/pet/{pet_id}/", response_model=List[WeightGoalResponse])
 async def get_weight_goals_by_pet(
     pet_id: int,
     db: Session = Depends(get_db),
@@ -156,7 +156,7 @@ async def create_weight_goal(
         )
 
 
-@router.put("/{goal_id}", response_model=WeightGoalResponse)
+@router.put("/{goal_id}/", response_model=WeightGoalResponse)
 async def update_weight_goal(
     goal_id: int,
     weight_goal_update: WeightGoalUpdate,
@@ -208,7 +208,7 @@ async def update_weight_goal(
         )
 
 
-@router.delete("/{goal_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{goal_id}/", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_weight_goal(
     goal_id: int,
     db: Session = Depends(get_db),

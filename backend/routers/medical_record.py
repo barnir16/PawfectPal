@@ -20,7 +20,7 @@ from datetime import date
 router = APIRouter(prefix="/medical-records", tags=["medical-records"])
 
 
-@router.get("/pet/{pet_id}", response_model=MedicalRecordListResponse)
+@router.get("/pet/{pet_id}/", response_model=MedicalRecordListResponse)
 def get_pet_medical_records(
     pet_id: int,
     page: int = Query(1, ge=1),
@@ -59,7 +59,7 @@ def get_pet_medical_records(
     )
 
 
-@router.post("/pet/{pet_id}", response_model=MedicalRecordRead)
+@router.post("/pet/{pet_id}/", response_model=MedicalRecordRead)
 def create_medical_record(
     pet_id: int,
     record: MedicalRecordCreate,
@@ -94,7 +94,7 @@ def create_medical_record(
     return MedicalRecordRead.model_validate(db_record)
 
 
-@router.put("/{record_id}", response_model=MedicalRecordRead)
+@router.put("/{record_id}/", response_model=MedicalRecordRead)
 def update_medical_record(
     record_id: int,
     record: MedicalRecordUpdate,
@@ -128,7 +128,7 @@ def update_medical_record(
     return MedicalRecordRead.model_validate(db_record)
 
 
-@router.delete("/{record_id}")
+@router.delete("/{record_id}/")
 def delete_medical_record(
     record_id: int,
     db: Session = Depends(get_db),
@@ -149,7 +149,7 @@ def delete_medical_record(
     return {"message": "Medical record deleted successfully"}
 
 
-@router.get("/pet/{pet_id}/summary", response_model=MedicalRecordSummary)
+@router.get("/pet/{pet_id}/summary/", response_model=MedicalRecordSummary)
 def get_pet_medical_summary(
     pet_id: int,
     db: Session = Depends(get_db),
