@@ -63,6 +63,7 @@ app.add_middleware(
     allow_headers=["*"],
     allow_origin_regex=r"https?://.*",
     expose_headers=["*"],
+    max_age=3600,
 )
 
 # Serve static files (uploaded images)

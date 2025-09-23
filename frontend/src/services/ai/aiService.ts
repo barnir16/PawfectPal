@@ -22,7 +22,7 @@ class AIService {
   private conversationHistory: Array<{ content: string; isUser: boolean }> = [];
 
   constructor() {
-    this.apiUrl = import.meta.env.VITE_API_URL || 'http://pawfectpal-production.up.railway.app';
+    this.apiUrl = import.meta.env.VITE_API_URL || 'https://pawfectpal-production.up.railway.app';
   }
 
   /**
