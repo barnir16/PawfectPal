@@ -10,18 +10,18 @@ export const getBaseUrl = (): string => {
     // Force Railway URL if localhost is detected
     if (baseUrl.includes('127.0.0.1') || baseUrl.includes('localhost')) {
       console.warn('Localhost detected in API URL, forcing Railway URL');
-      return "http://pawfectpal-production.up.railway.app";
+      return "https://pawfectpal-production.up.railway.app";
     }
     
     return baseUrl;
   } catch (error) {
     console.warn('Error getting API config, using Railway URL:', error);
-    return "http://pawfectpal-production.up.railway.app";
+    return "https://pawfectpal-production.up.railway.app";
   }
 };
 
 // Don't set BASE_URL at module load time - get it dynamically
-export const BASE_URL = "http://pawfectpal-production.up.railway.app";
+export const BASE_URL = "https://pawfectpal-production.up.railway.app";
 
 /**
  * Get stored authentication token
