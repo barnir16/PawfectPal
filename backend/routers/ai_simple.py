@@ -11,7 +11,10 @@ from datetime import datetime
 import json
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from simple_firebase import firebase_config
+from services.firebase_admin import firebase_admin
+from services.firebase_user_service import firebase_user_service
+from dependencies.auth import get_current_user
+from models.user import UserORM
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 
@@ -19,10 +22,7 @@ router = APIRouter(prefix="/ai", tags=["AI"])
 def get_gemini_model():
     """Get Gemini model instance using Firebase Remote Config"""
     try:
-        if not firebase_config.initialized:
-            firebase_config.initialize()
-        
-        api_key = firebase_config.get_gemini_api_key()
+        api_key = firebase_admin.get_gemini_api_key()
         
         if api_key:
             genai.configure(api_key=api_key)
@@ -59,17 +59,29 @@ class AIChatResponse(BaseModel):
     message: str
     suggested_actions: List[Dict[str, str]] = []
 
+class FirebaseConfigResponse(BaseModel):
+    configs: Dict[str, str]
+    user: str
+    firebase_available: bool
+
 @router.post("/chat", response_model=AIChatResponse)
-async def chat_with_ai(request: AIChatRequest):
+async def chat_with_ai(request: AIChatRequest, current_user: UserORM = Depends(get_current_user)):
     """
     Simple AI chat endpoint - inspired by successful PawfectPlanner versions
     """
     try:
+        # Get Gemini API key for this specific user (works for both Google and email users)
+        api_key = firebase_user_service.get_gemini_api_key_for_user(current_user)
         
-        # Try to get model, refresh if needed
-        current_model = model
-        if not current_model:
-            current_model = get_gemini_model()
+        if not api_key:
+            raise HTTPException(
+                status_code=503, 
+                detail="AI service temporarily unavailable. Please try again later."
+            )
+        
+        # Configure Gemini with user-specific API key
+        genai.configure(api_key=api_key)
+        current_model = genai.GenerativeModel('gemini-pro')
         
         if not current_model:
             return handle_simple_fallback(request.message, request.pet_context, request.conversation_history or [])
@@ -284,3 +296,26 @@ def generate_simple_actions(user_message: str, pet_context: Dict[str, Any]) -> L
     })
     
     return actions
+
+@router.get("/firebase-config", response_model=FirebaseConfigResponse)
+async def get_firebase_config(current_user: UserORM = Depends(get_current_user)):
+    """
+    Get Firebase Remote Config for any authenticated user (Google or email/password)
+    """
+    try:
+        # Get Firebase configs for this user
+        configs = firebase_user_service.get_available_configs(current_user)
+        
+        return FirebaseConfigResponse(
+            configs=configs,
+            user=current_user.username,
+            firebase_available=len(configs) > 0
+        )
+        
+    except Exception as e:
+        print(f"❌ Error getting Firebase config for user {current_user.username}: {str(e)}")
+        return FirebaseConfigResponse(
+            configs={},
+            user=current_user.username,
+            firebase_available=False
+        )

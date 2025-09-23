@@ -25,6 +25,8 @@ import {
   ChevronRight as ChevronRightIcon,
   EventAvailable as ServicesIcon,
   PostAdd as BookIcon,
+  ListAlt as ServiceRequestsIcon,
+  Chat as ChatIcon,
   Menu as MenuIcon,
 } from "@mui/icons-material";
 
@@ -50,6 +52,8 @@ export const Sidebar = ({ mobileOpen, onClose, onDesktopToggle }: SidebarProps) 
     { text: t('navigation.tasks'), icon: <TasksIcon />, path: "/tasks" },
     { text: t('services.title'), icon: <ServicesIcon />, path: "/services" },
     { text: t('services.bookService'), icon: <BookIcon />, path: "/bookservice" },
+    { text: t('services.browseRequests'), icon: <ServiceRequestsIcon />, path: "/service-requests" },
+    { text: t('services.myRequests'), icon: <ServiceRequestsIcon />, path: "/my-service-requests" },
     { text: t('navigation.weightTracking'), icon: <PersonIcon />, path: "/weight-tracking" },
     { text: t('navigation.profile'), icon: <PersonIcon />, path: "/profile" },
     { text: t('navigation.settings'), icon: <SettingsIcon />, path: "/settings" },
@@ -151,7 +155,7 @@ export const Sidebar = ({ mobileOpen, onClose, onDesktopToggle }: SidebarProps) 
     <Box
       component="nav"
       sx={{ 
-        width: { sm: minimizedWidth }, 
+        width: { sm: open ? drawerWidth : minimizedWidth }, 
         flexShrink: { sm: 0 },
         transition: 'width 0.3s ease'
       }}
