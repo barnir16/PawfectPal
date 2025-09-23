@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Card,
@@ -20,6 +21,7 @@ import {
   Badge,
   Alert,
   CircularProgress,
+  Fab,
 } from '@mui/material';
 import {
   Search,
@@ -30,20 +32,16 @@ import {
   Pets,
   FilterList,
   Refresh,
+  Add,
+  Visibility,
+  Message,
 } from '@mui/icons-material';
 import { useLocalization } from '../../contexts/LocalizationContext';
 import { ServiceRequestService } from '../../services/serviceRequests/serviceRequestService';
 import type { ServiceRequestSummary, ServiceRequestFilters } from '../../types/services/serviceRequest';
 
-interface ServiceRequestBrowserProps {
-  onRequestClick?: (request: ServiceRequestSummary) => void;
-  onContactUser?: (request: ServiceRequestSummary) => void;
-}
-
-export const ServiceRequestBrowser: React.FC<ServiceRequestBrowserProps> = ({
-  onRequestClick,
-  onContactUser
-}) => {
+export const ServiceRequestBrowser: React.FC = () => {
+  const navigate = useNavigate();
   const { t } = useLocalization();
   const [requests, setRequests] = useState<ServiceRequestSummary[]>([]);
   const [filteredRequests, setFilteredRequests] = useState<ServiceRequestSummary[]>([]);
@@ -262,7 +260,8 @@ export const ServiceRequestBrowser: React.FC<ServiceRequestBrowserProps> = ({
           <Button
             variant="outlined"
             size="small"
-            onClick={() => onRequestClick?.(request)}
+            onClick={() => navigate(`/service-requests/${request.id}`)}
+            startIcon={<Visibility />}
             sx={{ flex: 1 }}
           >
             {t('services.viewDetails')}
@@ -270,7 +269,8 @@ export const ServiceRequestBrowser: React.FC<ServiceRequestBrowserProps> = ({
           <Button
             variant="contained"
             size="small"
-            onClick={() => onContactUser?.(request)}
+            onClick={() => navigate(`/service-requests/${request.id}/chat`)}
+            startIcon={<Message />}
             sx={{ flex: 1 }}
           >
             {t('services.contactUser')}
@@ -282,9 +282,18 @@ export const ServiceRequestBrowser: React.FC<ServiceRequestBrowserProps> = ({
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        {t('services.browseRequests')}
-      </Typography>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h4">
+          {t('services.browseRequests')}
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => navigate('/bookservice')}
+        >
+          {t('services.createRequest')}
+        </Button>
+      </Box>
 
       {/* Filters and Search */}
       <Paper sx={{ p: 3, mb: 3 }}>
@@ -401,6 +410,16 @@ export const ServiceRequestBrowser: React.FC<ServiceRequestBrowserProps> = ({
           {filteredRequests.map(renderRequestCard)}
         </Grid>
       )}
+
+      {/* Floating Action Button */}
+      <Fab
+        color="primary"
+        aria-label="add"
+        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        onClick={() => navigate('/bookservice')}
+      >
+        <Add />
+      </Fab>
     </Box>
   );
 };

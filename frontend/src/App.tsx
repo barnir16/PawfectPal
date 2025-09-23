@@ -18,6 +18,10 @@ import { Tasks } from "./features/tasks/pages/TasksPage";
 import { Pets } from "./features/pets/pages/PetsPage";
 import { ServicesPage } from "./features/services/pages/ServicesPage";
 import { BookService } from "./features/services/pages/BookService";
+import { ServiceRequestBrowser } from "./components/services/ServiceRequestBrowser";
+import { ServiceRequestDetails } from "./components/services/ServiceRequestDetails";
+import { MyServiceRequests } from "./components/services/MyServiceRequests";
+import { ServiceRequestChat } from "./components/services/ServiceRequestChat";
 import { PetForm } from "./features/pets/components/PetForm/PetForm";
 import { PetDetail } from "./features/pets/components/PetDetail/PetDetail";
 import Settings from "./features/settings/components/Settings/Settings";
@@ -90,7 +94,7 @@ const AppContent = () => {
   // If authenticated, show the full app
   return (
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
-      <Header onMenuClick={handleDrawerToggle} />
+      <Header onMenuClick={handleDrawerToggle} desktopOpen={desktopOpen} />
       <Sidebar 
         mobileOpen={mobileOpen} 
         onClose={handleDrawerToggle} 
@@ -101,13 +105,13 @@ const AppContent = () => {
         sx={{
           flexGrow: 1,
           p: 3,
-          width: { sm: `calc(100% - 64px)` },
-          ml: { sm: isRTL ? "0px" : "64px" },
-          mr: { sm: isRTL ? "64px" : "0px" },
+          width: { sm: desktopOpen ? `calc(100% - 240px)` : `calc(100% - 64px)` },
+          ml: { sm: isRTL ? "0px" : (desktopOpen ? "240px" : "64px") },
+          mr: { sm: isRTL ? (desktopOpen ? "240px" : "64px") : "0px" },
           mt: "64px",
           overflow: "auto",
           height: "calc(100vh - 64px)",
-          transition: 'margin 0.3s ease',
+          transition: 'width 0.3s ease, margin 0.3s ease',
         }}
       >
         <Routes>
@@ -123,6 +127,10 @@ const AppContent = () => {
           <Route path="/weight-tracking" element={<WeightTrackingPage />} />
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/bookservice" element={<BookService />} />
+          <Route path="/service-requests" element={<ServiceRequestBrowser />} />
+          <Route path="/my-service-requests" element={<MyServiceRequests />} />
+          <Route path="/service-requests/:id" element={<ServiceRequestDetails />} />
+          <Route path="/service-requests/:id/chat" element={<ServiceRequestChat />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/test-vaccines" element={<RealVaccineTracker />} />
