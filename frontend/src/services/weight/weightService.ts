@@ -54,7 +54,7 @@ export class WeightService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${getBaseUrl()}/api/weight-records/pet/${petId}`, {
+      const response = await fetch(`${getBaseUrl()}/api/weight-records/pet/${petId}/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -92,7 +92,7 @@ export class WeightService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${getBaseUrl()}/api/weight-records`, {
+      const response = await fetch(`${getBaseUrl()}/api/weight-records/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -130,7 +130,7 @@ export class WeightService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${getBaseUrl()}/api/weight-records`, {
+      const response = await fetch(`${getBaseUrl()}/api/weight-records/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -177,7 +177,7 @@ export class WeightService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${getBaseUrl()}/api/weight-records/${id}`, {
+      const response = await fetch(`${getBaseUrl()}/api/weight-records/${id}/`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -224,7 +224,7 @@ export class WeightService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${getBaseUrl()}/api/weight-records/${id}`, {
+      const response = await fetch(`${getBaseUrl()}/api/weight-records/${id}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -254,7 +254,7 @@ export class WeightService {
       }
 
       const response = await fetch(
-        `${getBaseUrl()}/api/weight-records/pet/${petId}/range?start_date=${startDate}&end_date=${endDate}`,
+        `${getBaseUrl()}/api/weight-records/pet/${petId}/range/?start_date=${startDate}&end_date=${endDate}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
