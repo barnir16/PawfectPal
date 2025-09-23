@@ -36,7 +36,7 @@ FIREBASE_SERVICE_ACCOUNT_JSON={"type":"service_account","project_id":"pawfectpal
 
 #### **Option 2: Environment Variables (Fallback)**
 ```bash
-GEMINI_API_KEY=AIzaSyBFF8t4Z25B4ft002Rj-nmQ1pY1YbYANhs
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY_HERE
 ```
 
 ### **How to Get Service Account JSON**
