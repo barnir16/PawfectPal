@@ -23,7 +23,7 @@ def get_pets(
     return [PetRead.model_validate(p) for p in pets]
 
 
-@router.get("/{pet_id}", response_model=PetRead)
+@router.get("/{pet_id}/", response_model=PetRead)
 def get_pet(
     pet_id: int,
     db: Session = Depends(get_db),
@@ -85,7 +85,7 @@ def create_pet(
     return PetRead.model_validate(db_pet)
 
 
-@router.put("/{pet_id}", response_model=PetRead)
+@router.put("/{pet_id}/", response_model=PetRead)
 def update_pet(
     pet_id: int,
     pet: PetUpdate,
@@ -132,7 +132,7 @@ def update_pet(
     return PetRead.model_validate(db_pet)
 
 
-@router.delete("/{pet_id}")
+@router.delete("/{pet_id}/")
 def delete_pet(
     pet_id: int,
     db: Session = Depends(get_db),

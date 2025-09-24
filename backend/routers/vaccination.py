@@ -21,7 +21,7 @@ from datetime import date, timedelta
 router = APIRouter(prefix="/vaccinations", tags=["vaccinations"])
 
 
-@router.get("/pet/{pet_id}", response_model=VaccinationListResponse)
+@router.get("/pet/{pet_id}/", response_model=VaccinationListResponse)
 def get_pet_vaccinations(
     pet_id: int,
     page: int = Query(1, ge=1),
@@ -61,7 +61,7 @@ def get_pet_vaccinations(
     )
 
 
-@router.post("/pet/{pet_id}", response_model=VaccinationResponse)
+@router.post("/pet/{pet_id}/", response_model=VaccinationResponse)
 def create_vaccination(
     pet_id: int,
     vaccination: VaccinationCreate,
@@ -98,7 +98,7 @@ def create_vaccination(
     return VaccinationResponse.model_validate(db_vaccination)
 
 
-@router.put("/{vaccination_id}", response_model=VaccinationResponse)
+@router.put("/{vaccination_id}/", response_model=VaccinationResponse)
 def update_vaccination(
     vaccination_id: int,
     vaccination: VaccinationUpdate,
@@ -135,7 +135,7 @@ def update_vaccination(
     return VaccinationResponse.model_validate(db_vaccination)
 
 
-@router.delete("/{vaccination_id}")
+@router.delete("/{vaccination_id}/")
 def delete_vaccination(
     vaccination_id: int,
     db: Session = Depends(get_db),
@@ -158,7 +158,7 @@ def delete_vaccination(
     return {"message": "Vaccination record deleted successfully"}
 
 
-@router.get("/pet/{pet_id}/summary", response_model=VaccinationSummary)
+@router.get("/pet/{pet_id}/summary/", response_model=VaccinationSummary)
 def get_pet_vaccination_summary(
     pet_id: int,
     db: Session = Depends(get_db),
@@ -218,7 +218,7 @@ def get_pet_vaccination_summary(
     )
 
 
-@router.get("/due-soon", response_model=List[VaccinationReminder])
+@router.get("/due-soon/", response_model=List[VaccinationReminder])
 def get_vaccinations_due_soon(
     days_ahead: int = Query(30, ge=1, le=365),
     db: Session = Depends(get_db),
@@ -259,7 +259,7 @@ def get_vaccinations_due_soon(
     return reminders
 
 
-@router.get("/overdue", response_model=List[VaccinationReminder])
+@router.get("/overdue/", response_model=List[VaccinationReminder])
 def get_overdue_vaccinations(
     db: Session = Depends(get_db), current_user: UserORM = Depends(get_current_user)
 ):
@@ -293,7 +293,7 @@ def get_overdue_vaccinations(
     return reminders
 
 
-@router.get("/all", response_model=List[VaccinationResponse])
+@router.get("/all/", response_model=List[VaccinationResponse])
 def get_all_vaccinations(
     db: Session = Depends(get_db), current_user: UserORM = Depends(get_current_user)
 ):

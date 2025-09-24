@@ -85,7 +85,7 @@ export const createVaccination = async (
   vaccination: VaccinationCreate
 ): Promise<Vaccination> => {
   const backendVaccination = transformToBackend(vaccination);
-  const response = await apiRequest<any>(`/vaccinations/pet/${petId}`, {
+  const response = await apiRequest<any>(`/vaccinations/pet/${petId}/`, {
     method: 'POST',
     body: JSON.stringify(backendVaccination)
   });
@@ -101,7 +101,7 @@ export const updateVaccination = async (
   vaccination: VaccinationUpdate
 ): Promise<Vaccination> => {
   const backendVaccination = transformToBackend(vaccination);
-  const response = await apiRequest<any>(`/vaccinations/${vaccinationId}`, {
+  const response = await apiRequest<any>(`/vaccinations/${vaccinationId}/`, {
     method: 'PUT',
     body: JSON.stringify(backendVaccination)
   });
@@ -113,7 +113,7 @@ export const updateVaccination = async (
  * Delete a vaccination record
  */
 export const deleteVaccination = async (vaccinationId: number): Promise<void> => {
-  await apiRequest(`/vaccinations/${vaccinationId}`, {
+  await apiRequest(`/vaccinations/${vaccinationId}/`, {
     method: 'DELETE'
   });
 };
@@ -122,7 +122,7 @@ export const deleteVaccination = async (vaccinationId: number): Promise<void> =>
  * Get vaccination summary for a pet
  */
 export const getPetVaccinationSummary = async (petId: number): Promise<VaccinationSummary> => {
-  const response = await apiRequest<any>(`/vaccinations/pet/${petId}/summary`);
+  const response = await apiRequest<any>(`/vaccinations/pet/${petId}/summary/`);
   
   return {
     petId: response.pet_id,
@@ -138,7 +138,7 @@ export const getPetVaccinationSummary = async (petId: number): Promise<Vaccinati
  * Get vaccinations due soon
  */
 export const getVaccinationsDueSoon = async (daysAhead: number = 30): Promise<VaccinationReminder[]> => {
-  const response = await apiRequest<any>(`/vaccinations/due-soon?days_ahead=${daysAhead}`);
+  const response = await apiRequest<any>(`/vaccinations/due-soon/?days_ahead=${daysAhead}`);
   
   return response.map((reminder: any) => ({
     vaccinationId: reminder.vaccination_id,
@@ -155,7 +155,7 @@ export const getVaccinationsDueSoon = async (daysAhead: number = 30): Promise<Va
  * Get overdue vaccinations
  */
 export const getOverdueVaccinations = async (): Promise<VaccinationReminder[]> => {
-  const response = await apiRequest<any>('/vaccinations/overdue');
+  const response = await apiRequest<any>('/vaccinations/overdue/');
   
   return response.map((reminder: any) => ({
     vaccinationId: reminder.vaccination_id,

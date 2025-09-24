@@ -83,9 +83,12 @@ export class NotificationService {
     }
     
     try {
-      const registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('Service Worker registered:', registration);
-      return registration;
+      // Temporarily disabled service worker to avoid caching issues
+      console.log('Service Worker registration disabled for development');
+      return null;
+      // const registration = await navigator.serviceWorker.register('/sw.js');
+      // console.log('Service Worker registered:', registration);
+      // return registration;
     } catch (error) {
       console.error('Service Worker registration failed:', error);
       return null;
@@ -253,7 +256,7 @@ export class NotificationService {
       priority: 'medium',
       timestamp: new Date(),
       read: false,
-      actionUrl: '/pets',
+      actionUrl: '/pets/',
       data: {
         petName,
         reminderType,

@@ -83,7 +83,7 @@ export const createMedicalRecord = async (
   record: MedicalRecordCreate
 ): Promise<MedicalRecord> => {
   const backendRecord = transformToBackend(record);
-  const response = await apiRequest<any>(`/medical-records/pet/${petId}`, {
+  const response = await apiRequest<any>(`/medical-records/pet/${petId}/`, {
     method: 'POST',
     body: JSON.stringify(backendRecord)
   });
@@ -99,7 +99,7 @@ export const updateMedicalRecord = async (
   record: MedicalRecordUpdate
 ): Promise<MedicalRecord> => {
   const backendRecord = transformToBackend(record);
-  const response = await apiRequest<any>(`/medical-records/${recordId}`, {
+  const response = await apiRequest<any>(`/medical-records/${recordId}/`, {
     method: 'PUT',
     body: JSON.stringify(backendRecord)
   });
@@ -111,7 +111,7 @@ export const updateMedicalRecord = async (
  * Delete a medical record
  */
 export const deleteMedicalRecord = async (recordId: number): Promise<void> => {
-  await apiRequest(`/medical-records/${recordId}`, {
+  await apiRequest(`/medical-records/${recordId}/`, {
     method: 'DELETE'
   });
 };
@@ -120,7 +120,7 @@ export const deleteMedicalRecord = async (recordId: number): Promise<void> => {
  * Get medical record summary for a pet
  */
 export const getPetMedicalSummary = async (petId: number): Promise<MedicalRecordSummary> => {
-  const response = await apiRequest<any>(`/medical-records/pet/${petId}/summary`);
+  const response = await apiRequest<any>(`/medical-records/pet/${petId}/summary/`);
   
   return {
     petId: response.pet_id,

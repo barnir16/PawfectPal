@@ -67,7 +67,7 @@ async def get_pet_vaccinations(
         )
 
 
-@router.get("/pet/{pet_id}/summary", response_model=VaccinationSummary)
+@router.get("/pet/{pet_id}/summary/", response_model=VaccinationSummary)
 async def get_pet_vaccination_summary(
     pet_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)
 ):
@@ -268,7 +268,7 @@ async def delete_vaccination(
         )
 
 
-@router.get("/due-soon")
+@router.get("/due-soon/")
 async def get_vaccinations_due_soon(
     days_ahead: int = 30,
     db: Session = Depends(get_db),
@@ -315,7 +315,7 @@ async def get_vaccinations_due_soon(
         )
 
 
-@router.get("/overdue")
+@router.get("/overdue/")
 async def get_overdue_vaccinations(
     db: Session = Depends(get_db), current_user=Depends(get_current_user)
 ):

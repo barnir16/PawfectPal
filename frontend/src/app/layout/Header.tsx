@@ -22,12 +22,13 @@ import { getBaseUrl, getToken } from "../../services/api";
 
 type HeaderProps = {
   onMenuClick: () => void;
+  desktopOpen?: boolean;
 };
 
-export const Header = ({ onMenuClick }: HeaderProps) => {
+export const Header = ({ onMenuClick, desktopOpen = true }: HeaderProps) => {
   const { user, setUser, logout, forceLogout } = useAuth();
   const navigate = useNavigate();
-  const { t } = useLocalization();
+  const { t, isRTL } = useLocalization();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleAccountClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -98,32 +99,55 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
     <AppBar
       position="fixed"
       sx={{
-        width: { sm: `calc(100% - 240px)` },
-        ml: { sm: "240px" },
+        width: { sm: desktopOpen ? `calc(100% - 240px)` : `calc(100% - 64px)` },
+        ml: { sm: isRTL ? "0px" : desktopOpen ? "240px" : "64px" },
+        mr: { sm: isRTL ? (desktopOpen ? "240px" : "64px") : "0px" },
         boxShadow: "none",
         borderBottom: "1px solid rgba(0, 0, 0, 0.12)",
+        transition: "width 0.3s ease, margin 0.3s ease",
       }}
     >
       <Toolbar>
         <IconButton
           color="inherit"
           aria-label="open drawer"
-          edge="start"
+          edge={isRTL ? "end" : "start"}
           onClick={onMenuClick}
-          sx={{ mr: 2, display: { sm: "none" } }}
+          sx={{
+            mr: isRTL ? 0 : 2,
+            ml: isRTL ? 2 : 0,
+            display: { sm: "none" },
+          }}
         >
           <MenuIcon />
         </IconButton>
         <Box sx={{ flexGrow: 1 }} />
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Typography variant="body2" sx={{ color: "inherit" }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            flexDirection: isRTL ? "row-reverse" : "row",
+          }}
+        >
+          <Typography
+            variant="body2"
+            sx={{
+              color: "inherit",
+              textAlign: isRTL ? "right" : "left",
+            }}
+          >
             {user?.username || "User"}
           </Typography>
 
           {/* Debug info */}
           <Typography
             variant="caption"
-            sx={{ color: "inherit", fontSize: "10px" }}
+            sx={{
+              color: "inherit",
+              fontSize: "10px",
+              textAlign: isRTL ? "right" : "left",
+            }}
           >
             Provider: {user?.is_provider ? "Yes" : "No"}
           </Typography>

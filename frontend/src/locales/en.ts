@@ -28,6 +28,12 @@ export const en = {
     ready: 'Ready',
     refresh: 'Refresh',
     quickActions: 'Quick Actions',
+    creating: 'Creating...',
+    retry: 'Retry',
+    clear: 'Clear',
+    select: 'Select',
+    selectAll: 'Select All',
+    deselectAll: 'Deselect All',
   },
 
   // Navigation
@@ -39,7 +45,6 @@ export const en = {
     weightTracking: 'Weight Tracking',
     settings: 'Settings',
     profile: 'Profile',
-    logout: 'Logout',
   },
 
   // Auth
@@ -170,7 +175,6 @@ export const en = {
     petUpdated: 'Pet updated successfully!',
     petCreated: 'Pet created successfully!',
     errorSavingPet: 'Error saving pet: {error}',
-    sessionExpired: 'Your session has expired. Please log in again.',
     addNewPet: 'Add New Pet',
     petPhoto: 'Pet Photo',
     basicInformation: 'Basic Information',
@@ -1034,7 +1038,7 @@ export const en = {
     viewProfile: 'View Profile',
     available: 'Available',
     unavailable: 'Unavailable',
-    services: 'Services',
+    location: 'Location',
     selectDateAndTime: 'Please select date and time',
     calculatedAutomatically: 'Calculated automatically',
     booking: 'Booking...',
@@ -1069,19 +1073,60 @@ export const en = {
     specialRequirements: 'Special Requirements',
     specialRequirementsPlaceholder: 'Any special requirements or notes...',
     isUrgent: 'Urgent Request',
-    myRequests: 'My Requests',
-    browseRequests: 'Browse Requests',
-    noRequestsFound: 'No service requests found',
-    requestDetails: 'Request Details',
     contactProvider: 'Contact Provider',
     sendMessage: 'Send Message',
-    messagePlaceholder: 'Type your message...',
-    conversation: 'Conversation',
     unreadMessages: 'Unread Messages',
     notes: 'Notes',
     specialRequests: 'Special Requests',
     bookingSummary: 'Booking Summary',
     totalCost: 'Total Cost',
-    confirmBooking: 'Confirm Booking'
+    confirmBooking: 'Confirm Booking',
+    
+    // Chat interface
+    noConversationFound: 'No conversation found',
+    unknownUser: 'Unknown User',
+    serviceRequest: 'Service Request',
+    
+    // Service request browser
+    filters: 'Filters',
+    searchRequests: 'Search requests...',
+    urgency: 'Urgency',
+    all: 'All',
+    urgentOnly: 'Urgent Only',
+    nonUrgentOnly: 'Non-Urgent Only',
+    viewDetails: 'View Details',
+    contactUser: 'Contact User',
+    noMatchingRequests: 'No matching requests found',
+    
+    // Service request details
+    description: 'Description',
+    requestedBy: 'Requested By',
+    startChat: 'Start Chat',
+    pets: 'Pets',
+    budget: 'Budget',
+    posted: 'Posted',
+    views: 'views',
+    responses: 'responses',
+    
+    // Service request management
+    browseRequests: 'Browse Requests',
+    myRequests: 'My Requests',
+    requestDetails: 'Request Details',
+    noRequestsFound: 'No requests found',
+    createFirstRequest: 'Create your first service request to get started',
+    locationNotSpecified: 'Location not specified',
+    noPetsSelected: 'No pets selected',
+    conversation: 'Conversation',
+    noMessagesYet: 'No messages yet',
+    startConversation: 'Start the conversation by sending a message',
+    messagePlaceholder: 'Type your message...',
+    chatProvider: 'Provider',
+    requestStatus: {
+      open: 'Open',
+      in_progress: 'In Progress',
+      completed: 'Completed',
+      closed: 'Closed',
+    },
   },
+
 };
