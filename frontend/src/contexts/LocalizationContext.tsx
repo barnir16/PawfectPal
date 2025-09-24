@@ -11,6 +11,7 @@ interface LocalizationContextType {
   setLanguage: (language: Language) => void;
   t: (key: string) => string;
   getSupportedLanguages: () => { code: string; name: string; flag: string }[];
+  isRTL: boolean;
 }
 
 const LocalizationContext = createContext<LocalizationContextType | undefined>(undefined);
@@ -26,12 +27,21 @@ export const LocalizationProvider: React.FC<LocalizationProviderProps> = ({ chil
   useEffect(() => {
     const savedLanguage = LocaleHelper.getCurrentLanguage() as Language;
     setCurrentLanguageState(savedLanguage);
+    
+    // Set initial document direction
+    document.documentElement.dir = savedLanguage === 'he' ? 'rtl' : 'ltr';
+    document.documentElement.lang = savedLanguage;
+    
     setIsInitialized(true);
   }, []);
 
   const setLanguage = (language: Language) => {
     LocaleHelper.setNewLocale(language);
     setCurrentLanguageState(language);
+    
+    // Update document direction for RTL support
+    document.documentElement.dir = language === 'he' ? 'rtl' : 'ltr';
+    document.documentElement.lang = language;
   };
 
   const getLocaleData = (): LocaleData => {
@@ -68,11 +78,14 @@ export const LocalizationProvider: React.FC<LocalizationProviderProps> = ({ chil
     }));
   };
 
+  const isRTL = currentLanguage === 'he';
+
   const value: LocalizationContextType = {
     currentLanguage,
     setLanguage,
     t,
     getSupportedLanguages,
+    isRTL,
   };
 
   if (!isInitialized) {

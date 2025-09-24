@@ -25,20 +25,28 @@ import {
   ChevronRight as ChevronRightIcon,
   EventAvailable as ServicesIcon,
   PostAdd as BookIcon,
-  Person as ProfileIcon,
+  ListAlt as ServiceRequestsIcon,
+  Chat as ChatIcon,
+  Menu as MenuIcon,
 } from "@mui/icons-material";
 
 type SidebarProps = {
   mobileOpen: boolean;
   onClose: () => void;
+  onDesktopToggle?: (open: boolean) => void;
 };
 
 const drawerWidth = 240;
+const minimizedWidth = 64;
 
-export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
+export const Sidebar = ({
+  mobileOpen,
+  onClose,
+  onDesktopToggle,
+}: SidebarProps) => {
   const theme = useTheme();
   const location = useLocation();
-  const { t } = useLocalization();
+  const { t, isRTL } = useLocalization();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [open, setOpen] = useState(!isMobile);
 
@@ -57,6 +65,16 @@ export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
       path: "/bookservice",
     },
     {
+      text: t("services.browseRequests"),
+      icon: <ServiceRequestsIcon />,
+      path: "/service-requests",
+    },
+    {
+      text: t("services.myRequests"),
+      icon: <ServiceRequestsIcon />,
+      path: "/my-service-requests",
+    },
+    {
       text: t("navigation.weightTracking"),
       icon: <PersonIcon />,
       path: "/weight-tracking",
@@ -70,10 +88,13 @@ export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
   ];
 
   const handleDrawerToggle = () => {
+    console.log("Drawer toggle clicked", { isMobile, open, isRTL });
     if (isMobile) {
       onClose();
     } else {
-      setOpen(!open);
+      const newOpen = !open;
+      setOpen(newOpen);
+      onDesktopToggle?.(newOpen);
     }
   };
 
@@ -87,15 +108,21 @@ export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
           justifyContent: "space-between",
         }}
       >
-        <Typography variant="h6" noWrap component="div">
-          PawfectPal
-        </Typography>
-        <IconButton onClick={handleDrawerToggle}>
-          {theme.direction === "rtl" ? (
-            <ChevronRightIcon />
-          ) : (
-            <ChevronLeftIcon />
-          )}
+        {open && (
+          <Typography variant="h6" noWrap component="div">
+            PawfectPal
+          </Typography>
+        )}
+        <IconButton
+          onClick={handleDrawerToggle}
+          sx={{
+            color: "white",
+            "&:hover": { backgroundColor: "rgba(255,255,255,0.1)" },
+            ml: open ? 0 : "auto",
+            mr: open ? 0 : "auto",
+          }}
+        >
+          <MenuIcon fontSize="small" />
         </IconButton>
       </Box>
       <Divider />
@@ -107,9 +134,50 @@ export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
               to={item.path}
               selected={location.pathname === item.path}
               onClick={onClose}
+              sx={{
+                flexDirection: isRTL ? "row-reverse" : "row",
+                minHeight: 48,
+                px: open ? 2 : 1.5,
+                justifyContent: open ? "flex-start" : "center",
+                "&.Mui-selected": {
+                  backgroundColor: "rgba(255,255,255,0.1)",
+                  "&:hover": {
+                    backgroundColor: "rgba(255,255,255,0.15)",
+                  },
+                },
+                "&:hover": {
+                  backgroundColor: "rgba(255,255,255,0.05)",
+                },
+              }}
+              title={!open ? item.text : undefined} // Show tooltip when minimized
             >
-              <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
+              <ListItemIcon
+                sx={{
+                  minWidth: open ? 40 : "auto",
+                  justifyContent: "center",
+                  color:
+                    location.pathname === item.path
+                      ? "primary.main"
+                      : "inherit",
+                }}
+              >
+                {item.icon}
+              </ListItemIcon>
+              {open && (
+                <ListItemText
+                  primary={item.text}
+                  sx={{
+                    textAlign: isRTL ? "right" : "left",
+                    "& .MuiListItemText-primary": {
+                      textAlign: isRTL ? "right" : "left",
+                      color:
+                        location.pathname === item.path
+                          ? "primary.main"
+                          : "inherit",
+                    },
+                  }}
+                />
+              )}
             </ListItemButton>
           </ListItem>
         ))}
@@ -120,7 +188,11 @@ export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
   return (
     <Box
       component="nav"
-      sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+      sx={{
+        width: { sm: open ? drawerWidth : minimizedWidth },
+        flexShrink: { sm: 0 },
+        transition: "width 0.3s ease",
+      }}
       aria-label="mailbox folders"
     >
       {/* Mobile drawer */}
@@ -128,6 +200,7 @@ export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
         variant="temporary"
         open={mobileOpen}
         onClose={onClose}
+        anchor={isRTL ? "right" : "left"}
         ModalProps={{
           keepMounted: true, // Better open performance on mobile.
         }}
@@ -141,12 +214,21 @@ export const Sidebar = ({ mobileOpen, onClose }: SidebarProps) => {
 
       {/* Desktop drawer */}
       <Drawer
-        variant="permanent"
+        variant="persistent"
+        anchor={isRTL ? "right" : "left"}
+        open={true}
         sx={{
           display: { xs: "none", sm: "block" },
-          "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
+          "& .MuiDrawer-paper": {
+            boxSizing: "border-box",
+            width: open ? drawerWidth : minimizedWidth,
+            transition: theme.transitions.create("width", {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
+            overflow: "visible",
+          },
         }}
-        open={open}
       >
         {drawer}
       </Drawer>

@@ -72,7 +72,7 @@ async def get_all_weight_records(
         )
 
 
-@router.get("/pet/{pet_id}", response_model=List[WeightRecordResponse])
+@router.get("/pet/{pet_id}/", response_model=List[WeightRecordResponse])
 async def get_weight_records_by_pet(
     pet_id: int,
     db: Session = Depends(get_db),
@@ -115,7 +115,7 @@ async def get_weight_records_by_pet(
         )
 
 
-@router.get("/pet/{pet_id}/range", response_model=List[WeightRecordResponse])
+@router.get("/pet/{pet_id}/range/", response_model=List[WeightRecordResponse])
 async def get_weight_records_by_date_range(
     pet_id: int,
     start_date: datetime,
@@ -210,7 +210,7 @@ async def create_weight_record(
         )
 
 
-@router.put("/{record_id}", response_model=WeightRecordResponse)
+@router.put("/{record_id}/", response_model=WeightRecordResponse)
 async def update_weight_record(
     record_id: int,
     weight_record_update: WeightRecordUpdate,
@@ -264,7 +264,7 @@ async def update_weight_record(
         )
 
 
-@router.delete("/{record_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{record_id}/", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_weight_record(
     record_id: int,
     db: Session = Depends(get_db),

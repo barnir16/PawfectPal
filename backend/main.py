@@ -26,13 +26,44 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# Health check endpoint for Railway
+@app.get("/health")
+def health_check():
+    return {
+        "status": "healthy", 
+        "message": "PawfectPal API is running", 
+        "version": "1.0.2",
+        "firebase_fixed": True,
+        "deployment_time": "2025-01-21T23:30:00Z"
+    }
+
+@app.get("/test")
+def test_endpoint():
+    return {
+        "message": "This is the NEW version with Firebase fixes!",
+        "version": "1.0.3",
+        "firebase_status": "disabled_but_working",
+        "railway_detection": "FORCE_REDEPLOY_2025_01_21"
+    }
+
+@app.get("/railway-test")
+def railway_test():
+    return {
+        "status": "Railway is using NEW code!",
+        "timestamp": "2025-01-21T23:45:00Z",
+        "version": "1.0.3"
+    }
+
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    allow_origin_regex=r"https?://.*",
+    expose_headers=["*"],
+    max_age=3600,
 )
 
 # Serve static files (uploaded images)

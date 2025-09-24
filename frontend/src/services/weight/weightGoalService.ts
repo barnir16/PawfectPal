@@ -45,7 +45,7 @@ class WeightGoalService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${getBaseUrl()}/api/weight-goals`, {
+      const response = await fetch(`${getBaseUrl()}/api/weight-goals/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ class WeightGoalService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${getBaseUrl()}/api/weight-goals/pet/${petId}`, {
+      const response = await fetch(`${getBaseUrl()}/api/weight-goals/pet/${petId}/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -95,7 +95,7 @@ class WeightGoalService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${getBaseUrl()}/api/weight-goals`, {
+      const response = await fetch(`${getBaseUrl()}/api/weight-goals/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -122,7 +122,7 @@ class WeightGoalService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${getBaseUrl()}/api/weight-goals/${goalId}`, {
+      const response = await fetch(`${getBaseUrl()}/api/weight-goals/${goalId}/`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -149,7 +149,7 @@ class WeightGoalService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${getBaseUrl()}/api/weight-goals/${goalId}`, {
+      const response = await fetch(`${getBaseUrl()}/api/weight-goals/${goalId}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
