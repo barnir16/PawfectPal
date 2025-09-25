@@ -23,7 +23,12 @@ class FirebaseAdminService:
         """Initialize Firebase Admin with service account or default credentials"""
         try:
             # Try to get service account from environment variable
-            service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+            service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON") or os.getenv("RAILWAY_FIREBASE_SETUP")
+            
+            # Debug: Check what variables are available
+            print(f"🔍 FIREBASE_SERVICE_ACCOUNT_JSON: {'Found' if os.getenv('FIREBASE_SERVICE_ACCOUNT_JSON') else 'Not found'}")
+            print(f"🔍 RAILWAY_FIREBASE_SETUP: {'Found' if os.getenv('RAILWAY_FIREBASE_SETUP') else 'Not found'}")
+            print(f"🔍 All Railway variables: {[k for k in os.environ.keys() if 'RAILWAY' in k]}")
             
             if service_account_json:
                 # Parse JSON from environment variable
@@ -67,7 +72,8 @@ class FirebaseAdminService:
         try:
             if not self.initialized:
                 if not self.initialize():
-                    return {}
+                    # Fallback to API key method if service account fails
+                    return self._get_remote_config_with_api_key()
             
             # Use correct Firebase Remote Config API endpoint
             url = f"https://firebaseremoteconfig.googleapis.com/v1/projects/{self.project_id}/remoteConfig"
@@ -87,30 +93,36 @@ class FirebaseAdminService:
             
         except Exception as e:
             print(f"❌ Failed to fetch Firebase Remote Config: {str(e)}")
-            return {}
+            # Fallback to API key method
+            return self._get_remote_config_with_api_key()
+    
+    def _get_remote_config_with_api_key(self) -> Dict[str, Any]:
+        """Fallback method - Firebase Remote Config requires OAuth2, not API keys"""
+        print("❌ Firebase Remote Config API requires OAuth2 authentication, not API keys")
+        print("💡 To fix this, you need to:")
+        print("   1. Create a Firebase service account")
+        print("   2. Download the service account JSON file")
+        print("   3. Set FIREBASE_SERVICE_ACCOUNT_JSON environment variable")
+        print("   4. Or use Firebase Admin SDK with proper credentials")
+        return {}
     
     def get_gemini_api_key(self) -> Optional[str]:
-        """Get Gemini API key from Firebase Remote Config or environment"""
+        """Get Gemini API key from environment variable (Firebase Remote Config requires OAuth2)"""
         try:
-            # First try environment variable
+            # Try environment variable first
             env_key = os.getenv("GEMINI_API_KEY")
             if env_key:
                 print("✅ Using Gemini API key from environment variable")
                 return env_key
             
-            # Try Firebase Remote Config
-            if not self.config:
-                self.get_remote_config()
+            # Try the old Firebase API key as fallback (it might be a Gemini key)
+            firebase_key = os.getenv("FIREBASE_API_KEY", "AIzaSyDoNsVE_ZmgBBuVJ3IKZpAAZRz9HS-67s8")
+            if firebase_key and firebase_key != "AIzaSyDoNsVE_ZmgBBuVJ3IKZpAAZRz9HS-67s8":
+                print("✅ Using Firebase API key as Gemini API key fallback")
+                return firebase_key
             
-            # Get the Gemini API key from config
-            gemini_config = self.config.get("gemini_api_key", {})
-            if gemini_config.get("defaultValue", {}).get("value"):
-                api_key = gemini_config["defaultValue"]["value"]
-                print(f"✅ Firebase Config: Found Gemini API key (length: {len(api_key)})")
-                return api_key
-            
-            print("⚠️ Gemini API key not found in Firebase Remote Config or environment")
-            print(f"🔍 Available config keys: {list(self.config.keys())}")
+            print("⚠️ Gemini API key not found in environment variables")
+            print("💡 Set GEMINI_API_KEY environment variable to fix this")
             return None
             
         except Exception as e:

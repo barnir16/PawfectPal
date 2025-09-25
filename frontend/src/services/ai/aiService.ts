@@ -3,7 +3,7 @@
  * Direct API integration without complex state management
  */
 
-import { Pet } from '../../types/pet';
+import { Pet } from '../../types/pets/pet';
 import { configService } from '../config/firebaseConfigService';
 import { getToken } from '../api';
 

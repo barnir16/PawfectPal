@@ -28,8 +28,10 @@ def get_gemini_model():
             genai.configure(api_key=api_key)
             return genai.GenerativeModel('gemini-pro')
         else:
+            print("⚠️ Gemini API key not found in Firebase Remote Config or environment")
             return None
     except Exception as e:
+        print(f"❌ Error configuring Gemini: {e}")
         return None
 
 # Initialize model
