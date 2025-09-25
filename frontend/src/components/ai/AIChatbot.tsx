@@ -38,7 +38,7 @@ import { useLocalization } from '../../contexts/LocalizationContext';
 import { aiService } from '../../services/ai/aiService';
 import { getPets } from '../../services/pets/petService';
 import { getTasks } from '../../services/tasks/taskService';
-import type { Pet } from '../../types/pet';
+import type { Pet } from '../../types/pets/pet';
 
 // Simplified types for the new AI service
 interface ChatMessage {

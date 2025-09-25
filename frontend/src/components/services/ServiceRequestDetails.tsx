@@ -96,7 +96,7 @@ export const ServiceRequestDetails: React.FC = () => {
       </Box>
 
       <Grid container spacing={3}>
-        <Grid item xs={12} md={8}>
+        <Grid component="div" item xs={12} md={8}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -121,7 +121,7 @@ export const ServiceRequestDetails: React.FC = () => {
               <Divider sx={{ my: 2 }} />
 
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
+                <Grid component="div" item xs={12} sm={6}>
                   <Box display="flex" alignItems="center" mb={1}>
                     <LocationOn sx={{ mr: 1, color: 'text.secondary' }} />
                     <Typography variant="body2">
@@ -130,7 +130,7 @@ export const ServiceRequestDetails: React.FC = () => {
                   </Box>
                 </Grid>
                 
-                <Grid item xs={12} sm={6}>
+                <Grid component="div" item xs={12} sm={6}>
                   <Box display="flex" alignItems="center" mb={1}>
                     <AccessTime sx={{ mr: 1, color: 'text.secondary' }} />
                     <Typography variant="body2">
@@ -140,7 +140,7 @@ export const ServiceRequestDetails: React.FC = () => {
                 </Grid>
 
                 {request.budget_min && request.budget_max && (
-                  <Grid item xs={12} sm={6}>
+                  <Grid component="div" item xs={12} sm={6}>
                     <Box display="flex" alignItems="center" mb={1}>
                       <AttachMoney sx={{ mr: 1, color: 'text.secondary' }} />
                       <Typography variant="body2">
@@ -150,7 +150,7 @@ export const ServiceRequestDetails: React.FC = () => {
                   </Grid>
                 )}
 
-                <Grid item xs={12} sm={6}>
+                <Grid component="div" item xs={12} sm={6}>
                   <Box display="flex" alignItems="center" mb={1}>
                     <Visibility sx={{ mr: 1, color: 'text.secondary' }} />
                     <Typography variant="body2">
@@ -163,7 +163,7 @@ export const ServiceRequestDetails: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid component="div" item xs={12} md={4}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>

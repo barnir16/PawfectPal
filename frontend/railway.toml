@@ -1,0 +1,5 @@
+[deploy]
+startCommand = "npx serve -s dist -l 8080"
+
+[env]
+NODE_ENV = "production"
