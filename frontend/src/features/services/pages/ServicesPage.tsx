@@ -11,15 +11,14 @@ import {
   CardContent,
   CardActions,
   Button,
+  TextField,
+  InputAdornment,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
-import {
-  CheckCircle,
-  Cancel,
-  Schedule,
-  Pets,
-  Event,
-  EventAvailable,
-} from "@mui/icons-material";
+import { CheckCircle, Cancel, Schedule, Search } from "@mui/icons-material";
 import { useLocalization } from "../../../contexts/LocalizationContext";
 import { ServiceErrorBoundary } from "../components/ServiceErrorBoundary";
 import MockService from "../../../services/services/mockServices";
@@ -32,6 +31,10 @@ export const ServicesPage = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // new states for search and filter
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const fetchServices = useCallback(async () => {
     setLoading(true);
@@ -79,6 +82,15 @@ export const ServicesPage = () => {
     return <Schedule fontSize="small" />;
   };
 
+  // apply filters
+  const filteredServices = services
+    .filter((s) => (statusFilter === "all" ? true : s.status === statusFilter))
+    .filter(
+      (s) =>
+        s.pet_name.toLowerCase().includes(search.toLowerCase()) ||
+        s.service_type.toLowerCase().includes(search.toLowerCase())
+    );
+
   return (
     <ServiceErrorBoundary>
       <Box sx={{ p: 3 }}>
@@ -90,6 +102,47 @@ export const ServicesPage = () => {
           <Tab label={t("services.activeUpcoming")} />
           <Tab label={t("services.historyCompleted")} />
         </Tabs>
+
+        {/* filters UI */}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            gap: 2,
+            mt: 2,
+          }}
+        >
+          <TextField
+            fullWidth
+            size="small"
+            placeholder={t("Search")}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search fontSize="small" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
+
+          <FormControl size="small" sx={{ minWidth: 180 }}>
+            <InputLabel>{t("filterByStatus")}</InputLabel>
+            <Select
+              value={statusFilter}
+              label={t("filterByStatus")}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <MenuItem value="all">{t("All")}</MenuItem>
+              <MenuItem value="active">{t("In Progress")}</MenuItem>
+              <MenuItem value="completed">{t("Completed")}</MenuItem>
+              <MenuItem value="cancelled">{t("Cancelled")}</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
 
         <Paper sx={{ mt: 2, p: 2 }}>
           {loading && (
@@ -105,7 +158,7 @@ export const ServicesPage = () => {
             </Typography>
           )}
 
-          {!loading && !error && services.length === 0 && (
+          {!loading && !error && filteredServices.length === 0 && (
             <Typography
               sx={{ textAlign: "center", p: 3, color: "text.secondary" }}
             >
@@ -113,7 +166,7 @@ export const ServicesPage = () => {
             </Typography>
           )}
 
-          {!loading && !error && services.length > 0 && (
+          {!loading && !error && filteredServices.length > 0 && (
             <Box
               sx={{
                 display: "grid",
@@ -125,7 +178,7 @@ export const ServicesPage = () => {
                 gap: 3,
               }}
             >
-              {services.map((service) => (
+              {filteredServices.map((service) => (
                 <Card
                   key={service.id}
                   elevation={6}
@@ -171,6 +224,7 @@ export const ServicesPage = () => {
                       color={getStatusColor(service.status)}
                       size="small"
                       sx={{ fontWeight: 500 }}
+                      icon={getStatusIcon(service.status)}
                     />
                     <Button
                       size="small"
