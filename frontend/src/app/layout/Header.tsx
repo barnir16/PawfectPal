@@ -87,9 +87,15 @@ export const Header = ({ onMenuClick, desktopOpen = true }: HeaderProps) => {
       console.log("✅ Updated user:", updatedUser);
       setUser(updatedUser);
       console.log("🎉 Successfully became a provider!");
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("❌ Error becoming provider:", err);
-      alert(`Error becoming provider: ${err.message}`);
+
+      let message = "Unknown error";
+      if (err instanceof Error) {
+        message = err.message;
+      }
+
+      alert(`Error becoming provider: ${message}`);
     }
   };
 
@@ -193,7 +199,7 @@ export const Header = ({ onMenuClick, desktopOpen = true }: HeaderProps) => {
             </MenuItem>
             <MenuItem onClick={handleLogout}>
               <LogoutIcon sx={{ mr: 1 }} />
-              {t("navigation.logout")}
+              {t("auth.logout")}
             </MenuItem>
           </Menu>
         </Box>

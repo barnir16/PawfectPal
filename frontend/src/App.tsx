@@ -33,6 +33,8 @@ import { useAIChat } from "./hooks/useAIChat";
 import { NotificationContainer } from "./components/notifications/NotificationContainer";
 import ErrorBoundary from "./components/ErrorBoundary";
 import RealVaccineTracker from "./components/tasks/RealVaccineTracker";
+import { ChatListPage } from "./features/chat/pages/ChatListPage";
+import { ChatPage } from "./features/chat/pages/ChatPage";
 import "./utils/testVaccines"; // Import test utility
 
 const App = () => {
@@ -147,6 +149,8 @@ const AppContent = () => {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/test-vaccines" element={<RealVaccineTracker />} />
+          <Route path="/chat-list" element={<ChatListPage />} />
+          <Route path="/chat/:id" element={<ChatPage />} />{" "}
           <Route path="/auth" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

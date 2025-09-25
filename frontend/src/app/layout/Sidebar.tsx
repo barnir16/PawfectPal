@@ -116,8 +116,11 @@ export const Sidebar = ({
         <IconButton
           onClick={handleDrawerToggle}
           sx={{
-            color: "white",
-            "&:hover": { backgroundColor: "rgba(255,255,255,0.1)" },
+            color: "text.primary",
+            backgroundColor: "transparent",
+            "&:hover": {
+              backgroundColor: "rgba(0,0,0,0.05)",
+            },
             ml: open ? 0 : "auto",
             mr: open ? 0 : "auto",
           }}
