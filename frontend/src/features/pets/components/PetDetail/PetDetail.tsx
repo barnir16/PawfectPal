@@ -158,7 +158,7 @@ export const PetDetail = () => {
         const petData = await getPet(parseInt(id));
         console.log('🔍 Pet data fetched:', petData);
         console.log('🔍 Pet type:', petData.type);
-        console.log('🔍 Pet breedType:', petData.breedType);
+        console.log('🔍 Pet type:', petData.type);
         console.log('🔍 Pet breed:', petData.breed);
         console.log('🔍 Pet weightKg:', petData.weightKg);
         console.log('🔍 Pet weightUnit:', petData.weightUnit);
@@ -317,7 +317,7 @@ export const PetDetail = () => {
 
         <TabPanel value={tabValue} index={3}>
           <BreedInfoCard
-            petType={pet?.type || pet?.breedType || 'dog'}
+            petType={pet?.type || 'dog'}
             breedName={pet?.breed || 'Mixed Breed'}
             currentWeight={pet?.weightKg || pet?.weight_kg || 0}
             weightUnit={pet?.weightUnit || 'kg'}
