@@ -48,6 +48,11 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
   const [breedInfo, setBreedInfo] = useState<BreedInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Don't show breed info for "other" pet types
+  if (petType === 'other') {
+    return null;
+  }
   const [expanded, setExpanded] = useState(false);
 
   // Normalize and validate props with better fallbacks
