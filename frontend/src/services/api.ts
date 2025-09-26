@@ -7,9 +7,16 @@ export const getBaseUrl = (): string => {
     const apiConfig = configService.getApiConfig();
     const baseUrl = apiConfig.baseUrl;
     
-    // Force Railway URL if localhost is detected
-    if (baseUrl.includes('127.0.0.1') || baseUrl.includes('localhost')) {
-      console.warn('Localhost detected in API URL, forcing Railway URL');
+    // Check if we're in production (Railway deployment)
+    const isProduction = window.location.hostname.includes('railway.app');
+    
+    // Force Railway URL if localhost is detected OR we're in production
+    if (baseUrl.includes('127.0.0.1') || baseUrl.includes('localhost') || isProduction) {
+      if (isProduction) {
+        console.log('Production environment detected, using Railway URL');
+      } else {
+        console.warn('Localhost detected in API URL, forcing Railway URL');
+      }
       return "https://pawfectpal-production.up.railway.app";
     }
     
