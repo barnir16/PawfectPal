@@ -6,7 +6,7 @@ import { useLocalization } from "../../../contexts/LocalizationContext";
 
 export default function AuthScreen() {
   const { t } = useLocalization();
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState("");
@@ -109,14 +109,10 @@ export default function AuthScreen() {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      const response = await signInWithGoogle();
-      
-      // Store the token using the same method as regular login
-      localStorage.setItem('authToken', response.access_token);
-      
-      // Force a page reload to trigger AuthContext re-initialization
-      // This will make the AuthContext detect the new token and update the user state
-      window.location.href = "/dashboard";
+      // Use the AuthContext's loginWithGoogle function
+      await loginWithGoogle();
+      console.log('✅ Google login successful via AuthContext');
+      navigate("/dashboard");
     } catch (error) {
       const errorMessage =
         error instanceof Error
