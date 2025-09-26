@@ -231,7 +231,7 @@ export const ServiceRequestForm: React.FC<ServiceRequestFormProps> = ({
                   <CardContent>
                     <Typography variant="h6">{pet.name}</Typography>
                     <Typography variant="body2" color="text.secondary">
-                      {pet.breedType} • {pet.breed}
+                      {pet.type} • {pet.breed}
                     </Typography>
                   </CardContent>
                 </Card>

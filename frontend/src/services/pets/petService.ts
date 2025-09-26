@@ -65,16 +65,11 @@ export const transformPetToBackend = (pet: Omit<Pet, 'id'>): BackendPetCreate =>
  * Transform backend pet data to frontend Pet format
  */
 const transformPetFromBackend = (backendPet: any): Pet => {
-  // Debug logging for Nicole
-  if (backendPet.name === 'Nicole') {
-  }
-  
   return {
     // Basic information
     id: backendPet.id,
     name: backendPet.name,
     type: backendPet.breed_type || backendPet.type,
-    breedType: backendPet.breed_type || backendPet.type, // Add this field
     breed: backendPet.breed,
     
     // Physical attributes

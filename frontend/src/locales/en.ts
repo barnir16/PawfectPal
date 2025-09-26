@@ -45,6 +45,7 @@ export const en = {
     weightTracking: 'Weight Tracking',
     settings: 'Settings',
     profile: 'Profile',
+    logout: 'Logout',
   },
 
   // Auth

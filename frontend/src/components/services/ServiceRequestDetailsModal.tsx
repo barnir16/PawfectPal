@@ -190,7 +190,7 @@ export const ServiceRequestDetailsModal: React.FC<ServiceRequestDetailsModalProp
                       </Typography>
                     </Box>
                     <Typography variant="body2" color="text.secondary">
-                      {pet.breedType} • {pet.breed}
+                      {pet.type} • {pet.breed}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
                       {pet.age} years old

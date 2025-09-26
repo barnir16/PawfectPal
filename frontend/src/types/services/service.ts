@@ -27,8 +27,8 @@ export type ServiceStatus =
  * Represents a service booking in the PawfectPal application
  */
 export interface Service {
-  id?: number;
-  user_id: number; // Added from ORM
+  id: number; // Required - always present from backend
+  user_id: number;
   pet_id: number;
   service_type: ServiceType;
   status: ServiceStatus;
@@ -57,14 +57,10 @@ export interface Service {
 
   // Additional details
   service_report?: string;
-  rating?: number;
-  review?: string;
 
   // Timestamps
   created_at?: string; // ISO date string
   updated_at?: string; // ISO date string
-  cancelled_at?: string; // ISO date string
-  completed_at?: string; // ISO date string
 
   // Relationships (added from ORM)
   user?: User;
