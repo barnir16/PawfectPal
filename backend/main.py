@@ -54,12 +54,18 @@ def railway_test():
         "version": "1.0.3"
     }
 
-# CORS configuration
+# CORS configuration - Enhanced for Railway deployment
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173", 
+        "https://pawfectpal-production-2f07.up.railway.app",
+        "https://pawfectpal-production.up.railway.app",
+        "*"  # Fallback for any other origins
+    ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
     allow_origin_regex=r"https?://.*",
     expose_headers=["*"],
