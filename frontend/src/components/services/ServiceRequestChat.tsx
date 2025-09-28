@@ -2,32 +2,19 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
-  Card,
-  CardContent,
-  Typography,
-  TextField,
-  Button,
-  Avatar,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
   CircularProgress,
   Alert,
-  Paper,
-  IconButton,
-  Divider,
+  Button,
 } from '@mui/material';
 import {
   ArrowBack,
-  Send,
-  AttachFile,
-  Person,
 } from '@mui/icons-material';
 import { useLocalization } from '../../contexts/LocalizationContext';
 import { ChatService } from '../../services/chat/chatService';
 import { ServiceRequestService } from '../../services/serviceRequests/serviceRequestService';
-import type { ChatMessage } from '../../types/services/chat';
+import { ServiceContextPanel } from './ServiceContextPanel';
+import { EnhancedChatWindow } from './EnhancedChatWindow';
+import type { ChatMessage, ChatMessageCreate } from '../../types/services/chat';
 import type { ServiceRequest } from '../../types/services/serviceRequest';
 
 export const ServiceRequestChat: React.FC = () => {
@@ -36,11 +23,9 @@ export const ServiceRequestChat: React.FC = () => {
   const { t } = useLocalization();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [request, setRequest] = useState<ServiceRequest | null>(null);
-  const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (id) {
@@ -48,13 +33,6 @@ export const ServiceRequestChat: React.FC = () => {
     }
   }, [id]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   const fetchData = async () => {
     if (!id) return;
@@ -81,18 +59,16 @@ export const ServiceRequestChat: React.FC = () => {
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() || !id || sending) return;
+  const handleSendMessage = async (messageData: ChatMessageCreate) => {
+    if (!id || sending) return;
 
     try {
       setSending(true);
       const message = await ChatService.sendMessage({
+        ...messageData,
         service_request_id: parseInt(id),
-        message: newMessage.trim(),
-        message_type: 'text'
       });
       setMessages(prev => [...prev, message]);
-      setNewMessage('');
     } catch (err: any) {
       setError(err.message || t('common.error'));
     } finally {
@@ -100,10 +76,67 @@ export const ServiceRequestChat: React.FC = () => {
     }
   };
 
-  const handleKeyPress = (event: React.KeyboardEvent) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      handleSendMessage();
+  const handleQuickAction = async (action: string, data?: any) => {
+    console.log('Quick action:', action, data);
+    
+    try {
+      switch (action) {
+        case 'share_location':
+          await ChatService.shareLocation(
+            parseInt(id!),
+            data?.latitude,
+            data?.longitude,
+            data?.address,
+            data?.fallback
+          );
+          // Refresh messages
+          fetchData();
+          break;
+          
+        case 'request_photos':
+          const photoMessage = await ChatService.sendMessage({
+            service_request_id: parseInt(id!),
+            message: 'Could you please share some photos of your pet? This will help me provide better care.',
+            message_type: 'text',
+          });
+          setMessages(prev => [...prev, photoMessage]);
+          break;
+          
+        case 'schedule_meeting':
+          const meetingMessage = await ChatService.sendMessage({
+            service_request_id: parseInt(id!),
+            message: 'Let\'s schedule a meeting to discuss the service details. When would be a good time for you?',
+            message_type: 'text',
+          });
+          setMessages(prev => [...prev, meetingMessage]);
+          break;
+          
+        case 'share_instructions':
+          const instructionMessage = await ChatService.sendMessage({
+            service_request_id: parseInt(id!),
+            message: 'Please share any special instructions or requirements for your pet\'s care.',
+            message_type: 'text',
+          });
+          setMessages(prev => [...prev, instructionMessage]);
+          break;
+          
+        case 'update_service_status':
+          if (data?.status && data?.serviceRequestId) {
+            await ChatService.sendServiceUpdate(
+              data.serviceRequestId,
+              data.status
+            );
+            // Refresh messages and request data
+            fetchData();
+          }
+          break;
+          
+        default:
+          console.log('Unknown action:', action);
+      }
+    } catch (error) {
+      console.error('Error handling quick action:', error);
+      setError('Failed to perform action. Please try again.');
     }
   };
 
@@ -129,92 +162,44 @@ export const ServiceRequestChat: React.FC = () => {
   }
 
   return (
-    <Box height="100vh" display="flex" flexDirection="column">
-      {/* Header */}
-      <Paper elevation={1} sx={{ p: 2 }}>
-        <Box display="flex" alignItems="center" mb={1}>
-          <IconButton onClick={() => navigate(`/service-requests/${id}`)} sx={{ mr: 2 }}>
-            <ArrowBack />
-          </IconButton>
-          <Typography variant="h6">
-            {t('services.conversation')} - {request.title}
-          </Typography>
-        </Box>
-        <Typography variant="body2" color="text.secondary">
-          {t('services.requestedBy')}: {request.user?.username}
-        </Typography>
-      </Paper>
+    <Box height="100vh" display="flex">
+      {/* Service Context Panel */}
+      {request && (
+        <ServiceContextPanel
+          serviceRequest={request}
+          onAction={handleQuickAction}
+        />
+      )}
 
-      {/* Messages */}
-      <Box flex={1} overflow="auto" p={2}>
-        {messages.length === 0 ? (
-          <Box textAlign="center" py={4}>
-            <Typography variant="h6" color="text.secondary">
-              {t('services.noMessagesYet')}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {t('services.startConversation')}
+      {/* Main Chat Area */}
+      <Box flex={1} display="flex" flexDirection="column">
+        {/* Header */}
+        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+          <Box display="flex" alignItems="center" mb={1}>
+            <Button
+              startIcon={<ArrowBack />}
+              onClick={() => navigate(`/service-requests/${id}`)}
+              sx={{ mr: 2 }}
+            >
+              {t('common.back')}
+            </Button>
+            <Typography variant="h6">
+              {t('services.conversation')} - {request?.title}
             </Typography>
           </Box>
-        ) : (
-          <List>
-            {messages.map((message) => (
-              <ListItem key={message.id} alignItems="flex-start">
-                <ListItemAvatar>
-                  <Avatar>
-                    <Person />
-                  </Avatar>
-                </ListItemAvatar>
-                <ListItemText
-                  primary={
-                    <Box>
-                      <Typography variant="subtitle2">
-                        {message.sender_id === request.user_id ? request.user?.username : t('services.provider')}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {new Date(message.created_at).toLocaleString()}
-                      </Typography>
-                    </Box>
-                  }
-                  secondary={
-                    <Typography variant="body1" sx={{ mt: 1 }}>
-                      {message.message}
-                    </Typography>
-                  }
-                />
-              </ListItem>
-            ))}
-            <div ref={messagesEndRef} />
-          </List>
-        )}
-      </Box>
+          <Typography variant="body2" color="text.secondary">
+            {t('services.requestedBy')}: {request?.user?.username}
+          </Typography>
+        </Box>
 
-      <Divider />
-
-      {/* Message Input */}
-      <Box p={2}>
-        <Box display="flex" alignItems="center" gap={1}>
-          <TextField
-            fullWidth
-            multiline
-            maxRows={4}
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder={t('services.messagePlaceholder')}
-            disabled={sending}
+        {/* Enhanced Chat Window */}
+        <Box flex={1}>
+          <EnhancedChatWindow
+            messages={messages}
+            onSendMessage={handleSendMessage}
+            onQuickAction={handleQuickAction}
+            isSending={sending}
           />
-          <IconButton color="primary" disabled={sending}>
-            <AttachFile />
-          </IconButton>
-          <Button
-            variant="contained"
-            onClick={handleSendMessage}
-            disabled={!newMessage.trim() || sending}
-            startIcon={sending ? <CircularProgress size={20} /> : <Send />}
-          >
-            {sending ? t('common.creating') : t('common.submit')}
-          </Button>
         </Box>
       </Box>
     </Box>
