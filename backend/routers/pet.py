@@ -13,6 +13,11 @@ from dependencies.auth import get_current_user
 
 router = APIRouter(prefix="/pets", tags=["pets"])
 
+# Explicit OPTIONS handler for CORS preflight
+@router.options("/")
+def pets_options():
+    return {"message": "OK"}
+
 
 @router.get("/", response_model=List[PetRead])
 def get_pets(

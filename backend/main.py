@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from routers import (
@@ -54,17 +54,51 @@ def railway_test():
         "version": "1.0.3"
     }
 
-# CORS configuration
+# CORS configuration - Simplified for Railway deployment
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Allow all origins for now
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
-    allow_origin_regex=r"https?://.*",
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
     expose_headers=["*"],
     max_age=3600,
 )
+
+# Additional CORS handling for all routes
+@app.middleware("http")
+async def add_cors_headers(request, call_next):
+    # Handle preflight OPTIONS requests
+    if request.method == "OPTIONS":
+        response = Response()
+        origin = request.headers.get("origin")
+        if origin and (
+            origin.startswith("http://localhost") or 
+            origin.startswith("https://pawfectpal-production") or
+            origin.startswith("https://pawfectpal-production-2f07")
+        ):
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+            response.headers["Access-Control-Allow-Headers"] = "*"
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Access-Control-Max-Age"] = "3600"
+        return response
+    
+    response = await call_next(request)
+    
+    # Add CORS headers manually for all responses
+    origin = request.headers.get("origin")
+    if origin and (
+        origin.startswith("http://localhost") or 
+        origin.startswith("https://pawfectpal-production") or
+        origin.startswith("https://pawfectpal-production-2f07")
+    ):
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+    
+    return response
 
 # Serve static files (uploaded images)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")

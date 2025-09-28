@@ -3,7 +3,7 @@
  * Direct API integration without complex state management
  */
 
-import { Pet } from '../../types/pet';
+import { Pet } from '../../types/pets/pet';
 import { configService } from '../config/firebaseConfigService';
 import { getToken } from '../api';
 
@@ -115,7 +115,7 @@ class AIService {
   private preparePetContext(pets: Pet[], selectedPet?: Pet): any {
     const petData = pets.map(pet => ({
       name: pet.name || 'Unknown',
-      type: pet.type || pet.breedType || 'pet',
+      type: pet.type || 'pet',
       breed: pet.breed || 'Unknown',
       age: this.calculateAge(pet),
       weight: pet.weightKg || pet.weight_kg || 0,
@@ -235,7 +235,7 @@ Please provide helpful, specific advice based on the pet information provided. B
     if (lowerMessage.includes('exercise')) {
       const exerciseGuidelines = pets.map(pet => {
         const age = this.calculateAge(pet);
-        const type = pet.type || pet.breedType || 'pet';
+        const type = pet.type || 'pet';
         const breed = pet.breed || 'unknown breed';
         
         if (type === 'dog') {

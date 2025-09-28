@@ -16,6 +16,12 @@ export interface User {
   google_id?: string;
   profile_picture_url?: string;
 
+  // User status information (updated for Railway build)
+  is_active: boolean;
+  is_email_verified: boolean;
+  is_phone_verified: boolean;
+  date_joined: string;
+
   // Service provider information
   is_provider: boolean;
   provider_profile?: ProviderProfile;

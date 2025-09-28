@@ -8,7 +8,7 @@ export type RepeatUnit = 'daily' | 'weekly' | 'monthly' | 'yearly';
  * Represents a task/reminder in the PawfectPal application
  */
 export interface Task {
-  id?: number;
+  id: number; // Required - always present from backend
   title: string;
   description: string;
   dateTime: string; // ISO datetime string
