@@ -7,9 +7,16 @@ export const getBaseUrl = (): string => {
     const apiConfig = configService.getApiConfig();
     const baseUrl = apiConfig.baseUrl;
     
-    // Force Railway URL if localhost is detected
-    if (baseUrl.includes('127.0.0.1') || baseUrl.includes('localhost')) {
-      console.warn('Localhost detected in API URL, forcing Railway URL');
+    // Check if we're in production (Railway deployment)
+    const isProduction = window.location.hostname.includes('railway.app');
+    
+    // Force Railway URL if localhost is detected OR we're in production
+    if (baseUrl.includes('127.0.0.1') || baseUrl.includes('localhost') || isProduction) {
+      if (isProduction) {
+        console.log('Production environment detected, using Railway URL');
+      } else {
+        console.warn('Localhost detected in API URL, forcing Railway URL');
+      }
       return "https://pawfectpal-production.up.railway.app";
     }
     
@@ -35,6 +42,11 @@ export const getToken = async (): Promise<string | null> => {
  */
 export const getAuthHeaders = async (): Promise<HeadersInit> => {
   const token = await getToken();
+  console.log('🔑 API Auth Debug:', {
+    token: token ? `${token.substring(0, 20)}...` : 'null',
+    tokenLength: token ? token.length : 0,
+    hasToken: !!token
+  });
   return {
     'Content-Type': 'application/json',
     ...(token ? { 'Authorization': `Bearer ${token}` } : {})
@@ -137,9 +149,26 @@ export const apiRequest = async <T>(
 
   // Use fresh base URL from config
   const baseUrl = getBaseUrl();
-  const response = await fetch(`${baseUrl}${endpoint}`, {
+  const fullUrl = `${baseUrl}${endpoint}`;
+  
+  console.log('🌐 API Request Debug:', {
+    endpoint,
+    fullUrl,
+    method: options.method || 'GET',
+    hasAuth: headers.has('Authorization'),
+    authHeader: headers.get('Authorization') ? `${headers.get('Authorization')?.substring(0, 20)}...` : 'none'
+  });
+
+  const response = await fetch(fullUrl, {
     ...options,
     headers
+  });
+
+  console.log('📡 API Response Debug:', {
+    status: response.status,
+    statusText: response.statusText,
+    ok: response.ok,
+    url: response.url
   });
 
   if (!response.ok) {

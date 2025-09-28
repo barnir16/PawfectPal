@@ -107,7 +107,18 @@ export const initializeGoogleAuth = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     const oauthConfig = configService.getOAuthConfig();
     
-    if (!oauthConfig.googleClientId || !oauthConfig.isGoogleAuthEnabled) {
+    console.log('🔍 OAuth Config:', oauthConfig);
+    console.log('🔍 Google Client ID:', oauthConfig.googleClientId);
+    console.log('🔍 Is Google Auth Enabled:', oauthConfig.isGoogleAuthEnabled);
+    
+    // Fallback to hardcoded values if config service fails
+    const googleClientId = oauthConfig.googleClientId || '204752166323-r69volulegreitj2nflcoag0eae3iggk.apps.googleusercontent.com';
+    const isGoogleAuthEnabled = oauthConfig.isGoogleAuthEnabled !== false; // Default to true
+    
+    console.log('🔧 Using Google Client ID:', googleClientId);
+    console.log('🔧 Using Google Auth Enabled:', isGoogleAuthEnabled);
+    
+    if (!googleClientId || !isGoogleAuthEnabled) {
       reject(new Error("Google OAuth not configured or disabled"));
       return;
     }
@@ -122,7 +133,7 @@ export const initializeGoogleAuth = (): Promise<void> => {
       script.onload = () => {
         if (window.google?.accounts?.id) {
           window.google.accounts.id.initialize({
-            client_id: oauthConfig.googleClientId,
+            client_id: googleClientId,
             callback: () => {}, // Will be set per sign-in attempt
           });
           resolve();
@@ -149,7 +160,11 @@ export const signInWithGoogle = (): Promise<LoginResponse> => {
   return new Promise((resolve, reject) => {
     const oauthConfig = configService.getOAuthConfig();
     
-    if (!oauthConfig.googleClientId || !oauthConfig.isGoogleAuthEnabled) {
+    // Fallback to hardcoded values if config service fails
+    const googleClientId = oauthConfig.googleClientId || '204752166323-r69volulegreitj2nflcoag0eae3iggk.apps.googleusercontent.com';
+    const isGoogleAuthEnabled = oauthConfig.isGoogleAuthEnabled !== false; // Default to true
+    
+    if (!googleClientId || !isGoogleAuthEnabled) {
       reject(new Error('Google Sign-In is not available. Please configure Google OAuth in Firebase Remote Config.'));
       return;
     }
@@ -160,50 +175,67 @@ export const signInWithGoogle = (): Promise<LoginResponse> => {
     }
 
     // Use the popup-based OAuth2 flow which is more reliable
-    window.google.accounts.oauth2.initTokenClient({
-      client_id: oauthConfig.googleClientId,
-      scope: 'openid email profile',
-      callback: async (response: any) => {
-        if (response.error) {
-          reject(new Error(response.error));
-          return;
-        }
-
-        try {
-          // Get user info using the access token
-          const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-            headers: {
-              'Authorization': `Bearer ${response.access_token}`
-            }
-          });
+    console.log('🚀 Initializing Google OAuth2 with client ID:', googleClientId);
+    console.log('🚀 Current domain:', window.location.origin);
+    
+    // Use OAuth2 flow properly
+    try {
+      console.log('🔄 Using OAuth2 flow...');
+      
+      window.google.accounts.oauth2.initTokenClient({
+        client_id: googleClientId,
+        scope: 'openid email profile',
+        callback: async (response: any) => {
+          console.log('🎯 OAuth2 callback received:', response);
           
-          if (!userInfoResponse.ok) {
-            throw new Error('Failed to get user info from Google');
+          if (response.error) {
+            console.error('❌ OAuth2 error:', response.error);
+            reject(new Error(response.error));
+            return;
           }
-          
-          const userInfo = await userInfoResponse.json();
-          
-          // Create a JWT-like credential for the backend
-          const credential = btoa(JSON.stringify({
-            email: userInfo.email,
-            name: userInfo.name,
-            picture: userInfo.picture,
-            sub: userInfo.id,
-            access_token: response.access_token
-          }));
 
-          // Send to backend
-          const loginResponse = await apiRequest<LoginResponse>('/auth/google', {
-            method: 'POST',
-            body: JSON.stringify({ credential })
-          });
-          
-          resolve(loginResponse);
-        } catch (error) {
-          reject(error);
-        }
-      },
-    }).requestAccessToken();
+          try {
+            // Get user info using the access token
+            const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+              headers: {
+                'Authorization': `Bearer ${response.access_token}`
+              }
+            });
+            
+            if (!userInfoResponse.ok) {
+              throw new Error('Failed to get user info from Google');
+            }
+            
+            const userInfo = await userInfoResponse.json();
+            console.log('📋 User info:', userInfo);
+            
+            // Create a JWT-like credential for the backend
+            const credential = btoa(JSON.stringify({
+              email: userInfo.email,
+              name: userInfo.name,
+              picture: userInfo.picture,
+              sub: userInfo.id,
+              access_token: response.access_token
+            }));
+
+            // Send to backend
+            const loginResponse = await apiRequest<LoginResponse>('/auth/google', {
+              method: 'POST',
+              body: JSON.stringify({ credential })
+            });
+            
+            resolve(loginResponse);
+          } catch (error) {
+            console.error('❌ Error processing OAuth2:', error);
+            reject(error);
+          }
+        },
+      }).requestAccessToken();
+      
+    } catch (error) {
+      console.error('❌ Failed to initialize OAuth2:', error);
+      reject(error);
+    }
   });
 };
 

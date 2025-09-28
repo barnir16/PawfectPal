@@ -9,6 +9,7 @@ import { StorageHelper } from "../utils/StorageHelper";
 import {
   login as loginApi,
   logout as logoutApi,
+  signInWithGoogle,
 } from "../services/auth/authService";
 import { getBaseUrl } from "../services/api";
 import type { User, LoginResponse } from "../types/auth";
@@ -21,6 +22,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (username: string, password: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
   forceLogout: (reason: string) => Promise<void>;
@@ -116,6 +118,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const loginWithGoogle = async () => {
+    try {
+      const response: LoginResponse = await signInWithGoogle();
+
+      // Store the token
+      await StorageHelper.setItem("authToken", response.access_token);
+      console.log('✅ Google login token stored:', response.access_token.substring(0, 20) + '...');
+
+      // Create a minimal user object from the login data
+      const user: User = {
+        id: 1, // We'll get this from the backend later
+        username: response.user?.username || 'google_user',
+        is_active: true,
+        is_provider: false,
+        is_email_verified: false,
+        is_phone_verified: false,
+        date_joined: new Date().toISOString(),
+      };
+
+      setUser(user);
+      console.log('✅ Google login successful, user set:', user.username);
+    } catch (error) {
+      console.error("Google login failed:", error);
+      throw error;
+    }
+  };
+
   const logout = async () => {
     try {
       await logoutApi();
@@ -146,6 +175,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated: !!user,
     isLoading,
     login,
+    loginWithGoogle,
     logout,
     checkAuth,
     forceLogout,

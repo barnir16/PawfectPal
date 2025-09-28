@@ -31,7 +31,7 @@ export const SHARED_CONFIG = {
 
   // Feature Flags
   features: {
-    enableGoogleAuth: true,
+    enableGoogleAuth: true, // Re-enabled after adding Railway domains to Google OAuth
     enableGpsTracking: false,
     enableAiChatbot: true,
     enableNotifications: true,

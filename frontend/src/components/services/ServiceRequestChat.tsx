@@ -61,13 +61,20 @@ export const ServiceRequestChat: React.FC = () => {
 
     try {
       setLoading(true);
-      const [messagesData, requestData] = await Promise.all([
-        ChatService.getChatMessages(parseInt(id)),
+      setError(null);
+      
+      const [conversationData, requestData] = await Promise.all([
+        ChatService.getConversation(parseInt(id)),
         ServiceRequestService.getServiceRequest(parseInt(id))
       ]);
-      setMessages(messagesData);
+      
+      console.log('Conversation data:', conversationData);
+      console.log('Request data:', requestData);
+      
+      setMessages(conversationData?.messages || []);
       setRequest(requestData);
     } catch (err: any) {
+      console.error('Error fetching chat data:', err);
       setError(err.message || t('common.error'));
     } finally {
       setLoading(false);
@@ -79,7 +86,8 @@ export const ServiceRequestChat: React.FC = () => {
 
     try {
       setSending(true);
-      const message = await ChatService.sendMessage(parseInt(id), {
+      const message = await ChatService.sendMessage({
+        service_request_id: parseInt(id),
         message: newMessage.trim(),
         message_type: 'text'
       });

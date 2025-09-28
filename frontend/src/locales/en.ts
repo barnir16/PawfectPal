@@ -45,6 +45,7 @@ export const en = {
     weightTracking: 'Weight Tracking',
     settings: 'Settings',
     profile: 'Profile',
+    logout: 'Logout',
   },
 
   // Auth
@@ -1007,6 +1008,7 @@ export const en = {
   // Services
   services: {
     title: 'Services',
+    services: 'Services',
     activeUpcoming: 'Active / Upcoming',
     historyCompleted: 'History / Completed',
     providers: 'Providers',
@@ -1015,7 +1017,10 @@ export const en = {
     serviceType: 'Service Type',
     selectServiceType: 'Select Service Type',
     allServices: 'All Services',
-    status: 'Status',
+    status: {
+      label: 'Status',
+      open: 'Open',
+    },
     startDate: 'Start Date',
     endDate: 'End Date',
     provider: 'Provider',

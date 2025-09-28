@@ -1103,6 +1103,7 @@ export const he = {
   // Services
   services: {
     title: 'שירותים',
+    services: 'שירותים',
     activeUpcoming: 'פעילים / קרובים',
     historyCompleted: 'היסטוריה / הושלמו',
     providers: 'ספקים',
@@ -1111,7 +1112,10 @@ export const he = {
     serviceType: 'סוג שירות',
     selectServiceType: 'בחר סוג שירות',
     allServices: 'כל השירותים',
-    status: 'סטטוס',
+    status: {
+      label: 'סטטוס',
+      open: 'פתוח',
+    },
     startDate: 'תאריך התחלה',
     endDate: 'תאריך סיום',
     provider: 'ספק',
