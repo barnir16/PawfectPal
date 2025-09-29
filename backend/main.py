@@ -137,6 +137,9 @@ app.include_router(service_requests.router)
 app.include_router(chat.router)
 
 
+# Mount static files for image serving
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
 @app.get("/")
 def read_root():
     """API root endpoint"""

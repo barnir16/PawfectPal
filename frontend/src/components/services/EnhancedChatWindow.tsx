@@ -459,7 +459,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                         }}
                       >
                         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                          {getMessageTypeIcon(msg.message_type) && (
+                          {/* Only show message type icon if there are no attachments */}
+                          {getMessageTypeIcon(msg.message_type) && (!msg.attachments || msg.attachments.length === 0) && (
                             <Box sx={{ mt: 0.5 }}>
                               {getMessageTypeIcon(msg.message_type)}
                             </Box>
