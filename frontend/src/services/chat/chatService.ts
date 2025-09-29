@@ -1,4 +1,5 @@
 import { apiClient } from '../api';
+import { StorageHelper } from '../../utils/StorageHelper';
 import type { ChatMessage, ChatMessageCreate, ChatConversation } from '../../types/services/chat';
 
 export class ChatService {
@@ -53,7 +54,7 @@ export class ChatService {
           });
           
           const formData = new FormData();
-          formData.append('file', attachment.file);
+          formData.append('file', attachment.file, attachment.file.name);
           
           // Debug FormData contents
           console.log('📤 FormData entries:');
@@ -61,11 +62,33 @@ export class ChatService {
             console.log(`  ${key}:`, value);
           }
           
-          // Test with simple endpoint first
+          // Debug the file object itself
+          console.log('📤 File object details:', {
+            name: attachment.file.name,
+            size: attachment.file.size,
+            type: attachment.file.type,
+            lastModified: attachment.file.lastModified
+          });
+          
+          // Test with simple endpoint first using native fetch
           console.log('🧪 Testing with test-upload endpoint first...');
           try {
-            const testResponse = await apiClient.post('/image_upload/test-upload', formData);
-            console.log('🧪 Test upload successful:', testResponse);
+            const token = await StorageHelper.getItem('authToken');
+            const testResponse = await fetch('https://pawfectpal-production.up.railway.app/image_upload/test-upload', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+              body: formData
+            });
+            
+            if (testResponse.ok) {
+              const testData = await testResponse.json();
+              console.log('🧪 Test upload successful:', testData);
+            } else {
+              const errorText = await testResponse.text();
+              console.error('🧪 Test upload failed:', testResponse.status, errorText);
+            }
           } catch (testError) {
             console.error('🧪 Test upload failed:', testError);
           }
