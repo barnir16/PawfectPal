@@ -240,9 +240,19 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   };
 
   const formatTimestamp = (timestamp: string) => {
+    console.log('🕐 Formatting timestamp:', timestamp);
     const date = new Date(timestamp);
     const now = new Date();
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    console.log('🕐 Timestamp debug:', {
+      timestamp,
+      date: date.toISOString(),
+      now: now.toISOString(),
+      diffInMinutes,
+      localDate: date.toLocaleString(),
+      localNow: now.toLocaleString()
+    });
     
     if (diffInMinutes < 1) return t('services.justNow');
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
