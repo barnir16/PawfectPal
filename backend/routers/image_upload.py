@@ -202,3 +202,21 @@ async def upload_chat_attachment(
     except Exception as e:
         print(f"Error uploading chat attachment: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to upload file: {e}")
+
+
+@router.post("/test-upload")
+async def test_upload(
+    file: UploadFile = File(...),
+    current_user: UserORM = Depends(get_current_user),
+):
+    """Test endpoint for file upload debugging"""
+    print(f"🧪 Test upload - User: {current_user.id}")
+    print(f"🧪 File received: {file.filename}, Content-Type: {file.content_type}")
+    print(f"🧪 File size: {file.size if hasattr(file, 'size') else 'unknown'}")
+    
+    return {
+        "message": "Test upload successful",
+        "filename": file.filename,
+        "content_type": file.content_type,
+        "size": file.size if hasattr(file, 'size') else 0
+    }
