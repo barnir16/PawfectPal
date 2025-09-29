@@ -268,8 +268,38 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     return date.toLocaleDateString();
   };
 
+  const testImageUrl = async (url: string) => {
+    try {
+      const response = await fetch(url, { method: 'HEAD' });
+      console.log('🖼️ Image URL test:', {
+        url,
+        status: response.status,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('🖼️ Image URL test failed:', url, error);
+      return false;
+    }
+  };
+
   const renderMessageAttachments = (attachments: MediaAttachment[]) => {
-    console.log('Rendering attachments:', attachments);
+    console.log('🖼️ Rendering attachments:', attachments);
+    console.log('🖼️ Attachment details:', attachments.map(att => ({
+      id: att.id,
+      file_name: att.file_name,
+      file_url: att.file_url,
+      file_type: att.file_type
+    })));
+    
+    // Test each image URL
+    attachments.forEach(att => {
+      if (att.file_url) {
+        testImageUrl(att.file_url);
+      }
+    });
+    
     return (
       <Box sx={{ mt: 1 }}>
         {attachments.map((attachment, index) => (
@@ -287,6 +317,12 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
               height="120"
               image={attachment.thumbnail_url || attachment.file_url}
               alt={attachment.file_name}
+              onError={(e) => {
+                console.error('🖼️ Image load error:', attachment.file_url, e);
+              }}
+              onLoad={() => {
+                console.log('🖼️ Image loaded successfully:', attachment.file_url);
+              }}
             />
             <CardContent sx={{ p: 1 }}>
               <Typography variant="caption" noWrap>
@@ -417,6 +453,14 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         ) : (
           <List>
             {messages.filter(msg => msg).map((msg, index) => {
+              console.log('💬 Rendering message:', {
+                id: msg.id,
+                message: msg.message,
+                message_type: msg.message_type,
+                created_at: msg.created_at,
+                attachments: msg.attachments,
+                sender_id: msg.sender_id
+              });
               
               const isOwn = msg.sender_id === user?.id;
               const isSystem = msg.message_type === 'system';
