@@ -566,7 +566,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           </Typography>
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
             {selectedFiles.map((file, index) => (
-              <Card key={index} sx={{ maxWidth: 100 }}>
+              <Card key={index} sx={{ maxWidth: 100, position: 'relative' }}>
                 <CardMedia
                   component="img"
                   height="60"
@@ -577,14 +577,23 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                   <Typography variant="caption" noWrap>
                     {file.name}
                   </Typography>
-                  <IconButton
-                    size="small"
-                    onClick={() => removeFile(index)}
-                    sx={{ position: 'absolute', top: 0, right: 0 }}
-                  >
-                    <Close fontSize="small" />
-                  </IconButton>
                 </CardContent>
+                <IconButton
+                  size="small"
+                  onClick={() => removeFile(index)}
+                  sx={{ 
+                    position: 'absolute', 
+                    top: 4, 
+                    right: 4,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    color: 'white',
+                    '&:hover': {
+                      backgroundColor: 'rgba(0,0,0,0.7)',
+                    }
+                  }}
+                >
+                  <Close fontSize="small" />
+                </IconButton>
               </Card>
             ))}
           </Box>

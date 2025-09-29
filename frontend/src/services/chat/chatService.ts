@@ -109,6 +109,7 @@ export class ChatService {
           }
           
           const uploadData = await uploadResponse.json();
+          console.log('📤 Upload response data:', uploadData);
           
           return {
             id: uploadData.id,
@@ -122,13 +123,17 @@ export class ChatService {
       );
       
       // Send message with uploaded attachments
-      const response = await apiClient.post('/chat/messages', {
+      const messagePayload = {
         service_request_id: message.service_request_id,
         message: message.message,
         message_type: message.message_type || 'image',
         metadata: message.metadata,
         attachments: uploadedAttachments,
-      });
+      };
+      console.log('📤 Sending message with attachments:', messagePayload);
+      
+      const response = await apiClient.post('/chat/messages', messagePayload);
+      console.log('📤 Message sent response:', response);
       return response;
     } else {
       // Send regular message
