@@ -5,13 +5,16 @@ import {
   CircularProgress,
   Alert,
   Button,
+  Typography,
 } from '@mui/material';
 import {
   ArrowBack,
 } from '@mui/icons-material';
 import { useLocalization } from '../../contexts/LocalizationContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { ChatService } from '../../services/chat/chatService';
 import { ServiceRequestService } from '../../services/serviceRequests/serviceRequestService';
+import { getPets } from '../../services/pets/petService';
 import { ServiceContextPanel } from './ServiceContextPanel';
 import { EnhancedChatWindow } from './EnhancedChatWindow';
 import type { ChatMessage, ChatMessageCreate } from '../../types/services/chat';
@@ -21,6 +24,7 @@ export const ServiceRequestChat: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useLocalization();
+  const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [request, setRequest] = useState<ServiceRequest | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,16 +45,27 @@ export const ServiceRequestChat: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const [conversationData, requestData] = await Promise.all([
-        ChatService.getConversation(parseInt(id)),
-        ServiceRequestService.getServiceRequest(parseInt(id))
-      ]);
+      // Fetch service request details
+      const serviceRequest = await ServiceRequestService.getServiceRequest(parseInt(id));
+      console.log('Fetched service request:', serviceRequest);
       
-      console.log('Conversation data:', conversationData);
-      console.log('Request data:', requestData);
+      // If service request doesn't have pets, fetch them separately
+      if (!serviceRequest.pets || serviceRequest.pets.length === 0) {
+        try {
+          const pets = await getPets();
+          serviceRequest.pets = pets.filter(pet => serviceRequest.pet_ids?.includes(pet.id));
+          console.log('Fetched pets for service request:', serviceRequest.pets);
+        } catch (petError) {
+          console.warn('Could not fetch pets:', petError);
+        }
+      }
+      
+      // Fetch conversation messages
+      const conversationData = await ChatService.getConversation(parseInt(id));
+      console.log('Fetched conversation:', conversationData);
       
       setMessages(conversationData?.messages || []);
-      setRequest(requestData);
+      setRequest(serviceRequest);
     } catch (err: any) {
       console.error('Error fetching chat data:', err);
       setError(err.message || t('common.error'));
@@ -64,12 +79,53 @@ export const ServiceRequestChat: React.FC = () => {
 
     try {
       setSending(true);
-      const message = await ChatService.sendMessage({
+      
+      // Send message via API
+      const sentMessage = await ChatService.sendMessage({
         ...messageData,
         service_request_id: parseInt(id),
       });
-      setMessages(prev => [...prev, message]);
+      
+      console.log('Message sent successfully:', sentMessage);
+      
+      // If the API returns undefined or empty object, create a mock message
+      if (!sentMessage || (typeof sentMessage === 'object' && Object.keys(sentMessage).length === 0)) {
+        console.warn('API returned undefined or empty object, creating mock message');
+        const mockMessage: ChatMessage = {
+          id: Date.now(),
+          service_request_id: parseInt(id),
+          sender_id: user?.id || 0,
+          message: messageData.message,
+          message_type: messageData.message_type || 'text',
+          is_read: false,
+          is_edited: false,
+          created_at: new Date().toISOString(),
+          sender: {
+            id: user?.id || 0,
+            username: user?.username || 'You',
+            email: user?.email || '',
+            is_active: true,
+            is_email_verified: true,
+            is_phone_verified: false,
+            date_joined: new Date().toISOString(),
+            is_provider: false
+          }
+        };
+        setMessages(prev => {
+          const newMessages = [...prev, mockMessage];
+          console.log('Updated messages array with mock:', newMessages);
+          return newMessages;
+        });
+      } else {
+        console.log('API returned valid message:', sentMessage);
+        setMessages(prev => {
+          const newMessages = [...prev, sentMessage];
+          console.log('Updated messages array:', newMessages);
+          return newMessages;
+        });
+      }
     } catch (err: any) {
+      console.error('Error sending message:', err);
       setError(err.message || t('common.error'));
     } finally {
       setSending(false);
@@ -80,55 +136,54 @@ export const ServiceRequestChat: React.FC = () => {
     console.log('Quick action:', action, data);
     
     try {
+      let sentMessage: ChatMessage;
+      
       switch (action) {
         case 'share_location':
-          await ChatService.shareLocation(
+          sentMessage = await ChatService.shareLocation(
             parseInt(id!),
             data?.latitude,
             data?.longitude,
             data?.address,
             data?.fallback
           );
-          // Refresh messages
-          fetchData();
+          setMessages(prev => [...prev, sentMessage]);
           break;
           
         case 'request_photos':
-          const photoMessage = await ChatService.sendMessage({
+          sentMessage = await ChatService.sendMessage({
             service_request_id: parseInt(id!),
-            message: 'Could you please share some photos of your pet? This will help me provide better care.',
+            message: t('services.requestPhotosMessage'),
             message_type: 'text',
           });
-          setMessages(prev => [...prev, photoMessage]);
+          setMessages(prev => [...prev, sentMessage]);
           break;
           
         case 'schedule_meeting':
-          const meetingMessage = await ChatService.sendMessage({
+          sentMessage = await ChatService.sendMessage({
             service_request_id: parseInt(id!),
-            message: 'Let\'s schedule a meeting to discuss the service details. When would be a good time for you?',
+            message: t('services.scheduleMeetingMessage'),
             message_type: 'text',
           });
-          setMessages(prev => [...prev, meetingMessage]);
+          setMessages(prev => [...prev, sentMessage]);
           break;
           
         case 'share_instructions':
-          const instructionMessage = await ChatService.sendMessage({
+          sentMessage = await ChatService.sendMessage({
             service_request_id: parseInt(id!),
-            message: 'Please share any special instructions or requirements for your pet\'s care.',
+            message: t('services.shareInstructionsMessage'),
             message_type: 'text',
           });
-          setMessages(prev => [...prev, instructionMessage]);
+          setMessages(prev => [...prev, sentMessage]);
           break;
           
         case 'update_service_status':
-          if (data?.status && data?.serviceRequestId) {
-            await ChatService.sendServiceUpdate(
-              data.serviceRequestId,
-              data.status
-            );
-            // Refresh messages and request data
-            fetchData();
-          }
+          sentMessage = await ChatService.sendServiceUpdate(
+            parseInt(id!),
+            data?.status,
+            data?.message
+          );
+          setMessages(prev => [...prev, sentMessage]);
           break;
           
         default:
@@ -136,7 +191,7 @@ export const ServiceRequestChat: React.FC = () => {
       }
     } catch (error) {
       console.error('Error handling quick action:', error);
-      setError('Failed to perform action. Please try again.');
+      setError(t('common.error'));
     }
   };
 

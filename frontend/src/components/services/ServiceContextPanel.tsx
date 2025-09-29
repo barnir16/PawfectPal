@@ -26,8 +26,10 @@ import {
   Email,
   Verified,
   Warning,
+  Image as ImageIcon,
 } from '@mui/icons-material';
 import { useLocalization } from '../../contexts/LocalizationContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { railwayConfig } from '../../utils/railwayConfig';
 import type { ServiceRequest } from '../../types/services/serviceRequest';
 import type { Pet } from '../../types/pets/pet';
@@ -42,6 +44,11 @@ export const ServiceContextPanel: React.FC<ServiceContextPanelProps> = ({
   onAction,
 }) => {
   const { t } = useLocalization();
+  const { user } = useAuth();
+
+  // Determine if current user is the requester or provider
+  const isRequester = user?.id === serviceRequest.user_id;
+  const isProvider = user?.is_provider && !isRequester;
 
   const handleQuickAction = (action: string, data?: any) => {
     onAction?.(action, data);
@@ -153,47 +160,51 @@ export const ServiceContextPanel: React.FC<ServiceContextPanelProps> = ({
         </CardContent>
       </Card>
 
-      {/* Requester Info */}
+      {/* User Info */}
       <Card sx={{ mb: 2 }}>
         <CardContent>
           <Typography variant="subtitle2" sx={{ mb: 2 }}>
-            {t('services.requestedBy')}
+            {isRequester ? t('services.you') : isProvider ? t('services.client') : t('services.requestedBy')}
           </Typography>
           
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             <Avatar sx={{ mr: 2 }}>
-              {serviceRequest.user?.username?.[0] || 'U'}
+              {isRequester ? (user?.username?.[0] || 'U') : (serviceRequest.user?.username?.[0] || 'U')}
             </Avatar>
             <Box>
               <Typography variant="body2" fontWeight="medium">
-                {serviceRequest.user?.username || 'Unknown User'}
+                {isRequester ? (user?.username || 'You') : (serviceRequest.user?.username || 'Unknown User')}
               </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Star fontSize="small" color="warning" />
-                <Typography variant="caption" color="text.secondary">
-                  4.8 (24 reviews)
-                </Typography>
-                <Verified fontSize="small" color="primary" />
-              </Box>
+              {!isRequester && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Star fontSize="small" color="warning" />
+                  <Typography variant="caption" color="text.secondary">
+                    4.8 (24 reviews)
+                  </Typography>
+                  <Verified fontSize="small" color="primary" />
+                </Box>
+              )}
             </Box>
           </Box>
 
-          <Stack spacing={1}>
-            <Button
-              size="small"
-              startIcon={<Phone />}
-              onClick={() => handleQuickAction('call')}
-            >
-              {t('services.contact')}
-            </Button>
-            <Button
-              size="small"
-              startIcon={<Email />}
-              onClick={() => handleQuickAction('email')}
-            >
-              Send Email
-            </Button>
-          </Stack>
+          {!isRequester && (
+            <Stack spacing={1}>
+              <Button
+                size="small"
+                startIcon={<Phone />}
+                onClick={() => handleQuickAction('call')}
+              >
+                {t('services.contact')}
+              </Button>
+              <Button
+                size="small"
+                startIcon={<Email />}
+                onClick={() => handleQuickAction('email')}
+              >
+                {t('services.sendEmail')}
+              </Button>
+            </Stack>
+          )}
         </CardContent>
       </Card>
 
@@ -220,22 +231,76 @@ export const ServiceContextPanel: React.FC<ServiceContextPanelProps> = ({
                   <ListItemText
                     primary={pet.name}
                     secondary={
-                      <Box>
-                        <Typography variant="caption" display="block">
+                      <span>
+                        <span style={{ fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>
                           {pet.type} • {pet.breed}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {pet.age ? `${pet.age} years old` : 'Age unknown'}
-                        </Typography>
-                        {pet.healthIssues.length > 0 && (
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
-                            <Warning fontSize="small" color="warning" />
-                            <Typography variant="caption" color="warning.main">
-                              Health concerns
-                            </Typography>
-                          </Box>
+                        </span>
+                        <span style={{ display: 'block', marginBottom: '4px' }}>
+                          {pet.age ? `${pet.age} years old` : 'Age unknown'} • {pet.gender || 'Unknown'}
+                        </span>
+                        {pet.weightKg && (
+                          <span style={{ display: 'block', marginBottom: '8px' }}>
+                            {pet.weightKg} {pet.weightUnit}
+                          </span>
                         )}
-                      </Box>
+                        <span style={{ display: 'block', marginBottom: '8px' }}>
+                          {pet.isVaccinated && (
+                            <span style={{ 
+                              display: 'inline-block',
+                              padding: '2px 8px',
+                              border: '1px solid #4caf50',
+                              borderRadius: '12px',
+                              fontSize: '0.75rem',
+                              color: '#4caf50',
+                              marginRight: '4px'
+                            }}>
+                              Vaccinated
+                            </span>
+                          )}
+                          {pet.isNeutered && (
+                            <span style={{ 
+                              display: 'inline-block',
+                              padding: '2px 8px',
+                              border: '1px solid #2196f3',
+                              borderRadius: '12px',
+                              fontSize: '0.75rem',
+                              color: '#2196f3',
+                              marginRight: '4px'
+                            }}>
+                              Neutered
+                            </span>
+                          )}
+                          {pet.isMicrochipped && (
+                            <span style={{ 
+                              display: 'inline-block',
+                              padding: '2px 8px',
+                              border: '1px solid #9c27b0',
+                              borderRadius: '12px',
+                              fontSize: '0.75rem',
+                              color: '#9c27b0',
+                              marginRight: '4px'
+                            }}>
+                              Microchipped
+                            </span>
+                          )}
+                        </span>
+                        {pet.healthIssues.length > 0 && (
+                          <span style={{ display: 'block', marginBottom: '4px' }}>
+                            <Warning fontSize="small" color="warning" style={{ verticalAlign: 'middle', marginRight: '4px' }} />
+                            <span style={{ fontSize: '0.75rem', color: '#ff9800' }}>
+                              Health concerns: {pet.healthIssues.join(', ')}
+                            </span>
+                          </span>
+                        )}
+                        {pet.behaviorIssues.length > 0 && (
+                          <span style={{ display: 'block' }}>
+                            <Warning fontSize="small" color="warning" style={{ verticalAlign: 'middle', marginRight: '4px' }} />
+                            <span style={{ fontSize: '0.75rem', color: '#ff9800' }}>
+                              Behavior notes: {pet.behaviorIssues.join(', ')}
+                            </span>
+                          </span>
+                        )}
+                      </span>
                     }
                   />
                 </ListItem>
@@ -273,7 +338,7 @@ export const ServiceContextPanel: React.FC<ServiceContextPanelProps> = ({
               variant="outlined"
               size="small"
               onClick={() => handleQuickAction('request_photos')}
-              startIcon={<Image />}
+              startIcon={<ImageIcon />}
               disabled={!railwayConfig.getFeatureAvailability().fileUpload}
             >
               {t('services.requestPhotos')}
@@ -300,10 +365,10 @@ export const ServiceContextPanel: React.FC<ServiceContextPanelProps> = ({
           </Stack>
 
           {/* Service Status Actions */}
-          {serviceRequest.status === 'open' && (
+          {serviceRequest.status === 'open' && isProvider && (
             <Box sx={{ mt: 2 }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Service Actions
+                {t('services.serviceActions')}
               </Typography>
               <Stack spacing={1}>
                 <Button
@@ -312,7 +377,7 @@ export const ServiceContextPanel: React.FC<ServiceContextPanelProps> = ({
                   size="small"
                   onClick={() => handleServiceStatusUpdate('confirmed')}
                 >
-                  Accept Service
+                  {t('services.acceptService')}
                 </Button>
                 <Button
                   variant="outlined"
@@ -320,7 +385,25 @@ export const ServiceContextPanel: React.FC<ServiceContextPanelProps> = ({
                   size="small"
                   onClick={() => handleServiceStatusUpdate('cancelled')}
                 >
-                  Decline Service
+                  {t('services.declineService')}
+                </Button>
+              </Stack>
+            </Box>
+          )}
+
+          {serviceRequest.status === 'open' && isRequester && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                {t('services.serviceActions')}
+              </Typography>
+              <Stack spacing={1}>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  size="small"
+                  onClick={() => handleServiceStatusUpdate('cancelled')}
+                >
+                  {t('services.cancelRequest')}
                 </Button>
               </Stack>
             </Box>

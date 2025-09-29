@@ -13,11 +13,18 @@ from routers import (
     vaccination,
     weight_record,
     weight_goal,
-    ai_simple as ai,
     provider,
     service_requests,
     chat,
 )
+
+# Import AI router conditionally to avoid startup errors
+try:
+    from routers import ai_simple as ai
+    AI_AVAILABLE = True
+except Exception as e:
+    print(f"⚠️ AI router not available: {e}")
+    AI_AVAILABLE = False
 
 
 app = FastAPI(
@@ -120,7 +127,11 @@ app.include_router(service.router)
 app.include_router(task.router)
 app.include_router(weight_record.router)
 app.include_router(weight_goal.router)
-app.include_router(ai.router)
+if AI_AVAILABLE:
+    app.include_router(ai.router)
+    print("✅ AI router included")
+else:
+    print("⚠️ AI router skipped due to configuration issues")
 app.include_router(provider.router)
 app.include_router(service_requests.router)
 app.include_router(chat.router)

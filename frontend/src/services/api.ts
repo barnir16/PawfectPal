@@ -125,11 +125,25 @@ export const handleApiError = async (response: Response): Promise<never> => {
 };
 
 /**
- * Make an API request with proper error handling
+ * Handle 401 errors with automatic token refresh and retry
+ */
+const handleAuthError = async (): Promise<void> => {
+  console.log('🔄 Handling 401 error - clearing token and redirecting to login');
+  await StorageHelper.removeItem('authToken');
+  
+  // Dispatch a custom event to notify AuthContext
+  window.dispatchEvent(new CustomEvent('auth:token-expired', {
+    detail: { reason: 'Token expired, please log in again' }
+  }));
+};
+
+/**
+ * Make an API request with proper error handling and retry logic
  */
 export const apiRequest = async <T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  retryCount: number = 0
 ): Promise<T> => {
   // Create headers with proper type
   const headers = new Headers(options.headers);
@@ -159,19 +173,41 @@ export const apiRequest = async <T>(
     authHeader: headers.get('Authorization') ? `${headers.get('Authorization')?.substring(0, 20)}...` : 'none'
   });
 
-  const response = await fetch(fullUrl, {
-    ...options,
-    headers
-  });
-
-  console.log('📡 API Response Debug:', {
-    status: response.status,
-    statusText: response.statusText,
-    ok: response.ok,
-    url: response.url
-  });
+  let response;
+  try {
+    response = await fetch(fullUrl, {
+      ...options,
+      headers
+    });
+    
+    console.log('📡 API Response Debug:', {
+      status: response?.status,
+      statusText: response?.statusText,
+      ok: response?.ok,
+      url: response?.url,
+      responseType: typeof response,
+      responseExists: !!response
+    });
+  } catch (error) {
+    console.error('🚨 Fetch Error:', error);
+    throw error;
+  }
 
   if (!response.ok) {
+    // Handle 401 errors specially with token cleanup
+    if (response.status === 401) {
+      await handleAuthError();
+      // Don't retry 401 errors - they require re-authentication
+      return handleApiError(response);
+    }
+    
+    // For other errors, retry up to 2 times with exponential backoff
+    if (retryCount < 2 && response.status >= 500) {
+      console.log(`🔄 Retrying request (attempt ${retryCount + 1}/2) after ${Math.pow(2, retryCount)}s delay`);
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
+      return apiRequest<T>(endpoint, options, retryCount + 1);
+    }
+    
     return handleApiError(response);
   }
 
@@ -180,7 +216,14 @@ export const apiRequest = async <T>(
     return undefined as unknown as T;
   }
 
-  return response.json();
+  const data = await response.json();
+  console.log('📡 Parsed Response Data:', {
+    data: data,
+    dataType: typeof data,
+    dataLength: data ? Object.keys(data).length : 'N/A'
+  });
+  
+  return data;
 };
 
 /**
