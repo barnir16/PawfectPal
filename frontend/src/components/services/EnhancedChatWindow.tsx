@@ -77,6 +77,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   const [selectedMedia, setSelectedMedia] = useState<MediaAttachment | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -104,7 +105,6 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     if (!input.trim() && selectedFiles.length === 0) return;
 
     const newMessage: ChatMessageCreate = {
-      service_request_id: 0, // Will be set by parent component
       message: input.trim() || (selectedFiles.length > 0 ? '📎 Shared files' : ''),
       message_type: selectedFiles.length > 0 ? 'image' : 'text',
       attachments: selectedFiles.length > 0 ? selectedFiles : undefined,
@@ -153,6 +153,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   };
 
   const openMediaDialog = (media: MediaAttachment) => {
+    console.log('Opening media dialog with:', media);
     setSelectedMedia(media);
     setMediaDialogOpen(true);
   };
@@ -161,6 +162,11 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     setMediaDialogOpen(false);
     setSelectedMedia(null);
   };
+
+  // Debug media dialog state
+  useEffect(() => {
+    console.log('Media dialog state changed:', { mediaDialogOpen, selectedMedia });
+  }, [mediaDialogOpen, selectedMedia]);
 
   const handleQuickReply = async (reply: QuickReply) => {
     const newMessage: ChatMessageCreate = {
@@ -171,7 +177,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
     try {
       await onSendMessage(newMessage);
-      setShowQuickReplies(false);
+      // Don't hide quick replies immediately - let user send multiple quick replies
+      // setShowQuickReplies(false);
       scrollToBottom();
     } catch (error) {
       console.error('Failed to send quick reply:', error);
@@ -209,7 +216,19 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     }
   };
 
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return t('services.justNow');
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+    return date.toLocaleDateString();
+  };
+
   const renderMessageAttachments = (attachments: MediaAttachment[]) => {
+    console.log('Rendering attachments:', attachments);
     return (
       <Box sx={{ mt: 1 }}>
         {attachments.map((attachment, index) => (
@@ -322,7 +341,9 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           flex: 1,
           overflowY: 'auto',
           p: 2,
-          backgroundColor: '#fafafa',
+          backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'grey.900' : 'grey.50',
+          fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+          minHeight: '200px',
         }}
       >
         {messages.length === 0 ? (
@@ -343,13 +364,14 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           </Box>
         ) : (
           <List>
-            {messages.map((msg) => {
+            {messages.filter(msg => msg).map((msg, index) => {
+              
               const isOwn = msg.sender_id === user?.id;
               const isSystem = msg.message_type === 'system';
 
               return (
                 <ListItem
-                  key={msg.id}
+                  key={msg.id || index}
                   sx={{
                     flexDirection: isOwn ? 'row-reverse' : 'row',
                     alignItems: 'flex-start',
@@ -376,13 +398,15 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                           backgroundColor: isOwn
                             ? 'primary.main'
                             : isSystem
-                              ? 'grey.100'
-                              : 'white',
+                              ? (theme) => theme.palette.mode === 'dark' ? 'grey.800' : 'grey.100'
+                              : (theme) => theme.palette.mode === 'dark' ? 'grey.800' : 'white',
                           color: isOwn
                             ? 'primary.contrastText'
                             : 'text.primary',
                           borderRadius: 2,
                           boxShadow: 1,
+                          maxWidth: '100%',
+                          wordWrap: 'break-word',
                         }}
                       >
                         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
@@ -392,7 +416,15 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                             </Box>
                           )}
                           <Box sx={{ flex: 1 }}>
-                            <Typography variant="body2">{msg.message}</Typography>
+                            <Typography 
+                              variant="body2" 
+                              sx={{ 
+                                color: isOwn ? 'primary.contrastText' : 'text.primary',
+                                fontWeight: 400
+                              }}
+                            >
+                              {msg.message}
+                            </Typography>
                             
                             {/* Render attachments */}
                             {msg.attachments && msg.attachments.length > 0 && 
@@ -411,7 +443,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                   opacity: 0.7,
                                 }}
                               >
-                                {formatMessageTime(msg.created_at)}
+                                {formatTimestamp(msg.created_at)}
                               </Typography>
                               {msg.is_read && isOwn && (
                                 <CheckCircle fontSize="small" sx={{ opacity: 0.7 }} />
@@ -434,12 +466,31 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           </List>
         )}
 
+        {/* Typing Indicator */}
+        {isTyping && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1 }}>
+            <Avatar sx={{ width: 24, height: 24 }}>
+              <Pets fontSize="small" />
+            </Avatar>
+            <Paper sx={{ p: 1, backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'grey.800' : 'grey.100' }}>
+              <Typography variant="body2" color="text.secondary">
+                {t('chat.typing')}...
+              </Typography>
+            </Paper>
+          </Box>
+        )}
+
         {/* Quick Replies */}
         {showQuickReplies && (
           <Paper sx={{ mt: 2, p: 2 }}>
-            <Typography variant="subtitle2" sx={{ mb: 2 }}>
-              Quick Replies
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="subtitle2">
+                Quick Replies
+              </Typography>
+              <IconButton size="small" onClick={() => setShowQuickReplies(false)}>
+                <Close />
+              </IconButton>
+            </Box>
             <Stack spacing={1}>
               {quickReplies.map((reply) => (
                 <Button
@@ -528,6 +579,16 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             disabled={isSending}
             variant="outlined"
             size="small"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'grey.800' : 'white',
+                borderRadius: 2,
+              },
+              '& .MuiInputBase-input': {
+                fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+                fontSize: '0.875rem',
+              },
+            }}
           />
           <IconButton
             color="primary"

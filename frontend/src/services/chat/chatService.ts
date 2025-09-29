@@ -12,38 +12,31 @@ export class ChatService {
     }
 
     const response = await apiClient.post('/chat/messages', message);
-    return response.data;
+    console.log('Chat service response:', response);
+    console.log('Response type:', typeof response);
+    console.log('Response keys:', Object.keys(response || {}));
+    
+    // Check if response is undefined or null
+    if (response === undefined || response === null) {
+      console.warn('Backend returned undefined/null response');
+    }
+    
+    return response;
   }
 
   /**
    * Send a message with file attachments
    */
   static async sendMessageWithAttachments(message: ChatMessageCreate): Promise<ChatMessage> {
-    const formData = new FormData();
-    
-    // Add message data
-    formData.append('service_request_id', message.service_request_id.toString());
-    formData.append('message', message.message);
-    formData.append('message_type', message.message_type || 'text');
-    
-    // Add metadata if present
-    if (message.metadata) {
-      formData.append('metadata', JSON.stringify(message.metadata));
-    }
-    
-    // Add file attachments
-    if (message.attachments) {
-      message.attachments.forEach((file, index) => {
-        formData.append(`attachments`, file);
-      });
-    }
-
-    const response = await apiClient.post('/chat/messages/with-attachments', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    // For now, just send the message without attachments since the backend doesn't support them yet
+    // TODO: Implement file upload endpoint in backend
+    const response = await apiClient.post('/chat/messages', {
+      service_request_id: message.service_request_id,
+      message: message.message,
+      message_type: message.message_type || 'text',
+      metadata: message.metadata,
     });
-    return response.data;
+    return response;
   }
 
   /**
@@ -123,7 +116,7 @@ export class ChatService {
    */
   static async getConversation(serviceRequestId: number): Promise<ChatConversation> {
     const response = await apiClient.get(`/chat/conversations/${serviceRequestId}`);
-    return response.data;
+    return response;
   }
 
   /**
@@ -131,7 +124,7 @@ export class ChatService {
    */
   static async getMyConversations(): Promise<ChatConversation[]> {
     const response = await apiClient.get('/chat/my-conversations');
-    return response.data;
+    return response;
   }
 
   /**
