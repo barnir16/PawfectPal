@@ -314,6 +314,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       display: 'flex', 
       flexDirection: 'column', 
       height: '100%',
+      minHeight: '500px',
       borderRadius: 2,
       overflow: 'hidden',
       boxShadow: 3,
@@ -350,7 +351,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           p: 3,
           backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'grey.900' : 'grey.50',
           fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-          minHeight: '400px',
+          minHeight: '300px',
+          maxHeight: 'calc(100vh - 300px)',
           display: 'flex',
           flexDirection: 'column',
         }}
@@ -567,7 +569,13 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       )}
 
       {/* Input */}
-      <Paper sx={{ p: 1, borderTop: 1, borderColor: 'divider' }}>
+      <Paper sx={{ 
+        p: 2, 
+        borderTop: 1, 
+        borderColor: 'divider',
+        backgroundColor: 'white',
+        borderRadius: 0,
+      }}>
         <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1 }}>
           <input
             ref={fileInputRef}

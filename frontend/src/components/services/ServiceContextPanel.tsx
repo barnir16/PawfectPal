@@ -227,13 +227,16 @@ export const ServiceContextPanel: React.FC<ServiceContextPanelProps> = ({
             <Stack spacing={2}>
               {serviceRequest.pets.map((pet: Pet) => (
                 <Card key={pet.id} sx={{ 
-                  borderRadius: 2,
-                  boxShadow: 1,
+                  borderRadius: 3,
+                  boxShadow: 2,
                   border: '1px solid',
                   borderColor: 'grey.200',
+                  backgroundColor: 'white',
                   '&:hover': {
-                    boxShadow: 2,
+                    boxShadow: 4,
                     borderColor: 'primary.main',
+                    transform: 'translateY(-2px)',
+                    transition: 'all 0.2s ease-in-out',
                   }
                 }}>
                   <CardContent sx={{ p: 2 }}>
@@ -255,7 +258,7 @@ export const ServiceContextPanel: React.FC<ServiceContextPanelProps> = ({
                           {pet.name}
                         </Typography>
                         
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontWeight: 500 }}>
                           {pet.type} • {pet.breed}
                         </Typography>
                         
