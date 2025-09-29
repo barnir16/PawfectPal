@@ -61,6 +61,15 @@ export class ChatService {
             console.log(`  ${key}:`, value);
           }
           
+          // Test with simple endpoint first
+          console.log('🧪 Testing with test-upload endpoint first...');
+          try {
+            const testResponse = await apiClient.post('/image_upload/test-upload', formData);
+            console.log('🧪 Test upload successful:', testResponse);
+          } catch (testError) {
+            console.error('🧪 Test upload failed:', testError);
+          }
+          
           const uploadResponse = await apiClient.post('/image_upload/chat-attachment', formData);
           
           return {
