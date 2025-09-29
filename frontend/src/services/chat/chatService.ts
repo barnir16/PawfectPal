@@ -110,6 +110,8 @@ export class ChatService {
           
           const uploadData = await uploadResponse.json();
           console.log('📤 Upload response data:', uploadData);
+          console.log('📤 Upload response status:', uploadResponse.status);
+          console.log('📤 Upload response headers:', Object.fromEntries(uploadResponse.headers.entries()));
           
           return {
             id: uploadData.id,
