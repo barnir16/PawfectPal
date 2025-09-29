@@ -49,8 +49,12 @@ export interface ChatMessageCreate {
   service_request_id: number;
   message: string;
   message_type?: MessageType;
-  attachments?: File[];
+  attachments?: ChatAttachmentCreate[];
   metadata?: ServiceMessageMetadata;
+}
+
+export interface ChatAttachmentCreate {
+  file: File;
 }
 
 export interface ChatConversation {

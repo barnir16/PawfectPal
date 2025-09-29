@@ -153,3 +153,47 @@ async def upload_profile_image(
         db.rollback()
         print(f"An error occurred during image upload: {e}")
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
+
+
+@router.post("/chat-attachment")
+async def upload_chat_attachment(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: UserORM = Depends(get_current_user),
+):
+    """Upload chat attachment (image)"""
+    # Validate file type
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    
+    if file.filename is None:
+        raise ValueError("File path cannot be None")
+    
+    try:
+        # Generate unique filename
+        file_extension = Path(file.filename).suffix
+        filename = f"chat_{current_user.id}_{uuid.uuid4()}{file_extension}"
+        file_path = IMAGES_DIR / filename
+        
+        # Ensure directory exists
+        if not IMAGES_DIR.exists():
+            IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+        
+        # Save file
+        save_upload_file(file, str(file_path))
+        
+        # Return file info for chat message
+        file_url = f"/uploads/images/{filename}"
+        
+        return {
+            "id": str(uuid.uuid4()),  # Generate unique ID for attachment
+            "file_name": file.filename,
+            "file_url": file_url,
+            "file_type": file.content_type,
+            "file_size": file.size if hasattr(file, 'size') else 0,
+            "created_at": "2024-01-01T00:00:00Z"  # Will be set by frontend
+        }
+        
+    except Exception as e:
+        print(f"Error uploading chat attachment: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to upload file: {e}")
