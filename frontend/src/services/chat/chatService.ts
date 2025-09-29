@@ -6,8 +6,16 @@ export class ChatService {
    * Send a message in a service request conversation
    */
   static async sendMessage(message: ChatMessageCreate): Promise<ChatMessage> {
+    console.log('📤 sendMessage called with:', {
+      hasAttachments: !!(message.attachments && message.attachments.length > 0),
+      attachmentCount: message.attachments?.length || 0,
+      messageType: message.message_type,
+      messageText: message.message
+    });
+    
     // Handle file uploads if present
     if (message.attachments && message.attachments.length > 0) {
+      console.log('📤 Calling sendMessageWithAttachments');
       return this.sendMessageWithAttachments(message);
     }
 
@@ -28,6 +36,12 @@ export class ChatService {
    * Send a message with file attachments
    */
   static async sendMessageWithAttachments(message: ChatMessageCreate): Promise<ChatMessage> {
+    console.log('📤 sendMessageWithAttachments called with:', {
+      attachments: message.attachments,
+      attachmentCount: message.attachments?.length || 0,
+      messageType: message.message_type
+    });
+    
     if (message.attachments && message.attachments.length > 0) {
       // Upload attachments first
       const uploadedAttachments = await Promise.all(

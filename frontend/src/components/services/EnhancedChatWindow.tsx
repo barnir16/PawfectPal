@@ -104,11 +104,24 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   const handleSend = async () => {
     if (!input.trim() && selectedFiles.length === 0) return;
 
+    console.log('📤 handleSend called with:', {
+      input: input.trim(),
+      selectedFilesCount: selectedFiles.length,
+      selectedFiles: selectedFiles.map(f => ({ name: f.name, size: f.size, type: f.type }))
+    });
+
     const newMessage: ChatMessageCreate = {
       message: input.trim() || (selectedFiles.length > 0 ? '📎 Shared files' : ''),
       message_type: selectedFiles.length > 0 ? 'image' : 'text',
       attachments: selectedFiles.length > 0 ? selectedFiles.map(file => ({ file })) : undefined,
     };
+    
+    console.log('📤 Created message:', {
+      message: newMessage.message,
+      message_type: newMessage.message_type,
+      hasAttachments: !!(newMessage.attachments && newMessage.attachments.length > 0),
+      attachmentCount: newMessage.attachments?.length || 0
+    });
 
     try {
       await onSendMessage(newMessage);
@@ -124,7 +137,10 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
+    console.log('📁 Files selected:', files.map(f => ({ name: f.name, size: f.size, type: f.type })));
+    
     const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    console.log('📁 Image files filtered:', imageFiles.map(f => ({ name: f.name, size: f.size, type: f.type })));
     
     if (imageFiles.length !== files.length) {
       setSnackbarMessage('Only image files are supported');
@@ -135,12 +151,19 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     const validFiles = imageFiles.filter(file => file.size <= 5 * 1024 * 1024);
     const oversizedFiles = imageFiles.filter(file => file.size > 5 * 1024 * 1024);
     
+    console.log('📁 Valid files:', validFiles.map(f => ({ name: f.name, size: f.size, type: f.type })));
+    console.log('📁 Oversized files:', oversizedFiles.map(f => ({ name: f.name, size: f.size, type: f.type })));
+    
     if (oversizedFiles.length > 0) {
       setSnackbarMessage(`Some files are too large (max 5MB). ${validFiles.length} files added.`);
       setSnackbarOpen(true);
     }
     
-    setSelectedFiles(prev => [...prev, ...validFiles]);
+    setSelectedFiles(prev => {
+      const newFiles = [...prev, ...validFiles];
+      console.log('📁 Updated selectedFiles:', newFiles.map(f => ({ name: f.name, size: f.size, type: f.type })));
+      return newFiles;
+    });
     
     // Clear the input so the same file can be selected again
     if (event.target) {
