@@ -28,15 +28,49 @@ export class ChatService {
    * Send a message with file attachments
    */
   static async sendMessageWithAttachments(message: ChatMessageCreate): Promise<ChatMessage> {
-    // For now, just send the message without attachments since the backend doesn't support them yet
-    // TODO: Implement file upload endpoint in backend
-    const response = await apiClient.post('/chat/messages', {
-      service_request_id: message.service_request_id,
-      message: message.message,
-      message_type: message.message_type || 'text',
-      metadata: message.metadata,
-    });
-    return response;
+    if (message.attachments && message.attachments.length > 0) {
+      // Upload attachments first
+      const uploadedAttachments = await Promise.all(
+        message.attachments.map(async (attachment) => {
+          const formData = new FormData();
+          formData.append('file', attachment.file);
+          
+          const uploadResponse = await apiClient.post('/image_upload/chat-attachment', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+          
+          return {
+            id: uploadResponse.id,
+            file_name: uploadResponse.file_name,
+            file_url: uploadResponse.file_url,
+            file_type: uploadResponse.file_type,
+            file_size: uploadResponse.file_size,
+            created_at: new Date().toISOString(),
+          };
+        })
+      );
+      
+      // Send message with uploaded attachments
+      const response = await apiClient.post('/chat/messages', {
+        service_request_id: message.service_request_id,
+        message: message.message,
+        message_type: message.message_type || 'image',
+        metadata: message.metadata,
+        attachments: uploadedAttachments,
+      });
+      return response;
+    } else {
+      // Send regular message
+      const response = await apiClient.post('/chat/messages', {
+        service_request_id: message.service_request_id,
+        message: message.message,
+        message_type: message.message_type || 'text',
+        metadata: message.metadata,
+      });
+      return response;
+    }
   }
 
   /**

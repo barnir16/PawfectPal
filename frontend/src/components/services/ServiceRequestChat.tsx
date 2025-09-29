@@ -217,17 +217,25 @@ export const ServiceRequestChat: React.FC = () => {
   }
 
   return (
-    <Box height="100vh" display="flex">
+    <Box height="100vh" display="flex" sx={{ backgroundColor: 'grey.50' }}>
       {/* Service Context Panel */}
       {request && (
-        <ServiceContextPanel
-          serviceRequest={request}
-          onAction={handleQuickAction}
-        />
+        <Box sx={{ width: '350px', minWidth: '350px' }}>
+          <ServiceContextPanel
+            serviceRequest={request}
+            onAction={handleQuickAction}
+          />
+        </Box>
       )}
 
       {/* Main Chat Area */}
-      <Box flex={1} display="flex" flexDirection="column">
+      <Box flex={1} display="flex" flexDirection="column" sx={{ 
+        backgroundColor: 'white',
+        borderRadius: 2,
+        m: 2,
+        overflow: 'hidden',
+        boxShadow: 3,
+      }}>
         {/* Header */}
         <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
           <Box display="flex" alignItems="center" mb={1}>

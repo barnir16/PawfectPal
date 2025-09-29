@@ -107,7 +107,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     const newMessage: ChatMessageCreate = {
       message: input.trim() || (selectedFiles.length > 0 ? '📎 Shared files' : ''),
       message_type: selectedFiles.length > 0 ? 'image' : 'text',
-      attachments: selectedFiles.length > 0 ? selectedFiles : undefined,
+      attachments: selectedFiles.length > 0 ? selectedFiles.map(file => ({ file })) : undefined,
     };
 
     try {
@@ -445,11 +445,12 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                               renderMessageAttachments(msg.attachments)
                             }
                             
-                            {/* Debug: Show message type for image messages */}
-                            {msg.message_type === 'image' && (
-                              <Box sx={{ mt: 1, p: 1, bgcolor: 'grey.100', borderRadius: 1 }}>
-                                <Typography variant="caption" color="text.secondary">
-                                  Image message - Attachments: {msg.attachments?.length || 0}
+                            {/* Show image message indicator only if no attachments */}
+                            {msg.message_type === 'image' && (!msg.attachments || msg.attachments.length === 0) && (
+                              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Image color="primary" sx={{ fontSize: 16 }} />
+                                <Typography variant="caption" color="primary">
+                                  📎 Shared files
                                 </Typography>
                               </Box>
                             )}
