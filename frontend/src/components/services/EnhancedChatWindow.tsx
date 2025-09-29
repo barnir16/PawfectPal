@@ -257,7 +257,11 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       localDate: date.toLocaleString(),
       localNow: now.toLocaleString(),
       utcDate: date.toUTCString(),
-      utcNow: now.toUTCString()
+      utcNow: now.toUTCString(),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      dateTime: date.getTime(),
+      nowTime: now.getTime(),
+      timeDiff: now.getTime() - date.getTime()
     });
     
     // Handle negative differences (future timestamps)
@@ -270,12 +274,15 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
   const testImageUrl = async (url: string) => {
     try {
+      console.log('🖼️ Testing image URL:', url);
       const response = await fetch(url, { method: 'HEAD' });
-      console.log('🖼️ Image URL test:', {
+      console.log('🖼️ Image URL test result:', {
         url,
         status: response.status,
         ok: response.ok,
-        headers: Object.fromEntries(response.headers.entries())
+        contentType: response.headers.get('content-type'),
+        contentLength: response.headers.get('content-length'),
+        lastModified: response.headers.get('last-modified')
       });
       return response.ok;
     } catch (error) {
@@ -318,10 +325,20 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
               image={attachment.thumbnail_url || attachment.file_url}
               alt={attachment.file_name}
               onError={(e) => {
-                console.error('🖼️ Image load error:', attachment.file_url, e);
+                console.error('🖼️ Image load error:', {
+                  url: attachment.file_url,
+                  thumbnailUrl: attachment.thumbnail_url,
+                  fileName: attachment.file_name,
+                  error: e,
+                  target: e.target
+                });
               }}
               onLoad={() => {
-                console.log('🖼️ Image loaded successfully:', attachment.file_url);
+                console.log('🖼️ Image loaded successfully:', {
+                  url: attachment.file_url,
+                  thumbnailUrl: attachment.thumbnail_url,
+                  fileName: attachment.file_name
+                });
               }}
             />
             <CardContent sx={{ p: 1 }}>
