@@ -93,14 +93,29 @@ export class ChatService {
             console.error('🧪 Test upload failed:', testError);
           }
           
-          const uploadResponse = await apiClient.post('/image_upload/chat-attachment', formData);
+          // Use native fetch since API client has issues with FormData
+          const token = await StorageHelper.getItem('authToken');
+          const uploadResponse = await fetch('https://pawfectpal-production.up.railway.app/image_upload/chat-attachment', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+            body: formData
+          });
+          
+          if (!uploadResponse.ok) {
+            const errorText = await uploadResponse.text();
+            throw new Error(`Upload failed: ${uploadResponse.status} ${errorText}`);
+          }
+          
+          const uploadData = await uploadResponse.json();
           
           return {
-            id: uploadResponse.id,
-            file_name: uploadResponse.file_name,
-            file_url: uploadResponse.file_url,
-            file_type: uploadResponse.file_type,
-            file_size: uploadResponse.file_size,
+            id: uploadData.id,
+            file_name: uploadData.file_name,
+            file_url: uploadData.file_url,
+            file_type: uploadData.file_type,
+            file_size: uploadData.file_size,
             created_at: new Date().toISOString(),
           };
         })
