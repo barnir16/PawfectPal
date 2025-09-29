@@ -187,8 +187,8 @@ async def upload_chat_attachment(
         # Save file
         save_upload_file(file, str(file_path))
         
-        # Return file info for chat message
-        file_url = f"/uploads/images/{filename}"
+        # Return file info for chat message with full URL
+        file_url = f"https://pawfectpal-production.up.railway.app/uploads/images/{filename}"
         
         return {
             "id": str(uuid.uuid4()),  # Generate unique ID for attachment
