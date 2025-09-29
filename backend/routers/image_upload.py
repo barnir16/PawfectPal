@@ -162,11 +162,16 @@ async def upload_chat_attachment(
     current_user: UserORM = Depends(get_current_user),
 ):
     """Upload chat attachment (image)"""
+    print(f"📁 Chat attachment upload - User: {current_user.id}")
+    print(f"📁 File received: {file.filename}, Content-Type: {file.content_type}")
+    
     # Validate file type
     if not file.content_type or not file.content_type.startswith("image/"):
+        print(f"❌ Invalid file type: {file.content_type}")
         raise HTTPException(status_code=400, detail="File must be an image")
     
     if file.filename is None:
+        print("❌ No filename provided")
         raise ValueError("File path cannot be None")
     
     try:
