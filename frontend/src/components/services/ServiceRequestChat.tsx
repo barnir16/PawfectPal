@@ -256,7 +256,7 @@ export const ServiceRequestChat: React.FC = () => {
         </Box>
 
         {/* Enhanced Chat Window */}
-        <Box flex={1}>
+        <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
           <EnhancedChatWindow
             messages={messages}
             onSendMessage={handleSendMessage}
