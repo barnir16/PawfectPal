@@ -46,6 +46,10 @@ def send_message(
 
     db.commit()
     db.refresh(db_message)
+    
+    print(f"💬 Chat message created: {db_message.id}")
+    print(f"💬 Message timestamp: {db_message.created_at}")
+    print(f"💬 Message timestamp type: {type(db_message.created_at)}")
 
     return db_message
 
