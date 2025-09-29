@@ -64,7 +64,7 @@ export const ServiceRequestChat: React.FC = () => {
       const conversationData = await ChatService.getConversation(parseInt(id));
       console.log('Fetched conversation:', conversationData);
       
-      setMessages(conversationData?.messages || []);
+      setMessages((conversationData?.messages || []).map(processMessage));
       setRequest(serviceRequest);
     } catch (err: any) {
       console.error('Error fetching chat data:', err);
@@ -87,6 +87,11 @@ export const ServiceRequestChat: React.FC = () => {
       });
       
       console.log('Message sent successfully:', sentMessage);
+      
+      // Convert backend response to frontend format
+      const processedMessage = processMessage(sentMessage);
+      
+      console.log('Processed message with attachments:', processedMessage);
       
       // If the API returns undefined or empty object, create a mock message
       if (!sentMessage || (typeof sentMessage === 'object' && Object.keys(sentMessage).length === 0)) {
@@ -132,6 +137,13 @@ export const ServiceRequestChat: React.FC = () => {
     }
   };
 
+  const processMessage = (message: ChatMessage): ChatMessage => {
+    return {
+      ...message,
+      attachments: message.metadata?.attachments || undefined
+    };
+  };
+
   const handleQuickAction = async (action: string, data?: any) => {
     console.log('Quick action:', action, data);
     
@@ -147,7 +159,7 @@ export const ServiceRequestChat: React.FC = () => {
             data?.address,
             data?.fallback
           );
-          setMessages(prev => [...prev, sentMessage]);
+          setMessages(prev => [...prev, processMessage(sentMessage)]);
           break;
           
         case 'request_photos':
@@ -156,7 +168,7 @@ export const ServiceRequestChat: React.FC = () => {
             message: t('services.requestPhotosMessage'),
             message_type: 'text',
           });
-          setMessages(prev => [...prev, sentMessage]);
+          setMessages(prev => [...prev, processMessage(sentMessage)]);
           break;
           
         case 'schedule_meeting':
@@ -165,7 +177,7 @@ export const ServiceRequestChat: React.FC = () => {
             message: t('services.scheduleMeetingMessage'),
             message_type: 'text',
           });
-          setMessages(prev => [...prev, sentMessage]);
+          setMessages(prev => [...prev, processMessage(sentMessage)]);
           break;
           
         case 'share_instructions':
@@ -174,7 +186,7 @@ export const ServiceRequestChat: React.FC = () => {
             message: t('services.shareInstructionsMessage'),
             message_type: 'text',
           });
-          setMessages(prev => [...prev, sentMessage]);
+          setMessages(prev => [...prev, processMessage(sentMessage)]);
           break;
           
         case 'update_service_status':
@@ -183,7 +195,7 @@ export const ServiceRequestChat: React.FC = () => {
             data?.status,
             data?.message
           );
-          setMessages(prev => [...prev, sentMessage]);
+          setMessages(prev => [...prev, processMessage(sentMessage)]);
           break;
           
         default:
