@@ -32,14 +32,22 @@ export class ChatService {
       // Upload attachments first
       const uploadedAttachments = await Promise.all(
         message.attachments.map(async (attachment) => {
+          console.log('📤 Uploading attachment:', {
+            fileName: attachment.file.name,
+            fileSize: attachment.file.size,
+            fileType: attachment.file.type
+          });
+          
           const formData = new FormData();
           formData.append('file', attachment.file);
           
-          const uploadResponse = await apiClient.post('/image_upload/chat-attachment', formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          });
+          // Debug FormData contents
+          console.log('📤 FormData entries:');
+          for (const [key, value] of formData.entries()) {
+            console.log(`  ${key}:`, value);
+          }
+          
+          const uploadResponse = await apiClient.post('/image_upload/chat-attachment', formData);
           
           return {
             id: uploadResponse.id,
