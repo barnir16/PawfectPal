@@ -310,7 +310,14 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   };
 
   return (
-    <Paper sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Paper sx={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      height: '100%',
+      borderRadius: 2,
+      overflow: 'hidden',
+      boxShadow: 3,
+    }}>
       {/* Header */}
       <Box
         sx={{
@@ -340,10 +347,12 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         sx={{
           flex: 1,
           overflowY: 'auto',
-          p: 2,
+          p: 3,
           backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'grey.900' : 'grey.50',
           fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-          minHeight: '200px',
+          minHeight: '400px',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
         {messages.length === 0 ? (
@@ -375,7 +384,9 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                   sx={{
                     flexDirection: isOwn ? 'row-reverse' : 'row',
                     alignItems: 'flex-start',
-                    py: 1,
+                    py: 1.5,
+                    px: 0,
+                    width: '100%',
                   }}
                 >
                   {!isOwn && !isSystem && (
@@ -387,14 +398,17 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                   )}
                   <ListItemText
                     sx={{
-                      maxWidth: '70%',
-                      ml: isOwn ? 0 : 1,
-                      mr: isOwn ? 1 : 0,
+                      maxWidth: '75%',
+                      ml: isOwn ? 0 : 2,
+                      mr: isOwn ? 2 : 0,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: isOwn ? 'flex-end' : 'flex-start',
                     }}
                     primary={
                       <Paper
                         sx={{
-                          p: 1.5,
+                          p: 2,
                           backgroundColor: isOwn
                             ? 'primary.main'
                             : isSystem
@@ -403,8 +417,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                           color: isOwn
                             ? 'primary.contrastText'
                             : 'text.primary',
-                          borderRadius: 2,
-                          boxShadow: 1,
+                          borderRadius: isOwn ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                          boxShadow: 2,
                           maxWidth: '100%',
                           wordWrap: 'break-word',
                         }}
@@ -430,6 +444,15 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                             {msg.attachments && msg.attachments.length > 0 && 
                               renderMessageAttachments(msg.attachments)
                             }
+                            
+                            {/* Debug: Show message type for image messages */}
+                            {msg.message_type === 'image' && (
+                              <Box sx={{ mt: 1, p: 1, bgcolor: 'grey.100', borderRadius: 1 }}>
+                                <Typography variant="caption" color="text.secondary">
+                                  Image message - Attachments: {msg.attachments?.length || 0}
+                                </Typography>
+                              </Box>
+                            )}
                             
                             {/* Render location */}
                             {msg.message_type === 'location' && msg.metadata && 
@@ -582,11 +605,16 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             sx={{
               '& .MuiOutlinedInput-root': {
                 backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'grey.800' : 'white',
-                borderRadius: 2,
+                borderRadius: 3,
+                boxShadow: 1,
               },
               '& .MuiInputBase-input': {
                 fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
                 fontSize: '0.875rem',
+                padding: '12px 16px',
+              },
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: (theme) => theme.palette.mode === 'dark' ? 'grey.600' : 'grey.300',
               },
             }}
           />
