@@ -138,7 +138,30 @@ app.include_router(chat.router)
 
 
 # Mount static files for image serving
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+from pathlib import Path
+import os
+
+# Get the absolute path to uploads directory
+uploads_path = Path("uploads").absolute()
+print(f"📁 Static files path: {uploads_path}")
+print(f"📁 Directory exists: {uploads_path.exists()}")
+print(f"📁 Directory contents: {list(uploads_path.iterdir()) if uploads_path.exists() else 'Directory not found'}")
+
+app.mount("/uploads", StaticFiles(directory=str(uploads_path)), name="uploads")
+
+# Test endpoint to verify image serving
+@app.get("/test-image/{filename}")
+def test_image(filename: str):
+    """Test endpoint to verify image serving"""
+    image_path = uploads_path / "images" / filename
+    return {
+        "filename": filename,
+        "path": str(image_path),
+        "exists": image_path.exists(),
+        "is_file": image_path.is_file(),
+        "size": image_path.stat().st_size if image_path.exists() else 0,
+        "url": f"https://pawfectpal-production.up.railway.app/uploads/images/{filename}"
+    }
 
 @app.get("/")
 def read_root():
