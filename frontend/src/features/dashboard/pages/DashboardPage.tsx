@@ -291,12 +291,21 @@ export const Dashboard = () => {
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-             <Typography variant="h4" component="h1" gutterBottom>
-         {t('dashboard.title')}
-       </Typography>
+      <Typography 
+        variant="h4" 
+        component="h1" 
+        gutterBottom
+        sx={{ 
+          fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' },
+          fontWeight: 'bold',
+          mb: { xs: 2, sm: 3 }
+        }}
+      >
+        {t('dashboard.title')}
+      </Typography>
 
                                                                                    {/* Stats Grid */}
-         <Grid container spacing={3} sx={{ mb: 4 }}>
+         <Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mb: { xs: 2, sm: 4 } }}>
             <Grid key="pets-stat" size={{ xs: 12, sm: 6, md: 3 }}>
               <StatCard title={t('pets.title')} value={stats.totalPets} />
             </Grid>

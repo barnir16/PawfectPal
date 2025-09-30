@@ -43,6 +43,7 @@ export interface ServiceMessageMetadata {
   pet_id?: number;
   meeting_time?: string;
   instructions?: string;
+  attachments?: MediaAttachment[];
 }
 
 export interface ChatMessageCreate {
