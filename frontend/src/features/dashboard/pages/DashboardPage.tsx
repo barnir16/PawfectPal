@@ -166,8 +166,8 @@ export const Dashboard = () => {
                 let petAge: number | undefined;
                 if (pet.age !== undefined && pet.age !== null) {
                   petAge = pet.age;
-                } else if (pet.birthDate || pet.birth_date) {
-                  const birthDate = pet.birthDate || pet.birth_date;
+                } else if (pet.birthDate) {
+                  const birthDate = pet.birthDate;
                   if (birthDate) {
                     try {
                       const birth = new Date(birthDate);
@@ -297,7 +297,7 @@ export const Dashboard = () => {
 
                                                                                    {/* Stats Grid */}
          <Grid container spacing={3} sx={{ mb: 4 }}>
-                       <Grid key="pets-stat" size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid key="pets-stat" size={{ xs: 12, sm: 6, md: 3 }}>
               <StatCard title={t('pets.title')} value={stats.totalPets} />
             </Grid>
             <Grid key="tasks-stat" size={{ xs: 12, sm: 6, md: 3 }}>
@@ -412,7 +412,7 @@ export const Dashboard = () => {
                              <Typography variant="subtitle1" color="error" sx={{ mb: 2, fontWeight: "bold" }}>
                  🚨 {t('dashboard.overdueVaccinationsTitle')} ({overdueVaccinations.length})
                </Typography>
-                             <Grid container spacing={2}>
+               <Grid container spacing={2}>
                  {overdueVaccinations.slice(0, 4).map((vaccine: any) => (
                    <Grid key={vaccine.id} size={{ xs: 12, sm: 6, md: 3 }}>
                      <Alert severity="error" sx={{ height: '100%' }}>
@@ -438,7 +438,7 @@ export const Dashboard = () => {
                              <Typography variant="subtitle1" color="warning.main" sx={{ mb: 2, fontWeight: "bold" }}>
                  ⏰ {t('dashboard.upcomingVaccinationsTitle')} ({upcomingVaccinations.length})
                </Typography>
-                             <Grid container spacing={2}>
+               <Grid container spacing={2}>
                  {upcomingVaccinations.slice(0, 4).map((vaccine: any) => (
                    <Grid key={vaccine.id} size={{ xs: 12, sm: 6, md: 3 }}>
                      <Alert severity="warning" sx={{ height: '100%' }}>
@@ -475,7 +475,7 @@ export const Dashboard = () => {
                </Typography>
                <Grid container spacing={2}>
                  {weightAlerts.slice(0, 4).map((alert: any) => (
-                   <Grid key={alert.id} size={{ xs: 12, sm: 6, md: 3 }}>
+                   <Grid key={alert.id || `alert-${alert.petId}-${alert.message}`} size={{ xs: 12, sm: 6, md: 3 }}>
                      <Alert severity={alert.severity === 'critical' ? 'error' : alert.severity === 'high' ? 'warning' : 'info'} sx={{ height: '100%' }}>
                        <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
                          {alert.petName}
@@ -502,33 +502,33 @@ export const Dashboard = () => {
                <Grid container spacing={2}>
                  {weightHealthData.slice(0, 4).map((health: any) => (
                    <Grid key={health.petId} size={{ xs: 12, sm: 6, md: 3 }}>
-                                            <Paper sx={{ p: 2, height: '100%' }}>
-                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                           <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
-                             {health.petName}
-                           </Typography>
-                           {health.hasWarnings && (
-                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                               <Typography variant="caption" color="warning.main" sx={{ fontSize: '0.7rem' }}>
-                                 ⚠️
-                               </Typography>
-                             </Box>
-                           )}
-                         </Box>
-                         <Typography variant="body2" color="text.secondary">
-                           {t('weight.currentWeight')}: {health.currentWeight} {t('pets.kg')}
+                     <Paper sx={{ p: 2, height: '100%' }}>
+                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                         <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
+                           {health.petName}
                          </Typography>
-                         {health.idealRange && (
-                           <Typography variant="caption" color="text.secondary">
-                             {t('weight.idealWeightRange')}: {health.idealRange.minWeight}-{health.idealRange.maxWeight} {t('pets.kg')}
-                           </Typography>
+                         {health.hasWarnings && (
+                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                             <Typography variant="caption" color="warning.main" sx={{ fontSize: '0.7rem' }}>
+                               ⚠️
+                             </Typography>
+                           </Box>
                          )}
-                         {health.trend && (
-                           <Typography variant="caption" color={health.trend.isHealthy ? 'success.main' : 'warning.main'}>
-                             {health.trend.direction} trend
-                           </Typography>
-                         )}
-                       </Paper>
+                       </Box>
+                       <Typography variant="body2" color="text.secondary">
+                         {t('weight.currentWeight')}: {health.currentWeight} {t('pets.kg')}
+                       </Typography>
+                       {health.idealRange && (
+                         <Typography variant="caption" color="text.secondary">
+                           {t('weight.idealWeightRange')}: {health.idealRange.minWeight}-{health.idealRange.maxWeight} {t('pets.kg')}
+                         </Typography>
+                       )}
+                       {health.trend && (
+                         <Typography variant="caption" color={health.trend.isHealthy ? 'success.main' : 'warning.main'}>
+                           {health.trend.direction} trend
+                         </Typography>
+                       )}
+                     </Paper>
                    </Grid>
                  ))}
                </Grid>
@@ -609,36 +609,36 @@ export const Dashboard = () => {
 
       {/* Upcoming Events Section */}
       <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid key="upcoming-events" size={{ xs: 12, md: 6 }}>
           <Paper sx={{ p: 3, height: "100%" }}>
-                         <Typography variant="h6" component="h2" gutterBottom>
-               {t('dashboard.upcomingEvents')}
-             </Typography>
-             {stats.upcomingVetVisits > 0 ? (
-               <Typography color="primary">
-                 {stats.upcomingVetVisits} {t('dashboard.vetAppointmentsScheduled')}
-               </Typography>
-             ) : (
-               <Typography color="text.secondary" sx={{ fontStyle: "italic" }}>
-                 {t('dashboard.noUpcomingEvents')}
-               </Typography>
-             )}
+            <Typography variant="h6" component="h2" gutterBottom>
+              {t('dashboard.upcomingEvents')}
+            </Typography>
+            {stats.upcomingVetVisits > 0 ? (
+              <Typography color="primary">
+                {stats.upcomingVetVisits} {t('dashboard.vetAppointmentsScheduled')}
+              </Typography>
+            ) : (
+              <Typography color="text.secondary" sx={{ fontStyle: "italic" }}>
+                {t('dashboard.noUpcomingEvents')}
+              </Typography>
+            )}
           </Paper>
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid key="health-reminders" size={{ xs: 12, md: 6 }}>
           <Paper sx={{ p: 3, height: "100%" }}>
-                         <Typography variant="h6" component="h2" gutterBottom>
-               {t('dashboard.healthReminders')}
-             </Typography>
-             {stats.overdueVaccinations > 0 ? (
-               <Typography color="error">
-                 {stats.overdueVaccinations} {t('dashboard.vaccinationsOverdue')}
-               </Typography>
-             ) : (
-               <Typography color="text.secondary" sx={{ fontStyle: "italic" }}>
-                 {t('dashboard.allVaccinationsUpToDate')}
-               </Typography>
-             )}
+            <Typography variant="h6" component="h2" gutterBottom>
+              {t('dashboard.healthReminders')}
+            </Typography>
+            {stats.overdueVaccinations > 0 ? (
+              <Typography color="error">
+                {stats.overdueVaccinations} {t('dashboard.vaccinationsOverdue')}
+              </Typography>
+            ) : (
+              <Typography color="text.secondary" sx={{ fontStyle: "italic" }}>
+                {t('dashboard.allVaccinationsUpToDate')}
+              </Typography>
+            )}
           </Paper>
         </Grid>
       </Grid>

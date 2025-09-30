@@ -1,6 +1,6 @@
 import type { User } from '../auth';
 
-export type MessageType = 'text' | 'image' | 'file' | 'system';
+export type MessageType = 'text' | 'image' | 'file' | 'system' | 'location' | 'service_update';
 
 export interface ChatMessage {
   id: number;
@@ -13,14 +13,48 @@ export interface ChatMessage {
   edited_at?: string;
   created_at: string;
   
+  // Media attachments
+  attachments?: MediaAttachment[];
+  
+  // Service-specific metadata
+  metadata?: ServiceMessageMetadata;
+  
   // Relationships
   sender?: User;
+}
+
+export interface MediaAttachment {
+  id: number;
+  file_name: string;
+  file_url: string;
+  file_type: string;
+  file_size: number;
+  thumbnail_url?: string;
+  created_at: string;
+}
+
+export interface ServiceMessageMetadata {
+  location?: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+  };
+  service_status?: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
+  pet_id?: number;
+  meeting_time?: string;
+  instructions?: string;
 }
 
 export interface ChatMessageCreate {
   service_request_id: number;
   message: string;
   message_type?: MessageType;
+  attachments?: ChatAttachmentCreate[];
+  metadata?: ServiceMessageMetadata;
+}
+
+export interface ChatAttachmentCreate {
+  file: File;
 }
 
 export interface ChatConversation {
