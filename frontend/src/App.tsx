@@ -104,14 +104,24 @@ const AppContent = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
-          width: { sm: desktopOpen ? `calc(100% - 240px)` : `calc(100% - 64px)` },
-          ml: { sm: isRTL ? "0px" : (desktopOpen ? "240px" : "64px") },
-          mr: { sm: isRTL ? (desktopOpen ? "240px" : "64px") : "0px" },
+          p: { xs: 1, sm: 2, md: 3 },
+          width: { 
+            xs: "100%", 
+            sm: desktopOpen ? `calc(100% - 240px)` : `calc(100% - 64px)` 
+          },
+          ml: { 
+            xs: 0,
+            sm: isRTL ? "0px" : (desktopOpen ? "240px" : "64px") 
+          },
+          mr: { 
+            xs: 0,
+            sm: isRTL ? (desktopOpen ? "240px" : "64px") : "0px" 
+          },
           mt: "64px",
           overflow: "auto",
           height: "calc(100vh - 64px)",
           transition: 'width 0.3s ease, margin 0.3s ease',
+          minHeight: { xs: "calc(100vh - 64px)", sm: "auto" },
         }}
       >
         <Routes>
