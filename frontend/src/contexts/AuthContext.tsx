@@ -161,12 +161,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     console.log(`Force logout: ${reason}`);
     await StorageHelper.removeItem("authToken");
     setUser(null);
-    // Show user-friendly message
-    alert(`You have been logged out: ${reason}\nPlease log in again.`);
+    
+    // Show user-friendly notification instead of alert
+    console.log(`🔔 ${reason}`);
+    
+    // Optionally redirect to login page
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
   };
 
   useEffect(() => {
     checkAuth();
+    
+    // Listen for token expiry events from API service
+    const handleTokenExpiry = (event: CustomEvent) => {
+      console.log('🔔 Token expiry event received:', event.detail);
+      forceLogout(event.detail.reason);
+    };
+    
+    window.addEventListener('auth:token-expired', handleTokenExpiry as EventListener);
+    
+    return () => {
+      window.removeEventListener('auth:token-expired', handleTokenExpiry as EventListener);
+    };
   }, []);
 
   const value: AuthContextType = {

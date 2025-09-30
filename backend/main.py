@@ -13,11 +13,18 @@ from routers import (
     vaccination,
     weight_record,
     weight_goal,
-    ai_simple as ai,
     provider,
     service_requests,
     chat,
 )
+
+# Import AI router conditionally to avoid startup errors
+try:
+    from routers import ai_simple as ai
+    AI_AVAILABLE = True
+except Exception as e:
+    print(f"⚠️ AI router not available: {e}")
+    AI_AVAILABLE = False
 
 
 app = FastAPI(
@@ -120,11 +127,41 @@ app.include_router(service.router)
 app.include_router(task.router)
 app.include_router(weight_record.router)
 app.include_router(weight_goal.router)
-app.include_router(ai.router)
+if AI_AVAILABLE:
+    app.include_router(ai.router)
+    print("✅ AI router included")
+else:
+    print("⚠️ AI router skipped due to configuration issues")
 app.include_router(provider.router)
 app.include_router(service_requests.router)
 app.include_router(chat.router)
 
+
+# Mount static files for image serving
+from pathlib import Path
+import os
+
+# Get the absolute path to uploads directory
+uploads_path = Path("uploads").absolute()
+print(f"📁 Static files path: {uploads_path}")
+print(f"📁 Directory exists: {uploads_path.exists()}")
+print(f"📁 Directory contents: {list(uploads_path.iterdir()) if uploads_path.exists() else 'Directory not found'}")
+
+app.mount("/uploads", StaticFiles(directory=str(uploads_path)), name="uploads")
+
+# Test endpoint to verify image serving
+@app.get("/test-image/{filename}")
+def test_image(filename: str):
+    """Test endpoint to verify image serving"""
+    image_path = uploads_path / "images" / filename
+    return {
+        "filename": filename,
+        "path": str(image_path),
+        "exists": image_path.exists(),
+        "is_file": image_path.is_file(),
+        "size": image_path.stat().st_size if image_path.exists() else 0,
+        "url": f"https://pawfectpal-production.up.railway.app/uploads/images/{filename}"
+    }
 
 @app.get("/")
 def read_root():

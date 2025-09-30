@@ -3,7 +3,7 @@ from typing import Optional, TYPE_CHECKING
 from sqlalchemy import Integer, String, Text, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base import Base
-from datetime import datetime
+from datetime import datetime, timezone
 
 if TYPE_CHECKING:
     from .user import UserORM
@@ -27,7 +27,7 @@ class ChatMessageORM(Base):
     edited_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     
     # Timestamps
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
     
     # Relationships
     service_request: Mapped["ServiceRequestORM"] = relationship("ServiceRequestORM", back_populates="chat_messages")

@@ -153,3 +153,70 @@ async def upload_profile_image(
         db.rollback()
         print(f"An error occurred during image upload: {e}")
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
+
+
+@router.post("/chat-attachment")
+async def upload_chat_attachment(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: UserORM = Depends(get_current_user),
+):
+    """Upload chat attachment (image)"""
+    print(f"📁 Chat attachment upload - User: {current_user.id}")
+    print(f"📁 File received: {file.filename}, Content-Type: {file.content_type}")
+    
+    # Validate file type
+    if not file.content_type or not file.content_type.startswith("image/"):
+        print(f"❌ Invalid file type: {file.content_type}")
+        raise HTTPException(status_code=400, detail="File must be an image")
+    
+    if file.filename is None:
+        print("❌ No filename provided")
+        raise ValueError("File path cannot be None")
+    
+    try:
+        # Generate unique filename
+        file_extension = Path(file.filename).suffix
+        filename = f"chat_{current_user.id}_{uuid.uuid4()}{file_extension}"
+        file_path = IMAGES_DIR / filename
+        
+        # Ensure directory exists
+        if not IMAGES_DIR.exists():
+            IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+        
+        # Save file
+        save_upload_file(file, str(file_path))
+        
+        # Return file info for chat message with full URL
+        file_url = f"https://pawfectpal-production.up.railway.app/uploads/images/{filename}"
+        
+        return {
+            "id": str(uuid.uuid4()),  # Generate unique ID for attachment
+            "file_name": file.filename,
+            "file_url": file_url,
+            "file_type": file.content_type,
+            "file_size": file.size if hasattr(file, 'size') else 0,
+            "created_at": "2024-01-01T00:00:00Z"  # Will be set by frontend
+        }
+        
+    except Exception as e:
+        print(f"Error uploading chat attachment: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to upload file: {e}")
+
+
+@router.post("/test-upload")
+async def test_upload(
+    file: UploadFile = File(...),
+    current_user: UserORM = Depends(get_current_user),
+):
+    """Test endpoint for file upload debugging"""
+    print(f"🧪 Test upload - User: {current_user.id}")
+    print(f"🧪 File received: {file.filename}, Content-Type: {file.content_type}")
+    print(f"🧪 File size: {file.size if hasattr(file, 'size') else 'unknown'}")
+    
+    return {
+        "message": "Test upload successful",
+        "filename": file.filename,
+        "content_type": file.content_type,
+        "size": file.size if hasattr(file, 'size') else 0
+    }
