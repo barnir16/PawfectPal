@@ -39,7 +39,11 @@ type SidebarProps = {
 const drawerWidth = 240;
 const minimizedWidth = 64;
 
-export const Sidebar = ({ mobileOpen, onClose, onDesktopToggle }: SidebarProps) => {
+export const Sidebar = ({
+  mobileOpen,
+  onClose,
+  onDesktopToggle,
+}: SidebarProps) => {
   const theme = useTheme();
   const location = useLocation();
   const { t, isRTL } = useLocalization();
@@ -47,20 +51,43 @@ export const Sidebar = ({ mobileOpen, onClose, onDesktopToggle }: SidebarProps) 
   const [open, setOpen] = useState(!isMobile);
 
   const menuItems = [
-    { text: t('navigation.dashboard'), icon: <DashboardIcon />, path: "/dashboard" },
-    { text: t('navigation.pets'), icon: <PetsIcon />, path: "/pets" },
-    { text: t('navigation.tasks'), icon: <TasksIcon />, path: "/tasks" },
-    { text: t('services.title'), icon: <ServicesIcon />, path: "/services" },
-    { text: t('services.bookService'), icon: <BookIcon />, path: "/bookservice" },
-    { text: t('services.browseRequests'), icon: <ServiceRequestsIcon />, path: "/service-requests" },
-    { text: t('services.myRequests'), icon: <ServiceRequestsIcon />, path: "/my-service-requests" },
-    { text: t('navigation.weightTracking'), icon: <PersonIcon />, path: "/weight-tracking" },
-    { text: t('navigation.profile'), icon: <PersonIcon />, path: "/profile" },
-    { text: t('navigation.settings'), icon: <SettingsIcon />, path: "/settings" },
+    {
+      text: t("navigation.dashboard"),
+      icon: <DashboardIcon />,
+      path: "/dashboard",
+    },
+    { text: t("navigation.pets"), icon: <PetsIcon />, path: "/pets" },
+    { text: t("navigation.tasks"), icon: <TasksIcon />, path: "/tasks" },
+    { text: t("services.title"), icon: <ServicesIcon />, path: "/services" },
+    {
+      text: t("services.bookService"),
+      icon: <BookIcon />,
+      path: "/bookservice",
+    },
+    {
+      text: t("services.browseRequests"),
+      icon: <ServiceRequestsIcon />,
+      path: "/service-requests",
+    },
+    {
+      text: t("services.myRequests"),
+      icon: <ServiceRequestsIcon />,
+      path: "/my-service-requests",
+    },
+    {
+      text: t("navigation.weightTracking"),
+      icon: <PersonIcon />,
+      path: "/weight-tracking",
+    },
+    {
+      text: t("navigation.chat"),
+      icon: <ChatIcon />,
+      path: "/chat-list",
+    },
   ];
 
   const handleDrawerToggle = () => {
-    console.log('Drawer toggle clicked', { isMobile, open, isRTL });
+    console.log("Drawer toggle clicked", { isMobile, open, isRTL });
     if (isMobile) {
       onClose();
     } else {
@@ -85,13 +112,16 @@ export const Sidebar = ({ mobileOpen, onClose, onDesktopToggle }: SidebarProps) 
             PawfectPal
           </Typography>
         )}
-        <IconButton 
+        <IconButton
           onClick={handleDrawerToggle}
-          sx={{ 
-            color: 'white',
-            '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' },
-            ml: open ? 0 : 'auto',
-            mr: open ? 0 : 'auto'
+          sx={{
+            color: "text.primary",
+            backgroundColor: "transparent",
+            "&:hover": {
+              backgroundColor: "rgba(0,0,0,0.05)",
+            },
+            ml: open ? 0 : "auto",
+            mr: open ? 0 : "auto",
           }}
         >
           <MenuIcon fontSize="small" />
@@ -107,40 +137,46 @@ export const Sidebar = ({ mobileOpen, onClose, onDesktopToggle }: SidebarProps) 
               selected={location.pathname === item.path}
               onClick={onClose}
               sx={{
-                flexDirection: isRTL ? 'row-reverse' : 'row',
+                flexDirection: isRTL ? "row-reverse" : "row",
                 minHeight: 48,
                 px: open ? 2 : 1.5,
-                justifyContent: open ? 'flex-start' : 'center',
-                '&.Mui-selected': {
-                  backgroundColor: 'rgba(255,255,255,0.1)',
-                  '&:hover': {
-                    backgroundColor: 'rgba(255,255,255,0.15)',
+                justifyContent: open ? "flex-start" : "center",
+                "&.Mui-selected": {
+                  backgroundColor: "rgba(255,255,255,0.1)",
+                  "&:hover": {
+                    backgroundColor: "rgba(255,255,255,0.15)",
                   },
                 },
-                '&:hover': {
-                  backgroundColor: 'rgba(255,255,255,0.05)',
+                "&:hover": {
+                  backgroundColor: "rgba(255,255,255,0.05)",
                 },
               }}
               title={!open ? item.text : undefined} // Show tooltip when minimized
             >
-              <ListItemIcon 
-                sx={{ 
-                  minWidth: open ? 40 : 'auto',
-                  justifyContent: 'center',
-                  color: location.pathname === item.path ? 'primary.main' : 'inherit'
+              <ListItemIcon
+                sx={{
+                  minWidth: open ? 40 : "auto",
+                  justifyContent: "center",
+                  color:
+                    location.pathname === item.path
+                      ? "primary.main"
+                      : "inherit",
                 }}
               >
                 {item.icon}
               </ListItemIcon>
               {open && (
-                <ListItemText 
-                  primary={item.text} 
-                  sx={{ 
-                    textAlign: isRTL ? 'right' : 'left',
-                    '& .MuiListItemText-primary': {
-                      textAlign: isRTL ? 'right' : 'left',
-                      color: location.pathname === item.path ? 'primary.main' : 'inherit'
-                    }
+                <ListItemText
+                  primary={item.text}
+                  sx={{
+                    textAlign: isRTL ? "right" : "left",
+                    "& .MuiListItemText-primary": {
+                      textAlign: isRTL ? "right" : "left",
+                      color:
+                        location.pathname === item.path
+                          ? "primary.main"
+                          : "inherit",
+                    },
                   }}
                 />
               )}
@@ -154,10 +190,10 @@ export const Sidebar = ({ mobileOpen, onClose, onDesktopToggle }: SidebarProps) 
   return (
     <Box
       component="nav"
-      sx={{ 
-        width: { sm: open ? drawerWidth : minimizedWidth }, 
+      sx={{
+        width: { sm: open ? drawerWidth : minimizedWidth },
         flexShrink: { sm: 0 },
-        transition: 'width 0.3s ease'
+        transition: "width 0.3s ease",
       }}
       aria-label="mailbox folders"
     >
@@ -185,14 +221,14 @@ export const Sidebar = ({ mobileOpen, onClose, onDesktopToggle }: SidebarProps) 
         open={true}
         sx={{
           display: { xs: "none", sm: "block" },
-          "& .MuiDrawer-paper": { 
-            boxSizing: "border-box", 
+          "& .MuiDrawer-paper": {
+            boxSizing: "border-box",
             width: open ? drawerWidth : minimizedWidth,
-            transition: theme.transitions.create('width', {
+            transition: theme.transitions.create("width", {
               easing: theme.transitions.easing.sharp,
               duration: theme.transitions.duration.enteringScreen,
             }),
-            overflow: 'visible',
+            overflow: "visible",
           },
         }}
       >
