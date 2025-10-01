@@ -66,6 +66,7 @@ export const he = {
     settings: 'הגדרות',
     profile: 'פרופיל',
     logout: 'התנתקות',
+    chat: 'הודעות'
   },
 
   // Auth
@@ -173,6 +174,8 @@ export const he = {
     downloadSelectedPets: 'הורד חיות מחמד נבחרות',
     selectPetsForPDF: 'בחר חיות מחמד ל-PDF',
     selectAtLeastOnePet: 'אנא בחר לפחות חיית מחמד אחת',
+    noPetsFound: 'לא נמצאו חיות',
+    getStartedAddingFirstPet: 'התחל על ידי הוספת חיית המחמד הראשונה שלך!',
     edit: 'ערוך',
     delete: 'מחק',
     additionalNotes: 'הערות נוספות',

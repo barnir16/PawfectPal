@@ -1,7 +1,31 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Button, Grid, Typography, CircularProgress, Menu, MenuItem, ListItemIcon, ListItemText, Dialog, DialogTitle, DialogContent, DialogActions, Checkbox, List, ListItem, ListItemButton, ListItemText as MuiListItemText, ListItemIcon as MuiListItemIcon } from "@mui/material";
-import { Add as AddIcon, Download as DownloadIcon, PictureAsPdf as PdfIcon } from "@mui/icons-material";
+import {
+  Box,
+  Button,
+  Grid,
+  Typography,
+  CircularProgress,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Checkbox,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText as MuiListItemText,
+  ListItemIcon as MuiListItemIcon,
+} from "@mui/material";
+import {
+  Add as AddIcon,
+  Download as DownloadIcon,
+  PictureAsPdf as PdfIcon,
+} from "@mui/icons-material";
 
 // Components
 import { PetCard } from "./../../../features/pets/components/PetCard";
@@ -14,7 +38,10 @@ import { getPets, deletePet } from "../../../services/pets/petService";
 import { getTasks } from "../../../services/tasks/taskService";
 import type { Pet } from "../../../types/pets/pet";
 import { useLocalization } from "../../../contexts/LocalizationContext";
-import { generateAndDownloadMultiPetPDF, type PetData } from "../../../services/pdfService";
+import {
+  generateAndDownloadMultiPetPDF,
+  type PetData,
+} from "../../../services/pdfService";
 
 export const Pets = () => {
   const navigate = useNavigate();
@@ -23,7 +50,7 @@ export const Pets = () => {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"grid" | "table">("grid");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedType, setSelectedType] = useState(t('pets.all'));
+  const [selectedType, setSelectedType] = useState(t("pets.all"));
   const [pdfMenuAnchor, setPdfMenuAnchor] = useState<null | HTMLElement>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [showPetSelection, setShowPetSelection] = useState(false);
@@ -32,9 +59,9 @@ export const Pets = () => {
   const fetchPets = async () => {
     try {
       setLoading(true);
-      console.log('🔄 PetsPage: Fetching pets...');
+      console.log("🔄 PetsPage: Fetching pets...");
       const fetchedPets = await getPets();
-      console.log('🔄 PetsPage: Fetched pets:', fetchedPets);
+      console.log("🔄 PetsPage: Fetched pets:", fetchedPets);
       setPets(fetchedPets);
     } catch (error) {
       console.error("Failed to fetch pets:", error);
@@ -57,18 +84,14 @@ export const Pets = () => {
   };
 
   const handleDeletePet = async (id: number) => {
-    if (
-      window.confirm(
-        t('pets.deleteConfirmation')
-      )
-    ) {
+    if (window.confirm(t("pets.deleteConfirmation"))) {
       try {
         await deletePet(id);
         // Refresh the pets list
         await fetchPets();
       } catch (error) {
         console.error("Failed to delete pet:", error);
-        alert(t('pets.failedToDelete'));
+        alert(t("pets.failedToDelete"));
       }
     }
   };
@@ -85,16 +108,16 @@ export const Pets = () => {
     try {
       setPdfLoading(true);
       const tasks = await getTasks();
-      
-      const petsData: PetData[] = pets.map(pet => ({
+
+      const petsData: PetData[] = pets.map((pet) => ({
         pet,
-        tasks: tasks.filter(task => task.petIds.includes(pet.id!))
+        tasks: tasks.filter((task) => task.petIds.includes(pet.id!)),
       }));
 
       await generateAndDownloadMultiPetPDF(petsData);
     } catch (error) {
       console.error("Failed to generate PDF:", error);
-      alert(t('errors.generalError'));
+      alert(t("errors.generalError"));
     } finally {
       setPdfLoading(false);
       handlePdfMenuClose();
@@ -107,27 +130,29 @@ export const Pets = () => {
   };
 
   const handlePetSelectionToggle = (petId: number) => {
-    setSelectedPetsForPDF(prev => 
-      prev.includes(petId) 
-        ? prev.filter(id => id !== petId)
+    setSelectedPetsForPDF((prev) =>
+      prev.includes(petId)
+        ? prev.filter((id) => id !== petId)
         : [...prev, petId]
     );
   };
 
   const handleConfirmSelectedPetsPDF = async () => {
     if (selectedPetsForPDF.length === 0) {
-      alert(t('pets.selectAtLeastOnePet'));
+      alert(t("pets.selectAtLeastOnePet"));
       return;
     }
 
     try {
       setPdfLoading(true);
       const tasks = await getTasks();
-      
-      const selectedPets = pets.filter(pet => selectedPetsForPDF.includes(pet.id!));
-      const petsData: PetData[] = selectedPets.map(pet => ({
+
+      const selectedPets = pets.filter((pet) =>
+        selectedPetsForPDF.includes(pet.id!)
+      );
+      const petsData: PetData[] = selectedPets.map((pet) => ({
         pet,
-        tasks: tasks.filter(task => task.petIds.includes(pet.id!))
+        tasks: tasks.filter((task) => task.petIds.includes(pet.id!)),
       }));
 
       await generateAndDownloadMultiPetPDF(petsData);
@@ -135,18 +160,18 @@ export const Pets = () => {
       setSelectedPetsForPDF([]);
     } catch (error) {
       console.error("Failed to generate PDF:", error);
-      alert(t('errors.generalError'));
+      alert(t("errors.generalError"));
     } finally {
       setPdfLoading(false);
     }
   };
 
-
   const filteredPets = pets.filter(
     (pet) =>
       (pet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         pet.breed.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (selectedType === t('pets.all') || (pet.type || pet.breedType) === selectedType)
+      (selectedType === t("pets.all") ||
+        (pet.type || pet.breedType) === selectedType)
   );
 
   let content;
@@ -207,23 +232,25 @@ export const Pets = () => {
         }}
       >
         <Typography variant="h4" component="h1">
-          {t('pets.myPets')}
+          {t("pets.myPets")}
         </Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: "flex", gap: 1 }}>
           <Button
             variant="outlined"
-            startIcon={pdfLoading ? <CircularProgress size={20} /> : <DownloadIcon />}
+            startIcon={
+              pdfLoading ? <CircularProgress size={20} /> : <DownloadIcon />
+            }
             onClick={handlePdfMenuOpen}
             disabled={pets.length === 0 || pdfLoading}
           >
-            {t('pets.downloadPDF')}
+            {t("pets.downloadPDF")}
           </Button>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={handleAddPet}
           >
-            {t('pets.addPet')}
+            {t("pets.addPet")}
           </Button>
         </Box>
       </Box>
@@ -246,31 +273,39 @@ export const Pets = () => {
         open={Boolean(pdfMenuAnchor)}
         onClose={handlePdfMenuClose}
         anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'left',
+          vertical: "bottom",
+          horizontal: "left",
         }}
         transformOrigin={{
-          vertical: 'top',
-          horizontal: 'left',
+          vertical: "top",
+          horizontal: "left",
         }}
       >
         <MenuItem onClick={handleDownloadAllPetsPDF} disabled={pdfLoading}>
           <ListItemIcon>
             <PdfIcon />
           </ListItemIcon>
-          <ListItemText primary={t('pets.downloadAllPets')} />
+          <ListItemText primary={t("pets.downloadAllPets")} />
         </MenuItem>
-        <MenuItem onClick={handleDownloadSelectedPetsPDF} disabled={pdfLoading || filteredPets.length === 0}>
+        <MenuItem
+          onClick={handleDownloadSelectedPetsPDF}
+          disabled={pdfLoading || filteredPets.length === 0}
+        >
           <ListItemIcon>
             <PdfIcon />
           </ListItemIcon>
-          <ListItemText primary={t('pets.downloadSelectedPets')} />
+          <ListItemText primary={t("pets.downloadSelectedPets")} />
         </MenuItem>
       </Menu>
 
       {/* Pet Selection Modal */}
-      <Dialog open={showPetSelection} onClose={() => setShowPetSelection(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>{t('pets.selectPetsForPDF')}</DialogTitle>
+      <Dialog
+        open={showPetSelection}
+        onClose={() => setShowPetSelection(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>{t("pets.selectPetsForPDF")}</DialogTitle>
         <DialogContent>
           <List>
             {pets.map((pet) => (
@@ -285,7 +320,7 @@ export const Pets = () => {
                       onChange={() => handlePetSelectionToggle(pet.id!)}
                     />
                   </MuiListItemIcon>
-                  <MuiListItemText 
+                  <MuiListItemText
                     primary={pet.name}
                     secondary={`${pet.breed} • ${pet.gender}`}
                   />
@@ -296,14 +331,18 @@ export const Pets = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setShowPetSelection(false)}>
-            {t('common.cancel')}
+            {t("common.cancel")}
           </Button>
-          <Button 
-            onClick={handleConfirmSelectedPetsPDF} 
+          <Button
+            onClick={handleConfirmSelectedPetsPDF}
             variant="contained"
             disabled={selectedPetsForPDF.length === 0 || pdfLoading}
           >
-            {pdfLoading ? <CircularProgress size={20} /> : t('pets.downloadSelectedPets')}
+            {pdfLoading ? (
+              <CircularProgress size={20} />
+            ) : (
+              t("pets.downloadSelectedPets")
+            )}
           </Button>
         </DialogActions>
       </Dialog>

@@ -100,6 +100,7 @@ export const ChatPage = () => {
           onSendMessage={handleSendMessage}
           onQuickAction={handleQuickAction}
           isSending={sending}
+          serviceRequestId={conversation.service_request_id}
         />
       </Box>
     </Box>

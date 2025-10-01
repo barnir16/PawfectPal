@@ -46,6 +46,7 @@ export const en = {
     settings: 'Settings',
     profile: 'Profile',
     logout: 'Logout',
+    chat: 'Chat'
   },
 
   // Auth
@@ -157,6 +158,8 @@ export const en = {
     downloadSelectedPets: 'Download Selected Pets',
     selectPetsForPDF: 'Select Pets for PDF',
     selectAtLeastOnePet: 'Please select at least one pet',
+    noPetsFound: 'No Pets Found',
+    getStartedAddingFirstPet: 'Get started by adding your first pet!',
     months: 'months',
     years: 'years',
     imageUploadFailed: 'Failed to upload image',
@@ -1160,5 +1163,4 @@ export const en = {
       closed: 'Closed',
     },
   },
-
 };
