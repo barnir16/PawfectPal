@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from "react";
 import {
   Box,
   Paper,
@@ -27,7 +27,7 @@ import {
   CardContent,
   Alert,
   Snackbar,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Send,
   AttachFile,
@@ -43,10 +43,15 @@ import {
   Close,
   Download,
   Visibility,
-} from '@mui/icons-material';
-import { useLocalization } from '../../contexts/LocalizationContext';
-import { useAuth } from '../../contexts/AuthContext';
-import type { ChatMessage, ChatMessageCreate, MediaAttachment } from '../../types/services/chat';
+  InsertDriveFile,
+} from "@mui/icons-material";
+import { useLocalization } from "../../contexts/LocalizationContext";
+import { useAuth } from "../../contexts/AuthContext";
+import type {
+  ChatMessage,
+  ChatMessageCreate,
+  MediaAttachment,
+} from "../../types/services/chat";
 
 interface EnhancedChatWindowProps {
   messages: ChatMessage[];
@@ -69,31 +74,59 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 }) => {
   const { t } = useLocalization();
   const { user } = useAuth();
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [showQuickReplies, setShowQuickReplies] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [mediaDialogOpen, setMediaDialogOpen] = useState(false);
-  const [selectedMedia, setSelectedMedia] = useState<MediaAttachment | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<MediaAttachment | null>(
+    null
+  );
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarMessage, setSnackbarMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const quickReplies: QuickReply[] = [
-    { id: 'greeting', text: 'Hi! I\'m interested in your service request.', icon: <Pets /> },
-    { id: 'availability', text: 'I\'m available for this service. When would you like to meet?', icon: <Schedule /> },
-    { id: 'location', text: 'Could you share the exact location?', icon: <LocationOn /> },
-    { id: 'photos', text: 'Could you send some photos of your pet?', icon: <Image /> },
-    { id: 'confirm', text: 'Perfect! I\'ll be there at the scheduled time.', icon: <CheckCircle /> },
-    { id: 'instructions', text: 'Please share any special instructions for your pet.', icon: <Pets /> },
+    {
+      id: "greeting",
+      text: "Hi! I'm interested in your service request.",
+      icon: <Pets />,
+    },
+    {
+      id: "availability",
+      text: "I'm available for this service. When would you like to meet?",
+      icon: <Schedule />,
+    },
+    {
+      id: "location",
+      text: "Could you share the exact location?",
+      icon: <LocationOn />,
+    },
+    {
+      id: "photos",
+      text: "Could you send some photos of your pet?",
+      icon: <Image />,
+    },
+    {
+      id: "confirm",
+      text: "Perfect! I'll be there at the scheduled time.",
+      icon: <CheckCircle />,
+    },
+    {
+      id: "instructions",
+      text: "Please share any special instructions for your pet.",
+      icon: <Pets />,
+    },
   ];
 
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      messagesContainerRef.current.scrollTop =
+        messagesContainerRef.current.scrollHeight;
     }
   };
 
@@ -104,86 +137,147 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   const handleSend = async () => {
     if (!input.trim() && selectedFiles.length === 0) return;
 
-    console.log('📤 handleSend called with:', {
+    console.log("📤 handleSend called with:", {
       input: input.trim(),
       selectedFilesCount: selectedFiles.length,
-      selectedFiles: selectedFiles.map(f => ({ name: f.name, size: f.size, type: f.type }))
+      selectedFiles: selectedFiles.map((f) => ({
+        name: f.name,
+        size: f.size,
+        type: f.type,
+      })),
     });
 
     // Ensure we have a valid message
-    const messageText = input.trim() || (selectedFiles.length > 0 ? '📎 Shared files' : '');
+    const messageText = input.trim() || (selectedFiles.length > 0 ? "📎 Shared files" : "");
     if (!messageText) {
-      console.warn('📤 Cannot send empty message');
+      console.warn("📤 Cannot send empty message");
       return;
     }
 
     const newMessage: ChatMessageCreate = {
       message: messageText,
-      message_type: selectedFiles.length > 0 ? 'image' : 'text',
-      attachments: selectedFiles.length > 0 ? selectedFiles.map(file => ({ file })) : undefined,
+      message_type: selectedFiles.length > 0 ? "image" : "text",
+      attachments:
+        selectedFiles.length > 0
+          ? selectedFiles.map((file) => ({ file }))
+          : undefined,
     };
-    
-    console.log('📤 Created message:', {
+
+    console.log("📤 Created message:", {
       message: newMessage.message,
       message_type: newMessage.message_type,
-      hasAttachments: !!(newMessage.attachments && newMessage.attachments.length > 0),
-      attachmentCount: newMessage.attachments?.length || 0
+      hasAttachments: !!(
+        newMessage.attachments && newMessage.attachments.length > 0
+      ),
+      attachmentCount: newMessage.attachments?.length || 0,
     });
 
     try {
       await onSendMessage(newMessage);
-      setInput('');
+      setInput("");
       setSelectedFiles([]);
       scrollToBottom();
     } catch (error) {
-      console.error('Failed to send message:', error);
-      setSnackbarMessage('Failed to send message');
+      console.error("Failed to send message:", error);
+      setSnackbarMessage("Failed to send message");
       setSnackbarOpen(true);
     }
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    console.log('📁 Files selected:', files.map(f => ({ name: f.name, size: f.size, type: f.type })));
-    
-    const imageFiles = files.filter(file => file.type.startsWith('image/'));
-    console.log('📁 Image files filtered:', imageFiles.map(f => ({ name: f.name, size: f.size, type: f.type })));
-    
-    if (imageFiles.length !== files.length) {
-      setSnackbarMessage('Only image files are supported');
+    console.log(
+      "📁 Files selected:",
+      files.map((f) => ({ name: f.name, size: f.size, type: f.type }))
+    );
+
+    // Separate images vs other files
+    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+    const otherFiles = files.filter((file) => !file.type.startsWith("image/"));
+
+    // Limit file size for images (5MB per file)
+    const validImageFiles = imageFiles.filter(
+      (file) => file.size <= 5 * 1024 * 1024
+    );
+    const oversizedImages = imageFiles.filter(
+      (file) => file.size > 5 * 1024 * 1024
+    );
+
+    if (oversizedImages.length > 0) {
+      setSnackbarMessage(
+        `Some images are too large (max 5MB). ${validImageFiles.length} images added.`
+      );
       setSnackbarOpen(true);
     }
-    
-    // Limit file size for web (5MB per file)
-    const validFiles = imageFiles.filter(file => file.size <= 5 * 1024 * 1024);
-    const oversizedFiles = imageFiles.filter(file => file.size > 5 * 1024 * 1024);
-    
-    console.log('📁 Valid files:', validFiles.map(f => ({ name: f.name, size: f.size, type: f.type })));
-    console.log('📁 Oversized files:', oversizedFiles.map(f => ({ name: f.name, size: f.size, type: f.type })));
-    
-    if (oversizedFiles.length > 0) {
-      setSnackbarMessage(`Some files are too large (max 5MB). ${validFiles.length} files added.`);
-      setSnackbarOpen(true);
-    }
-    
-    setSelectedFiles(prev => {
+
+    // Merge both images and other files
+    const validFiles = [...validImageFiles, ...otherFiles];
+
+    console.log(
+      "📁 Valid files:",
+      validFiles.map((f) => ({ name: f.name, size: f.size, type: f.type }))
+    );
+    console.log(
+      "📁 Oversized images:",
+      oversizedImages.map((f) => ({ name: f.name, size: f.size, type: f.type }))
+    );
+
+    setSelectedFiles((prev) => {
       const newFiles = [...prev, ...validFiles];
-      console.log('📁 Updated selectedFiles:', newFiles.map(f => ({ name: f.name, size: f.size, type: f.type })));
+      console.log(
+        "📁 Updated selectedFiles:",
+        newFiles.map((f) => ({ name: f.name, size: f.size, type: f.type }))
+      );
       return newFiles;
     });
-    
+
     // Clear the input so the same file can be selected again
     if (event.target) {
-      event.target.value = '';
+      event.target.value = "";
     }
+  };
+
+  const handleShareLocation = () => {
+    if (!navigator.geolocation) {
+      setSnackbarMessage("Geolocation is not supported by your browser.");
+      setSnackbarOpen(true);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+
+        const locationMessage: ChatMessageCreate = {
+          message: "📍 Shared location",
+          message_type: "location",
+          metadata: {
+            location: { latitude, longitude },
+          },
+        };
+
+        try {
+          await onSendMessage(locationMessage);
+        } catch (error) {
+          console.error("Failed to send location:", error);
+          setSnackbarMessage("Failed to send location");
+          setSnackbarOpen(true);
+        }
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        setSnackbarMessage("Unable to retrieve location.");
+        setSnackbarOpen(true);
+      }
+    );
   };
 
   const removeFile = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const openMediaDialog = (media: MediaAttachment) => {
-    console.log('Opening media dialog with:', media);
+    console.log("Opening media dialog with:", media);
     setSelectedMedia(media);
     setMediaDialogOpen(true);
   };
@@ -195,14 +289,17 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
   // Debug media dialog state
   useEffect(() => {
-    console.log('Media dialog state changed:', { mediaDialogOpen, selectedMedia });
+    console.log("Media dialog state changed:", {
+      mediaDialogOpen,
+      selectedMedia,
+    });
   }, [mediaDialogOpen, selectedMedia]);
 
   const handleQuickReply = async (reply: QuickReply) => {
     const newMessage: ChatMessageCreate = {
       service_request_id: 0, // Will be set by parent component
       message: reply.text,
-      message_type: 'text',
+      message_type: "text",
     };
 
     try {
@@ -211,12 +308,12 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       // setShowQuickReplies(false);
       scrollToBottom();
     } catch (error) {
-      console.error('Failed to send quick reply:', error);
+      console.error("Failed to send quick reply:", error);
     }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
@@ -228,35 +325,49 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
 
     if (diffInHours < 1) {
-      return 'Just now';
+      return "Just now";
     } else if (diffInHours < 24) {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
     } else {
-      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return (
+        date.toLocaleDateString() +
+        " " +
+        date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      );
     }
   };
 
   const getMessageTypeIcon = (messageType: string) => {
     switch (messageType) {
-      case 'system': return <CheckCircle />;
-      case 'location': return <LocationOn />;
-      case 'image': return <Image />;
-      case 'service_update': return <Schedule />;
-      default: return null;
+      case "system":
+        return <CheckCircle />;
+      case "location":
+        return <LocationOn />;
+      case "image":
+        return <Image />;
+      case "service_update":
+        return <Schedule />;
+      default:
+        return null;
     }
   };
 
   const formatTimestamp = (timestamp: string) => {
-    console.log('🕐 Formatting timestamp:', timestamp);
-    
+    console.log("🕐 Formatting timestamp:", timestamp);
+
     // Parse the timestamp as UTC to avoid timezone issues
     const date = new Date(timestamp);
     const now = new Date();
-    
+
     // Calculate difference in minutes
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
-    console.log('🕐 Timestamp debug:', {
+    const diffInMinutes = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60)
+    );
+
+    console.log("🕐 Timestamp debug:", {
       timestamp,
       date: date.toISOString(),
       now: now.toISOString(),
@@ -268,12 +379,12 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       dateTime: date.getTime(),
       nowTime: now.getTime(),
-      timeDiff: now.getTime() - date.getTime()
+      timeDiff: now.getTime() - date.getTime(),
     });
-    
+
     // Handle negative differences (future timestamps)
-    if (diffInMinutes < 0) return t('services.justNow');
-    if (diffInMinutes < 1) return t('services.justNow');
+    if (diffInMinutes < 0) return t("services.justNow");
+    if (diffInMinutes < 1) return t("services.justNow");
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
     return date.toLocaleDateString();
@@ -281,39 +392,42 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
   const testImageUrl = async (url: string) => {
     try {
-      console.log('🖼️ Testing image URL:', url);
-      const response = await fetch(url, { method: 'HEAD' });
-      console.log('🖼️ Image URL test result:', {
+      console.log("🖼️ Testing image URL:", url);
+      const response = await fetch(url, { method: "HEAD" });
+      console.log("🖼️ Image URL test result:", {
         url,
         status: response.status,
         ok: response.ok,
-        contentType: response.headers.get('content-type'),
-        contentLength: response.headers.get('content-length'),
-        lastModified: response.headers.get('last-modified')
+        contentType: response.headers.get("content-type"),
+        contentLength: response.headers.get("content-length"),
+        lastModified: response.headers.get("last-modified"),
       });
       return response.ok;
     } catch (error) {
-      console.error('🖼️ Image URL test failed:', url, error);
+      console.error("🖼️ Image URL test failed:", url, error);
       return false;
     }
   };
 
   const renderMessageAttachments = (attachments: MediaAttachment[]) => {
-    console.log('🖼️ Rendering attachments:', attachments);
-    console.log('🖼️ Attachment details:', attachments.map(att => ({
-      id: att.id,
-      file_name: att.file_name,
-      file_url: att.file_url,
-      file_type: att.file_type
-    })));
-    
+    console.log("🖼️ Rendering attachments:", attachments);
+    console.log(
+      "🖼️ Attachment details:",
+      attachments.map((att) => ({
+        id: att.id,
+        file_name: att.file_name,
+        file_url: att.file_url,
+        file_type: att.file_type,
+      }))
+    );
+
     // Test each image URL
-    attachments.forEach(att => {
+    attachments.forEach((att) => {
       if (att.file_url) {
         testImageUrl(att.file_url);
       }
     });
-    
+
     return (
       <Box sx={{ mt: 1 }}>
         {attachments.map((attachment, index) => (
@@ -322,7 +436,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             sx={{
               maxWidth: 200,
               mb: 1,
-              cursor: 'pointer',
+              cursor: "pointer",
             }}
             onClick={() => openMediaDialog(attachment)}
           >
@@ -332,19 +446,19 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
               image={attachment.thumbnail_url || attachment.file_url}
               alt={attachment.file_name}
               onError={(e) => {
-                console.error('🖼️ Image load error:', {
+                console.error("🖼️ Image load error:", {
                   url: attachment.file_url,
                   thumbnailUrl: attachment.thumbnail_url,
                   fileName: attachment.file_name,
                   error: e,
-                  target: e.target
+                  target: e.target,
                 });
               }}
               onLoad={() => {
-                console.log('🖼️ Image loaded successfully:', {
+                console.log("🖼️ Image loaded successfully:", {
                   url: attachment.file_url,
                   thumbnailUrl: attachment.thumbnail_url,
-                  fileName: attachment.file_name
+                  fileName: attachment.file_name,
                 });
               }}
             />
@@ -361,34 +475,44 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
   const renderLocationMessage = (metadata: any) => {
     if (!metadata?.location) return null;
-    
+
     const { latitude, longitude, address, fallback } = metadata.location;
-    
+
     return (
       <Box sx={{ mt: 1 }}>
         <Card sx={{ maxWidth: 250 }}>
           <CardContent sx={{ p: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
               <LocationOn color="primary" sx={{ mr: 1 }} />
-              <Typography variant="subtitle2">{t('services.locationShared')}</Typography>
+              <Typography variant="subtitle2">
+                {t("services.locationShared")}
+              </Typography>
             </Box>
             <Typography variant="body2" color="text.secondary">
-              {address || t('services.currentLocation')}
+              {address || t("services.currentLocation")}
             </Typography>
             {!fallback && latitude && longitude ? (
               <Button
                 size="small"
                 startIcon={<Visibility />}
                 onClick={() => {
-                  window.open(`https://maps.google.com/?q=${latitude},${longitude}`, '_blank');
+                  window.open(
+                    `https://maps.google.com/?q=${latitude},${longitude}`,
+                    "_blank"
+                  );
                 }}
                 sx={{ mt: 1 }}
               >
-                {t('services.viewOnMaps')}
+                {t("services.viewOnMaps")}
               </Button>
             ) : (
-              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                {t('services.locationShared')} - {address || t('services.currentLocation')}
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ mt: 1, display: "block" }}
+              >
+                {t("services.locationShared")} -{" "}
+                {address || t("services.currentLocation")}
               </Typography>
             )}
           </CardContent>
@@ -411,30 +535,30 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   };
 
   return (
-    <Paper sx={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      height: '100%',
-      minHeight: { xs: '300px', md: '500px' },
-      borderRadius: { xs: 0, md: 2 },
-      overflow: 'hidden',
-      boxShadow: { xs: 0, md: 3 },
-    }}>
+    <Paper
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        minHeight: { xs: "300px", md: "500px" },
+        borderRadius: { xs: 0, md: 2 },
+        overflow: "hidden",
+        boxShadow: { xs: 0, md: 3 },
+      }}
+    >
       {/* Header */}
       <Box
         sx={{
           p: 2,
           borderBottom: 1,
-          borderColor: 'divider',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          borderColor: "divider",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
         }}
       >
-        <Typography variant="h6">
-          {t('services.conversation')}
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Typography variant="h6">{t("services.conversation")}</Typography>{" "}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Tooltip title="Quick Actions">
             <IconButton onClick={handleMenuOpen}>
               <MoreVert />
@@ -443,28 +567,30 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         </Box>
       </Box>
 
-      {/* Messages */}
+      {/* Messages container */}
       <Box
         ref={messagesContainerRef}
         sx={{
           flex: 1,
-          overflowY: 'auto',
+          overflowY: "auto",
           p: { xs: 1, md: 3 },
-          backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'grey.900' : 'grey.50',
+          backgroundColor: (theme) =>
+            theme.palette.mode === "dark" ? "grey.900" : "grey.50",
           fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-          minHeight: { xs: '200px', md: '300px' },
-          maxHeight: { xs: 'calc(100vh - 200px)', md: 'calc(100vh - 300px)' },
-          display: 'flex',
-          flexDirection: 'column',
+          minHeight: { xs: "200px", md: "300px" },
+          maxHeight: { xs: "calc(100vh - 200px)", md: "calc(100vh - 300px)" },
+          display: "flex",
+          flexDirection: "column",
         }}
       >
+        {" "}
         {messages.length === 0 ? (
-          <Box sx={{ textAlign: 'center', mt: 4 }}>
+          <Box sx={{ textAlign: "center", mt: 4 }}>
             <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
-              {t('services.noMessagesYet')}
+              {t("services.noMessagesYet")}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              {t('services.startConversation')}
+              {t("services.startConversation")}
             </Typography>
             <Button
               variant="outlined"
@@ -476,154 +602,214 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           </Box>
         ) : (
           <List>
-            {messages.filter(msg => msg).map((msg, index) => {
-              console.log('💬 Rendering message:', {
-                id: msg.id,
-                message: msg.message,
-                message_type: msg.message_type,
-                created_at: msg.created_at,
-                attachments: msg.attachments,
-                sender_id: msg.sender_id
-              });
-              
-              const isOwn = msg.sender_id === user?.id;
-              const isSystem = msg.message_type === 'system';
+            {messages
+              .filter((msg) => msg)
+              .map((msg, index) => {
+                console.log("💬 Rendering message:", {
+                  id: msg.id,
+                  message: msg.message,
+                  message_type: msg.message_type,
+                  created_at: msg.created_at,
+                  attachments: msg.attachments,
+                  sender_id: msg.sender_id,
+                });
 
-              return (
-                <ListItem
-                  key={msg.id || index}
-                  sx={{
-                    flexDirection: isOwn ? 'row-reverse' : 'row',
-                    alignItems: 'flex-start',
-                    py: 1.5,
-                    px: 0,
-                    width: '100%',
-                  }}
-                >
-                  {!isOwn && !isSystem && (
-                    <ListItemAvatar sx={{ minWidth: 40 }}>
-                      <Avatar sx={{ width: 32, height: 32 }}>
-                        {msg.sender?.username?.[0] || 'U'}
-                      </Avatar>
-                    </ListItemAvatar>
-                  )}
-                  <ListItemText
+                const isOwn = msg.sender_id === user?.id;
+                const isSystem = msg.message_type === "system";
+
+                return (
+                  <ListItem
+                    key={msg.id || index}
                     sx={{
-                      maxWidth: '75%',
-                      ml: isOwn ? 0 : 2,
-                      mr: isOwn ? 2 : 0,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: isOwn ? 'flex-end' : 'flex-start',
+                      flexDirection: isOwn ? "row-reverse" : "row",
+                      alignItems: "flex-start",
+                      py: 1.5,
+                      px: 0,
+                      width: "100%",
                     }}
-                    primary={
-                      <Paper
-                        sx={{
-                          p: 2,
-                          backgroundColor: isOwn
-                            ? 'primary.main'
-                            : isSystem
-                              ? (theme) => theme.palette.mode === 'dark' ? 'grey.800' : 'grey.100'
-                              : (theme) => theme.palette.mode === 'dark' ? 'grey.800' : 'white',
-                          color: isOwn
-                            ? 'primary.contrastText'
-                            : 'text.primary',
-                          borderRadius: isOwn ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                          boxShadow: 2,
-                          maxWidth: '100%',
-                          wordWrap: 'break-word',
-                        }}
-                      >
-                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                          {/* Only show message type icon if there are no attachments */}
-                          {getMessageTypeIcon(msg.message_type) && (!msg.attachments || msg.attachments.length === 0) && (
-                            <Box sx={{ mt: 0.5 }}>
-                              {getMessageTypeIcon(msg.message_type)}
-                            </Box>
-                          )}
-                          <Box sx={{ flex: 1 }}>
-                            <Typography 
-                              variant="body2" 
-                              sx={{ 
-                                color: isOwn ? 'primary.contrastText' : 'text.primary',
-                                fontWeight: 400
-                              }}
-                            >
-                              {msg.message}
-                            </Typography>
-                            
-                            {/* Render attachments */}
-                            {msg.attachments && msg.attachments.length > 0 && 
-                              renderMessageAttachments(msg.attachments)
-                            }
-                            
-                            {/* Show image message indicator only if no attachments */}
-                            {msg.message_type === 'image' && (!msg.attachments || msg.attachments.length === 0) && (
-                              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Image color="primary" sx={{ fontSize: 16 }} />
-                                <Typography variant="caption" color="primary">
-                                  📎 Shared files
-                                </Typography>
-                              </Box>
-                            )}
-                            
-                            {/* Render location */}
-                            {msg.message_type === 'location' && msg.metadata && 
-                              renderLocationMessage(msg.metadata)
-                            }
-                            
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                  >
+                    {!isOwn && !isSystem && (
+                      <ListItemAvatar sx={{ minWidth: 40 }}>
+                        <Avatar sx={{ width: 32, height: 32 }}>
+                          {msg.sender?.username?.[0] || "U"}
+                        </Avatar>
+                      </ListItemAvatar>
+                    )}
+                    <ListItemText
+                      sx={{
+                        maxWidth: "75%",
+                        ml: isOwn ? 0 : 2,
+                        mr: isOwn ? 2 : 0,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: isOwn ? "flex-end" : "flex-start",
+                      }}
+                      primary={
+                        <Paper
+                          sx={{
+                            p: 2,
+                            backgroundColor: isOwn
+                              ? "primary.main"
+                              : isSystem
+                                ? (theme) =>
+                                    theme.palette.mode === "dark"
+                                      ? "grey.800"
+                                      : "grey.100"
+                                : (theme) =>
+                                    theme.palette.mode === "dark"
+                                      ? "grey.800"
+                                      : "white",
+                            color: isOwn
+                              ? "primary.contrastText"
+                              : "text.primary",
+                            borderRadius: isOwn
+                              ? "18px 18px 4px 18px"
+                              : "18px 18px 18px 4px",
+                            boxShadow: 2,
+                            maxWidth: "100%",
+                            wordWrap: "break-word",
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "flex-start",
+                              gap: 1,
+                            }}
+                          >
+                            {/* Only show message type icon if there are no attachments */}
+                            {getMessageTypeIcon(msg.message_type) &&
+                              (!msg.attachments ||
+                                msg.attachments.length === 0) && (
+                                <Box sx={{ mt: 0.5 }}>
+                                  {getMessageTypeIcon(msg.message_type)}
+                                </Box>
+                              )}
+                            <Box sx={{ flex: 1 }}>
                               <Typography
-                                variant="caption"
+                                variant="body2"
                                 sx={{
-                                  opacity: 0.7,
+                                  color: isOwn
+                                    ? "primary.contrastText"
+                                    : "text.primary",
+                                  fontWeight: 400,
                                 }}
                               >
-                                {formatTimestamp(msg.created_at)}
+                                {msg.message}
                               </Typography>
-                              {msg.is_read && isOwn && (
-                                <CheckCircle fontSize="small" sx={{ opacity: 0.7 }} />
-                              )}
-                              {msg.is_edited && (
-                                <Typography variant="caption" sx={{ opacity: 0.7 }}>
-                                  (edited)
+
+                              {/* Render attachments */}
+                              {msg.attachments &&
+                                msg.attachments.length > 0 &&
+                                renderMessageAttachments(msg.attachments)}
+
+                              {/* Show image message indicator only if no attachments */}
+                              {msg.message_type === "image" &&
+                                (!msg.attachments ||
+                                  msg.attachments.length === 0) && (
+                                  <Box
+                                    sx={{
+                                      mt: 1,
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 1,
+                                    }}
+                                  >
+                                    <Image
+                                      color="primary"
+                                      sx={{ fontSize: 16 }}
+                                    />
+                                    <Typography
+                                      variant="caption"
+                                      color="primary"
+                                    >
+                                      📎 Shared files
+                                    </Typography>
+                                  </Box>
+                                )}
+
+                              {/* Render location */}
+                              {msg.message_type === "location" &&
+                                msg.metadata &&
+                                renderLocationMessage(msg.metadata)}
+
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 1,
+                                  mt: 0.5,
+                                }}
+                              >
+                                <Typography
+                                  variant="caption"
+                                  sx={{
+                                    opacity: 0.7,
+                                  }}
+                                >
+                                  {formatTimestamp(msg.created_at)}
                                 </Typography>
-                              )}
+                                {msg.is_read && isOwn && (
+                                  <CheckCircle
+                                    fontSize="small"
+                                    sx={{ opacity: 0.7 }}
+                                  />
+                                )}
+                                {msg.is_edited && (
+                                  <Typography
+                                    variant="caption"
+                                    sx={{ opacity: 0.7 }}
+                                  >
+                                    (edited)
+                                  </Typography>
+                                )}
+                              </Box>
                             </Box>
                           </Box>
-                        </Box>
-                      </Paper>
-                    }
-                  />
-                </ListItem>
-              );
-            })}
+                        </Paper>
+                      }
+                    />
+                  </ListItem>
+                );
+              })}
             <div ref={messagesEndRef} />
           </List>
         )}
-
         {/* Typing Indicator */}
         {isTyping && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, p: 1 }}>
             <Avatar sx={{ width: 24, height: 24 }}>
               <Pets fontSize="small" />
             </Avatar>
-            <Paper sx={{ p: 1, backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'grey.800' : 'grey.100' }}>
+            <Paper
+              sx={{
+                p: 1,
+                backgroundColor: (theme) =>
+                  theme.palette.mode === "dark" ? "grey.800" : "grey.100",
+              }}
+            >
               <Typography variant="body2" color="text.secondary">
-                {t('chat.typing')}...
+                {t("chat.typing")}...
               </Typography>
             </Paper>
           </Box>
         )}
-
         {/* Quick Replies */}
         {showQuickReplies && (
           <Paper sx={{ mt: 2, p: 2 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="subtitle2">
-                Quick Replies
-              </Typography>
-              <IconButton size="small" onClick={() => setShowQuickReplies(false)}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+              }}
+            >
+              <Typography variant="subtitle2">Quick Replies</Typography>
+              <IconButton
+                size="small"
+                onClick={() => setShowQuickReplies(false)}
+              >
                 <Close />
               </IconButton>
             </Box>
@@ -635,7 +821,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                   size="small"
                   startIcon={reply.icon}
                   onClick={() => handleQuickReply(reply)}
-                  sx={{ justifyContent: 'flex-start' }}
+                  sx={{ justifyContent: "flex-start" }}
                 >
                   {reply.text}
                 </Button>
@@ -647,19 +833,32 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
       {/* File Preview */}
       {selectedFiles.length > 0 && (
-        <Paper sx={{ p: 1, borderTop: 1, borderColor: 'divider' }}>
-          <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
+        <Paper sx={{ p: 1, borderTop: 1, borderColor: "divider" }}>
+          <Typography variant="caption" sx={{ mb: 1, display: "block" }}>
             Selected files ({selectedFiles.length}):
           </Typography>
-          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
             {selectedFiles.map((file, index) => (
-              <Card key={index} sx={{ maxWidth: 100, position: 'relative' }}>
-                <CardMedia
-                  component="img"
-                  height="60"
-                  image={URL.createObjectURL(file)}
-                  alt={file.name}
-                />
+              <Card key={index} sx={{ maxWidth: 120, position: "relative" }}>
+                {file.type.startsWith("image/") ? (
+                  <CardMedia
+                    component="img"
+                    height="60"
+                    image={URL.createObjectURL(file)}
+                    alt={file.name}
+                  />
+                ) : (
+                  <Box
+                    sx={{
+                      height: 60,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <InsertDriveFile fontSize="large" color="action" />
+                  </Box>
+                )}
                 <CardContent sx={{ p: 0.5 }}>
                   <Typography variant="caption" noWrap>
                     {file.name}
@@ -668,15 +867,13 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                 <IconButton
                   size="small"
                   onClick={() => removeFile(index)}
-                  sx={{ 
-                    position: 'absolute', 
-                    top: 4, 
+                  sx={{
+                    position: "absolute",
+                    top: 4,
                     right: 4,
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    color: 'white',
-                    '&:hover': {
-                      backgroundColor: 'rgba(0,0,0,0.7)',
-                    }
+                    backgroundColor: "rgba(0,0,0,0.5)",
+                    color: "white",
+                    "&:hover": { backgroundColor: "rgba(0,0,0,0.7)" },
                   }}
                 >
                   <Close fontSize="small" />
@@ -688,69 +885,92 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       )}
 
       {/* Input */}
-      <Paper sx={{ 
-        p: { xs: 1, md: 2 }, 
-        borderTop: 1, 
-        borderColor: 'divider',
-        backgroundColor: 'white',
-        borderRadius: 0,
-        minHeight: { xs: '60px', md: 'auto' }
-      }}>
-        <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1 }}>
+      <Paper
+        sx={{
+          p: { xs: 1, md: 2 },
+          borderTop: 1,
+          borderColor: "divider",
+          backgroundColor: "white",
+          borderRadius: 0,
+          minHeight: { xs: "60px", md: "auto" }
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <input
             ref={fileInputRef}
+            type="file"
+            multiple
+            onChange={handleFileSelect}
+            style={{ display: "none" }}
+          />
+          <input
+            ref={imageInputRef}
             type="file"
             accept="image/*"
             multiple
             onChange={handleFileSelect}
-            style={{ display: 'none' }}
+            style={{ display: "none" }}
           />
+
+          {/* Attach File */}
           <Tooltip title="Attach File">
-            <IconButton size="small" onClick={() => fileInputRef.current?.click()}>
+            <IconButton
+              size="small"
+              onClick={() => fileInputRef.current?.click()}
+            >
               <AttachFile />
             </IconButton>
           </Tooltip>
+
+          {/* Share Photo */}
           <Tooltip title="Share Photo">
-            <IconButton size="small" onClick={() => fileInputRef.current?.click()}>
+            <IconButton
+              size="small"
+              onClick={() => imageInputRef.current?.click()}
+            >
               <Image />
             </IconButton>
           </Tooltip>
+
+          {/* Share Location */}
           <Tooltip title="Share Location">
-            <IconButton size="small" onClick={() => handleAction('share_location')}>
+            <IconButton size="small" onClick={handleShareLocation}>
               <LocationOn />
             </IconButton>
           </Tooltip>
+
           <TextField
             fullWidth
             multiline
             maxRows={4}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder={t('services.messagePlaceholder')}
+            onKeyDown={handleKeyPress}
+            placeholder={t("services.messagePlaceholder")}
             disabled={isSending}
             variant="outlined"
             size="small"
             sx={{
-              '& .MuiOutlinedInput-root': {
-                backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'grey.800' : 'white',
+              "& .MuiOutlinedInput-root": {
+                backgroundColor: (theme) =>
+                  theme.palette.mode === "dark" ? "grey.800" : "white",
                 borderRadius: 3,
                 boxShadow: 1,
+                paddingY: 0, // reduce vertical padding
               },
-              '& .MuiInputBase-input': {
-                fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-                fontSize: '0.875rem',
-                padding: '12px 16px',
-              },
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: (theme) => theme.palette.mode === 'dark' ? 'grey.600' : 'grey.300',
+              "& .MuiInputBase-input": {
+                fontSize: "0.875rem",
+                padding: "8px 12px", // shrink input padding
               },
             }}
           />
+
           <IconButton
             color="primary"
             onClick={handleSend}
-            disabled={(!input.trim() && selectedFiles.length === 0) || isSending}
+            disabled={
+              (!input.trim() && selectedFiles.length === 0) || isSending
+            }
           >
             {isSending ? <CircularProgress size={20} /> : <Send />}
           </IconButton>
@@ -763,19 +983,19 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
       >
-        <MenuItem onClick={() => handleAction('share_location')}>
+        <MenuItem onClick={handleShareLocation}>
           <LocationOn sx={{ mr: 1 }} />
           Share Location
         </MenuItem>
-        <MenuItem onClick={() => handleAction('request_photos')}>
+        <MenuItem onClick={() => handleAction("request_photos")}>
           <Image sx={{ mr: 1 }} />
           Request Pet Photos
         </MenuItem>
-        <MenuItem onClick={() => handleAction('schedule_meeting')}>
+        <MenuItem onClick={() => handleAction("schedule_meeting")}>
           <Schedule sx={{ mr: 1 }} />
           Schedule Meeting
         </MenuItem>
-        <MenuItem onClick={() => handleAction('share_instructions')}>
+        <MenuItem onClick={() => handleAction("share_instructions")}>
           <Pets sx={{ mr: 1 }} />
           Share Instructions
         </MenuItem>
@@ -789,7 +1009,13 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         fullWidth
       >
         <DialogTitle>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             {selectedMedia?.file_name}
             <IconButton onClick={closeMediaDialog}>
               <Close />
@@ -798,14 +1024,14 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         </DialogTitle>
         <DialogContent>
           {selectedMedia && (
-            <Box sx={{ textAlign: 'center' }}>
+            <Box sx={{ textAlign: "center" }}>
               <img
                 src={selectedMedia.file_url}
                 alt={selectedMedia.file_name}
                 style={{
-                  maxWidth: '100%',
-                  maxHeight: '70vh',
-                  objectFit: 'contain',
+                  maxWidth: "100%",
+                  maxHeight: "70vh",
+                  objectFit: "contain",
                 }}
               />
             </Box>
@@ -816,7 +1042,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             startIcon={<Download />}
             onClick={() => {
               if (selectedMedia) {
-                const link = document.createElement('a');
+                const link = document.createElement("a");
                 link.href = selectedMedia.file_url;
                 link.download = selectedMedia.file_name;
                 link.click();
@@ -838,7 +1064,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         <Alert
           onClose={() => setSnackbarOpen(false)}
           severity="error"
-          sx={{ width: '100%' }}
+          sx={{ width: "100%" }}
         >
           {snackbarMessage}
         </Alert>
