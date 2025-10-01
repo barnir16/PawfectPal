@@ -329,6 +329,7 @@ export const ServiceRequestChat: React.FC = () => {
             onSendMessage={handleSendMessage}
             onQuickAction={handleQuickAction}
             isSending={sending}
+            serviceRequestId={parseInt(id!)}
           />
         </Box>
       </Box>

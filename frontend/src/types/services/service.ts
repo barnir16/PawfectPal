@@ -30,6 +30,7 @@ export interface Service {
   id: number; // Required - always present from backend
   user_id: number;
   pet_id: number;
+  pet_name: string;
   service_type: ServiceType;
   status: ServiceStatus;
   start_datetime: string; // ISO date string

@@ -58,6 +58,7 @@ interface EnhancedChatWindowProps {
   onSendMessage: (message: ChatMessageCreate) => Promise<void>;
   onQuickAction?: (action: string, data?: any) => void;
   isSending?: boolean;
+  serviceRequestId: number;
 }
 
 interface QuickReply {
@@ -71,6 +72,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   onSendMessage,
   onQuickAction,
   isSending = false,
+  serviceRequestId,
 }) => {
   const { t } = useLocalization();
   const { user } = useAuth();
@@ -155,6 +157,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     }
 
     const newMessage: ChatMessageCreate = {
+      service_request_id: serviceRequestId,
       message: messageText,
       message_type: selectedFiles.length > 0 ? "image" : "text",
       attachments:
@@ -249,8 +252,9 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         const { latitude, longitude } = position.coords;
 
         const locationMessage: ChatMessageCreate = {
+          service_request_id: serviceRequestId,
           message: "📍 Shared location",
-          message_type: "location",
+          message_type: "text",
           metadata: {
             location: { latitude, longitude },
           },
@@ -297,7 +301,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
   const handleQuickReply = async (reply: QuickReply) => {
     const newMessage: ChatMessageCreate = {
-      service_request_id: 0, // Will be set by parent component
+      service_request_id: serviceRequestId,
       message: reply.text,
       message_type: "text",
     };
@@ -729,8 +733,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                 )}
 
                               {/* Render location */}
-                              {msg.message_type === "location" &&
-                                msg.metadata &&
+                              {msg.metadata?.location &&
                                 renderLocationMessage(msg.metadata)}
 
                               <Box
