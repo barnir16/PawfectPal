@@ -66,6 +66,7 @@ export const he = {
     settings: 'הגדרות',
     profile: 'פרופיל',
     logout: 'התנתקות',
+    chat: 'הודעות'
   },
 
   // Auth
