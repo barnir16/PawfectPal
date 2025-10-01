@@ -46,6 +46,7 @@ export const en = {
     settings: 'Settings',
     profile: 'Profile',
     logout: 'Logout',
+    chat: 'Chat'
   },
 
   // Auth
@@ -1162,5 +1163,4 @@ export const en = {
       closed: 'Closed',
     },
   },
-
 };

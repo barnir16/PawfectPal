@@ -79,11 +79,10 @@ export const Sidebar = ({
       icon: <PersonIcon />,
       path: "/weight-tracking",
     },
-    { text: t("navigation.profile"), icon: <PersonIcon />, path: "/profile" },
     {
-      text: t("navigation.settings"),
-      icon: <SettingsIcon />,
-      path: "/settings",
+      text: t("navigation.chat"),
+      icon: <ChatIcon />,
+      path: "/chat-list",
     },
   ];
 

@@ -9,7 +9,7 @@ import {
   Avatar,
   Button,
 } from "@mui/material";
-import MenuIcon from "@mui/icons-material/Menu";
+import { Person as PersonIcon, Menu as MenuIcon } from "@mui/icons-material";
 
 import LogoutIcon from "@mui/icons-material/Logout";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -193,6 +193,15 @@ export const Header = ({ onMenuClick, desktopOpen = true }: HeaderProps) => {
             transformOrigin={{ horizontal: "right", vertical: "top" }}
             anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
           >
+            <MenuItem
+              onClick={() => {
+                navigate("/profile");
+                handleClose();
+              }}
+            >
+              <PersonIcon sx={{ mr: 1 }} />
+              {t("navigation.profile")}
+            </MenuItem>
             <MenuItem onClick={handleAccountSettings}>
               <SettingsIcon sx={{ mr: 1 }} />
               {t("navigation.settings")}
