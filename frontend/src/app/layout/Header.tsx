@@ -9,7 +9,7 @@ import {
   Avatar,
   Button,
 } from "@mui/material";
-import MenuIcon from "@mui/icons-material/Menu";
+import { Person as PersonIcon, Menu as MenuIcon } from "@mui/icons-material";
 
 import LogoutIcon from "@mui/icons-material/Logout";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -57,11 +57,11 @@ export const Header = ({ onMenuClick, desktopOpen = true }: HeaderProps) => {
     handleClose();
   };
 
-  const handleBecomeProvider = async () => {
+  const handleToggleProvider = async () => {
     try {
       console.log("🔄 Attempting to become a provider...");
       console.log("Current user:", user);
-      
+
       const token = await getToken();
       if (!token) throw new Error("No auth token found");
 
@@ -72,23 +72,30 @@ export const Header = ({ onMenuClick, desktopOpen = true }: HeaderProps) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ is_provider: true }),
       });
 
       console.log("📡 API response status:", res.status);
       if (!res.ok) {
         const errorText = await res.text();
         console.error("❌ API error:", errorText);
-        throw new Error(`Failed to become provider: ${res.status} ${errorText}`);
+        throw new Error(
+          `Failed to become provider: ${res.status} ${errorText}`
+        );
       }
 
       const updatedUser = await res.json();
       console.log("✅ Updated user:", updatedUser);
       setUser(updatedUser);
       console.log("🎉 Successfully became a provider!");
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("❌ Error becoming provider:", err);
-      alert(`Error becoming provider: ${err.message}`);
+
+      let message = "Unknown error";
+      if (err instanceof Error) {
+        message = err.message;
+      }
+
+      alert(`Error becoming provider: ${message}`);
     }
   };
 
@@ -99,11 +106,11 @@ export const Header = ({ onMenuClick, desktopOpen = true }: HeaderProps) => {
       position="fixed"
       sx={{
         width: { sm: desktopOpen ? `calc(100% - 240px)` : `calc(100% - 64px)` },
-        ml: { sm: isRTL ? "0px" : (desktopOpen ? "240px" : "64px") },
+        ml: { sm: isRTL ? "0px" : desktopOpen ? "240px" : "64px" },
         mr: { sm: isRTL ? (desktopOpen ? "240px" : "64px") : "0px" },
         boxShadow: "none",
         borderBottom: "1px solid rgba(0, 0, 0, 0.12)",
-        transition: 'width 0.3s ease, margin 0.3s ease',
+        transition: "width 0.3s ease, margin 0.3s ease",
       }}
     >
       <Toolbar>
@@ -112,34 +119,42 @@ export const Header = ({ onMenuClick, desktopOpen = true }: HeaderProps) => {
           aria-label="open drawer"
           edge={isRTL ? "end" : "start"}
           onClick={onMenuClick}
-          sx={{ 
-            mr: isRTL ? 0 : 2, 
-            ml: isRTL ? 2 : 0, 
-            display: { sm: "none" } 
+          sx={{
+            mr: isRTL ? 0 : 2,
+            ml: isRTL ? 2 : 0,
+            display: { sm: "none" },
           }}
         >
           <MenuIcon />
         </IconButton>
         <Box sx={{ flexGrow: 1 }} />
-        <Box sx={{ 
-          display: "flex", 
-          alignItems: "center", 
-          gap: 1,
-          flexDirection: isRTL ? 'row-reverse' : 'row'
-        }}>
-          <Typography variant="body2" sx={{ 
-            color: "inherit",
-            textAlign: isRTL ? 'right' : 'left'
-          }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            flexDirection: isRTL ? "row-reverse" : "row",
+          }}
+        >
+          <Typography
+            variant="body2"
+            sx={{
+              color: "inherit",
+              textAlign: isRTL ? "right" : "left",
+            }}
+          >
             {user?.username || "User"}
           </Typography>
 
           {/* Debug info */}
-          <Typography variant="caption" sx={{ 
-            color: "inherit", 
-            fontSize: "10px",
-            textAlign: isRTL ? 'right' : 'left'
-          }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "inherit",
+              fontSize: "10px",
+              textAlign: isRTL ? "right" : "left",
+            }}
+          >
             Provider: {user?.is_provider ? "Yes" : "No"}
           </Typography>
 
@@ -148,10 +163,10 @@ export const Header = ({ onMenuClick, desktopOpen = true }: HeaderProps) => {
               color="inherit"
               variant="contained"
               size="small"
-              onClick={() => handleBecomeProvider()}
-              sx={{ 
+              onClick={() => handleToggleProvider()}
+              sx={{
                 bgcolor: "rgba(255,255,255,0.2)",
-                "&:hover": { bgcolor: "rgba(255,255,255,0.3)" }
+                "&:hover": { bgcolor: "rgba(255,255,255,0.3)" },
               }}
             >
               {t("services.becomeProvider")}
@@ -178,13 +193,22 @@ export const Header = ({ onMenuClick, desktopOpen = true }: HeaderProps) => {
             transformOrigin={{ horizontal: "right", vertical: "top" }}
             anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
           >
+            <MenuItem
+              onClick={() => {
+                navigate("/profile");
+                handleClose();
+              }}
+            >
+              <PersonIcon sx={{ mr: 1 }} />
+              {t("navigation.profile")}
+            </MenuItem>
             <MenuItem onClick={handleAccountSettings}>
               <SettingsIcon sx={{ mr: 1 }} />
               {t("navigation.settings")}
             </MenuItem>
             <MenuItem onClick={handleLogout}>
               <LogoutIcon sx={{ mr: 1 }} />
-              {t("navigation.logout")}
+              {t("auth.logout")}
             </MenuItem>
           </Menu>
         </Box>

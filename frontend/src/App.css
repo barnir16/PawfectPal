@@ -4,20 +4,6 @@
   padding: 2rem;
 }
 
-/* Mobile Responsiveness */
-@media (max-width: 768px) {
-  #root {
-    padding: 1rem;
-    max-width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  #root {
-    padding: 0.5rem;
-  }
-}
-
 .logo {
   height: 6em;
   padding: 1.5em;
