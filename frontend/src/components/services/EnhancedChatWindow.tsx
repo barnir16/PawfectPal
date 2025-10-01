@@ -110,8 +110,15 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       selectedFiles: selectedFiles.map(f => ({ name: f.name, size: f.size, type: f.type }))
     });
 
+    // Ensure we have a valid message
+    const messageText = input.trim() || (selectedFiles.length > 0 ? '📎 Shared files' : '');
+    if (!messageText) {
+      console.warn('📤 Cannot send empty message');
+      return;
+    }
+
     const newMessage: ChatMessageCreate = {
-      message: input.trim() || (selectedFiles.length > 0 ? '📎 Shared files' : ''),
+      message: messageText,
       message_type: selectedFiles.length > 0 ? 'image' : 'text',
       attachments: selectedFiles.length > 0 ? selectedFiles.map(file => ({ file })) : undefined,
     };
@@ -408,10 +415,10 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       display: 'flex', 
       flexDirection: 'column', 
       height: '100%',
-      minHeight: '500px',
-      borderRadius: 2,
+      minHeight: { xs: '300px', md: '500px' },
+      borderRadius: { xs: 0, md: 2 },
       overflow: 'hidden',
-      boxShadow: 3,
+      boxShadow: { xs: 0, md: 3 },
     }}>
       {/* Header */}
       <Box
@@ -442,11 +449,11 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         sx={{
           flex: 1,
           overflowY: 'auto',
-          p: 3,
+          p: { xs: 1, md: 3 },
           backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'grey.900' : 'grey.50',
           fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-          minHeight: '300px',
-          maxHeight: 'calc(100vh - 300px)',
+          minHeight: { xs: '200px', md: '300px' },
+          maxHeight: { xs: 'calc(100vh - 200px)', md: 'calc(100vh - 300px)' },
           display: 'flex',
           flexDirection: 'column',
         }}
@@ -682,11 +689,12 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
       {/* Input */}
       <Paper sx={{ 
-        p: 2, 
+        p: { xs: 1, md: 2 }, 
         borderTop: 1, 
         borderColor: 'divider',
         backgroundColor: 'white',
         borderRadius: 0,
+        minHeight: { xs: '60px', md: 'auto' }
       }}>
         <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1 }}>
           <input

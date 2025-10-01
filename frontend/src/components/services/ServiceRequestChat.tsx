@@ -229,10 +229,23 @@ export const ServiceRequestChat: React.FC = () => {
   }
 
   return (
-    <Box height="100vh" display="flex" sx={{ backgroundColor: 'grey.50' }}>
-      {/* Service Context Panel */}
+    <Box 
+      height="100vh" 
+      display="flex" 
+      flexDirection={{ xs: 'column', md: 'row' }}
+      sx={{ 
+        backgroundColor: 'grey.50',
+        overflow: 'hidden'
+      }}
+    >
+      {/* Service Context Panel - Hidden on mobile */}
       {request && (
-        <Box sx={{ width: '350px', minWidth: '350px' }}>
+        <Box sx={{ 
+          width: { xs: 0, md: '350px' }, 
+          minWidth: { xs: 0, md: '350px' },
+          display: { xs: 'none', md: 'block' },
+          overflow: 'hidden'
+        }}>
           <ServiceContextPanel
             serviceRequest={request}
             onAction={handleQuickAction}
@@ -241,34 +254,76 @@ export const ServiceRequestChat: React.FC = () => {
       )}
 
       {/* Main Chat Area */}
-      <Box flex={1} display="flex" flexDirection="column" sx={{ 
-        backgroundColor: 'white',
-        borderRadius: 2,
-        m: 2,
-        overflow: 'hidden',
-        boxShadow: 3,
-      }}>
+      <Box 
+        flex={1} 
+        display="flex" 
+        flexDirection="column" 
+        sx={{ 
+          backgroundColor: 'white',
+          borderRadius: { xs: 0, md: 2 },
+          m: { xs: 0, md: 2 },
+          overflow: 'hidden',
+          boxShadow: { xs: 0, md: 3 },
+          height: { xs: '100vh', md: 'auto' },
+          minHeight: { xs: '100vh', md: 0 }
+        }}
+      >
         {/* Header */}
-        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-          <Box display="flex" alignItems="center" mb={1}>
+        <Box sx={{ 
+          p: { xs: 1, md: 2 }, 
+          borderBottom: 1, 
+          borderColor: 'divider',
+          minHeight: '64px',
+          display: 'flex',
+          alignItems: 'center'
+        }}>
+          <Box display="flex" alignItems="center" flex={1} sx={{ minWidth: 0 }}>
             <Button
               startIcon={<ArrowBack />}
               onClick={() => navigate(`/service-requests/${id}`)}
-              sx={{ mr: 2 }}
+              sx={{ 
+                mr: { xs: 1, md: 2 },
+                minWidth: 'auto',
+                px: { xs: 1, md: 2 }
+              }}
             >
               {t('common.back')}
             </Button>
-            <Typography variant="h6">
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontSize: { xs: '1rem', md: '1.25rem' },
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}
+            >
               {t('services.conversation')} - {request?.title}
             </Typography>
           </Box>
+        </Box>
+        
+        {/* Mobile-only user info */}
+        <Box sx={{ 
+          display: { xs: 'block', md: 'none' },
+          p: 1,
+          borderBottom: 1,
+          borderColor: 'divider',
+          backgroundColor: 'grey.50'
+        }}>
           <Typography variant="body2" color="text.secondary">
             {t('services.requestedBy')}: {request?.user?.username}
           </Typography>
         </Box>
 
         {/* Enhanced Chat Window */}
-        <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ 
+          flex: 1, 
+          minHeight: 0, 
+          display: 'flex', 
+          flexDirection: 'column',
+          height: { xs: 'calc(100vh - 120px)', md: 'auto' }
+        }}>
           <EnhancedChatWindow
             messages={messages}
             onSendMessage={handleSendMessage}
