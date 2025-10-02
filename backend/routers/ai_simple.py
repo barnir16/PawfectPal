@@ -66,6 +66,21 @@ class FirebaseConfigResponse(BaseModel):
     user: str
     firebase_available: bool
 
+@router.post("/test", response_model=AIChatResponse)
+async def test_ai_chat(request: AIChatRequest):
+    """
+    Test AI chat endpoint without authentication for development
+    """
+    try:
+        # Use fallback logic for testing
+        return handle_simple_fallback(request.message, request.pet_context, request.conversation_history or [])
+    except Exception as e:
+        print(f"AI Test Error: {str(e)}")
+        return AIChatResponse(
+            message="Test endpoint is working but AI service is not available.",
+            suggested_actions=[]
+        )
+
 @router.post("/chat", response_model=AIChatResponse)
 async def chat_with_ai(request: AIChatRequest, current_user: UserORM = Depends(get_current_user)):
     """
