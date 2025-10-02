@@ -36,6 +36,7 @@ import RealVaccineTracker from "./components/tasks/RealVaccineTracker";
 import { ChatListPage } from "./features/chat/pages/ChatListPage";
 import { ChatPage } from "./features/chat/pages/ChatPage";
 import "./utils/testVaccines"; // Import test utility
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const App = () => {
   return (
@@ -136,7 +137,14 @@ const AppContent = () => {
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/services/:id" element={<ServiceDetailsPage />} />
           <Route path="/bookservice" element={<BookService />} />
-          <Route path="/service-requests" element={<ServiceRequestBrowser />} />
+          <Route
+            path="/service-requests"
+            element={
+              <ProtectedRoute requireProvider>
+                <ServiceRequestBrowser />
+              </ProtectedRoute>
+            }
+          />{" "}
           <Route path="/my-service-requests" element={<MyServiceRequests />} />
           <Route
             path="/service-requests/:id"

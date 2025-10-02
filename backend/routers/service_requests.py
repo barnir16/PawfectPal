@@ -10,7 +10,7 @@ from schemas import (
     ServiceRequestSummary,
 )
 from dependencies.db import get_db
-from dependencies.auth import get_current_user
+from dependencies.auth import get_current_user, require_provider
 
 router = APIRouter(prefix="/service-requests", tags=["service-requests"])
 
@@ -52,6 +52,7 @@ def get_service_requests(
     limit: int = Query(20, le=100, description="Number of requests to return"),
     offset: int = Query(0, ge=0, description="Number of requests to skip"),
     db: Session = Depends(get_db),
+    current_user: UserORM = Depends(require_provider),
 ):
     """Get service requests with optional filtering"""
     query = db.query(ServiceRequestORM).filter(ServiceRequestORM.status == "open")
