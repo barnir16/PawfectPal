@@ -5,6 +5,7 @@ from auth.utils import oauth2_scheme, get_user_by_username
 from config import ALGORITHM, SECRET_KEY
 from .db import get_db
 from typing import Optional
+from models import UserORM
 
 
 def get_current_user(
@@ -27,4 +28,10 @@ def get_current_user(
     user = get_user_by_username(db, username=username)
     if user is None:
         raise credentials_exception
+    return user
+
+
+def require_provider(user: UserORM = Depends(get_current_user)) -> UserORM:
+    if not user.is_provider:
+        raise HTTPException(status_code=403, detail="Providers only")
     return user
