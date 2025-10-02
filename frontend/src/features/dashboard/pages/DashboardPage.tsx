@@ -113,8 +113,10 @@ export const Dashboard = () => {
               })
             ]);
             console.log('🔍 Dashboard: Vaccination data fetched successfully');
-            setOverdueVaccinations(overdueData || []);
-            setUpcomingVaccinations(upcomingData || []);
+            overdueVaccinations = overdueData || [];
+            upcomingVaccinations = upcomingData || [];
+            setOverdueVaccinations(overdueVaccinations);
+            setUpcomingVaccinations(upcomingVaccinations);
           } catch (error) {
             console.warn('Could not fetch vaccination data:', error);
             // Continue without vaccination data
