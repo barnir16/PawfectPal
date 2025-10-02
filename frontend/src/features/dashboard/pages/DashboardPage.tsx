@@ -220,17 +220,15 @@ export const Dashboard = () => {
           }
         }
 
-        // Calculate stats
+        // Calculate stats after vaccination data is fetched
         const totalPets = petsData.length;
         const tasksDue = tasksData.filter(task => !task.isCompleted && new Date(task.dateTime) <= new Date()).length;
-        const overdueVaccinationsCount = overdueVaccinations.length;
-        const upcomingVaccinationsCount = upcomingVaccinations.length;
-
+        
         setStats({
           totalPets,
           tasksDue,
-          overdueVaccinations: overdueVaccinationsCount,
-          upcomingVaccinations: upcomingVaccinationsCount,
+          overdueVaccinations: overdueVaccinations.length,
+          upcomingVaccinations: upcomingVaccinations.length,
         });
 
         // Get recent tasks (last 5 incomplete tasks) and convert to TaskList format
@@ -597,71 +595,6 @@ export const Dashboard = () => {
        )}
 
 
-      {/* Upcoming Events Section */}
-      <Paper sx={{ p: 3, mb: 4 }}>
-        <Typography variant="h6" component="h2" gutterBottom>
-          📅 {t('dashboard.upcomingEvents')}
-        </Typography>
-        
-        {/* Upcoming Tasks */}
-        {recentTasks.length > 0 && (
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle1" color="primary" sx={{ mb: 2, fontWeight: "bold" }}>
-              📋 {t('dashboard.upcomingTasks')} ({recentTasks.length})
-            </Typography>
-            <Grid container spacing={2}>
-              {recentTasks.slice(0, 4).map((task: TaskListTask) => (
-                <Grid key={task.id} size={{ xs: 12, sm: 6, md: 3 }}>
-                  <Paper sx={{ p: 2, height: '100%', border: 1, borderColor: 'primary.light' }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                      {task.title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      {task.pet}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {t('dashboard.due')}: {new Date(task.dueDate).toLocaleDateString()}
-                    </Typography>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        )}
-        
-        {/* Upcoming Vaccinations */}
-        {upcomingVaccinations.length > 0 && (
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle1" color="warning.main" sx={{ mb: 2, fontWeight: "bold" }}>
-              ⏰ {t('dashboard.upcomingVaccinationsTitle')} ({upcomingVaccinations.length})
-            </Typography>
-            <Grid container spacing={2}>
-              {upcomingVaccinations.slice(0, 4).map((vaccine: any) => (
-                <Grid key={vaccine.id} size={{ xs: 12, sm: 6, md: 3 }}>
-                  <Paper sx={{ p: 2, height: '100%', border: 1, borderColor: 'warning.light' }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
-                      {vaccine.pet_name}
-                    </Typography>
-                    <Typography variant="body2" sx={{ mb: 1 }}>
-                      {getTranslatedVaccineName(vaccine.vaccine_name)}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {t('dashboard.due')}: {vaccine.due_date ? new Date(vaccine.due_date).toLocaleDateString() : t('dashboard.noDateSet')}
-                    </Typography>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        )}
-        
-        {/* No upcoming events */}
-        {recentTasks.length === 0 && upcomingVaccinations.length === 0 && (
-          <Typography color="text.secondary" sx={{ fontStyle: "italic", textAlign: "center", py: 3 }}>
-            {t('dashboard.noUpcomingEvents')}
-          </Typography>
-        )}
-      </Paper>
     </Box>
   );
 };
