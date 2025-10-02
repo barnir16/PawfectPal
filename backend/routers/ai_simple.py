@@ -132,23 +132,30 @@ def create_simple_prompt(user_message: str, pet_context: Dict[str, Any], convers
     """
     pets = pet_context.get('pets', [])
     
-    # Format pet information simply
+    # Enhanced pet information with medical history and tasks
     pet_info = []
     for pet in pets:
         health_issues = pet.get('health_issues', [])
         behavior_issues = pet.get('behavior_issues', [])
-        health_text = f", Health: {', '.join(health_issues)}" if health_issues else ""
-        behavior_text = f", Behavior: {', '.join(behavior_issues)}" if behavior_issues else ""
+        medical_history = pet.get('medical_history', [])
+        recent_tasks = pet.get('recent_tasks', [])
+        vaccination_status = pet.get('vaccination_status', [])
         
-        pet_info.append(f"{pet['name']}: {pet['type']} ({pet['breed']}), {pet['age']:.1f} years old, {pet['weight']}kg, {pet['gender']}{health_text}{behavior_text}")
+        health_text = f", Health Issues: {', '.join(health_issues)}" if health_issues else ""
+        behavior_text = f", Behavior Issues: {', '.join(behavior_issues)}" if behavior_issues else ""
+        medical_text = f", Medical History: {', '.join(medical_history)}" if medical_history else ""
+        tasks_text = f", Recent Tasks: {', '.join(recent_tasks)}" if recent_tasks else ""
+        vaccine_text = f", Vaccination Status: {', '.join(vaccination_status)}" if vaccination_status else ""
+        
+        pet_info.append(f"{pet['name']}: {pet['type']} ({pet['breed']}), {pet['age']:.1f} years old, {pet['weight']}kg, {pet['gender']}{health_text}{behavior_text}{medical_text}{tasks_text}{vaccine_text}")
     
     pet_list = "\n".join(pet_info)
     
-    # Simple conversation history
+    # Enhanced conversation history (no limit)
     conversation_context = ""
     if conversation_history:
-        conversation_context = "\n\nRecent conversation:\n"
-        for msg in conversation_history[-6:]:  # Keep last 6 messages
+        conversation_context = "\n\nConversation history:\n"
+        for msg in conversation_history:  # Keep all messages for better context
             role = "User" if msg.get('isUser') == "true" else "Assistant"
             conversation_context += f"{role}: {msg.get('content', '')}\n"
     
@@ -175,13 +182,92 @@ Please provide a helpful response."""
 
 def handle_simple_fallback(message: str, pet_context: Dict[str, Any], conversation_history: List[Dict[str, str]] = []) -> AIChatResponse:
     """
-    Simple fallback AI logic when Gemini API is not available
+    Enhanced fallback AI logic when Gemini API is not available
     """
     pets = pet_context.get('pets', [])
+    
+    # Enhanced fallback responses based on message content
     message_lower = message.lower()
     
-    # Handle sorting requests - this should be the first check
-    if 'sort' in message_lower and 'pet' in message_lower:
+    # Greeting responses
+    if any(word in message_lower for word in ['hello', 'hi', 'hey', 'good morning', 'good afternoon']):
+        if pets:
+            pet_names = [pet.get('name', 'your pet') for pet in pets]
+            pet_list = ', '.join(pet_names) if len(pet_names) == 1 else ', '.join(pet_names[:-1]) + f' and {pet_names[-1]}'
+            return AIChatResponse(
+                message=f"Hello! I'm here to help you with {pet_list}. How can I assist you with their care today?",
+                suggested_actions=[
+                    {"id": "care_tips", "type": "view_tips", "label": "Care Tips", "description": "Get general care advice"},
+                    {"id": "health_check", "type": "health_check", "label": "Health Check", "description": "Check pet health status"},
+                    {"id": "schedule_task", "type": "create_task", "label": "Schedule Task", "description": "Create a reminder"}
+                ]
+            )
+        else:
+            return AIChatResponse(
+                message="Hello! I'm your pet care assistant. I'd be happy to help you with any pet-related questions or tasks.",
+                suggested_actions=[
+                    {"id": "add_pet", "type": "add_pet", "label": "Add Pet", "description": "Add a new pet to your profile"},
+                    {"id": "general_tips", "type": "view_tips", "label": "Pet Care Tips", "description": "Get general pet care advice"}
+                ]
+            )
+    
+    # Feeding questions
+    if any(word in message_lower for word in ['feed', 'food', 'eating', 'diet', 'nutrition']):
+        if pets:
+            pet_name = pets[0].get('name', 'your pet')
+            pet_type = pets[0].get('type', 'pet')
+            return AIChatResponse(
+                message=f"For {pet_name}'s feeding, I recommend consulting with your veterinarian for a personalized diet plan. Generally, {pet_type}s need balanced nutrition with appropriate portions based on their age, weight, and activity level.",
+                suggested_actions=[
+                    {"id": "feeding_schedule", "type": "create_task", "label": "Set Feeding Schedule", "description": "Create feeding reminders"},
+                    {"id": "diet_consultation", "type": "vet_consultation", "label": "Diet Consultation", "description": "Schedule vet consultation"}
+                ]
+            )
+    
+    # Health questions
+    if any(word in message_lower for word in ['sick', 'ill', 'health', 'vet', 'doctor', 'medicine']):
+        return AIChatResponse(
+            message="If you're concerned about your pet's health, I recommend contacting your veterinarian immediately. I can help you schedule appointments or create health monitoring tasks.",
+            suggested_actions=[
+                {"id": "emergency_vet", "type": "emergency", "label": "Emergency Vet", "description": "Find emergency veterinary care"},
+                {"id": "schedule_checkup", "type": "create_task", "label": "Schedule Checkup", "description": "Create vet appointment reminder"},
+                {"id": "health_monitoring", "type": "health_tracking", "label": "Health Tracking", "description": "Track health symptoms"}
+            ]
+        )
+    
+    # Exercise/activity questions
+    if any(word in message_lower for word in ['exercise', 'walk', 'play', 'activity', 'energy']):
+        if pets:
+            pet_name = pets[0].get('name', 'your pet')
+            pet_type = pets[0].get('type', 'pet')
+            return AIChatResponse(
+                message=f"{pet_name} needs regular exercise appropriate for their age and breed. For {pet_type}s, daily walks and playtime are essential for physical and mental health.",
+                suggested_actions=[
+                    {"id": "walk_reminder", "type": "create_task", "label": "Walk Reminder", "description": "Set daily walk reminders"},
+                    {"id": "playtime", "type": "create_task", "label": "Playtime", "description": "Schedule play sessions"}
+                ]
+            )
+    
+    # Default response
+    if pets:
+        pet_name = pets[0].get('name', 'your pet')
+        return AIChatResponse(
+            message=f"I understand you're asking about {pet_name}. While I'm currently using basic responses, I can help you with pet care tasks, reminders, and general advice. What specific aspect of {pet_name}'s care would you like help with?",
+            suggested_actions=[
+                {"id": "general_care", "type": "view_tips", "label": "General Care", "description": "Get care advice"},
+                {"id": "create_task", "type": "create_task", "label": "Create Task", "description": "Set up a reminder"},
+                {"id": "health_tracking", "type": "health_tracking", "label": "Health Tracking", "description": "Track health metrics"}
+            ]
+        )
+    else:
+        return AIChatResponse(
+            message="I'm here to help with pet care! I can assist with feeding schedules, health monitoring, exercise routines, and general pet care advice. What would you like to know?",
+            suggested_actions=[
+                {"id": "add_pet", "type": "add_pet", "label": "Add Pet", "description": "Add a new pet"},
+                {"id": "general_tips", "type": "view_tips", "label": "Pet Care Tips", "description": "Get general advice"},
+                {"id": "emergency_info", "type": "emergency", "label": "Emergency Info", "description": "Emergency pet care"}
+            ]
+        )
         # Sort pets by age
         sorted_pets = sorted(pets, key=lambda x: x.get('age', 0))
         
