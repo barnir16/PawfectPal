@@ -824,6 +824,8 @@ export const en = {
     viewWeightTracking: 'View Weight Tracking',
     dog: 'Dog',
     cat: 'Cat',
+    tasksNeedAttention: 'tasks need attention',
+    allUpToDate: 'All up to date',
   },
 
   // Search

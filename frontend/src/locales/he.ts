@@ -952,6 +952,8 @@ export const he = {
     viewWeightTracking: 'צפה במעקב משקל',
     dog: 'כלב',
     cat: 'חתול',
+    tasksNeedAttention: 'משימות דורשות תשומת לב',
+    allUpToDate: 'הכל מעודכן',
   },
 
   // Messages
