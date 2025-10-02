@@ -29,6 +29,7 @@ import {
   Chat as ChatIcon,
   Menu as MenuIcon,
 } from "@mui/icons-material";
+import { useAuth } from "../../contexts/AuthContext";
 
 type SidebarProps = {
   mobileOpen: boolean;
@@ -49,6 +50,8 @@ export const Sidebar = ({
   const { t, isRTL } = useLocalization();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [open, setOpen] = useState(!isMobile);
+  const { user } = useAuth();
+  const isProvider = user?.is_provider;
 
   const menuItems = [
     {
@@ -58,17 +61,22 @@ export const Sidebar = ({
     },
     { text: t("navigation.pets"), icon: <PetsIcon />, path: "/pets" },
     { text: t("navigation.tasks"), icon: <TasksIcon />, path: "/tasks" },
-    { text: t("services.title"), icon: <ServicesIcon />, path: "/services" },
+    { text: t("services.title"), icon: <ServicesIcon />, path: "/services" }, // Everyone
     {
       text: t("services.bookService"),
       icon: <BookIcon />,
       path: "/bookservice",
     },
-    {
-      text: t("services.browseRequests"),
-      icon: <ServiceRequestsIcon />,
-      path: "/service-requests",
-    },
+    // Provider-only
+    ...(isProvider
+      ? [
+          {
+            text: t("services.browseRequests"),
+            icon: <ServiceRequestsIcon />,
+            path: "/service-requests",
+          },
+        ]
+      : []),
     {
       text: t("services.myRequests"),
       icon: <ServiceRequestsIcon />,
@@ -79,11 +87,7 @@ export const Sidebar = ({
       icon: <PersonIcon />,
       path: "/weight-tracking",
     },
-    {
-      text: t("navigation.chat"),
-      icon: <ChatIcon />,
-      path: "/chat-list",
-    },
+    { text: t("navigation.chat"), icon: <ChatIcon />, path: "/chat-list" },
   ];
 
   const handleDrawerToggle = () => {
