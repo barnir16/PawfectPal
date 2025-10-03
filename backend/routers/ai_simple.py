@@ -224,16 +224,37 @@ def handle_simple_fallback(message: str, pet_context: Dict[str, Any], conversati
                 ]
             )
     
-    # Health questions
-    if any(word in message_lower for word in ['sick', 'ill', 'health', 'vet', 'doctor', 'medicine']):
-        return AIChatResponse(
-            message="If you're concerned about your pet's health, I recommend contacting your veterinarian immediately. I can help you schedule appointments or create health monitoring tasks.",
-            suggested_actions=[
-                {"id": "emergency_vet", "type": "emergency", "label": "Emergency Vet", "description": "Find emergency veterinary care"},
-                {"id": "schedule_checkup", "type": "create_task", "label": "Schedule Checkup", "description": "Create vet appointment reminder"},
-                {"id": "health_monitoring", "type": "health_tracking", "label": "Health Tracking", "description": "Track health symptoms"}
-            ]
-        )
+    # Health questions (expanded keywords)
+    if any(word in message_lower for word in ['sick', 'ill', 'health', 'vet', 'doctor', 'medicine', 'bad eye', 'incontinence', 'pee', 'urinate', 'comfortable', 'comfort']):
+        if pets:
+            pet_name = pets[0].get('name', 'your pet')
+            health_issues = pets[0].get('health_issues', [])
+            
+            # Specific advice for common health issues
+            specific_advice = ""
+            if 'bad eye' in message_lower or 'bad eye' in str(health_issues).lower():
+                specific_advice += f"For {pet_name}'s eye condition, keep the area clean and avoid irritants. "
+            if 'incontinence' in message_lower or 'pee' in message_lower or 'incontinence' in str(health_issues).lower():
+                specific_advice += f"For incontinence issues, consider more frequent bathroom breaks and waterproof bedding. "
+            
+            return AIChatResponse(
+                message=f"If you're concerned about {pet_name}'s health, I recommend contacting your veterinarian immediately. {specific_advice}I can help you schedule appointments or create health monitoring tasks.",
+                suggested_actions=[
+                    {"id": "emergency_vet", "type": "emergency", "label": "Emergency Vet", "description": "Find emergency veterinary care"},
+                    {"id": "schedule_checkup", "type": "create_task", "label": "Schedule Checkup", "description": "Create vet appointment reminder"},
+                    {"id": "health_monitoring", "type": "health_tracking", "label": "Health Tracking", "description": "Track health symptoms"},
+                    {"id": "comfort_care", "type": "comfort_care", "label": "Comfort Care", "description": "Set up comfort measures"}
+                ]
+            )
+        else:
+            return AIChatResponse(
+                message="If you're concerned about your pet's health, I recommend contacting your veterinarian immediately. I can help you schedule appointments or create health monitoring tasks.",
+                suggested_actions=[
+                    {"id": "emergency_vet", "type": "emergency", "label": "Emergency Vet", "description": "Find emergency veterinary care"},
+                    {"id": "schedule_checkup", "type": "create_task", "label": "Schedule Checkup", "description": "Create vet appointment reminder"},
+                    {"id": "health_monitoring", "type": "health_tracking", "label": "Health Tracking", "description": "Track health symptoms"}
+                ]
+            )
     
     # Exercise/activity questions
     if any(word in message_lower for word in ['exercise', 'walk', 'play', 'activity', 'energy']):
