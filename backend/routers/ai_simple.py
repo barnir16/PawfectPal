@@ -84,101 +84,202 @@ async def test_ai_chat(request: AIChatRequest):
 @router.post("/chat", response_model=AIChatResponse)
 async def chat_with_ai(request: AIChatRequest, current_user: UserORM = Depends(get_current_user)):
     """
-    Simple AI chat endpoint - inspired by successful PawfectPlanner versions
+    Enhanced AI chat endpoint - inspired by successful PawfectPlanner versions
+    Production-ready with comprehensive context understanding
     """
     try:
+        # Validate request data
+        if not request.message or not request.message.strip():
+            return AIChatResponse(
+                message="Please provide a message so I can help you with your pet care needs.",
+                suggested_actions=[
+                    {"id": "general_tips", "type": "view_tips", "label": "💡 Pet Care Tips", "description": "Get general pet care advice"}
+                ]
+            )
+        
         # Get Gemini API key for this specific user (works for both Google and email users)
         api_key = firebase_user_service.get_gemini_api_key_for_user(current_user)
         
         if not api_key:
-            raise HTTPException(
-                status_code=503, 
-                detail="AI service temporarily unavailable. Please try again later."
-            )
+            print("⚠️ No Gemini API key available, using fallback")
+            return handle_simple_fallback(request.message, request.pet_context or {}, request.conversation_history or [])
         
+        try:
         # Configure Gemini with user-specific API key
         genai.configure(api_key=api_key)
         current_model = genai.GenerativeModel('gemini-pro')
         
         if not current_model:
-            return handle_simple_fallback(request.message, request.pet_context, request.conversation_history or [])
-        
-        
-        # Create simple prompt
-        prompt = create_simple_prompt(request.message, request.pet_context, request.conversation_history or [])
-        
-        # Generate response using Gemini
-        response = current_model.generate_content(prompt)
-        
-        # Parse the response
+                print("⚠️ Gemini model unavailable, using fallback")
+                return handle_simple_fallback(request.message, request.pet_context or {}, request.conversation_history or [])
+            
+            # Create comprehensive prompt with full context
+            prompt = create_comprehensive_prompt(request.message, request.pet_context or {}, request.conversation_history or [])
+            
+            # Generate response using Gemini with timeout protection
+            import asyncio
+            response = await asyncio.wait_for(
+                current_model.generate_content_async(prompt),
+                timeout=30.0  # 30 second timeout
+            )
+            
+            # Parse the response safely
         message = response.text.strip() if response.text else "I apologize, but I couldn't generate a response."
+            message = message[:2000] if len(message) > 2000 else message  # Limit response length
         
-        # Generate simple suggested actions
-        suggested_actions = generate_simple_actions(request.message, request.pet_context)
+            # Generate contextual suggested actions based on conversation and pet data
+            suggested_actions = generate_contextual_actions(request.message, request.pet_context or {}, conversation_history=request.conversation_history or [])
         
         return AIChatResponse(
             message=message,
             suggested_actions=suggested_actions
         )
+            
+        except asyncio.TimeoutError:
+            print("⚠️ Gemini API timeout, using fallback")
+            return handle_simple_fallback(request.message, request.pet_context or {}, request.conversation_history or [])
         
     except Exception as e:
         print(f"AI Chat Error: {str(e)}")
-        # Fallback to simple logic
-        return handle_simple_fallback(request.message, request.pet_context, request.conversation_history or [])
+        try:
+            # Fallback to simple logic with safe data
+            return handle_simple_fallback(request.message, request.pet_context or {}, request.conversation_history or [])
+        except Exception as fallback_error:
+            print(f"Fallback also failed: {fallback_error}")
+            return AIChatResponse(
+                message="I'm experiencing technical difficulties. Please try again in a moment.",
+                suggested_actions=[
+                    {"id": "retry", "type": "retry", "label": "🔄 Try Again", "description": "Retry your request"},
+                    {"id": "contact_support", "type": "contact", "label": "💬 Contact Support", "description": "Get help from support team"}
+                ]
+            )
 
-def create_simple_prompt(user_message: str, pet_context: Dict[str, Any], conversation_history: List[Dict[str, str]] = []) -> str:
+def create_comprehensive_prompt(user_message: str, pet_context: Dict[str, Any], conversation_history: List[Dict[str, str]] = []) -> str:
     """
-    Create a simple, effective prompt - inspired by successful PawfectPlanner versions
+    Create a comprehensive prompt inspired by PawfectPlanner - with full context understanding
+    Production-ready with error handling and validation
     """
-    pets = pet_context.get('pets', [])
-    
-    # Enhanced pet information with medical history and tasks
-    pet_info = []
+    try:
+        pets = pet_context.get('pets', []) or []
+        
+        # Comprehensive pet information - mimic PawfectPlanner's data injection
+        pet_profiles = []
     for pet in pets:
-        health_issues = pet.get('health_issues', [])
-        behavior_issues = pet.get('behavior_issues', [])
-        medical_history = pet.get('medical_history', [])
-        recent_tasks = pet.get('recent_tasks', [])
-        vaccination_status = pet.get('vaccination_status', [])
+            try:
+                # Safe pet data extraction with defaults
+                pet_name = pet.get('name', 'unnamed pet')
+                pet_type = pet.get('type', 'pet').capitalize()
+                pet_breed = pet.get('breed', 'Unknown')
+                pet_age = float(pet.get('age', 0))
+                pet_weight = pet.get('weight', 0)
+                pet_gender = pet.get('gender', 'unknown')
+                
+                # Health and behavior data
+                health_issues = pet.get('health_issues', []) or []
+                behavior_issues = pet.get('behavior_issues', []) or []
+                medical_history = pet.get('medical_history', []) or []
+                recent_tasks = pet.get('recent_tasks', []) or []
+                vaccination_status = pet.get('vaccination_status', []) or []
+                
+                # Create detailed pet profile with safe formatting
+                profile_lines = [
+                    f"🐾 **{pet_name}** ({pet_type})",
+                    f"   • Breed: {pet_breed}",
+                    f"   • Age: {pet_age:.1f} years old",
+                    f"   • Weight: {pet_weight}kg",
+                    f"   • Gender: {pet_gender}"
+                ]
+                
+                # Add health information safely
+                if health_issues:
+                    profile_lines.append(f"   • Health Issues: {', '.join(str(issue) for issue in health_issues)}")
+                if behavior_issues:
+                    profile_lines.append(f"   • Behavior Issues: {', '.join(str(issue) for issue in behavior_issues)}")
+                if medical_history:
+                    profile_lines.append(f"   • Medical History: {', '.join(str(mh) for mh in medical_history)}")
+                if vaccination_status:
+                    profile_lines.append(f"   • Vaccination Status: {', '.join(str(vs) for vs in vaccination_status)}")
+                if recent_tasks:
+                    profile_lines.append(f"   • Recent Tasks: {', '.join(str(task) for task in recent_tasks)}")
+                
+                pet_profiles.append('\n'.join(profile_lines))
+                
+            except Exception as pet_error:
+                print(f"Error processing pet data: {pet_error}")
+                # Add minimal pet info even if there's an error
+                pet_name = pet.get('name', 'Unknown Pet') if isinstance(pet, dict) else 'Unknown Pet'
+                pet_profiles.append(f"🐾 **{pet_name}** (Pet information unavailable)")
         
-        health_text = f", Health Issues: {', '.join(health_issues)}" if health_issues else ""
-        behavior_text = f", Behavior Issues: {', '.join(behavior_issues)}" if behavior_issues else ""
-        medical_text = f", Medical History: {', '.join(medical_history)}" if medical_history else ""
-        tasks_text = f", Recent Tasks: {', '.join(recent_tasks)}" if recent_tasks else ""
-        vaccine_text = f", Vaccination Status: {', '.join(vaccination_status)}" if vaccination_status else ""
+        pets_section = '\n\n'.join(pet_profiles) if pet_profiles else "No pet information available."
         
-        pet_info.append(f"{pet['name']}: {pet['type']} ({pet['breed']}), {pet['age']:.1f} years old, {pet['weight']}kg, {pet['gender']}{health_text}{behavior_text}{medical_text}{tasks_text}{vaccine_text}")
-    
-    pet_list = "\n".join(pet_info)
-    
-    # Enhanced conversation history (no limit)
+        # Enhanced conversation history with safe parsing
+        conversation_context = ""
+        if conversation_history and isinstance(conversation_history, list):
+            try:
+                conversation_context = f"""
+
+📝 **CONVERSATION HISTORY:**
+"""
+                # Safely process last 10 messages for context
+                safe_history = conversation_history[-10:] if len(conversation_history) > 10 else conversation_history
+                
+                for msg in safe_history:
+                    try:
+                        if isinstance(msg, dict):
+                            role = "👤 USER" if msg.get('isUser') == "true" else "🤖 ASSISTANT"
+                            content = msg.get('content', str(msg.get('message', ''))) or 'No content'
+                            conversation_context += f"{role}: {content}\n"
+                        else:
+                            conversation_context += f"🤖 ASSISTANT: {str(msg)}\n"
+                    except Exception as msg_error:
+                        print(f"Error processing message: {msg_error}")
+                        conversation_context += f"🤖 ASSISTANT: [Message unavailable]\n"
+                        
+            except Exception as conv_error:
+                print(f"Error processing conversation history: {conv_error}")
     conversation_context = ""
-    if conversation_history:
-        conversation_context = "\n\nConversation history:\n"
-        for msg in conversation_history:  # Keep all messages for better context
-            role = "User" if msg.get('isUser') == "true" else "Assistant"
-            conversation_context += f"{role}: {msg.get('content', '')}\n"
-    
-    # Simple, effective prompt
-    prompt = f"""You are a helpful pet care assistant. Here is the user's pet information:
+        
+        # Create comprehensive prompt with safe string formatting
+        safe_message = str(user_message)[:1000] if user_message else "No message provided"  # Limit message length
+        
+        prompt = f"""🤖 **PAWFECT PAL AI ASSISTANT**
 
-PETS:
-{pet_list}{conversation_context}
+I am your intelligent pet care assistant with access to detailed information about your pets. I provide personalized, context-aware advice based on your pet's specific needs, health conditions, and care history.
 
-USER QUESTION: {user_message}
+📋 **PET PROFILES:**
+{pets_section}{conversation_context}
 
-Instructions:
-- Answer the user's question about their pets
-- If they ask to sort pets by age, list all pets in the requested order
-- If they mention specific pets, focus on those pets
-- If they use pronouns like "her" or "him", refer to the most recently mentioned pet
-- Provide specific, helpful advice based on the pet information
-- Be conversational and practical
-- If medical advice is needed, recommend consulting a veterinarian
+🎯 **CURRENT QUERY:** {safe_message}
 
-Please provide a helpful response."""
+📚 **MY CAPABILITIES:**
+I can help with: Health monitoring, Behavior analysis, Diet planning, Exercise routines, Grooming advice, Medical scheduling, Vaccination reminders, Emergency care guidance, Comfort measures, Training tips.
+
+💡 **RESPONSE GUIDELINES:**
+1. **Context Awareness**: Always reference the specific pet mentioned and their unique characteristics
+2. **Health Focus**: Prioritize safety and recommend veterinary consultation for medical concerns
+3. **Practical Advice**: Provide actionable, specific recommendations based on the pet's breed, age, and conditions
+4. **Comfort & Care**: Suggest comfort measures for pets with health issues or behavioral problems
+5. **Task Integration**: Suggest creating reminders or tasks when appropriate
+6. **Conversation Continuity**: Reference previous topics to maintain meaningful dialogue
+7. **Safety First**: Always prioritize pet safety and recommend professional veterinary care when needed
+
+🎪 **TEMPERAMENT:** Be friendly, empathetic, and knowledgeable. Use emojis sparingly for warmth. Focus on being helpful rather than just informative. Always encourage professional veterinary consultation for health concerns.
+
+Please provide personalized advice for this specific situation."""
 
     return prompt
+        
+    except Exception as e:
+        print(f"Error creating comprehensive prompt: {e}")
+        # Return a minimal but safe prompt
+        safe_message = str(user_message)[:500] if user_message else "Hello"
+        return f"""🤖 **PAWFECT PAL AI ASSISTANT**
+
+I'm here to help with your pet care needs.
+
+🎯 **QUERY:** {safe_message}
+
+Please ask me anything about pet care, health, nutrition, behavior, or general pet advice. I'll do my best to help while always recommending professional veterinary consultation for health concerns."""
 
 def handle_simple_fallback(message: str, pet_context: Dict[str, Any], conversation_history: List[Dict[str, str]] = []) -> AIChatResponse:
     """
@@ -397,6 +498,68 @@ def handle_simple_fallback(message: str, pet_context: Dict[str, Any], conversati
             }
         ]
     )
+
+def generate_contextual_actions(message: str, pet_context: Dict[str, Any], conversation_history: List[Dict[str, str]] = []) -> List[Dict[str, str]]:
+    """
+    Generate contextual suggested actions based on message content, pet data, and conversation history
+    Production-ready with safe data handling
+    """
+    try:
+        pets = pet_context.get('pets', []) or []
+        message_lower = str(message).lower() if message else ""
+        actions = []
+    
+    # Health-related actions
+    if any(word in message_lower for word in ['sick', 'ill', 'health', 'vet', 'doctor', 'medicine', 'comfortable', 'comfort', 'pain', 'hurt', 'bad eye', 'pee', 'incontinence']):
+        actions.extend([
+            {"id": "emergency_vet", "type": "emergency", "label": "🚨 Emergency Vet", "description": "Find emergency veterinary care"},
+            {"id": "health_tracking", "type": "health_tracking", "label": "📊 Health Tracking", "description": "Track health symptoms"},
+            {"id": "comfort_care", "type": "comfort_care", "label": "💕 Comfort Care", "description": "Set up comfort measures"},
+            {"id": "schedule_checkup", "type": "create_task", "label": "📅 Schedule Checkup", "description": "Create vet appointment reminder"}
+        ])
+    
+    # Feeding/nutrition actions
+    elif any(word in message_lower for word in ['feed', 'food', 'eating', 'diet', 'nutrition', 'hungry']):
+        actions.extend([
+            {"id": "feeding_schedule", "type": "create_task", "label": "🍽️ Feeding Schedule", "description": "Create feeding reminders"},
+            {"id": "diet_consultation", "type": "vet_consultation", "label": "👨‍⚕️ Diet Consultation", "description": "Schedule vet consultation"},
+            {"id": "nutrition_tips", "type": "view_tips", "label": "💡 Nutrition Tips", "description": "Get feeding recommendations"}
+        ])
+    
+    # Exercise/activity actions
+    elif any(word in message_lower for word in ['exercise', 'walk', 'play', 'activity', 'energy']):
+        actions.extend([
+            {"id": "walk_reminder", "type": "create_task", "label": "🚶 Walk Reminder", "description": "Set daily walk reminders"},
+            {"id": "playtime", "type": "create_task", "label": "🎾 Playtime", "description": "Schedule play sessions"},
+            {"id": "exercise_plan", "type": "view_tips", "label": "💪 Exercise Plan", "description": "Get exercise recommendations"}
+        ])
+    
+    # Default actions if no specific category detected
+    else:
+        if pets:
+            pet_name = pets[0].get('name', 'your pet')
+            actions.extend([
+                {"id": "care_tips", "type": "view_tips", "label": f"🐾 {pet_name}'s Care", "description": "Get personalized care advice"},
+                {"id": "create_task", "type": "create_task", "label": "📝 Create Task", "description": "Set up a reminder or task"},
+                {"id": "health_monitoring", "type": "health_tracking", "label": "📊 Health Monitoring", "description": "Monitor health metrics"}
+            ])
+        else:
+            actions.extend([
+                {"id": "add_pet", "type": "add_pet", "label": "🐾 Add Pet", "description": "Add a new pet to your profile"},
+                {"id": "general_tips", "type": "view_tips", "label": "💡 Pet Care Tips", "description": "Get general pet care advice"},
+                {"id": "emergency_info", "type": "emergency", "label": "🚨 Emergency Info", "description": "Emergency pet care"}
+            ])
+    
+        return actions
+        
+    except Exception as e:
+        print(f"Error generating contextual actions: {e}")
+        # Return safe default actions
+        return [
+            {"id": "health_help", "type": "view_tips", "label": "💡 Health Tips", "description": "Get health advice"},
+            {"id": "general_care", "type": "view_tips", "label": "🐾 General Care", "description": "Get pet care tips"},
+            {"id": "emergency_info", "type": "emergency", "label": "🚨 Emergency Info", "description": "Emergency pet care"}
+        ]
 
 def generate_simple_actions(user_message: str, pet_context: Dict[str, Any]) -> List[Dict[str, str]]:
     """
