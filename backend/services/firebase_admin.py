@@ -107,26 +107,29 @@ class FirebaseAdminService:
         return {}
     
     def get_gemini_api_key(self) -> Optional[str]:
-        """Get Gemini API key from environment variable (Firebase Remote Config requires OAuth2)"""
+        """Get Gemini API key from Firebase Remote Config"""
         try:
-            # Try environment variable first
+            # Get the config first
+            if not self.config:
+                self.get_remote_config()
+            
+            # Try to get Gemini API key from Firebase Remote Config
+            gemini_key = self.get_config_value("GEMINI_API_KEY")
+            if gemini_key:
+                print("Using Gemini API key from Firebase Remote Config")
+                return gemini_key
+            
+            # Fallback to environment variable for local development
             env_key = os.getenv("GEMINI_API_KEY")
             if env_key:
-                print("✅ Using Gemini API key from environment variable")
+                print("Using Gemini API key from environment variable (fallback)")
                 return env_key
             
-            # Try the old Firebase API key as fallback (it might be a Gemini key)
-            firebase_key = os.getenv("FIREBASE_API_KEY", "AIzaSyDoNsVE_ZmgBBuVJ3IKZpAAZRz9HS-67s8")
-            if firebase_key and firebase_key != "AIzaSyDoNsVE_ZmgBBuVJ3IKZpAAZRz9HS-67s8":
-                print("✅ Using Firebase API key as Gemini API key fallback")
-                return firebase_key
-            
-            print("⚠️ Gemini API key not found in environment variables")
-            print("💡 Set GEMINI_API_KEY environment variable to fix this")
+            print("Gemini API key not found in Firebase Remote Config or environment")
             return None
             
         except Exception as e:
-            print(f"❌ Error getting Gemini API key: {str(e)}")
+            print(f"Error getting Gemini API key: {str(e)}")
             return None
     
     def get_config_value(self, key: str) -> Optional[str]:

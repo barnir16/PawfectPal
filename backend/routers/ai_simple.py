@@ -164,22 +164,25 @@ async def chat_with_ai(request: AIChatRequest, current_user: UserORM = Depends(g
         # Detect language if not provided
         language = request.prompt_language or detect_language(request.message)
         
-        # Get Gemini API key
+        # Get Gemini API key from Firebase Remote Config
         api_key = None
         if FIREBASE_AVAILABLE:
             api_key = firebase_user_service.get_gemini_api_key_for_user(current_user)
         
+        # Fallback to environment variable for local development
         if not api_key:
             api_key = os.getenv('GEMINI_API_KEY')
         
         if not api_key:
-            # Simple fallback message
+            print("No Gemini API key found")
             return AIChatResponse(
                 message="AI chat is temporarily unavailable. Please try again later.",
                 suggested_actions=[
                     {"id": "retry", "type": "retry", "label": "Try Again", "description": "Retry your request"}
                 ]
             )
+        
+        print(f"Using Gemini API key: {api_key[:10]}...")
         
         # Create prompt and call AI
         prompt = create_simple_prompt(request.message, request.pet_context, language)
