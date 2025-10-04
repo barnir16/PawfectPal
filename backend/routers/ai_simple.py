@@ -105,11 +105,11 @@ async def chat_with_ai(request: AIChatRequest, current_user: UserORM = Depends(g
             return handle_simple_fallback(request.message, request.pet_context or {}, request.conversation_history or [])
         
         try:
-        # Configure Gemini with user-specific API key
-        genai.configure(api_key=api_key)
-        current_model = genai.GenerativeModel('gemini-pro')
-        
-        if not current_model:
+            # Configure Gemini with user-specific API key
+            genai.configure(api_key=api_key)
+            current_model = genai.GenerativeModel('gemini-pro')
+            
+            if not current_model:
                 print("⚠️ Gemini model unavailable, using fallback")
                 return handle_simple_fallback(request.message, request.pet_context or {}, request.conversation_history or [])
             
@@ -124,16 +124,16 @@ async def chat_with_ai(request: AIChatRequest, current_user: UserORM = Depends(g
             )
             
             # Parse the response safely
-        message = response.text.strip() if response.text else "I apologize, but I couldn't generate a response."
+            message = response.text.strip() if response.text else "I apologize, but I couldn't generate a response."
             message = message[:2000] if len(message) > 2000 else message  # Limit response length
-        
+            
             # Generate contextual suggested actions based on conversation and pet data
             suggested_actions = generate_contextual_actions(request.message, request.pet_context or {}, conversation_history=request.conversation_history or [])
-        
-        return AIChatResponse(
-            message=message,
-            suggested_actions=suggested_actions
-        )
+            
+            return AIChatResponse(
+                message=message,
+                suggested_actions=suggested_actions
+            )
             
         except asyncio.TimeoutError:
             print("⚠️ Gemini API timeout, using fallback")
