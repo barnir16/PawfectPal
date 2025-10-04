@@ -17,9 +17,9 @@ try:
     from services.firebase_admin import firebase_admin
     from services.firebase_user_service import firebase_user_service
     FIREBASE_AVAILABLE = True
-    print("✅ Firebase services imported successfully")
+    print("Firebase services imported successfully")
 except Exception as e:
-    print(f"⚠️ Firebase services not available: {e}")
+    print(f"Firebase services not available: {e}")
     FIREBASE_AVAILABLE = False
     # Create dummy classes for fallback
     class DummyFirebaseService:
@@ -63,12 +63,12 @@ def get_gemini_model():
 try:
     model = get_gemini_model()
     if model:
-        print("✅ Gemini model configured successfully")
+        print("Gemini model configured successfully")
     else:
-        print("⚠️ No Gemini API key available, using fallback AI logic")
+        print("No Gemini API key available, using fallback AI logic")
 except Exception as e:
     model = None
-    print(f"⚠️ Gemini model initialization failed: {e}")
+    print(f"Gemini model initialization failed: {e}")
 
 class PetContext(BaseModel):
     name: str
@@ -142,10 +142,10 @@ def save_conversation_to_db(db: Session, user_id: int, user_message: str, ai_res
         conversation.updated_at = datetime.now(timezone.utc)
         
         db.commit()
-        print(f"✅ Conversation saved: {conversation.id}")
+        print(f"Conversation saved: {conversation.id}")
         
     except Exception as e:
-        print(f"❌ Error saving conversation: {e}")
+        print(f"Error saving conversation: {e}")
         db.rollback()
         raise
 
