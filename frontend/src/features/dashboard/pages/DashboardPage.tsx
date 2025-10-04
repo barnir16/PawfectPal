@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Box, Grid, Paper, Typography, CircularProgress, Alert, Chip } from "@mui/material";
-import { styled } from "@mui/material/styles";
 import { Add as AddIcon } from "@mui/icons-material";
 import { Button } from "./../../../components/ui/Button";
 import { TaskList } from "./../../../features/tasks/components/TaskList";
@@ -17,46 +16,13 @@ import { useNotifications } from "../../../contexts/NotificationContext";
 import { createTaskNotificationService } from "../../../services/notifications/taskNotificationService";
 import { vaccineNameTranslations } from "../../../data/vaccines/israeliVaccines";
 
-const Item = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(2),
-  textAlign: "center",
-  color: theme.palette.text.secondary,
-  height: "100%",
-}));
 
-type StatCardProps = {
-  title: string;
-  value: string | number;
-  description?: string;
-};
-
-const StatCard = ({ title, value, description }: StatCardProps) => (
-  <Item elevation={2}>
-    <Typography variant="h6" color="text.secondary" gutterBottom>
-      {title}
-    </Typography>
-    <Typography variant="h4" component="div" sx={{ fontWeight: "bold", mb: 1 }}>
-      {value}
-    </Typography>
-    {description && (
-      <Typography variant="body2" color="text.secondary">
-        {description}
-      </Typography>
-    )}
-  </Item>
-);
 
 export const Dashboard = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { t, currentLanguage } = useLocalization();
   const { addNotification } = useNotifications();
-  const [stats, setStats] = useState({
-    totalPets: 0,
-    tasksDue: 0,
-    overdueVaccinations: 0,
-    upcomingVaccinations: 0,
-  });
   const [pets, setPets] = useState<any[]>([]);
   const [recentTasks, setRecentTasks] = useState<TaskListTask[]>([]);
   const [overdueVaccinations, setOverdueVaccinations] = useState<any[]>([]);
@@ -222,16 +188,6 @@ export const Dashboard = () => {
           }
         }
 
-        // Calculate stats after vaccination data is fetched
-        const totalPets = petsData.length;
-        const tasksDue = tasksData.filter(task => !task.isCompleted && new Date(task.dateTime) <= new Date()).length;
-        
-        setStats({
-          totalPets,
-          tasksDue,
-          overdueVaccinations: overdueVaccinations.length,
-          upcomingVaccinations: upcomingVaccinations.length,
-        });
 
         // Get recent tasks (last 5 incomplete tasks) and convert to TaskList format
         const recentIncompleteTasks = tasksData
@@ -288,33 +244,6 @@ export const Dashboard = () => {
          {t('dashboard.title')}
        </Typography>
 
-                                                                                   {/* Stats Grid */}
-         <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid key="pets-stat" size={{ xs: 12, sm: 6, md: 3 }}>
-              <StatCard title={t('pets.title')} value={stats.totalPets} />
-            </Grid>
-            <Grid key="tasks-stat" size={{ xs: 12, sm: 6, md: 3 }}>
-              <StatCard 
-                title={t('tasks.title')} 
-                value={stats.tasksDue}
-                description={stats.tasksDue === 0 ? t('dashboard.noPendingTasks') : t('dashboard.tasksNeedAttention')}
-              />
-            </Grid>
-            <Grid key="overdue-vaccines-stat" size={{ xs: 12, sm: 6, md: 3 }}>
-              <StatCard
-                title={t('dashboard.overdueVaccinations')}
-                value={stats.overdueVaccinations}
-                description={stats.overdueVaccinations === 0 ? t('dashboard.allUpToDate') : t('dashboard.needAttention')}
-              />
-            </Grid>
-            <Grid key="upcoming-vaccines-stat" size={{ xs: 12, sm: 6, md: 3 }}>
-              <StatCard
-                title={t('dashboard.upcomingVaccinations')}
-                value={stats.upcomingVaccinations}
-                description={t('dashboard.next30Days')}
-              />
-            </Grid>
-         </Grid>
 
       {/* Recent Tasks */}
       <Paper sx={{ p: 3, mb: 4 }}>
