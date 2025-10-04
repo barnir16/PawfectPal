@@ -11,31 +11,61 @@ from datetime import datetime
 import json
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from services.firebase_admin import firebase_admin
-from services.firebase_user_service import firebase_user_service
+
+# Import Firebase services with error handling
+try:
+    from services.firebase_admin import firebase_admin
+    from services.firebase_user_service import firebase_user_service
+    FIREBASE_AVAILABLE = True
+    print("✅ Firebase services imported successfully")
+except Exception as e:
+    print(f"⚠️ Firebase services not available: {e}")
+    FIREBASE_AVAILABLE = False
+    # Create dummy classes for fallback
+    class DummyFirebaseService:
+        def get_gemini_api_key_for_user(self, user): return None
+        def get_available_configs(self, user): return {}
+    firebase_admin = type('DummyAdmin', (), {'get_gemini_api_key': lambda: None})()
+    firebase_user_service = DummyFirebaseService()
 from dependencies.auth import get_current_user
 from models.user import UserORM
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 
-# Configure Gemini API using Firebase Remote Config
+# Configure Gemini API using Firebase Remote Config with fallback
 def get_gemini_model():
     """Get Gemini model instance using Firebase Remote Config"""
     try:
-        api_key = firebase_admin.get_gemini_api_key()
+        # Try Firebase first (only if available)
+        if FIREBASE_AVAILABLE:
+            api_key = firebase_admin.get_gemini_api_key()
+            if api_key:
+                genai.configure(api_key=api_key)
+                return genai.GenerativeModel('gemini-pro')
         
+        # Fallback to environment variable
+        api_key = os.getenv('GEMINI_API_KEY')
         if api_key:
             genai.configure(api_key=api_key)
             return genai.GenerativeModel('gemini-pro')
-        else:
-            print("⚠️ Gemini API key not found in Firebase Remote Config or environment")
-            return None
+        
+        print("⚠️ Gemini API key not found in Firebase or environment")
+        return None
+        
     except Exception as e:
         print(f"❌ Error configuring Gemini: {e}")
         return None
 
-# Initialize model
-model = get_gemini_model()
+# Initialize model (non-blocking)
+try:
+    model = get_gemini_model()
+    if model:
+        print("✅ Gemini model configured successfully")
+    else:
+        print("⚠️ No Gemini API key available, using fallback AI logic")
+except Exception as e:
+    model = None
+    print(f"⚠️ Gemini model initialization failed: {e}")
 
 class PetContext(BaseModel):
     name: str
@@ -98,7 +128,13 @@ async def chat_with_ai(request: AIChatRequest, current_user: UserORM = Depends(g
             )
         
         # Get Gemini API key for this specific user (works for both Google and email users)
-        api_key = firebase_user_service.get_gemini_api_key_for_user(current_user)
+        api_key = None
+        if FIREBASE_AVAILABLE:
+            api_key = firebase_user_service.get_gemini_api_key_for_user(current_user)
+        
+        if not api_key:
+            # Try environment variable fallback
+            api_key = os.getenv('GEMINI_API_KEY')
         
         if not api_key:
             print("⚠️ No Gemini API key available, using fallback")
