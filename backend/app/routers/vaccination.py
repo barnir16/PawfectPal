@@ -1,12 +1,12 @@
 from fastapi import HTTPException, Depends, APIRouter, Query
 from sqlalchemy.orm import Session
 from typing import List
-from models import (
+from app.models import (
     VaccinationORM,
     PetORM,
     UserORM,
 )
-from schemas.vaccination import (
+from app.schemas.vaccination import (
     VaccinationCreate,
     VaccinationResponse,
     VaccinationUpdate,
@@ -14,8 +14,8 @@ from schemas.vaccination import (
     VaccinationSummary,
     VaccinationReminder,
 )
-from dependencies.db import get_db
-from dependencies.auth import get_current_user
+from app.dependencies.db import get_db
+from app.dependencies.auth import get_current_user
 from datetime import date, timedelta
 
 router = APIRouter(prefix="/vaccinations", tags=["vaccinations"])

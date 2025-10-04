@@ -24,6 +24,7 @@ from app.models import Base
 
 # Also import both possible get_db callables (absolute and relative import paths)
 from app.dependencies.db import get_db as app_get_db
+from app.dependencies.db import get_db as rel_get_db
 
 # --------------------------------------------------------------------
 # 🧱 Create dedicated engine and session for testing
@@ -67,18 +68,37 @@ def db_session():
 # 🚀 Async test client fixture
 # --------------------------------------------------------------------
 @pytest_asyncio.fixture
-async def client(db_session):
+async def client(override_get_db):
     """Async test client with overridden DB dependency."""
-
-    def override_get_db():
-        try:
-            yield db_session
-        finally:
-            db_session.close()
-
-    # Override both absolute and relative imports of get_db
-    app.dependency_overrides[app_get_db] = override_get_db
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
+
+
+# --------------------------------------------------------------------
+# 🔁 DB dependency override fixture
+# --------------------------------------------------------------------
+@pytest.fixture
+def override_get_db(db_session):
+    """Override both absolute and relative get_db with the test session."""
+
+    def _override():
+        try:
+            yield db_session
+        finally:
+            pass
+
+    # Apply overrides
+    app.dependency_overrides[app_get_db] = _override
+    app.dependency_overrides[rel_get_db] = _override
+
+    try:
+        yield
+    finally:
+        # Remove only the overrides we added
+        for key in (app_get_db, rel_get_db):
+            try:
+                del app.dependency_overrides[key]
+            except KeyError:
+                pass

@@ -2,16 +2,17 @@ from fastapi import HTTPException, Depends, APIRouter
 from .medical_record import MedicalRecordORM
 from sqlalchemy.orm import Session
 from typing import List
-from models import (
+from app.models import (
     PetORM,
     UserORM,
     VaccinationORM,
 )
-from schemas.pet import PetCreate, PetRead, PetUpdate
-from dependencies.db import get_db
-from dependencies.auth import get_current_user
+from app.schemas.pet import PetCreate, PetRead, PetUpdate
+from app.dependencies.db import get_db
+from app.dependencies.auth import get_current_user
 
 router = APIRouter(prefix="/pets", tags=["pets"])
+
 
 # Explicit OPTIONS handler for CORS preflight
 @router.options("/")
@@ -60,7 +61,9 @@ def create_pet(
             breed=pet.breed or "",
             birth_date=pet.birth_date if pet.birth_date else None,
             age=pet.age,
-            is_birthday_given=pet.is_birthday_given if pet.is_birthday_given is not None else False,
+            is_birthday_given=pet.is_birthday_given
+            if pet.is_birthday_given is not None
+            else False,
             weight_kg=pet.weight_kg,
             photo_uri=pet.photo_uri,
             health_issues=pet.health_issues or "",

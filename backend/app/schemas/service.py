@@ -1,6 +1,6 @@
 from typing import List, Optional
 from pydantic import BaseModel, field_validator
-from models import ServiceType, ServiceStatus
+from app.models import ServiceType, ServiceStatus
 from datetime import datetime
 import json
 
@@ -40,6 +40,7 @@ class ServiceCreate(ServiceBase):
 
 class ServiceUpdate(BaseModel):
     """Schema for updating services - all fields are optional"""
+
     pet_id: Optional[int] = None
     service_type: Optional[ServiceType] = None
     status: Optional[ServiceStatus] = None

@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from models import UserORM
-from schemas import UserRead
-from dependencies.db import get_db
+from app.models import UserORM
+from app.schemas import UserRead
+from app.dependencies.db import get_db
 
 router = APIRouter(prefix="/providers", tags=["providers"])
 

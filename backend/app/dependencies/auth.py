@@ -1,11 +1,11 @@
 from fastapi import HTTPException, Depends, status
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
-from auth.utils import oauth2_scheme, get_user_by_username
+from app.auth.utils import oauth2_scheme, get_user_by_username
 from config import ALGORITHM, SECRET_KEY
 from .db import get_db
 from typing import Optional
-from models import UserORM
+from app.models import UserORM
 
 
 def get_current_user(

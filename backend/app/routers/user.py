@@ -1,13 +1,13 @@
 from fastapi import HTTPException, Depends, status, APIRouter
 from sqlalchemy.orm import Session
-from models import UserORM, ServiceTypeORM
-from models.provider import ProviderORM
-from schemas import UserRead, UserCreate, UserUpdate
+from app.models import UserORM, ServiceTypeORM
+from app.models.provider import ProviderORM
+from app.schemas import UserRead, UserCreate, UserUpdate
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
-from dependencies.db import get_db
-from dependencies.auth import get_current_user
-from auth.utils import (
+from app.dependencies.db import get_db
+from app.dependencies.auth import get_current_user
+from app.auth.utils import (
     get_password_hash,
     get_user_by_username,
     verify_password,

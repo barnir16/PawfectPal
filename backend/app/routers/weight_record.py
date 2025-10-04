@@ -3,16 +3,16 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
 from .pet import PetORM
-from dependencies.db import get_db
-from models.weight_record import WeightRecordORM
-from schemas.weight_record import (
+from app.dependencies.db import get_db
+from app.models.weight_record import WeightRecordORM
+from app.schemas.weight_record import (
     WeightRecordCreate,
     WeightRecordUpdate,
     WeightRecordResponse,
     WeightRecordWithPet,
 )
-from dependencies.auth import get_current_user
-from models.user import UserORM
+from app.dependencies.auth import get_current_user
+from app.models.user import UserORM
 
 router = APIRouter(prefix="/api/weight-records", tags=["Weight Records"])
 
