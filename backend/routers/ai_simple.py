@@ -200,7 +200,7 @@ def create_comprehensive_prompt(user_message: str, pet_context: Dict[str, Any], 
         
         # Comprehensive pet information - mimic PawfectPlanner's data injection
         pet_profiles = []
-    for pet in pets:
+        for pet in pets:
             try:
                 # Safe pet data extraction with defaults
                 pet_name = pet.get('name', 'unnamed pet')
@@ -273,7 +273,7 @@ def create_comprehensive_prompt(user_message: str, pet_context: Dict[str, Any], 
                         
             except Exception as conv_error:
                 print(f"Error processing conversation history: {conv_error}")
-    conversation_context = ""
+                conversation_context = ""
         
         # Create comprehensive prompt with safe string formatting
         safe_message = str(user_message)[:1000] if user_message else "No message provided"  # Limit message length
@@ -303,7 +303,7 @@ I can help with: Health monitoring, Behavior analysis, Diet planning, Exercise r
 
 Please provide personalized advice for this specific situation."""
 
-    return prompt
+        return prompt
         
     except Exception as e:
         print(f"Error creating comprehensive prompt: {e}")
@@ -544,47 +544,47 @@ def generate_contextual_actions(message: str, pet_context: Dict[str, Any], conve
         pets = pet_context.get('pets', []) or []
         message_lower = str(message).lower() if message else ""
         actions = []
-    
-    # Health-related actions
-    if any(word in message_lower for word in ['sick', 'ill', 'health', 'vet', 'doctor', 'medicine', 'comfortable', 'comfort', 'pain', 'hurt', 'bad eye', 'pee', 'incontinence']):
-        actions.extend([
+        
+        # Health-related actions
+        if any(word in message_lower for word in ['sick', 'ill', 'health', 'vet', 'doctor', 'medicine', 'comfortable', 'comfort', 'pain', 'hurt', 'bad eye', 'pee', 'incontinence']):
+            actions.extend([
             {"id": "emergency_vet", "type": "emergency", "label": "🚨 Emergency Vet", "description": "Find emergency veterinary care"},
             {"id": "health_tracking", "type": "health_tracking", "label": "📊 Health Tracking", "description": "Track health symptoms"},
             {"id": "comfort_care", "type": "comfort_care", "label": "💕 Comfort Care", "description": "Set up comfort measures"},
             {"id": "schedule_checkup", "type": "create_task", "label": "📅 Schedule Checkup", "description": "Create vet appointment reminder"}
         ])
-    
-    # Feeding/nutrition actions
-    elif any(word in message_lower for word in ['feed', 'food', 'eating', 'diet', 'nutrition', 'hungry']):
-        actions.extend([
-            {"id": "feeding_schedule", "type": "create_task", "label": "🍽️ Feeding Schedule", "description": "Create feeding reminders"},
-            {"id": "diet_consultation", "type": "vet_consultation", "label": "👨‍⚕️ Diet Consultation", "description": "Schedule vet consultation"},
-            {"id": "nutrition_tips", "type": "view_tips", "label": "💡 Nutrition Tips", "description": "Get feeding recommendations"}
-        ])
-    
-    # Exercise/activity actions
-    elif any(word in message_lower for word in ['exercise', 'walk', 'play', 'activity', 'energy']):
-        actions.extend([
-            {"id": "walk_reminder", "type": "create_task", "label": "🚶 Walk Reminder", "description": "Set daily walk reminders"},
-            {"id": "playtime", "type": "create_task", "label": "🎾 Playtime", "description": "Schedule play sessions"},
-            {"id": "exercise_plan", "type": "view_tips", "label": "💪 Exercise Plan", "description": "Get exercise recommendations"}
-        ])
-    
-    # Default actions if no specific category detected
-    else:
-        if pets:
-            pet_name = pets[0].get('name', 'your pet')
+        
+        # Feeding/nutrition actions
+        elif any(word in message_lower for word in ['feed', 'food', 'eating', 'diet', 'nutrition', 'hungry']):
             actions.extend([
-                {"id": "care_tips", "type": "view_tips", "label": f"🐾 {pet_name}'s Care", "description": "Get personalized care advice"},
-                {"id": "create_task", "type": "create_task", "label": "📝 Create Task", "description": "Set up a reminder or task"},
-                {"id": "health_monitoring", "type": "health_tracking", "label": "📊 Health Monitoring", "description": "Monitor health metrics"}
+                {"id": "feeding_schedule", "type": "create_task", "label": "🍽️ Feeding Schedule", "description": "Create feeding reminders"},
+                {"id": "diet_consultation", "type": "vet_consultation", "label": "👨‍⚕️ Diet Consultation", "description": "Schedule vet consultation"},
+                {"id": "nutrition_tips", "type": "view_tips", "label": "💡 Nutrition Tips", "description": "Get feeding recommendations"}
             ])
+        
+        # Exercise/activity actions
+        elif any(word in message_lower for word in ['exercise', 'walk', 'play', 'activity', 'energy']):
+            actions.extend([
+                {"id": "walk_reminder", "type": "create_task", "label": "🚶 Walk Reminder", "description": "Set daily walk reminders"},
+                {"id": "playtime", "type": "create_task", "label": "🎾 Playtime", "description": "Schedule play sessions"},
+                {"id": "exercise_plan", "type": "view_tips", "label": "💪 Exercise Plan", "description": "Get exercise recommendations"}
+            ])
+        
+        # Default actions if no specific category detected
         else:
-            actions.extend([
-                {"id": "add_pet", "type": "add_pet", "label": "🐾 Add Pet", "description": "Add a new pet to your profile"},
-                {"id": "general_tips", "type": "view_tips", "label": "💡 Pet Care Tips", "description": "Get general pet care advice"},
-                {"id": "emergency_info", "type": "emergency", "label": "🚨 Emergency Info", "description": "Emergency pet care"}
-            ])
+            if pets:
+                pet_name = pets[0].get('name', 'your pet')
+                actions.extend([
+                    {"id": "care_tips", "type": "view_tips", "label": f"🐾 {pet_name}'s Care", "description": "Get personalized care advice"},
+                    {"id": "create_task", "type": "create_task", "label": "📝 Create Task", "description": "Set up a reminder or task"},
+                    {"id": "health_monitoring", "type": "health_tracking", "label": "📊 Health Monitoring", "description": "Monitor health metrics"}
+                ])
+            else:
+                actions.extend([
+                    {"id": "add_pet", "type": "add_pet", "label": "🐾 Add Pet", "description": "Add a new pet to your profile"},
+                    {"id": "general_tips", "type": "view_tips", "label": "💡 Pet Care Tips", "description": "Get general pet care advice"},
+                    {"id": "emergency_info", "type": "emergency", "label": "🚨 Emergency Info", "description": "Emergency pet care"}
+                ])
     
         return actions
         
