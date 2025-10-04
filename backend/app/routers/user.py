@@ -35,10 +35,11 @@ class TokenResponse(BaseModel):
     expires_in: int
 
 
-@router.post("/register", response_model=UserRead)
+@router.post("/register", response_model=UserRead, status_code=201)
 def register(user: UserCreate, db: Session = Depends(get_db)):
     """Register a new user"""
     db_user = get_user_by_username(db, username=user.username)
+    print("Existing user check:", db_user)
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
     hashed_password = get_password_hash(user.password)
@@ -263,3 +264,23 @@ def toggle_provider_status(
 def get_current_user_info(current_user: UserORM = Depends(get_current_user)):
     """Get current user information"""
     return UserRead.model_validate(current_user)
+
+
+# ------------------------------------------------------------
+# Compatibility endpoints for tests expecting /users/* routes
+# ------------------------------------------------------------
+
+
+@user_router.post("/register", response_model=UserRead, status_code=201)
+def users_register(user: UserCreate, db: Session = Depends(get_db)):
+    """Mirror of /auth/register at /users/register for test compatibility."""
+    return register(user=user, db=db)
+
+
+@user_router.post("/login")
+def users_login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db),
+):
+    """Mirror of /auth/token at /users/login for test compatibility."""
+    return login(form_data=form_data, db=db)
