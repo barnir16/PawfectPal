@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import os
 import google.generativeai as genai
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -28,7 +28,10 @@ except Exception as e:
     firebase_admin = type('DummyAdmin', (), {'get_gemini_api_key': lambda: None})()
     firebase_user_service = DummyFirebaseService()
 from dependencies.auth import get_current_user
+from dependencies.db import get_db
 from models.user import UserORM
+from models.ai_conversation import AIConversationORM, AIConversationMessageORM
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 
@@ -96,6 +99,56 @@ class FirebaseConfigResponse(BaseModel):
     user: str
     firebase_available: bool
 
+def save_conversation_to_db(db: Session, user_id: int, user_message: str, ai_response: str, pet_context: Dict[str, Any], suggested_actions: List[Dict[str, Any]]):
+    """
+    Save AI conversation to database with conversation management
+    """
+    try:
+        # Get or create the current active conversation for this user
+        conversation = db.query(AIConversationORM).filter(
+            AIConversationORM.user_id == user_id,
+            AIConversationORM.is_active == True
+        ).order_by(AIConversationORM.created_at.desc()).first()
+        
+        # If no active conversation exists, create a new one
+        if not conversation:
+            conversation = AIConversationORM(
+                user_id=user_id,
+                title=f"AI Chat - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+            )
+            db.add(conversation)
+            db.commit()
+            db.refresh(conversation)
+        
+        # Save user message
+        user_msg = AIConversationMessageORM(
+            conversation_id=conversation.id,
+            role="user",
+            content=user_message,
+            pet_context=pet_context
+        )
+        db.add(user_msg)
+        
+        # Save AI response
+        ai_msg = AIConversationMessageORM(
+            conversation_id=conversation.id,
+            role="assistant",
+            content=ai_response,
+            suggested_actions=suggested_actions
+        )
+        db.add(ai_msg)
+        
+        # Update conversation timestamp
+        conversation.updated_at = datetime.now(timezone.utc)
+        
+        db.commit()
+        print(f"✅ Conversation saved: {conversation.id}")
+        
+    except Exception as e:
+        print(f"❌ Error saving conversation: {e}")
+        db.rollback()
+        raise
+
 @router.post("/test", response_model=AIChatResponse)
 async def test_ai_chat(request: AIChatRequest):
     """
@@ -112,10 +165,10 @@ async def test_ai_chat(request: AIChatRequest):
         )
 
 @router.post("/chat", response_model=AIChatResponse)
-async def chat_with_ai(request: AIChatRequest, current_user: UserORM = Depends(get_current_user)):
+async def chat_with_ai(request: AIChatRequest, current_user: UserORM = Depends(get_current_user), db: Session = Depends(get_db)):
     """
     Enhanced AI chat endpoint - inspired by successful PawfectPlanner versions
-    Production-ready with comprehensive context understanding
+    Production-ready with comprehensive context understanding and conversation persistence
     """
     try:
         # Validate request data
@@ -166,6 +219,13 @@ async def chat_with_ai(request: AIChatRequest, current_user: UserORM = Depends(g
             # Generate contextual suggested actions based on conversation and pet data
             suggested_actions = generate_contextual_actions(request.message, request.pet_context or {}, conversation_history=request.conversation_history or [])
             
+            # Save conversation to database
+            try:
+                save_conversation_to_db(db, current_user.id, request.message, message, request.pet_context, suggested_actions)
+            except Exception as db_error:
+                print(f"Failed to save conversation to database: {db_error}")
+                # Continue without failing the request
+            
             return AIChatResponse(
                 message=message,
                 suggested_actions=suggested_actions
@@ -173,22 +233,46 @@ async def chat_with_ai(request: AIChatRequest, current_user: UserORM = Depends(g
             
         except asyncio.TimeoutError:
             print("⚠️ Gemini API timeout, using fallback")
-            return handle_simple_fallback(request.message, request.pet_context or {}, request.conversation_history or [])
+            fallback_response = handle_simple_fallback(request.message, request.pet_context or {}, request.conversation_history or [])
+            
+            # Save fallback conversation to database
+            try:
+                save_conversation_to_db(db, current_user.id, request.message, fallback_response.message, request.pet_context, fallback_response.suggested_actions)
+            except Exception as db_error:
+                print(f"Failed to save fallback conversation to database: {db_error}")
+            
+            return fallback_response
         
     except Exception as e:
         print(f"AI Chat Error: {str(e)}")
         try:
             # Fallback to simple logic with safe data
-            return handle_simple_fallback(request.message, request.pet_context or {}, request.conversation_history or [])
+            fallback_response = handle_simple_fallback(request.message, request.pet_context or {}, request.conversation_history or [])
+            
+            # Save fallback conversation to database
+            try:
+                save_conversation_to_db(db, current_user.id, request.message, fallback_response.message, request.pet_context, fallback_response.suggested_actions)
+            except Exception as db_error:
+                print(f"Failed to save fallback conversation to database: {db_error}")
+            
+            return fallback_response
         except Exception as fallback_error:
             print(f"Fallback also failed: {fallback_error}")
-            return AIChatResponse(
+            error_response = AIChatResponse(
                 message="I'm experiencing technical difficulties. Please try again in a moment.",
                 suggested_actions=[
                     {"id": "retry", "type": "retry", "label": "🔄 Try Again", "description": "Retry your request"},
                     {"id": "contact_support", "type": "contact", "label": "💬 Contact Support", "description": "Get help from support team"}
                 ]
             )
+            
+            # Save error conversation to database
+            try:
+                save_conversation_to_db(db, current_user.id, request.message, error_response.message, request.pet_context, error_response.suggested_actions)
+            except Exception as db_error:
+                print(f"Failed to save error conversation to database: {db_error}")
+            
+            return error_response
 
 def create_comprehensive_prompt(user_message: str, pet_context: Dict[str, Any], conversation_history: List[Dict[str, str]] = []) -> str:
     """
