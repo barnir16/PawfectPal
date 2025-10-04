@@ -22,8 +22,12 @@ from routers import (
 try:
     from routers import ai_simple as ai
     AI_AVAILABLE = True
+    print("✅ AI router imported successfully")
 except Exception as e:
-    print(f"⚠️ AI router not available: {e}")
+    print(f"❌ AI router import failed: {e}")
+    print(f"❌ Error type: {type(e).__name__}")
+    import traceback
+    print(f"❌ Full traceback: {traceback.format_exc()}")
     AI_AVAILABLE = False
 
 
