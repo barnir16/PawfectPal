@@ -154,7 +154,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
     try {
       console.log('🤖 Chatbot: Sending message with selectedPet:', selectedPet);
       console.log('🤖 Chatbot: Current pets state:', pets);
-      const response = await aiService.sendMessage(userMessage, pets, selectedPet);
+      const response = await aiService.sendMessage(userMessage, pets, selectedPet ? [selectedPet] : []);
       console.log('🤖 Chatbot: AI response:', response);
       // Add user message
       const userMessageObj: ChatMessage = {
@@ -221,11 +221,11 @@ If your pet is bleeding, unconscious, or having breathing difficulties - GO IMME
         case 'health_check':
         case 'health_monitoring':
         case 'health_tracking':
-          await handleQuickSuggestion(`How can I monitor ${selectedPets.length > 0 ? selectedPets[0].name : 'my pet'}'s health?`);
+          await handleQuickSuggestion(`How can I monitor ${selectedPet ? selectedPet.name : 'my pet'}'s health?`);
           break;
         
         case 'comfort_care':
-          await handleQuickSuggestion(`What comfort measures can I use for ${selectedPets.length > 0 ? selectedPets[0].name : 'my pet'}?`);
+          await handleQuickSuggestion(`What comfort measures can I use for ${selectedPet ? selectedPet.name : 'my pet'}?`);
           break;
         
         case 'vet_consultation':

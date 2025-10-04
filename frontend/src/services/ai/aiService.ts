@@ -1,6 +1,5 @@
 /**
- * Simplified AI Service - Inspired by PawfectPlanner Python version
- * Direct API integration without complex state management
+ * Simplified AI Service - Direct approach inspired by PawfectPlanner
  */
 
 import { Pet } from '../../types/pets/pet';
@@ -20,17 +19,27 @@ interface AIServiceResponse {
 
 class AIService {
   private apiUrl: string;
-  private conversationHistory: Array<{ content: string; isUser: boolean }> = [];
-  private readonly CONVERSATION_STORAGE_KEY = 'pawfectpal_ai_conversation';
 
   constructor() {
     this.apiUrl = import.meta.env.VITE_API_URL || 'https://pawfectpal-production.up.railway.app';
-    this.loadConversationHistory();
+  }
+
+  /**
+   * Detect primary language of a message
+   */
+  private detectLanguage(message: string): string {
+    const hebrewPattern = /[\u0590-\u05FF]/;
+    const hebrewMatches = (message.match(/[\u0590-\u05FF]/g) || []).length;
+    const totalLetters = (message.match(/[a-zA-Z]/g) || []).length + hebrewMatches;
+    
+    if (totalLetters === 0) return 'en'; // Default to English
+    
+    const hebrewRatio = hebrewMatches / totalLetters;
+    return hebrewRatio > 0.3 ? 'he' : 'en';
   }
 
   /**
    * Send a message to the AI with pet context
-   * This mimics the Python version's direct approach
    */
   async sendMessage(
     userMessage: string, 
@@ -39,46 +48,32 @@ class AIService {
   ): Promise<AIServiceResponse> {
     try {
       console.log('🤖 AI Service: Sending message with pets:', pets.length);
-      console.log('🤖 AI Service: Current conversation history length:', this.conversationHistory.length);
       
-      // Ensure Firebase config is initialized
-      if (!configService.isInitialized) {
-        await configService.initialize();
-      }
+      // Detect language
+      const language = this.detectLanguage(userMessage);
+      console.log('🤖 AI Service: Detected language:', language);
       
-      // Add user message to conversation history with persistence
-      this.addToHistory(userMessage, true);
-      
-      // Limit conversation history to prevent it from growing too large
-      if (this.conversationHistory.length > 20) {
-        this.conversationHistory = this.conversationHistory.slice(-20);
-      }
-      
-      // Prepare enhanced pet data for AI context  
-      const petContext = await this.preparePetContext(pets, selectedPet);
+      // Prepare pet context - simplified format
+      const petContext = this.preparePetContext(pets, selectedPet);
       
       // Get authentication token
       const token = await getToken();
       console.log('🔑 AI Service Token:', token ? 'Present' : 'Missing');
       
-      // Prepare request data with proper format - let backend create the prompt
+      // Prepare request data
       const requestData = {
         message: userMessage,
         pet_context: petContext,
-        conversation_history: this.conversationHistory.map(msg => ({
-          content: msg.content,
-          isUser: msg.isUser ? "true" : "false"
-        }))
+        prompt_language: language
       };
-      
+
       console.log('🤖 AI Request Data:', JSON.stringify(requestData, null, 2));
       
-      // Call the backend AI endpoint
+      // Call the simplified backend AI endpoint
       const response = await fetch(`${this.apiUrl}/ai/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Note: AI endpoint might not require authentication
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify(requestData)
@@ -87,160 +82,66 @@ class AIService {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('🤖 AI Service Error Response:', errorText);
-        throw new Error(`AI service error: ${response.status} - ${errorText}`);
+        
+        // Handle specific error types
+        if (response.status === 408) {
+          throw new Error('timeout');
+        } else if (!navigator.onLine) {
+          throw new Error('connection_lost');
+        } else {
+          throw new Error('service_unavailable');
+        }
       }
 
       const data = await response.json();
       
-      // Add AI response to conversation history with persistence
-      const aiResponse = data.message || data.response || 'I apologize, but I had trouble processing your request.';
-      this.addToHistory(aiResponse, false);
-      
-      console.log('🤖 AI Response received:', aiResponse.substring(0, 100) + '...');
-      console.log('🤖 AI Service: Updated conversation history length:', this.conversationHistory.length);
-      console.log('🤖 AI Suggested actions:', data.suggested_actions || data.suggestedActions || []);
-      
-      // Enhanced suggested actions processing
-      const suggestedActions = this.processSuggestedActions(data.suggested_actions || data.suggestedActions || []);
+      console.log('🤖 AI Response received:', data.message?.substring(0, 100) + '...');
+      console.log('🤖 AI Suggested actions:', data.suggested_actions || []);
       
       return {
-        message: data.message || data.response || 'I apologize, but I had trouble processing your request.',
-        suggestedActions: suggestedActions
+        message: data.message || 'I apologize, but I had trouble processing your request.',
+        suggestedActions: this.processSuggestedActions(data.suggested_actions || [])
       };
 
     } catch (error) {
       console.error('🤖 AI Service Error:', error);
       
-      // Fallback to local AI logic if backend is unavailable
-      return this.handleLocalAI(userMessage, pets, selectedPet);
-    }
-  }
-
-  /**
-   * Prepare enhanced pet context data (like our enhanced backend expects)
-   */
-  private async preparePetContext(pets: Pet[], selectedPet?: Pet[]): Promise<any> {
-    try {
-      // Fetch additional pet data for enhanced context
-      const [tasksData, vaccinationsData] = await Promise.all([
-        getTasks().catch(() => []),
-        // Add vaccine service call when available
-        Promise.resolve([])
-      ]);
-
-      const petData = pets.map(pet => {
-        const petTasks = tasksData.filter(task => task.petIds?.includes(pet.id));
-        const recentTaskNames = petTasks
-          .sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime())
-          .slice(0, 3)
-          .map(task => task.title);
-
-        return {
-          id: pet.id,
-          name: pet.name || 'Unknown',
-          type: pet.type || 'pet',
-          breed: pet.breed || 'Unknown',
-          age: this.calculateAge(pet),
-          weight: pet.weightKg || pet.weight_kg || 0,
-          gender: pet.gender || 'Unknown',
-          health_issues: this.processHealthIssues(pet),
-          behavior_issues: pet.behaviorIssues || pet.behavior_issues || [],
-          medical_history: this.processMedicalHistory(pet),
-          recent_tasks: recentTaskNames,
-          vaccination_status: this.processVaccinationStatus(pet),
-          is_vaccinated: Boolean(pet.isVaccinated || pet.is_vaccinated),
-          is_neutered: Boolean(pet.isNeutered || pet.is_neutered),
-          last_vet_visit: pet.lastVetVisit || pet.last_vet_visit || null,
-          next_vet_visit: pet.nextVetVisit || pet.next_vet_visit || null
-        };
-      });
-
+      // Return appropriate error message based on error type
+      const errorMessage = this.getErrorMessage(error);
       return {
-        pets: petData,
-        selected_pet: selectedPet ? petData.find(p => p.name === selectedPet[0]?.name) : null,
-        total_pets: pets.length,
-        additional_context: {
-          total_tasks: tasksData.length,
-          overdue_tasks: tasksData.filter(task => !task.isCompleted && new Date(task.dateTime) <= new Date()).length,
-          recent_vaccinations: vaccinationsData.length
-        }
+        message: errorMessage,
+        suggestedActions: [
+          {
+            id: 'retry',
+            type: 'retry',
+            label: 'Try Again',
+            description: 'Retry your request'
+          }
+        ]
       };
-    } catch (error) {
-      console.warn('Error preparing enhanced pet context:', error);
-      // Fallback to basic context
-      return this.prepareBasicPetContext(pets, selectedPet);
     }
   }
 
   /**
-   * Process health issues for enhanced context
+   * Prepare simplified pet context
    */
-  private processHealthIssues(pet: Pet): string[] {
-    const issues = pet.healthIssues || pet.health_issues || [];
-    const parsedIssues = Array.isArray(issues) ? issues : [];
-    
-    // Convert to descriptive format for AI context
-    return parsedIssues.map(issue => {
-      if (typeof issue === 'string') return issue.toLowerCase();
-      return issue.description || 'unknown issue';
+  private preparePetContext(pets: Pet[], selectedPet?: Pet[]): any {
+    const petData = pets.map(pet => {
+      return {
+        name: pet.name || 'Unknown',
+        type: pet.type || 'pet',
+        breed: pet.breed || 'Unknown',
+        age: this.calculateAge(pet),
+        weight: pet.weightKg || pet.weight_kg || 0,
+        gender: pet.gender || 'Unknown',
+        health_issues: this.processHealthIssues(pet),
+        behavior_issues: pet.behaviorIssues || pet.behavior_issues || [],
+        is_vaccinated: Boolean(pet.isVaccinated || pet.is_vaccinated),
+        is_neutered: Boolean(pet.isNeutered || pet.is_neutered),
+        last_vet_visit: pet.lastVetVisit || pet.last_vet_visit || null,
+        next_vet_visit: pet.nextVetVisit || pet.next_vet_visit || null
+      };
     });
-  }
-
-  /**
-   * Process medical history for enhanced context
-   */
-  private processMedicalHistory(pet: Pet): string[] {
-    const history = pet.medicalHistory || pet.medical_history || [];
-    const parsedHistory = Array.isArray(history) ? history : [];
-    
-    return parsedHistory.map(record => {
-      if (typeof record === 'string') return record;
-      return record.description || record.reason || 'unknown medical record';
-    });
-  }
-
-  /**
-   * Process vaccination status for enhanced context
-   */
-  private processVaccinationStatus(pet: Pet): string[] {
-    const status = [];
-    
-    if (pet.isVaccinated || pet.is_vaccinated) {
-      status.push('up to date');
-    } else {
-      status.push('needs vaccination updates');
-    }
-    
-    // Add overdue vaccines if available
-    if (pet.overdueVaccines && pet.overdueVaccines.length > 0) {
-      status.push(`overdue vaccines: ${pet.overdueVaccines.join(', ')}`);
-    }
-    
-    return status;
-  }
-
-  /**
-   * Fallback basic context preparation
-   */
-  private prepareBasicPetContext(pets: Pet[], selectedPet?: Pet[]): any {
-    const petData = pets.map(pet => ({
-      id: pet.id,
-      name: pet.name || 'Unknown',
-      type: pet.type || 'pet',
-      breed: pet.breed || 'Unknown',
-      age: this.calculateAge(pet),
-      weight: pet.weightKg || pet.weight_kg || 0,
-      gender: pet.gender || 'Unknown',
-      health_issues: [],
-      behavior_issues: [],
-      medical_history: [],
-      recent_tasks: [],
-      vaccination_status: [],
-      is_vaccinated: Boolean(pet.isVaccinated || pet.is_vaccinated),
-      is_neutered: Boolean(pet.isNeutered || pet.is_neutered),
-      last_vet_visit: pet.lastVetVisit || pet.last_vet_visit || null,
-      next_vet_visit: pet.nextVetVisit || pet.next_vet_visit || null
-    }));
 
     return {
       pets: petData,
@@ -250,7 +151,20 @@ class AIService {
   }
 
   /**
-   * Calculate pet age (using the same logic as our fixed calculation)
+   * Process health issues for AI context
+   */
+  private processHealthIssues(pet: Pet): string[] {
+    const issues = pet.healthIssues || pet.health_issues || [];
+    const parsedIssues = Array.isArray(issues) ? issues : [];
+    
+    return parsedIssues.map(issue => {
+      if (typeof issue === 'string') return issue.toLowerCase();
+      return issue.description || 'unknown issue';
+    });
+  }
+
+  /**
+   * Calculate pet age (existing logic)
    */
   private calculateAge(pet: Pet): number {
     const birthDate = pet.birthDate || pet.birth_date;
@@ -275,26 +189,6 @@ class AIService {
   }
 
   /**
-   * Create AI prompt with pet data injected (similar to Python version)
-   */
-  private createPrompt(userMessage: string, petContext: any): string {
-    const petInfo = petContext.pets.map((pet: any) => 
-      `- ${pet.name}: ${pet.type} (${pet.breed}), ${pet.age.toFixed(1)} years old, ${pet.weight}kg, ${pet.gender}`
-    ).join('\n');
-
-    return `You are a helpful pet care assistant. Here is the user's pet information:
-
-PETS:
-${petInfo}
-
-${petContext.selected_pet ? `\nCURRENT FOCUS: ${petContext.selected_pet.name} (${petContext.selected_pet.type})\n` : ''}
-
-USER QUESTION: ${userMessage}
-
-Please provide helpful, specific advice based on the pet information provided. Be conversational and practical.`;
-  }
-
-  /**
    * Process suggested actions from backend response
    */
   private processSuggestedActions(actions: any[]): Array<{
@@ -306,7 +200,6 @@ Please provide helpful, specific advice based on the pet information provided. B
     if (!Array.isArray(actions)) return [];
     
     return actions.map(action => {
-      // Handle both string and object formats
       if (typeof action === 'string') {
         return {
           id: `action_${Date.now()}_${Math.random()}`,
@@ -316,7 +209,6 @@ Please provide helpful, specific advice based on the pet information provided. B
         };
       }
       
-      // Handle object format
       return {
         id: action.id || `action_${Date.now()}_${Math.random()}`,
         type: action.type || 'general',
@@ -327,155 +219,34 @@ Please provide helpful, specific advice based on the pet information provided. B
   }
 
   /**
-   * Load conversation history from localStorage
+   * Get appropriate error message based on error type
    */
-  private loadConversationHistory(): void {
-    try {
-      const stored = localStorage.getItem(this.CONVERSATION_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          this.conversationHistory = parsed;
-          console.log('🤖 AI Service: Loaded conversation history:', this.conversationHistory.length, 'messages');
-        }
-      }
-    } catch (error) {
-      console.warn('🤖 AI Service: Failed to load conversation history:', error);
-      this.conversationHistory = [];
+  private getErrorMessage(error: any): string {
+    const errorStr = String(error).toLowerCase();
+    
+    if (errorStr.includes('timeout')) {
+      return 'Request timed out. Please try again with a shorter message.';
+    } else if (errorStr.includes('connection_lost') || !navigator.onLine) {
+      return 'Connection lost. Please check your internet connection and try again.';
+    } else if (errorStr.includes('service_unavailable')) {
+      return 'AI service is temporarily unavailable. Please try again later.';
+    } else {
+      return 'AI service error. Please try again or contact support.';
     }
   }
 
   /**
-   * Save conversation history to localStorage
-   */
-  private saveConversationHistory(): void {
-    try {
-      // Only keep last 50 messages to prevent localStorage bloat
-      const historyToSave = this.conversationHistory.slice(-50);
-      localStorage.setItem(this.CONVERSATION_STORAGE_KEY, JSON.stringify(historyToSave));
-    } catch (error) {
-      console.warn('🤖 AI Service: Failed to save conversation history:', error);
-    }
-  }
-
-  /**
-   * Add message to history and persist to localStorage
-   */
-  private addToHistory(content: string, isUser: boolean): void {
-    this.conversationHistory.push({ content, isUser });
-    this.saveConversationHistory();
-  }
-
-  /**
-   * Reset conversation history (useful for starting fresh)
+   * Reset conversation history (no longer needed with simplified approach)
    */
   resetConversation(): void {
-    this.conversationHistory = [];
-    localStorage.removeItem(this.CONVERSATION_STORAGE_KEY);
-    console.log('🤖 AI Service: Conversation history reset');
+    console.log('🤖 AI Service: Conversation reset (simplified approach - no localStorage needed)');
   }
 
   /**
-   * Get current conversation history length
+   * Get conversation length (no longer tracked with simplified approach)
    */
   getConversationLength(): number {
-    return this.conversationHistory.length;
-  }
-
-  /**
-   * Fallback local AI logic if backend is unavailable
-   */
-  private handleLocalAI(userMessage: string, pets: Pet[], selectedPet?: Pet[]): AIServiceResponse {
-    const lowerMessage = userMessage.toLowerCase();
-    
-    // Handle age comparison questions
-    if (lowerMessage.includes('oldest') || lowerMessage.includes('youngest')) {
-      const isOldest = lowerMessage.includes('oldest');
-      const petsWithAges = pets.map(pet => ({
-        ...pet,
-        calculatedAge: this.calculateAge(pet)
-      }));
-      
-      const sortedPets = petsWithAges.sort((a, b) => 
-        isOldest ? b.calculatedAge - a.calculatedAge : a.calculatedAge - b.calculatedAge
-      );
-      
-      const targetPet = sortedPets[0];
-      const ageText = targetPet.calculatedAge < 1 
-        ? `${Math.floor(targetPet.calculatedAge * 12)} months`
-        : `${Math.floor(targetPet.calculatedAge)} year${Math.floor(targetPet.calculatedAge) === 1 ? '' : 's'}`;
-      
-      return {
-        message: `${targetPet.name} is your ${isOldest ? 'oldest' : 'youngest'} pet at ${ageText} old.`,
-        suggestedActions: [
-          {
-            id: `tell_about_${targetPet.name.toLowerCase()}`,
-            type: 'view_tips',
-            label: `Tell me about ${targetPet.name}`,
-            description: `Get specific advice for ${targetPet.name}`
-          }
-        ]
-      };
-    }
-    
-    // Handle exercise questions
-    if (lowerMessage.includes('exercise')) {
-      const exerciseGuidelines = pets.map(pet => {
-        const age = this.calculateAge(pet);
-        const type = pet.type || 'pet';
-        const breed = pet.breed || 'unknown breed';
-        
-        if (type === 'dog') {
-          if (age < 1) {
-            return `${pet.name} (${breed}, puppy): Short walks 5-10 minutes, 3-4 times daily + playtime`;
-          } else if (age > 7) {
-            return `${pet.name} (${breed}, senior): Gentle walks 15-20 minutes, 2-3 times daily`;
-          } else {
-            return `${pet.name} (${breed}, adult): 30-60 minutes daily - walks, playtime, and mental stimulation`;
-          }
-        } else if (type === 'cat') {
-          if (age < 1) {
-            return `${pet.name} (${breed}, kitten): Interactive play 15-20 minutes, 3-4 times daily`;
-          } else if (age > 7) {
-            return `${pet.name} (${breed}, senior): Gentle play 10-15 minutes, 2-3 times daily`;
-          } else {
-            return `${pet.name} (${breed}, adult): 20-30 minutes daily - interactive toys, climbing, and play`;
-          }
-        }
-        return `${pet.name} (${breed}): Consult with a vet for species-specific exercise needs`;
-      }).join('\n\n');
-      
-      return {
-        message: `Here are exercise guidelines for each of your pets:\n\n${exerciseGuidelines}\n\nRemember: Always adjust based on your pet's individual energy level and health status!`,
-        suggestedActions: [
-          {
-            id: 'exercise_tracking',
-            type: 'create_task',
-            label: 'Create Exercise Reminders',
-            description: 'Set up daily exercise reminders for your pets'
-          }
-        ]
-      };
-    }
-    
-    // Default response
-    return {
-      message: `I'd be happy to help with your pet care questions! You have ${pets.length} pets: ${pets.map(p => p.name).join(', ')}. What specific aspect of their care would you like to know about?`,
-      suggestedActions: [
-        {
-          id: 'exercise_guide',
-          type: 'view_tips',
-          label: 'Exercise Guidelines',
-          description: 'Get exercise recommendations for all pets'
-        },
-        {
-          id: 'feeding_guide',
-          type: 'view_tips',
-          label: 'Feeding Guide',
-          description: 'Learn feeding schedules for all pets'
-        }
-      ]
-    };
+    return 0;
   }
 }
 
