@@ -121,7 +121,7 @@ class FirebaseAdminService:
             
             # Fallback to environment variable for local development
             env_key = os.getenv("GEMINI_API_KEY")
-            if env_key:
+            if env_key and not env_key.startswith("AIzaSyDoNs"):  # Don't use Firebase API key
                 print("Using Gemini API key from environment variable (fallback)")
                 return env_key
             
