@@ -6,6 +6,7 @@
 import { Pet } from '../../types/pets/pet';
 import { configService } from '../config/firebaseConfigService';
 import { getToken } from '../api';
+import { getTasks } from '../tasks/taskService';
 
 interface AIServiceResponse {
   message: string;
@@ -20,9 +21,11 @@ interface AIServiceResponse {
 class AIService {
   private apiUrl: string;
   private conversationHistory: Array<{ content: string; isUser: boolean }> = [];
+  private readonly CONVERSATION_STORAGE_KEY = 'pawfectpal_ai_conversation';
 
   constructor() {
     this.apiUrl = import.meta.env.VITE_API_URL || 'https://pawfectpal-production.up.railway.app';
+    this.loadConversationHistory();
   }
 
   /**
@@ -32,7 +35,7 @@ class AIService {
   async sendMessage(
     userMessage: string, 
     pets: Pet[], 
-    selectedPet?: Pet
+    selectedPet?: Pet[]
   ): Promise<AIServiceResponse> {
     try {
       console.log('🤖 AI Service: Sending message with pets:', pets.length);
@@ -43,16 +46,16 @@ class AIService {
         await configService.initialize();
       }
       
-      // Add user message to conversation history
-      this.conversationHistory.push({ content: userMessage, isUser: true });
+      // Add user message to conversation history with persistence
+      this.addToHistory(userMessage, true);
       
       // Limit conversation history to prevent it from growing too large
       if (this.conversationHistory.length > 20) {
         this.conversationHistory = this.conversationHistory.slice(-20);
       }
       
-      // Prepare pet data for AI context (similar to Python version)
-      const petContext = this.preparePetContext(pets, selectedPet);
+      // Prepare enhanced pet data for AI context  
+      const petContext = await this.preparePetContext(pets, selectedPet);
       
       // Get authentication token
       const token = await getToken();
@@ -89,16 +92,20 @@ class AIService {
 
       const data = await response.json();
       
-      // Add AI response to conversation history
+      // Add AI response to conversation history with persistence
       const aiResponse = data.message || data.response || 'I apologize, but I had trouble processing your request.';
-      this.conversationHistory.push({ content: aiResponse, isUser: false });
+      this.addToHistory(aiResponse, false);
       
       console.log('🤖 AI Response received:', aiResponse.substring(0, 100) + '...');
       console.log('🤖 AI Service: Updated conversation history length:', this.conversationHistory.length);
+      console.log('🤖 AI Suggested actions:', data.suggested_actions || data.suggestedActions || []);
+      
+      // Enhanced suggested actions processing
+      const suggestedActions = this.processSuggestedActions(data.suggested_actions || data.suggestedActions || []);
       
       return {
         message: data.message || data.response || 'I apologize, but I had trouble processing your request.',
-        suggestedActions: data.suggested_actions || []
+        suggestedActions: suggestedActions
       };
 
     } catch (error) {
@@ -110,18 +117,125 @@ class AIService {
   }
 
   /**
-   * Prepare pet context data (similar to Python version's data injection)
+   * Prepare enhanced pet context data (like our enhanced backend expects)
    */
-  private preparePetContext(pets: Pet[], selectedPet?: Pet): any {
+  private async preparePetContext(pets: Pet[], selectedPet?: Pet[]): Promise<any> {
+    try {
+      // Fetch additional pet data for enhanced context
+      const [tasksData, vaccinationsData] = await Promise.all([
+        getTasks().catch(() => []),
+        // Add vaccine service call when available
+        Promise.resolve([])
+      ]);
+
+      const petData = pets.map(pet => {
+        const petTasks = tasksData.filter(task => task.petIds?.includes(pet.id));
+        const recentTaskNames = petTasks
+          .sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime())
+          .slice(0, 3)
+          .map(task => task.title);
+
+        return {
+          id: pet.id,
+          name: pet.name || 'Unknown',
+          type: pet.type || 'pet',
+          breed: pet.breed || 'Unknown',
+          age: this.calculateAge(pet),
+          weight: pet.weightKg || pet.weight_kg || 0,
+          gender: pet.gender || 'Unknown',
+          health_issues: this.processHealthIssues(pet),
+          behavior_issues: pet.behaviorIssues || pet.behavior_issues || [],
+          medical_history: this.processMedicalHistory(pet),
+          recent_tasks: recentTaskNames,
+          vaccination_status: this.processVaccinationStatus(pet),
+          is_vaccinated: Boolean(pet.isVaccinated || pet.is_vaccinated),
+          is_neutered: Boolean(pet.isNeutered || pet.is_neutered),
+          last_vet_visit: pet.lastVetVisit || pet.last_vet_visit || null,
+          next_vet_visit: pet.nextVetVisit || pet.next_vet_visit || null
+        };
+      });
+
+      return {
+        pets: petData,
+        selected_pet: selectedPet ? petData.find(p => p.name === selectedPet[0]?.name) : null,
+        total_pets: pets.length,
+        additional_context: {
+          total_tasks: tasksData.length,
+          overdue_tasks: tasksData.filter(task => !task.isCompleted && new Date(task.dateTime) <= new Date()).length,
+          recent_vaccinations: vaccinationsData.length
+        }
+      };
+    } catch (error) {
+      console.warn('Error preparing enhanced pet context:', error);
+      // Fallback to basic context
+      return this.prepareBasicPetContext(pets, selectedPet);
+    }
+  }
+
+  /**
+   * Process health issues for enhanced context
+   */
+  private processHealthIssues(pet: Pet): string[] {
+    const issues = pet.healthIssues || pet.health_issues || [];
+    const parsedIssues = Array.isArray(issues) ? issues : [];
+    
+    // Convert to descriptive format for AI context
+    return parsedIssues.map(issue => {
+      if (typeof issue === 'string') return issue.toLowerCase();
+      return issue.description || 'unknown issue';
+    });
+  }
+
+  /**
+   * Process medical history for enhanced context
+   */
+  private processMedicalHistory(pet: Pet): string[] {
+    const history = pet.medicalHistory || pet.medical_history || [];
+    const parsedHistory = Array.isArray(history) ? history : [];
+    
+    return parsedHistory.map(record => {
+      if (typeof record === 'string') return record;
+      return record.description || record.reason || 'unknown medical record';
+    });
+  }
+
+  /**
+   * Process vaccination status for enhanced context
+   */
+  private processVaccinationStatus(pet: Pet): string[] {
+    const status = [];
+    
+    if (pet.isVaccinated || pet.is_vaccinated) {
+      status.push('up to date');
+    } else {
+      status.push('needs vaccination updates');
+    }
+    
+    // Add overdue vaccines if available
+    if (pet.overdueVaccines && pet.overdueVaccines.length > 0) {
+      status.push(`overdue vaccines: ${pet.overdueVaccines.join(', ')}`);
+    }
+    
+    return status;
+  }
+
+  /**
+   * Fallback basic context preparation
+   */
+  private prepareBasicPetContext(pets: Pet[], selectedPet?: Pet[]): any {
     const petData = pets.map(pet => ({
+      id: pet.id,
       name: pet.name || 'Unknown',
       type: pet.type || 'pet',
       breed: pet.breed || 'Unknown',
       age: this.calculateAge(pet),
       weight: pet.weightKg || pet.weight_kg || 0,
       gender: pet.gender || 'Unknown',
-      health_issues: pet.healthIssues || pet.health_issues || [],
-      behavior_issues: pet.behaviorIssues || pet.behavior_issues || [],
+      health_issues: [],
+      behavior_issues: [],
+      medical_history: [],
+      recent_tasks: [],
+      vaccination_status: [],
       is_vaccinated: Boolean(pet.isVaccinated || pet.is_vaccinated),
       is_neutered: Boolean(pet.isNeutered || pet.is_neutered),
       last_vet_visit: pet.lastVetVisit || pet.last_vet_visit || null,
@@ -130,7 +244,7 @@ class AIService {
 
     return {
       pets: petData,
-      selected_pet: selectedPet ? petData.find(p => p.name === selectedPet.name) : null,
+      selected_pet: selectedPet ? petData.find(p => p.name === selectedPet[0]?.name) : null,
       total_pets: pets.length
     };
   }
@@ -181,10 +295,83 @@ Please provide helpful, specific advice based on the pet information provided. B
   }
 
   /**
+   * Process suggested actions from backend response
+   */
+  private processSuggestedActions(actions: any[]): Array<{
+    id: string;
+    type: string;
+    label: string;
+    description: string;
+  }> {
+    if (!Array.isArray(actions)) return [];
+    
+    return actions.map(action => {
+      // Handle both string and object formats
+      if (typeof action === 'string') {
+        return {
+          id: `action_${Date.now()}_${Math.random()}`,
+          type: 'general',
+          label: action,
+          description: `Quick action: ${action}`
+        };
+      }
+      
+      // Handle object format
+      return {
+        id: action.id || `action_${Date.now()}_${Math.random()}`,
+        type: action.type || 'general',
+        label: action.label || action.action || 'Unknown Action',
+        description: action.description || `Action: ${action.label || action.action}`
+      };
+    });
+  }
+
+  /**
+   * Load conversation history from localStorage
+   */
+  private loadConversationHistory(): void {
+    try {
+      const stored = localStorage.getItem(this.CONVERSATION_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          this.conversationHistory = parsed;
+          console.log('🤖 AI Service: Loaded conversation history:', this.conversationHistory.length, 'messages');
+        }
+      }
+    } catch (error) {
+      console.warn('🤖 AI Service: Failed to load conversation history:', error);
+      this.conversationHistory = [];
+    }
+  }
+
+  /**
+   * Save conversation history to localStorage
+   */
+  private saveConversationHistory(): void {
+    try {
+      // Only keep last 50 messages to prevent localStorage bloat
+      const historyToSave = this.conversationHistory.slice(-50);
+      localStorage.setItem(this.CONVERSATION_STORAGE_KEY, JSON.stringify(historyToSave));
+    } catch (error) {
+      console.warn('🤖 AI Service: Failed to save conversation history:', error);
+    }
+  }
+
+  /**
+   * Add message to history and persist to localStorage
+   */
+  private addToHistory(content: string, isUser: boolean): void {
+    this.conversationHistory.push({ content, isUser });
+    this.saveConversationHistory();
+  }
+
+  /**
    * Reset conversation history (useful for starting fresh)
    */
   resetConversation(): void {
     this.conversationHistory = [];
+    localStorage.removeItem(this.CONVERSATION_STORAGE_KEY);
     console.log('🤖 AI Service: Conversation history reset');
   }
 
@@ -198,7 +385,7 @@ Please provide helpful, specific advice based on the pet information provided. B
   /**
    * Fallback local AI logic if backend is unavailable
    */
-  private handleLocalAI(userMessage: string, pets: Pet[], selectedPet?: Pet): AIServiceResponse {
+  private handleLocalAI(userMessage: string, pets: Pet[], selectedPet?: Pet[]): AIServiceResponse {
     const lowerMessage = userMessage.toLowerCase();
     
     // Handle age comparison questions
