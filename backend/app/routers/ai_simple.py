@@ -12,8 +12,8 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from services.firebase_admin import firebase_admin
 from services.firebase_user_service import firebase_user_service
-from dependencies.auth import get_current_user
-from models.user import UserORM
+from app.dependencies.auth import get_current_user
+from app.models.user import UserORM
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 

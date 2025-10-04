@@ -1,12 +1,12 @@
 from fastapi import Depends, APIRouter
 from sqlalchemy.orm import Session
 from typing import List
-from models import (
+from app.models import (
     VaccineORM,
     AgeRestrictionORM,
 )
-from schemas import Vaccine, AgeRestriction
-from dependencies.db import get_db
+from app.schemas import Vaccine, AgeRestriction
+from app.dependencies.db import get_db
 
 vaccines_router = APIRouter(prefix="/vaccines", tags=["Vaccines"])
 age_router = APIRouter(prefix="/age_restrictions", tags=["Age Restrictions"])

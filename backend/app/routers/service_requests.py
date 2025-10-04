@@ -2,15 +2,15 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
-from models import ServiceRequestORM, UserORM, PetORM
-from schemas import (
+from app.models import ServiceRequestORM, UserORM, PetORM
+from app.schemas import (
     ServiceRequestCreate,
     ServiceRequestRead,
     ServiceRequestUpdate,
     ServiceRequestSummary,
 )
-from dependencies.db import get_db
-from dependencies.auth import get_current_user, require_provider
+from app.dependencies.db import get_db
+from app.dependencies.auth import get_current_user, require_provider
 
 router = APIRouter(prefix="/service-requests", tags=["service-requests"])
 

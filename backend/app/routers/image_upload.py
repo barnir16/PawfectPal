@@ -1,6 +1,6 @@
 from fastapi import HTTPException, Depends, UploadFile, File, APIRouter
 from sqlalchemy.orm import Session
-from models import (
+from app.models import (
     PetORM,
     TaskORM,
     UserORM,
@@ -9,9 +9,9 @@ from models import (
 )
 from pathlib import Path
 import uuid
-from dependencies.db import get_db
-from dependencies.auth import get_current_user
-from utils.file_upload import save_upload_file
+from app.dependencies.db import get_db
+from app.dependencies.auth import get_current_user
+from app.utils.file_upload import save_upload_file
 from config import IMAGES_DIR
 
 router = APIRouter(prefix="/image_upload", tags=["image_upload"])
@@ -164,41 +164,43 @@ async def upload_chat_attachment(
     """Upload chat attachment (image)"""
     print(f"📁 Chat attachment upload - User: {current_user.id}")
     print(f"📁 File received: {file.filename}, Content-Type: {file.content_type}")
-    
+
     # Validate file type
     if not file.content_type or not file.content_type.startswith("image/"):
         print(f"❌ Invalid file type: {file.content_type}")
         raise HTTPException(status_code=400, detail="File must be an image")
-    
+
     if file.filename is None:
         print("❌ No filename provided")
         raise ValueError("File path cannot be None")
-    
+
     try:
         # Generate unique filename
         file_extension = Path(file.filename).suffix
         filename = f"chat_{current_user.id}_{uuid.uuid4()}{file_extension}"
         file_path = IMAGES_DIR / filename
-        
+
         # Ensure directory exists
         if not IMAGES_DIR.exists():
             IMAGES_DIR.mkdir(parents=True, exist_ok=True)
-        
+
         # Save file
         save_upload_file(file, str(file_path))
-        
+
         # Return file info for chat message with full URL
-        file_url = f"https://pawfectpal-production.up.railway.app/uploads/images/{filename}"
-        
+        file_url = (
+            f"https://pawfectpal-production.up.railway.app/uploads/images/{filename}"
+        )
+
         return {
             "id": str(uuid.uuid4()),  # Generate unique ID for attachment
             "file_name": file.filename,
             "file_url": file_url,
             "file_type": file.content_type,
-            "file_size": file.size if hasattr(file, 'size') else 0,
-            "created_at": "2024-01-01T00:00:00Z"  # Will be set by frontend
+            "file_size": file.size if hasattr(file, "size") else 0,
+            "created_at": "2024-01-01T00:00:00Z",  # Will be set by frontend
         }
-        
+
     except Exception as e:
         print(f"Error uploading chat attachment: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to upload file: {e}")
@@ -213,10 +215,10 @@ async def test_upload(
     print(f"🧪 Test upload - User: {current_user.id}")
     print(f"🧪 File received: {file.filename}, Content-Type: {file.content_type}")
     print(f"🧪 File size: {file.size if hasattr(file, 'size') else 'unknown'}")
-    
+
     return {
         "message": "Test upload successful",
         "filename": file.filename,
         "content_type": file.content_type,
-        "size": file.size if hasattr(file, 'size') else 0
+        "size": file.size if hasattr(file, "size") else 0,
     }

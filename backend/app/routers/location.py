@@ -1,14 +1,14 @@
 from fastapi import HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
 from typing import List
-from models import (
+from app.models import (
     PetORM,
     LocationHistoryORM,
     UserORM,
 )
-from schemas import LocationHistoryRead, LocationHistoryUpdate
-from dependencies.db import get_db
-from dependencies.auth import get_current_user
+from app.schemas import LocationHistoryRead, LocationHistoryUpdate
+from app.dependencies.db import get_db
+from app.dependencies.auth import get_current_user
 
 router = APIRouter(prefix="/gps", tags=["gps"])
 

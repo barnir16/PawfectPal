@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from typing import Optional
-from models.user import UserORM
+from app.models.user import UserORM
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from jose import jwt

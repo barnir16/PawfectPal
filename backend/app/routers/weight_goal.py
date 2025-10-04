@@ -3,17 +3,17 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
 
-from dependencies.db import get_db
-from models.weight_goal import WeightGoalORM
-from models.pet import PetORM
-from schemas.weight_goal import (
+from app.dependencies.db import get_db
+from app.models.weight_goal import WeightGoalORM
+from app.models.pet import PetORM
+from app.schemas.weight_goal import (
     WeightGoalCreate,
     WeightGoalUpdate,
     WeightGoalResponse,
     WeightGoalWithPet,
 )
-from dependencies.auth import get_current_user
-from models.user import UserORM
+from app.dependencies.auth import get_current_user
+from app.models.user import UserORM
 
 router = APIRouter(prefix="/api/weight-goals", tags=["Weight Goals"])
 

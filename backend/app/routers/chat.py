@@ -1,10 +1,10 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from models import ChatMessageORM, ServiceRequestORM, UserORM
-from schemas import ChatMessageCreate, ChatMessageRead, ChatConversation
-from dependencies.db import get_db
-from dependencies.auth import get_current_user
+from app.models import ChatMessageORM, ServiceRequestORM, UserORM
+from app.schemas import ChatMessageCreate, ChatMessageRead, ChatConversation
+from app.dependencies.db import get_db
+from app.dependencies.auth import get_current_user
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -37,7 +37,7 @@ def send_message(
         message=message.message,
         message_type=message.message_type,
     )
-    
+
     # Handle attachments if present
     if message.attachments:
         print(f"💬 Processing {len(message.attachments)} attachments")
@@ -45,14 +45,16 @@ def send_message(
         # In a real implementation, you'd want a separate attachments table
         attachments_data = []
         for attachment in message.attachments:
-            attachments_data.append({
-                "id": attachment.id,
-                "file_name": attachment.file_name,
-                "file_url": attachment.file_url,
-                "file_type": attachment.file_type,
-                "file_size": attachment.file_size,
-                "created_at": attachment.created_at
-            })
+            attachments_data.append(
+                {
+                    "id": attachment.id,
+                    "file_name": attachment.file_name,
+                    "file_url": attachment.file_url,
+                    "file_type": attachment.file_type,
+                    "file_size": attachment.file_size,
+                    "created_at": attachment.created_at,
+                }
+            )
         db_message.metadata = {"attachments": attachments_data}
         print(f"💬 Attachments stored: {attachments_data}")
 
@@ -64,7 +66,7 @@ def send_message(
 
     db.commit()
     db.refresh(db_message)
-    
+
     print(f"💬 Chat message created: {db_message.id}")
     print(f"💬 Message timestamp: {db_message.created_at}")
     print(f"💬 Message timestamp type: {type(db_message.created_at)}")

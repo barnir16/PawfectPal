@@ -1,10 +1,10 @@
 from fastapi import HTTPException, Depends, APIRouter, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from models import PetORM, ServiceORM, UserORM, ServiceStatus, ServiceTypeORM
-from schemas import ServiceCreate, ServiceRead, ServiceUpdate
-from dependencies.db import get_db
-from dependencies.auth import get_current_user
+from app.models import PetORM, ServiceORM, UserORM, ServiceStatus, ServiceTypeORM
+from app.schemas import ServiceCreate, ServiceRead, ServiceUpdate
+from app.dependencies.db import get_db
+from app.dependencies.auth import get_current_user
 
 router = APIRouter(prefix="/service_booking", tags=["service_booking"])
 

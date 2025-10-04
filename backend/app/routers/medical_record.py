@@ -1,20 +1,20 @@
 from fastapi import HTTPException, Depends, APIRouter, Query
 from sqlalchemy.orm import Session
 from typing import Optional
-from models import (
+from app.models import (
     MedicalRecordORM,
     PetORM,
     UserORM,
 )
-from schemas.medical_record import (
+from app.schemas.medical_record import (
     MedicalRecordCreate,
     MedicalRecordRead,
     MedicalRecordUpdate,
     MedicalRecordListResponse,
     MedicalRecordSummary,
 )
-from dependencies.db import get_db
-from dependencies.auth import get_current_user
+from app.dependencies.db import get_db
+from app.dependencies.auth import get_current_user
 from datetime import date
 
 router = APIRouter(prefix="/medical-records", tags=["medical-records"])
