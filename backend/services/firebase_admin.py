@@ -114,7 +114,7 @@ class FirebaseAdminService:
                 self.get_remote_config()
             
             # Try to get Gemini API key from Firebase Remote Config
-            gemini_key = self.get_config_value("GEMINI_API_KEY")
+            gemini_key = self.get_config_value("gemini_api_key")
             if gemini_key:
                 print("Using Gemini API key from Firebase Remote Config")
                 return gemini_key
