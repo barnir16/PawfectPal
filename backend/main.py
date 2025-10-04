@@ -136,6 +136,14 @@ if AI_AVAILABLE:
     print("✅ AI router included")
 else:
     print("⚠️ AI router skipped due to configuration issues")
+
+# Import and include AI conversations router
+try:
+    from routers import ai_conversations
+    app.include_router(ai_conversations.router)
+    print("✅ AI conversations router included")
+except Exception as e:
+    print(f"⚠️ AI conversations router not available: {e}")
 app.include_router(provider.router)
 app.include_router(service_requests.router)
 app.include_router(chat.router)

@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from .provider import ProviderORM
     from .service_request import ServiceRequestORM
     from .chat_message import ChatMessageORM
+    from .ai_conversation import AIConversationORM
 
 
 class UserORM(Base):
@@ -60,3 +61,4 @@ class UserORM(Base):
     )
     service_requests: Mapped[List["ServiceRequestORM"]] = relationship("ServiceRequestORM", back_populates="user")
     chat_messages: Mapped[List["ChatMessageORM"]] = relationship("ChatMessageORM", back_populates="sender")
+    ai_conversations: Mapped[List["AIConversationORM"]] = relationship("AIConversationORM", back_populates="user")
