@@ -118,7 +118,7 @@ async def call_gemini_api(api_key: str, prompt: str) -> str:
     """Call Gemini API with timeout"""
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
         response = await asyncio.wait_for(
             model.generate_content_async(prompt),
