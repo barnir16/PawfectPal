@@ -61,13 +61,8 @@ def send_message(
     return ChatMessageRead.model_validate(db_message)
 
 
-@router.get("/conversations/{service_request_id}", response_model=ChatConversation)
-def get_conversation(
-    service_request_id: int,
-    db: Session = Depends(get_db),
-    current_user: UserORM = Depends(get_current_user),
-):
-    """Get conversation for a service request"""
+def _get_conversation_data(service_request_id: int, db: Session, current_user: UserORM) -> ChatConversation:
+    """Helper function to get conversation data without FastAPI dependencies"""
     # Verify the service request exists and user has access
     service_request = (
         db.query(ServiceRequestORM)
@@ -109,6 +104,16 @@ def get_conversation(
     )
 
 
+@router.get("/conversations/{service_request_id}", response_model=ChatConversation)
+def get_conversation(
+    service_request_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserORM = Depends(get_current_user),
+):
+    """Get conversation for a service request"""
+    return _get_conversation_data(service_request_id, db, current_user)
+
+
 @router.get("/my-conversations", response_model=List[ChatConversation])
 def get_my_conversations(
     db: Session = Depends(get_db), current_user: UserORM = Depends(get_current_user)
@@ -134,8 +139,14 @@ def get_my_conversations(
 
     conversations = []
     for request_id in service_request_ids:
-        conversation = get_conversation(request_id, db, current_user)
-        conversations.append(conversation)
+        try:
+            conversation = _get_conversation_data(request_id, db, current_user)
+            conversations.append(conversation)
+        except HTTPException as e:
+            # Skip conversations user doesn't have access to
+            if e.status_code == 403:
+                continue
+            raise e
 
     return conversations
 
