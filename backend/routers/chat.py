@@ -41,20 +41,8 @@ def send_message(
     # Handle attachments if present
     if message.attachments:
         print(f"💬 Processing {len(message.attachments)} attachments")
-        # Store attachments as JSON in metadata for now
-        # In a real implementation, you'd want a separate attachments table
-        attachments_data = []
-        for attachment in message.attachments:
-            attachments_data.append({
-                "id": attachment.id,
-                "file_name": attachment.file_name,
-                "file_url": attachment.file_url,
-                "file_type": attachment.file_type,
-                "file_size": attachment.file_size,
-                "created_at": attachment.created_at
-            })
-        db_message.message_data = {"attachments": attachments_data}
-        print(f"💬 Attachments stored: {attachments_data}")
+        # For now, we'll skip storing attachments since we don't have the column
+        print(f"💬 Attachments received but not stored (no metadata column)")
 
     db.add(db_message)
 
