@@ -43,7 +43,7 @@ def health_check():
     return {
         "status": "healthy", 
         "message": "PawfectPal API is running", 
-        "version": "1.0.6",
+        "version": "1.0.7",
         "firebase_fixed": True,
         "cors_fixed": True,
         "deployment_time": "2025-01-21T23:58:00Z",
@@ -54,7 +54,7 @@ def health_check():
 def test_endpoint():
     return {
         "message": "This is the NEW version with Firebase fixes!",
-        "version": "1.0.6",
+        "version": "1.0.7",
         "firebase_status": "disabled_but_working",
         "cors_status": "simple_clean_fix",
         "railway_detection": "FORCE_REDEPLOY_2025_01_21"
@@ -65,16 +65,22 @@ def railway_test():
     return {
         "status": "Railway is using NEW code!",
         "timestamp": "2025-01-21T23:58:00Z",
-        "version": "1.0.6",
+        "version": "1.0.7",
         "cors_fix": "simple_clean"
     }
 
-# Simple, clean CORS configuration
+# Enhanced CORS configuration for Railway
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://pawfectpal-production-2f07.up.railway.app",
+        "https://pawfectpal-production.up.railway.app",
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "*"
+    ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
 )
 
@@ -147,7 +153,7 @@ def read_root():
     """API root endpoint"""
     return {
         "message": "Welcome to PawfectPal API",
-        "version": "1.0.6",
+        "version": "1.0.7",
         "features": [
             "Pet Management",
             "Task Scheduling",
