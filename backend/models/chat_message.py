@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Optional, TYPE_CHECKING
-from sqlalchemy import Integer, String, Text, DateTime, Boolean, ForeignKey
+from sqlalchemy import Integer, String, Text, DateTime, Boolean, ForeignKey, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base import Base
 from datetime import datetime, timezone
@@ -25,6 +25,7 @@ class ChatMessageORM(Base):
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
     is_edited: Mapped[bool] = mapped_column(Boolean, default=False)
     edited_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    metadata: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)  # JSON metadata for attachments, location, etc.
     
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))

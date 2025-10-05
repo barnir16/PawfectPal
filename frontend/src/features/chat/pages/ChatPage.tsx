@@ -8,7 +8,7 @@ import type {
   ChatMessage,
   ChatMessageCreate,
 } from "../../../types/services/chat";
-import MockChatService from "../../../services/chat/mockChat";
+import { chatService } from "../../../services/chat/chatService";
 
 export const ChatPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -22,23 +22,26 @@ export const ChatPage = () => {
     const fetchConversation = async () => {
       try {
         setLoading(true);
-        const data = await MockChatService.getConversation(Number(id));
-        setConversation(data ?? null);
+        const data = await chatService.getConversation(Number(id));
+        setConversation(data);
       } catch (err) {
         console.error("Failed to fetch conversation", err);
+        setConversation(null);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchConversation();
+    if (id) {
+      fetchConversation();
+    }
   }, [id]);
 
   const handleSendMessage = async (msg: ChatMessageCreate) => {
     if (!conversation) return;
     try {
       setSending(true);
-      const newMsg: ChatMessage = await MockChatService.sendMessage(
+      const newMsg: ChatMessage = await chatService.sendMessage(
         conversation.service_request_id,
         msg
       );
