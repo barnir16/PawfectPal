@@ -125,6 +125,8 @@ export const en = {
     title: 'Pets',
     addPet: 'Add Pet',
     editPet: 'Edit Pet',
+    addPhoto: 'Add Photo',
+    changePhoto: 'Change Photo',
     petDetails: 'Pet Details',
     name: 'Name',
     type: 'Type',
@@ -487,6 +489,8 @@ export const en = {
   vaccines: {
     title: 'Vaccines',
     overdue: 'Overdue',
+    dueSoon: 'Due Soon',
+    upToDate: 'Up to Date',
     upcoming: 'Upcoming',
     totalPets: 'Total Pets',
     healthStatus: 'Health Status',
@@ -499,6 +503,7 @@ export const en = {
     overdueVaccinations: 'Overdue Vaccinations',
     upcomingVaccinations: 'Upcoming Vaccinations',
     due: 'Due',
+    allPets: 'All Pets',
     noUpcomingVaccinations: 'No upcoming vaccinations',
     smartSuggestions: 'Smart Suggestions',
     smartSuggestionsDescription: 'Vaccine recommendations based on age, breed, and lifestyle of your pet',
@@ -518,12 +523,16 @@ export const en = {
     noPetDataAvailable: 'No pet data available. Please add a pet first.',
     mandatory: 'Mandatory',
     recommended: 'Recommended',
+    preventative: 'Preventative',
     preventativeTreatments: 'Preventative Treatments',
+    vaccination: 'Vaccination',
+    treatment: 'Treatment',
+    frequency: 'Frequency',
     noVaccinesFound: 'No vaccines found',
     noVaccineRecordsFound: 'No vaccine records found for the selected pet(s).',
-    noVaccinesAre: 'No vaccines are',
+    noVaccinesAre: 'No vaccines',
     other: 'Other',
-    nextDueDate: 'Next due date',
+    nextDueDate: 'Next Due Date',
     createReminder: 'Create Reminder',
     basedOnAge: 'Based on your pet\'s age',
     basedOnLifestyle: 'Based on your pet\'s lifestyle',
@@ -535,18 +544,23 @@ export const en = {
     completed: 'Completed',
     dueDate: 'Due Date',
     deleteVaccine: 'Delete Vaccine',
+    cancel: 'Cancel',
+    create: 'Create',
+    update: 'Update',
+    more: 'More',
     noSuggestions: 'No vaccine suggestions available',
-    weightHealthInfo: 'Weight health information',
-    idealWeightRange: 'Ideal weight range',
+    weightHealthInfo: 'Weight Health Information',
+    currentWeight: 'Current Weight',
+    idealWeightRange: 'Ideal Weight Range',
+
     // Vaccine Dashboard
     vaccineDashboard: 'Vaccine Dashboard',
-    overdueVaccines: 'Overdue Vaccines',
     upcomingVaccines: 'Upcoming Vaccines',
     completedVaccines: 'Completed Vaccines',
-    totalVaccines: 'Total Vaccines',
     vaccineOverview: 'Vaccine Overview',
     vaccineStatistics: 'Vaccine Statistics',
-    
+    totalVaccines: 'Total Vaccines',
+
     // Vaccine Management
     vaccineManagement: 'Vaccine Management',
     addNewVaccine: 'Add New Vaccine',
@@ -554,7 +568,7 @@ export const en = {
     vaccineName: 'Vaccine Name',
     vaccineType: 'Vaccine Type',
     vaccineDate: 'Vaccine Date',
-    
+
     // Smart Suggestions
     smartVaccineSuggestions: 'Smart Vaccine Suggestions',
     basedOnBreed: 'Based on Breed',
@@ -563,9 +577,11 @@ export const en = {
     dismissSuggestion: 'Dismiss Suggestion',
     completionDescription: 'Completion Description',
     veterinarian: 'Veterinarian',
+    veterinarianPlaceholder: 'Dr. Cohen',
     clinic: 'Clinic',
-    autoRescheduleInfo: 'Auto-reschedule information',
-    
+    clinicPlaceholder: 'Veterinary Hospital',
+    autoRescheduleInfo: 'Auto-reschedule Information',
+
     // Vaccine Scheduling
     vaccineScheduling: 'Vaccine Scheduling',
     customSchedule: 'Custom Schedule',
@@ -573,36 +589,36 @@ export const en = {
     scheduleName: 'Schedule Name',
     scheduleDescription: 'Schedule Description',
     initialAge: 'Initial Age',
-    repeatInterval: 'Repeat Interval',
     maxAge: 'Maximum Age',
+    repeatInterval: 'Repeat Interval',
     priority: 'Priority',
-    
+
     // Vaccine History
     completionDate: 'Completion Date',
     lastVaccination: 'Last Vaccination',
     nextVaccination: 'Next Vaccination',
     vaccinationRecord: 'Vaccination Record',
-    
+
     // Vaccine Certificates
     vaccineCertificate: 'Vaccine Certificate',
     downloadCertificate: 'Download Certificate',
     printCertificate: 'Print Certificate',
     certificatePreview: 'Certificate Preview',
-    
+
     // Vaccine Reminders
     vaccineReminders: 'Vaccine Reminders',
     reminderSettings: 'Reminder Settings',
     emailReminders: 'Email Reminders',
     pushReminders: 'Push Reminders',
     reminderFrequency: 'Reminder Frequency',
-    
+
     // Vaccine Analytics
     vaccineAnalytics: 'Vaccine Analytics',
     vaccinationRate: 'Vaccination Rate',
     overdueRate: 'Overdue Rate',
     completionRate: 'Completion Rate',
     healthScore: 'Health Score',
-    
+
     // Common Actions
     markAsCompleted: 'Mark as Completed',
     reschedule: 'Reschedule',
@@ -610,6 +626,23 @@ export const en = {
     exportData: 'Export Data',
     importData: 'Import Data',
     completeVaccine: 'Complete Vaccine',
+    backToTasks: 'Back to Tasks',
+    filterByPet: 'Filter by Pet',
+    allRecords: 'All Records',
+    suggestions: 'Suggestions',
+    administered: 'Administered',
+    nextDue: 'Next Due',
+    notes: 'Notes',
+    notesPlaceholder: 'Additional notes about this vaccination...',
+    edit: 'Edit',
+    delete: 'Delete',
+    refresh: 'Refresh',
+    loadingVaccineData: 'Loading vaccine data...',
+    failedToLoadVaccineData: 'Failed to load vaccine data',
+    exportToICal: 'Export to iCal',
+    syncWithGoogleCalendar: 'Sync with Google Calendar',
+    vaccinesExported: 'Vaccines exported to calendar!',
+    vaccinesSynced: 'Vaccines synced with Google Calendar!',
   },
 
   // AI Chatbot
@@ -683,9 +716,11 @@ export const en = {
     editTask: 'Edit Task',
     updateTask: 'Update Task',
     taskDetails: 'Task Details',
+    taskTitle: 'Task Title',
     name: 'Name',
     description: 'Description',
     dueDate: 'Due Date',
+    dueLabel: 'Due Date',
     priority: 'Priority',
     priorityLevel: 'Priority Level',
     selectPriority: 'Select Priority',
@@ -697,20 +732,25 @@ export const en = {
     medium: 'Medium',
     high: 'High',
     urgent: 'Urgent',
+    status: 'Status',
     completed: 'Completed',
     pending: 'Pending',
     overdue: 'Overdue',
     assignedTo: 'Assigned To',
     pet: 'Pet',
+    petLabel: 'Pet',
     category: 'Category',
     notes: 'Notes',
     listView: 'List View',
     gridView: 'Grid View',
     markIncomplete: 'Mark Incomplete',
     addNewTask: 'Add New Task',
+    createTask: 'Create Task',
     manageYourTasks: 'Manage your pet care tasks efficiently',
     refresh: 'Refresh',
     filterByPet: 'Filter by Pet',
+    allPets: 'All Pets',
+    allPetsLabel: 'All Pets',
     totalTasks: 'Total Tasks',
     allTasks: 'All Tasks',
     noTasks: 'No tasks found',
@@ -729,12 +769,11 @@ export const en = {
     failedToExportTasks: 'Failed to export tasks',
     failedToSyncTasks: 'Failed to sync tasks',
     confirmDelete: 'Are you sure you want to delete this task?',
-    taskTitle: 'Task Title',
     assignToPet: 'Assign to Pet',
     noPet: 'No specific pet',
-    daysLeft: 'days left',
+    daysLeft: 'Days left',
     dueToday: 'Due today',
-    daysOverdue: 'days overdue',
+    daysOverdue: 'Days overdue',
     reminder: 'Reminder',
     myTasks: 'My Tasks',
     searchTasks: 'Search tasks...',
@@ -753,22 +792,28 @@ export const en = {
     allPriorities: 'All Priorities',
     chooseTaskType: 'Choose Task Type',
     chooseTaskTypeDescription: 'Select the type of task you want to create',
+    
+    // Tasks types
     vaccines: 'Vaccines',
     vaccinesDescription: 'Manage vaccination schedules and records',
     customTasks: 'Custom Tasks',
     customTasksDescription: 'Create custom tasks for your pets',
     backToMain: 'Back to Main',
-    createTask: 'Create Task',
+    
+    // Scheduling
     daily: 'Daily',
     weekly: 'Weekly',
     monthly: 'Monthly',
     yearly: 'Yearly',
+    
+    // Calendar integration
+    exportToICal: 'Export to iCal',
+    syncWithGoogleCalendar: 'Sync with Google Calendar',
     export: 'Export',
     syncCalendar: 'Sync Calendar',
+    
+    // Extra info
     allStatuses: 'All Statuses',
-    status: 'Status',
-    petLabel: 'Pet',
-    dueLabel: 'Due Date',
   },
 
   // Task Priorities
@@ -989,6 +1034,7 @@ export const en = {
     weightGain: 'Weight Gain',
     weightLoss: 'Weight Loss',
     weightStable: 'Weight Stable',
+    belowAverageWeightMessage: 'Weight below average',
     consultVeterinarian: 'Please consult your veterinarian about proper nutrition and feeding schedule',
     monitoringHealth: 'Monitoring your pet\'s health',
     noAlerts: 'No weight alerts - your pet is healthy!',
