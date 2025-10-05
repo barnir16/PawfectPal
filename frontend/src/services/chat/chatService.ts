@@ -12,10 +12,11 @@ class ChatService {
   async getMyConversations(): Promise<ChatConversation[]> {
     try {
       const response = await apiClient.get('/chat/my-conversations');
-      return response.data;
+      return response.data || [];
     } catch (error) {
       console.error('Failed to fetch conversations:', error);
-      throw new Error('Failed to fetch conversations');
+      // Return empty array instead of throwing error
+      return [];
     }
   }
 
