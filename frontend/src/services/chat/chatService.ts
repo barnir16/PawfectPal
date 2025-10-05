@@ -1,4 +1,4 @@
-import { apiClient } from '../api/apiClient';
+import { apiClient } from '../api';
 import type {
   ChatConversation,
   ChatMessage,
