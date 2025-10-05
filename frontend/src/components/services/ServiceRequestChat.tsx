@@ -60,11 +60,17 @@ export const ServiceRequestChat: React.FC = () => {
         }
       }
       
-      // Fetch conversation messages
-      const conversationData = await chatService.getConversation(parseInt(id));
-      console.log('Fetched conversation:', conversationData);
+      // Fetch conversation messages with better error handling
+      try {
+        const conversationData = await chatService.getConversation(parseInt(id));
+        console.log('Fetched conversation:', conversationData);
+        setMessages((conversationData?.messages || []).map(processMessage));
+      } catch (chatError: any) {
+        console.warn('Could not fetch conversation, starting with empty chat:', chatError);
+        // Start with empty messages if conversation fetch fails
+        setMessages([]);
+      }
       
-      setMessages((conversationData?.messages || []).map(processMessage));
       setRequest(serviceRequest);
     } catch (err: any) {
       console.error('Error fetching chat data:', err);

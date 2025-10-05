@@ -26,8 +26,23 @@ class ChatService {
     try {
       const response = await apiClient.get(`/chat/conversations/${serviceRequestId}`);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch conversation:', error);
+      
+      // If it's a 404, return empty conversation (new chat)
+      if (error?.status === 404) {
+        return {
+          service_request_id: serviceRequestId,
+          messages: [],
+          unread_count: 0
+        };
+      }
+      
+      // If it's a 403, user doesn't have access
+      if (error?.status === 403) {
+        throw new Error('You do not have access to this conversation');
+      }
+      
       throw new Error('Failed to fetch conversation');
     }
   }

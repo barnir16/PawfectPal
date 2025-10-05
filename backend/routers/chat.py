@@ -69,7 +69,8 @@ def send_message(
     print(f"💬 Message timestamp: {db_message.created_at}")
     print(f"💬 Message timestamp type: {type(db_message.created_at)}")
 
-    return db_message
+    # Convert to response model with proper serialization
+    return ChatMessageRead.model_validate(db_message)
 
 
 @router.get("/conversations/{service_request_id}", response_model=ChatConversation)
@@ -110,9 +111,12 @@ def get_conversation(
 
     db.commit()
 
+    # Convert messages to proper response format
+    serialized_messages = [ChatMessageRead.model_validate(msg) for msg in messages]
+
     return ChatConversation(
         service_request_id=service_request_id,
-        messages=messages,
+        messages=serialized_messages,
         unread_count=unread_count,
     )
 
