@@ -16,7 +16,7 @@ import {
 import { useLocalization } from "../../../contexts/LocalizationContext";
 import type { ChatConversation } from "../../../types/services/chat";
 import { useNavigate } from "react-router-dom";
-import MockChatService from "../../../services/chat/mockChat";
+import { chatService } from "../../../services/chat/chatService";
 
 export const ChatListPage = () => {
   const { t } = useLocalization();
@@ -31,7 +31,7 @@ export const ChatListPage = () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await MockChatService.getMyConversations(); // Replace with real API
+        const data = await chatService.getMyConversations();
         setConversations(data);
       } catch (err: any) {
         setError(err.message || t("chat.somethingWentWrong"));
