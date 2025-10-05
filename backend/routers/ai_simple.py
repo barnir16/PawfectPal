@@ -118,7 +118,30 @@ async def call_gemini_api(api_key: str, prompt: str) -> str:
     """Call Gemini API with timeout"""
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # First, let's list available models to see what's actually available
+        try:
+            models = genai.list_models()
+            print(f"🔍 Available models: {[model.name for model in models]}")
+            
+            # Look for any model that supports generateContent
+            available_model = None
+            for model in models:
+                if 'generateContent' in model.supported_generation_methods:
+                    available_model = model.name
+                    print(f"✅ Found model with generateContent: {available_model}")
+                    break
+            
+            if not available_model:
+                print("❌ No models found that support generateContent")
+                return "No suitable AI models are currently available."
+                
+        except Exception as e:
+            print(f"❌ Error listing models: {e}")
+            # Fallback to trying common model names
+            available_model = 'gemini-pro'
+        
+        model = genai.GenerativeModel(available_model)
         
         response = await asyncio.wait_for(
             model.generate_content_async(prompt),
