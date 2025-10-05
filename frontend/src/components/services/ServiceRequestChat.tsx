@@ -64,7 +64,11 @@ export const ServiceRequestChat: React.FC = () => {
       try {
         const conversationData = await chatService.getConversation(parseInt(id));
         console.log('Fetched conversation:', conversationData);
-        setMessages((conversationData?.messages || []).map(processMessage));
+        
+        // Ensure messages is always an array
+        const messages = conversationData?.messages || [];
+        console.log('Processing messages:', messages);
+        setMessages(messages.map(processMessage));
       } catch (chatError: any) {
         console.warn('Could not fetch conversation, starting with empty chat:', chatError);
         // Start with empty messages if conversation fetch fails
@@ -144,9 +148,25 @@ export const ServiceRequestChat: React.FC = () => {
   };
 
   const processMessage = (message: ChatMessage): ChatMessage => {
+    // Ensure message is valid
+    if (!message) {
+      console.warn('Invalid message received:', message);
+      return {
+        id: 0,
+        service_request_id: 0,
+        sender_id: 0,
+        message: '',
+        message_type: 'text',
+        is_read: false,
+        is_edited: false,
+        created_at: new Date().toISOString(),
+        attachments: []
+      };
+    }
+    
     return {
       ...message,
-      attachments: message.attachments || undefined
+      attachments: message.attachments || []
     };
   };
 
