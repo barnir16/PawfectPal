@@ -36,32 +36,49 @@ class FirebaseAdminService:
                     service_account_info = json.loads(service_account_json)
                     self.credentials = service_account.Credentials.from_service_account_info(
                         service_account_info,
-                        scopes=['https://www.googleapis.com/auth/firebase.remoteconfig']
+                        scopes=[
+                            'https://www.googleapis.com/auth/firebase.remoteconfig',
+                            'https://www.googleapis.com/auth/cloud-platform'
+                        ]
                     )
                     print("✅ Firebase Admin: Using service account from environment")
-                except json.JSONDecodeError:
-                    print("❌ Invalid JSON in FIREBASE_SERVICE_ACCOUNT_JSON")
+                except json.JSONDecodeError as e:
+                    print(f"❌ Invalid JSON in FIREBASE_SERVICE_ACCOUNT_JSON: {e}")
+                    return False
+                except Exception as e:
+                    print(f"❌ Error creating credentials from service account: {e}")
                     return False
             else:
                 # Try to use default credentials (for local development)
                 try:
                     self.credentials, _ = google.auth.default(
-                        scopes=['https://www.googleapis.com/auth/firebase.remoteconfig']
+                        scopes=[
+                            'https://www.googleapis.com/auth/firebase.remoteconfig',
+                            'https://www.googleapis.com/auth/cloud-platform'
+                        ]
                     )
                     print("✅ Firebase Admin: Using default credentials")
                 except Exception as e:
                     print(f"❌ No default credentials available: {e}")
+                    print("💡 To fix this:")
+                    print("   1. Create a Firebase service account")
+                    print("   2. Download the JSON file")
+                    print("   3. Set FIREBASE_SERVICE_ACCOUNT_JSON environment variable")
                     return False
             
             # Get access token
-            if not self.credentials.valid:
-                self.credentials.refresh(Request())
-            
-            self.access_token = self.credentials.token
-            self.initialized = True
-            
-            print("✅ Firebase Admin initialized successfully")
-            return True
+            try:
+                if not self.credentials.valid:
+                    self.credentials.refresh(Request())
+                
+                self.access_token = self.credentials.token
+                self.initialized = True
+                
+                print(f"✅ Firebase Admin initialized successfully with token: {self.access_token[:20]}...")
+                return True
+            except Exception as e:
+                print(f"❌ Failed to refresh credentials: {e}")
+                return False
             
         except Exception as e:
             print(f"❌ Failed to initialize Firebase Admin: {str(e)}")
@@ -72,8 +89,8 @@ class FirebaseAdminService:
         try:
             if not self.initialized:
                 if not self.initialize():
-                    # Fallback to API key method if service account fails
-                    return self._get_remote_config_with_api_key()
+                    print("❌ Firebase initialization failed, cannot fetch Remote Config")
+                    return {}
             
             # Use correct Firebase Remote Config API endpoint
             url = f"https://firebaseremoteconfig.googleapis.com/v1/projects/{self.project_id}/remoteConfig"
@@ -82,19 +99,25 @@ class FirebaseAdminService:
                 "Content-Type": "application/json"
             }
             
-            response = requests.get(url, headers=headers)
+            print(f"🔍 Fetching Remote Config from: {url}")
+            print(f"🔍 Using token: {self.access_token[:20]}...")
+            
+            response = requests.get(url, headers=headers, timeout=10)
             response.raise_for_status()
             
             data = response.json()
             self.config = data.get("parameters", {})
             
             print(f"✅ Firebase Remote Config fetched successfully: {len(self.config)} parameters")
+            print(f"🔍 Available config keys: {list(self.config.keys())}")
             return self.config
             
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Network error fetching Firebase Remote Config: {str(e)}")
+            return {}
         except Exception as e:
             print(f"❌ Failed to fetch Firebase Remote Config: {str(e)}")
-            # Fallback to API key method
-            return self._get_remote_config_with_api_key()
+            return {}
     
     def _get_remote_config_with_api_key(self) -> Dict[str, Any]:
         """Fallback method - Firebase Remote Config requires OAuth2, not API keys"""
@@ -128,11 +151,18 @@ class FirebaseAdminService:
             print(f"Available config keys: {list(self.config.keys()) if self.config else 'No config'}")
             gemini_key = self.get_config_value("gemini_api_key")
             print(f"Gemini key from Firebase: {gemini_key[:10] if gemini_key else 'None'}...")
-            if gemini_key:
-                print("Using Gemini API key from Firebase Remote Config")
+            if gemini_key and gemini_key.startswith("AIza") and not gemini_key.startswith("AIzaSyDoNs"):
+                print("✅ Using Gemini API key from Firebase Remote Config")
                 return gemini_key
+            elif gemini_key and gemini_key.startswith("AIzaSyDoNs"):
+                print("❌ Firebase Remote Config contains Firebase API key instead of Gemini API key")
+                print("💡 Please update the 'gemini_api_key' in Firebase Remote Config with a valid Gemini API key")
             
-            print("Gemini API key not found in Firebase Remote Config or environment")
+            print("❌ Gemini API key not found in Firebase Remote Config or environment")
+            print("💡 To fix this immediately:")
+            print("   1. Go to Railway dashboard")
+            print("   2. Add environment variable: GEMINI_API_KEY = REDACTED_GEMINI_API_KEY")
+            print("   3. Or update Firebase Remote Config with proper OAuth2 setup")
             return None
             
         except Exception as e:
