@@ -53,7 +53,7 @@ def send_message(
                 "file_size": attachment.file_size,
                 "created_at": attachment.created_at
             })
-        db_message.message_metadata = {"attachments": attachments_data}
+        db_message.metadata = {"attachments": attachments_data}
         print(f"💬 Attachments stored: {attachments_data}")
 
     db.add(db_message)

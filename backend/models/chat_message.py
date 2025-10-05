@@ -25,7 +25,7 @@ class ChatMessageORM(Base):
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
     is_edited: Mapped[bool] = mapped_column(Boolean, default=False)
     edited_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    message_metadata: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)  # JSON metadata for attachments, location, etc.
+    metadata: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)  # JSON metadata for attachments, location, etc.
     
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
