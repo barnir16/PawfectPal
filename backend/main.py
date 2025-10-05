@@ -43,19 +43,20 @@ def health_check():
     return {
         "status": "healthy", 
         "message": "PawfectPal API is running", 
-        "version": "1.0.8",
+        "version": "1.0.9",
         "firebase_fixed": True,
         "cors_fixed": True,
         "deployment_time": "2025-01-21T23:58:00Z",
         "chat_fixed": True,
-        "db_schema_fixed": True
+        "db_schema_fixed": True,
+        "sqlalchemy_reserved_word_fixed": True
     }
 
 @app.get("/test")
 def test_endpoint():
     return {
         "message": "This is the NEW version with Firebase fixes!",
-        "version": "1.0.8",
+        "version": "1.0.9",
         "firebase_status": "disabled_but_working",
         "cors_status": "simple_clean_fix",
         "railway_detection": "FORCE_REDEPLOY_2025_01_21"
@@ -66,7 +67,7 @@ def railway_test():
     return {
         "status": "Railway is using NEW code!",
         "timestamp": "2025-01-21T23:58:00Z",
-        "version": "1.0.8",
+        "version": "1.0.9",
         "cors_fix": "simple_clean"
     }
 
@@ -154,7 +155,7 @@ def read_root():
     """API root endpoint"""
     return {
         "message": "Welcome to PawfectPal API",
-        "version": "1.0.8",
+        "version": "1.0.9",
         "features": [
             "Pet Management",
             "Task Scheduling",
