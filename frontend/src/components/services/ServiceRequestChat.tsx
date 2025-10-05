@@ -140,7 +140,7 @@ export const ServiceRequestChat: React.FC = () => {
   const processMessage = (message: ChatMessage): ChatMessage => {
     return {
       ...message,
-      attachments: message.metadata?.attachments || undefined
+      attachments: message.message_metadata?.attachments || undefined
     };
   };
 

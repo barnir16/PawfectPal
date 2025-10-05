@@ -255,7 +255,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           service_request_id: serviceRequestId,
           message: "📍 Shared location",
           message_type: "text",
-          metadata: {
+          message_metadata: {
             location: { latitude, longitude },
           },
         };
@@ -732,8 +732,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                 )}
 
                               {/* Render location */}
-                              {msg.metadata?.location &&
-                                renderLocationMessage(msg.metadata)}
+                              {msg.message_metadata?.location &&
+                                renderLocationMessage(msg.message_metadata)}
 
                               <Box
                                 sx={{
