@@ -43,19 +43,19 @@ def health_check():
     return {
         "status": "healthy", 
         "message": "PawfectPal API is running", 
-        "version": "1.0.4",
+        "version": "1.0.5",
         "firebase_fixed": True,
         "cors_fixed": True,
-        "deployment_time": "2025-01-21T23:55:00Z"
+        "deployment_time": "2025-01-21T23:58:00Z"
     }
 
 @app.get("/test")
 def test_endpoint():
     return {
         "message": "This is the NEW version with Firebase fixes!",
-        "version": "1.0.4",
+        "version": "1.0.5",
         "firebase_status": "disabled_but_working",
-        "cors_status": "ultra_aggressive_fix",
+        "cors_status": "simple_clean_fix",
         "railway_detection": "FORCE_REDEPLOY_2025_01_21"
     }
 
@@ -63,63 +63,19 @@ def test_endpoint():
 def railway_test():
     return {
         "status": "Railway is using NEW code!",
-        "timestamp": "2025-01-21T23:55:00Z",
-        "version": "1.0.4",
-        "cors_fix": "ultra_aggressive"
+        "timestamp": "2025-01-21T23:58:00Z",
+        "version": "1.0.5",
+        "cors_fix": "simple_clean"
     }
 
-# CORS configuration - Ultra aggressive fix for Railway deployment
+# Simple, clean CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all methods
-    allow_headers=["*"],  # Allow all headers
-    expose_headers=["*"],
-    max_age=3600,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
 )
-
-# Force CORS headers on all responses - Ultra aggressive
-@app.middleware("http")
-async def force_cors_headers(request, call_next):
-    response = await call_next(request)
-    
-    # Force CORS headers regardless of origin
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-    response.headers["Access-Control-Allow-Headers"] = "*"
-    response.headers["Access-Control-Allow-Credentials"] = "true"
-    response.headers["Access-Control-Max-Age"] = "3600"
-    
-    # Handle preflight requests
-    if request.method == "OPTIONS":
-        response.status_code = 200
-    
-    return response
-
-# Handle preflight requests explicitly
-@app.options("/{path:path}")
-async def options_handler(path: str):
-    return Response(
-        status_code=200,
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
-            "Access-Control-Allow-Headers": "*",
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Max-Age": "3600",
-        }
-    )
-
-# CORS test endpoint
-@app.get("/cors-test")
-def cors_test():
-    return {
-        "message": "CORS test endpoint",
-        "headers": "Should have CORS headers",
-        "timestamp": "2025-01-21T23:55:00Z",
-        "version": "1.0.4"
-    }
 
 # Serve static files (uploaded images)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
@@ -190,7 +146,7 @@ def read_root():
     """API root endpoint"""
     return {
         "message": "Welcome to PawfectPal API",
-        "version": "1.0.4",
+        "version": "1.0.5",
         "features": [
             "Pet Management",
             "Task Scheduling",
