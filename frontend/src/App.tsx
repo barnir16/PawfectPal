@@ -111,12 +111,19 @@ const AppContent = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
+          p: { xs: 1, sm: 2, md: 3 }, // Responsive padding
           width: {
+            xs: "100%", // Full width on mobile
             sm: desktopOpen ? `calc(100% - 240px)` : `calc(100% - 64px)`,
           },
-          ml: { sm: isRTL ? "0px" : desktopOpen ? "240px" : "64px" },
-          mr: { sm: isRTL ? (desktopOpen ? "240px" : "64px") : "0px" },
+          ml: { 
+            xs: "0px", // No margin on mobile
+            sm: isRTL ? "0px" : desktopOpen ? "240px" : "64px" 
+          },
+          mr: { 
+            xs: "0px", // No margin on mobile
+            sm: isRTL ? (desktopOpen ? "240px" : "64px") : "0px" 
+          },
           mt: "64px",
           overflow: "auto",
           height: "calc(100vh - 64px)",
