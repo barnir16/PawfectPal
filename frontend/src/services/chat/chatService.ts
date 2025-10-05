@@ -56,6 +56,62 @@ class ChatService {
       throw new Error('Failed to mark message as read');
     }
   }
+
+  /**
+   * Share location in a service request conversation
+   */
+  async shareLocation(
+    serviceRequestId: number,
+    latitude?: number,
+    longitude?: number,
+    address?: string,
+    fallback?: string
+  ): Promise<ChatMessage> {
+    try {
+      const messageData: ChatMessageCreate = {
+        service_request_id: serviceRequestId,
+        message: address || fallback || 'Location shared',
+        message_type: 'location',
+        metadata: {
+          latitude,
+          longitude,
+          address,
+          fallback
+        }
+      };
+      
+      return await this.sendMessage(serviceRequestId, messageData);
+    } catch (error) {
+      console.error('Failed to share location:', error);
+      throw new Error('Failed to share location');
+    }
+  }
+
+  /**
+   * Send service update message
+   */
+  async sendServiceUpdate(
+    serviceRequestId: number,
+    status?: string,
+    message?: string
+  ): Promise<ChatMessage> {
+    try {
+      const messageData: ChatMessageCreate = {
+        service_request_id: serviceRequestId,
+        message: message || `Service status updated to: ${status}`,
+        message_type: 'system',
+        metadata: {
+          status,
+          type: 'service_update'
+        }
+      };
+      
+      return await this.sendMessage(serviceRequestId, messageData);
+    } catch (error) {
+      console.error('Failed to send service update:', error);
+      throw new Error('Failed to send service update');
+    }
+  }
 }
 
 export const chatService = new ChatService();
