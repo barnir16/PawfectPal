@@ -17,7 +17,7 @@ export interface ChatMessage {
   attachments?: MediaAttachment[];
   
   // Service-specific metadata
-  message_metadata?: ServiceMessageMetadata;
+  metadata?: ServiceMessageMetadata;
   
   // Relationships
   sender?: User;
@@ -51,7 +51,7 @@ export interface ChatMessageCreate {
   message: string;
   message_type?: MessageType;
   attachments?: ChatAttachmentCreate[];
-  message_metadata?: ServiceMessageMetadata;
+  metadata?: ServiceMessageMetadata;
 }
 
 export interface ChatAttachmentCreate {
