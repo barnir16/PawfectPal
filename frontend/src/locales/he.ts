@@ -1249,8 +1249,10 @@ export const he = {
     locationShared: 'מיקום שותף',
     currentLocation: 'מיקום נוכחי',
     viewOnMaps: 'צפה במפות',
-    
-    // Chat list page
+  },
+
+  // Chat
+  chat: {
     chatTitle: 'צ\'אט',
     noConversations: 'אין שיחות עדיין',
     loadingConversations: 'טוען שיחות...',
@@ -1279,7 +1281,6 @@ export const he = {
       closed: 'סגור',
     },
   },
-
 };
 
 export default he;

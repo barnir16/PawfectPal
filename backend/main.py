@@ -65,10 +65,10 @@ def railway_test():
         "version": "1.0.3"
     }
 
-# CORS configuration - Simplified for Railway deployment
+# CORS configuration - Aggressive fix for Railway deployment
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for now
+    allow_origins=["*"],  # Allow all origins
     allow_credentials=True,
     allow_methods=["*"],  # Allow all methods
     allow_headers=["*"],  # Allow all headers
@@ -76,40 +76,17 @@ app.add_middleware(
     max_age=3600,
 )
 
-# Additional CORS handling for all routes
+# Force CORS headers on all responses
 @app.middleware("http")
-async def add_cors_headers(request, call_next):
-    # Handle preflight OPTIONS requests
-    if request.method == "OPTIONS":
-        response = Response()
-        origin = request.headers.get("origin")
-        if origin and (
-            origin.startswith("http://localhost") or 
-            origin.startswith("https://pawfectpal-production") or
-            origin.startswith("https://pawfectpal-production-2f07") or
-            "railway.app" in origin
-        ):
-            response.headers["Access-Control-Allow-Origin"] = origin
-            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-            response.headers["Access-Control-Allow-Headers"] = "*"
-            response.headers["Access-Control-Allow-Credentials"] = "true"
-            response.headers["Access-Control-Max-Age"] = "3600"
-        return response
-    
+async def force_cors_headers(request, call_next):
     response = await call_next(request)
     
-    # Add CORS headers manually for all responses
-    origin = request.headers.get("origin")
-    if origin and (
-        origin.startswith("http://localhost") or 
-        origin.startswith("https://pawfectpal-production") or
-        origin.startswith("https://pawfectpal-production-2f07") or
-        "railway.app" in origin
-    ):
-        response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-        response.headers["Access-Control-Allow-Headers"] = "*"
-        response.headers["Access-Control-Allow-Credentials"] = "true"
+    # Force CORS headers regardless of origin
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Max-Age"] = "3600"
     
     return response
 
