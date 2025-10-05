@@ -110,21 +110,21 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
         // Add welcome message
         const welcomeMessage: ChatMessage = {
           id: 'welcome',
-          content: `Hi! I'm your AI pet care assistant. I can help you with: Health concerns, Behavior issues, Feeding questions, Exercise planning, Grooming advice, Care reminders. Ask me about your pet's care...`,
+          content: `${t('ai.welcome')} ${t('ai.helpWith')} ${t('ai.healthConcerns')}, ${t('ai.behaviorIssues')}, ${t('ai.feedingQuestions')}, ${t('ai.exercisePlanning')}, ${t('ai.groomingAdvice')}, ${t('ai.careReminders')}. ${t('ai.askAboutPetCare')}`,
           isUser: false,
           timestamp: new Date(),
           suggestedActions: [
             {
               id: 'exercise_guide',
               type: 'view_tips',
-              label: 'Exercise Guidelines',
-              description: 'Get exercise recommendations for all pets'
+              label: t('ai.exercisePlanning'),
+              description: t('ai.viewTips')
             },
             {
               id: 'health_check',
               type: 'view_tips',
-              label: 'Health Assessment',
-              description: 'Review your pet\'s health status'
+              label: t('ai.healthConcerns'),
+              description: t('ai.viewTips')
             }
           ]
         };
