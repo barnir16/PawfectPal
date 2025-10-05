@@ -1154,8 +1154,10 @@ export const en = {
     locationShared: 'Location Shared',
     currentLocation: 'Current Location',
     viewOnMaps: 'View on Maps',
-    
-    // Chat list page
+  },
+
+  // Chat
+  chat: {
     chatTitle: 'Chat',
     noConversations: 'No conversations yet',
     loadingConversations: 'Loading conversations...',
