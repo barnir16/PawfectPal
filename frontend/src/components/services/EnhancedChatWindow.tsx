@@ -581,8 +581,6 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           backgroundColor: (theme) =>
             theme.palette.mode === "dark" ? "grey.900" : "grey.50",
           fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-          minHeight: { xs: "200px", md: "300px" },
-          maxHeight: { xs: "calc(100vh - 200px)", md: "calc(100vh - 300px)" },
           display: "flex",
           flexDirection: "column",
         }}
@@ -618,7 +616,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                   sender_id: msg.sender_id,
                 });
 
-                const isOwn = msg.sender_id === user?.id;
+                // Fix: Properly identify own messages - check both user ID and sender_id: 0 (mock data)
+                const isOwn = msg.sender_id === user?.id || msg.sender_id === 0;
                 const isSystem = msg.message_type === "system";
 
                 return (
