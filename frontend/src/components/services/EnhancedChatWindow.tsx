@@ -255,9 +255,6 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           service_request_id: serviceRequestId,
           message: "📍 Shared location",
           message_type: "text",
-          message_data: {
-            location: { latitude, longitude },
-          },
         };
 
         try {
@@ -477,53 +474,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     );
   };
 
-  const renderLocationMessage = (message_data: any) => {
-    if (!message_data?.location) return null;
-
-    const { latitude, longitude, address, fallback } = message_data.location;
-
-    return (
-      <Box sx={{ mt: 1 }}>
-        <Card sx={{ maxWidth: 250 }}>
-          <CardContent sx={{ p: 2 }}>
-            <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-              <LocationOn color="primary" sx={{ mr: 1 }} />
-              <Typography variant="subtitle2">
-                {t("services.locationShared")}
-              </Typography>
-            </Box>
-            <Typography variant="body2" color="text.secondary">
-              {address || t("services.currentLocation")}
-            </Typography>
-            {!fallback && latitude && longitude ? (
-              <Button
-                size="small"
-                startIcon={<Visibility />}
-                onClick={() => {
-                  window.open(
-                    `https://maps.google.com/?q=${latitude},${longitude}`,
-                    "_blank"
-                  );
-                }}
-                sx={{ mt: 1 }}
-              >
-                {t("services.viewOnMaps")}
-              </Button>
-            ) : (
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ mt: 1, display: "block" }}
-              >
-                {t("services.locationShared")} -{" "}
-                {address || t("services.currentLocation")}
-              </Typography>
-            )}
-          </CardContent>
-        </Card>
-      </Box>
-    );
-  };
+  // Location sharing function removed since message_data doesn't exist
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -731,9 +682,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                   </Box>
                                 )}
 
-                              {/* Render location */}
-                              {msg.message_data?.location &&
-                                renderLocationMessage(msg.message_data)}
+                              {/* Render location - removed since message_data doesn't exist */}
 
                               <Box
                                 sx={{
