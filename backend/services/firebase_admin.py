@@ -115,9 +115,14 @@ class FirebaseAdminService:
             
             # For now, use environment variable directly since Firebase Remote Config requires OAuth2
             env_key = os.getenv("GEMINI_API_KEY")
-            if env_key and env_key.startswith("AIza"):  # Valid Gemini API key format
-                print("Using Gemini API key from environment variable")
+            print(f"🔍 GEMINI_API_KEY from env: {env_key[:10] if env_key else 'None'}...")
+            if env_key and env_key.startswith("AIza") and not env_key.startswith("AIzaSyDoNs"):  # Valid Gemini API key format, not Firebase key
+                print("✅ Using Gemini API key from environment variable")
                 return env_key
+            elif env_key and env_key.startswith("AIzaSyDoNs"):
+                print("❌ Detected Firebase API key instead of Gemini API key")
+                print("💡 Please set GEMINI_API_KEY to a valid Gemini API key (not Firebase key)")
+                return None
             
             # Try Firebase Remote Config as fallback (if OAuth2 is set up)
             print(f"Available config keys: {list(self.config.keys()) if self.config else 'No config'}")
