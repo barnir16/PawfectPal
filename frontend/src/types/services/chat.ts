@@ -16,9 +16,6 @@ export interface ChatMessage {
   // Media attachments
   attachments?: MediaAttachment[];
   
-  // Service-specific message_data
-  message_data?: ServiceMessageMetadata;
-  
   // Relationships
   sender?: User;
 }
