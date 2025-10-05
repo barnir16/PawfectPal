@@ -87,7 +87,7 @@ class ChatService {
         service_request_id: serviceRequestId,
         message: address || fallback || 'Location shared',
         message_type: 'location',
-        metadata: {
+        message_data: {
           latitude,
           longitude,
           address,
@@ -115,7 +115,7 @@ class ChatService {
         service_request_id: serviceRequestId,
         message: message || `Service status updated to: ${status}`,
         message_type: 'system',
-        metadata: {
+        message_data: {
           status,
           type: 'service_update'
         }
