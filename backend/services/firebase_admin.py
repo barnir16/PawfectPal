@@ -22,18 +22,29 @@ class FirebaseAdminService:
     def initialize(self):
         """Initialize Firebase Admin with service account or default credentials"""
         try:
-            # Try to get service account from environment variable
-            service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON") or os.getenv("RAILWAY_FIREBASE_SETUP")
+            # Try multiple environment variable sources
+            service_account_json = (
+                os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON") or 
+                os.getenv("RAILWAY_FIREBASE_SETUP") or
+                os.getenv("FIREBASE_CREDENTIALS")
+            )
             
             # Debug: Check what variables are available
             print(f"🔍 FIREBASE_SERVICE_ACCOUNT_JSON: {'Found' if os.getenv('FIREBASE_SERVICE_ACCOUNT_JSON') else 'Not found'}")
             print(f"🔍 RAILWAY_FIREBASE_SETUP: {'Found' if os.getenv('RAILWAY_FIREBASE_SETUP') else 'Not found'}")
-            print(f"🔍 All Railway variables: {[k for k in os.environ.keys() if 'RAILWAY' in k]}")
+            print(f"🔍 FIREBASE_CREDENTIALS: {'Found' if os.getenv('FIREBASE_CREDENTIALS') else 'Not found'}")
+            print(f"🔍 FIREBASE_API_KEY: {'Found' if os.getenv('FIREBASE_API_KEY') else 'Not found'}")
             
             if service_account_json:
                 # Parse JSON from environment variable
                 try:
-                    service_account_info = json.loads(service_account_json)
+                    # Handle both single-line and multi-line JSON
+                    if service_account_json.startswith('{'):
+                        service_account_info = json.loads(service_account_json)
+                    else:
+                        # Try to parse as escaped JSON string
+                        service_account_info = json.loads(service_account_json.replace('\\n', '\n'))
+                    
                     self.credentials = service_account.Credentials.from_service_account_info(
                         service_account_info,
                         scopes=[
@@ -43,7 +54,8 @@ class FirebaseAdminService:
                     )
                     print("✅ Firebase Admin: Using service account from environment")
                 except json.JSONDecodeError as e:
-                    print(f"❌ Invalid JSON in FIREBASE_SERVICE_ACCOUNT_JSON: {e}")
+                    print(f"❌ Invalid JSON in service account environment variable: {e}")
+                    print("💡 Make sure the JSON is properly formatted and escaped")
                     return False
                 except Exception as e:
                     print(f"❌ Error creating credentials from service account: {e}")
@@ -64,6 +76,7 @@ class FirebaseAdminService:
                     print("   1. Create a Firebase service account")
                     print("   2. Download the JSON file")
                     print("   3. Set FIREBASE_SERVICE_ACCOUNT_JSON environment variable")
+                    print("   4. Or set FIREBASE_API_KEY for basic API access")
                     return False
             
             # Get access token
@@ -120,13 +133,23 @@ class FirebaseAdminService:
             return {}
     
     def _get_remote_config_with_api_key(self) -> Dict[str, Any]:
-        """Fallback method - Firebase Remote Config requires OAuth2, not API keys"""
-        print("❌ Firebase Remote Config API requires OAuth2 authentication, not API keys")
-        print("💡 To fix this, you need to:")
-        print("   1. Create a Firebase service account")
-        print("   2. Download the service account JSON file")
-        print("   3. Set FIREBASE_SERVICE_ACCOUNT_JSON environment variable")
-        print("   4. Or use Firebase Admin SDK with proper credentials")
+        """Fallback method using Firebase API key (limited functionality)"""
+        firebase_api_key = os.getenv("FIREBASE_API_KEY")
+        
+        if not firebase_api_key:
+            print("❌ No Firebase API key available for fallback")
+            print("💡 To fix this, you need to:")
+            print("   1. Create a Firebase service account")
+            print("   2. Download the service account JSON file")
+            print("   3. Set FIREBASE_SERVICE_ACCOUNT_JSON environment variable")
+            print("   4. Or set FIREBASE_API_KEY for basic API access")
+            return {}
+        
+        print("⚠️ Using Firebase API key fallback (limited functionality)")
+        print("💡 For full Remote Config access, use service account authentication")
+        
+        # Note: Firebase Remote Config API doesn't support API key authentication
+        # This is just a placeholder for future implementation
         return {}
     
     def get_gemini_api_key(self) -> Optional[str]:
