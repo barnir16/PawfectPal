@@ -86,7 +86,8 @@ async def add_cors_headers(request, call_next):
         if origin and (
             origin.startswith("http://localhost") or 
             origin.startswith("https://pawfectpal-production") or
-            origin.startswith("https://pawfectpal-production-2f07")
+            origin.startswith("https://pawfectpal-production-2f07") or
+            "railway.app" in origin
         ):
             response.headers["Access-Control-Allow-Origin"] = origin
             response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
@@ -102,7 +103,8 @@ async def add_cors_headers(request, call_next):
     if origin and (
         origin.startswith("http://localhost") or 
         origin.startswith("https://pawfectpal-production") or
-        origin.startswith("https://pawfectpal-production-2f07")
+        origin.startswith("https://pawfectpal-production-2f07") or
+        "railway.app" in origin
     ):
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
