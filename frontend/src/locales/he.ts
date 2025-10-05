@@ -1251,9 +1251,9 @@ export const he = {
     viewOnMaps: 'צפה במפות',
     
     // Chat list page
-    title: 'צ\'אט',
+    chatTitle: 'צ\'אט',
     noConversations: 'אין שיחות עדיין',
-    loading: 'טוען שיחות...',
+    loadingConversations: 'טוען שיחות...',
     quickReplies: 'תשובות מהירות',
     serviceUpdate: 'עדכון שירות',
     requestPhotosMessage: 'האם תוכל לשתף כמה תמונות של החיה שלך? זה יעזור לי לספק טיפול טוב יותר.',
@@ -1262,7 +1262,6 @@ export const he = {
     you: 'אתה',
     client: 'לקוח',
     cancelRequest: 'בטל בקשה',
-    locationShared: 'מיקום שותף',
     photosRequested: 'תמונות התבקשו',
     meetingScheduled: 'פגישה נקבעה',
     acceptService: 'קבל שירות',
@@ -1271,10 +1270,8 @@ export const he = {
     completeService: 'השלם שירות',
     serviceActions: 'פעולות שירות',
     selectedFiles: 'קבצים נבחרים',
-    viewOnMaps: 'צפה במפות',
     download: 'הורד',
     close: 'סגור',
-    currentLocation: 'מיקום נוכחי',
     requestStatus: {
       open: 'פתוח',
       in_progress: 'בתהליך',

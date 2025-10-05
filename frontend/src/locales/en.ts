@@ -1156,9 +1156,9 @@ export const en = {
     viewOnMaps: 'View on Maps',
     
     // Chat list page
-    title: 'Chat',
+    chatTitle: 'Chat',
     noConversations: 'No conversations yet',
-    loading: 'Loading conversations...',
+    loadingConversations: 'Loading conversations...',
     quickReplies: 'Quick Replies',
     serviceUpdate: 'Service Update',
     requestPhotosMessage: 'Could you please share some photos of your pet? This will help me provide better care.',
@@ -1167,7 +1167,6 @@ export const en = {
     you: 'You',
     client: 'Client',
     cancelRequest: 'Cancel Request',
-    locationShared: 'Location Shared',
     photosRequested: 'Photos Requested',
     meetingScheduled: 'Meeting Scheduled',
     acceptService: 'Accept Service',
@@ -1176,10 +1175,8 @@ export const en = {
     completeService: 'Complete Service',
     serviceActions: 'Service Actions',
     selectedFiles: 'Selected files',
-    viewOnMaps: 'View on Maps',
     download: 'Download',
     close: 'Close',
-    currentLocation: 'Current location',
     requestStatus: {
       open: 'Open',
       in_progress: 'In Progress',

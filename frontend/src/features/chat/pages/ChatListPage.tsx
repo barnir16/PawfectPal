@@ -53,7 +53,7 @@ export const ChatListPage = () => {
         <Box sx={{ p: 5, textAlign: "center" }}>
           <CircularProgress />
           <Typography sx={{ mt: 2, fontWeight: 500 }}>
-            {t("chat.loading")}
+            {t("chat.loadingConversations")}
           </Typography>
         </Box>
       );
@@ -134,7 +134,7 @@ export const ChatListPage = () => {
   return (
     <Box sx={{ p: { xs: 2, md: 4 } }}>
       <Typography variant="h4" gutterBottom fontWeight={700}>
-        {t("chat.title")}
+        {t("chat.chatTitle")}
       </Typography>
       <Paper elevation={3} sx={{ mt: 2, borderRadius: 2 }}>
         {renderContent()}
