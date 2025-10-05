@@ -81,17 +81,17 @@ export const ChatPage = () => {
       sx={{
         height: "100vh",
         display: "flex",
-        justifyContent: "center", // horizontal centering
-        alignItems: "flex-start", // top alignment instead of center
+        justifyContent: "center",
+        alignItems: "flex-start",
         overflow: "hidden",
-        pt: "5px", // optional padding from top/header
+        pt: "5px",
       }}
     >
       <Box
         sx={{
-          transform: "translateX(-20px)", // keep your horizontal nudge
+          transform: "translateX(-20px)",
           width: "700px",
-          height: "85vh", // fill most of viewport height
+          height: "calc(100vh - 10px)", // Use full height minus padding
           maxWidth: "90%",
         }}
       >
