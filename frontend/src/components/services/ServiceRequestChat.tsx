@@ -12,7 +12,7 @@ import {
 } from '@mui/icons-material';
 import { useLocalization } from '../../contexts/LocalizationContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { ChatService } from '../../services/chat/chatService';
+import { chatService } from '../../services/chat/chatService';
 import { ServiceRequestService } from '../../services/serviceRequests/serviceRequestService';
 import { getPets } from '../../services/pets/petService';
 import { ServiceContextPanel } from './ServiceContextPanel';
@@ -61,7 +61,7 @@ export const ServiceRequestChat: React.FC = () => {
       }
       
       // Fetch conversation messages
-      const conversationData = await ChatService.getConversation(parseInt(id));
+      const conversationData = await chatService.getConversation(parseInt(id));
       console.log('Fetched conversation:', conversationData);
       
       setMessages((conversationData?.messages || []).map(processMessage));
@@ -81,7 +81,7 @@ export const ServiceRequestChat: React.FC = () => {
       setSending(true);
       
       // Send message via API
-      const sentMessage = await ChatService.sendMessage({
+      const sentMessage = await chatService.sendMessage(parseInt(id), {
         ...messageData,
         service_request_id: parseInt(id),
       });
@@ -152,7 +152,7 @@ export const ServiceRequestChat: React.FC = () => {
       
       switch (action) {
         case 'share_location':
-          sentMessage = await ChatService.shareLocation(
+          sentMessage = await chatService.shareLocation(
             parseInt(id!),
             data?.latitude,
             data?.longitude,
@@ -163,7 +163,7 @@ export const ServiceRequestChat: React.FC = () => {
           break;
           
         case 'request_photos':
-          sentMessage = await ChatService.sendMessage({
+          sentMessage = await chatService.sendMessage(parseInt(id!), {
             service_request_id: parseInt(id!),
             message: t('services.requestPhotosMessage'),
             message_type: 'text',
@@ -172,7 +172,7 @@ export const ServiceRequestChat: React.FC = () => {
           break;
           
         case 'schedule_meeting':
-          sentMessage = await ChatService.sendMessage({
+          sentMessage = await chatService.sendMessage(parseInt(id!), {
             service_request_id: parseInt(id!),
             message: t('services.scheduleMeetingMessage'),
             message_type: 'text',
@@ -181,7 +181,7 @@ export const ServiceRequestChat: React.FC = () => {
           break;
           
         case 'share_instructions':
-          sentMessage = await ChatService.sendMessage({
+          sentMessage = await chatService.sendMessage(parseInt(id!), {
             service_request_id: parseInt(id!),
             message: t('services.shareInstructionsMessage'),
             message_type: 'text',
@@ -190,7 +190,7 @@ export const ServiceRequestChat: React.FC = () => {
           break;
           
         case 'update_service_status':
-          sentMessage = await ChatService.sendServiceUpdate(
+          sentMessage = await chatService.sendServiceUpdate(
             parseInt(id!),
             data?.status,
             data?.message
