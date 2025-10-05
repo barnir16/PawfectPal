@@ -1246,6 +1246,14 @@ export const he = {
     requestPhotos: 'בקש תמונות של החיה',
     scheduleMeeting: 'קבע פגישה',
     shareInstructions: 'שתף הוראות',
+    locationShared: 'מיקום שותף',
+    currentLocation: 'מיקום נוכחי',
+    viewOnMaps: 'צפה במפות',
+    
+    // Chat list page
+    title: 'צ\'אט',
+    noConversations: 'אין שיחות עדיין',
+    loading: 'טוען שיחות...',
     quickReplies: 'תשובות מהירות',
     serviceUpdate: 'עדכון שירות',
     requestPhotosMessage: 'האם תוכל לשתף כמה תמונות של החיה שלך? זה יעזור לי לספק טיפול טוב יותר.',

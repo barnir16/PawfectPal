@@ -1151,6 +1151,14 @@ export const en = {
     requestPhotos: 'Request Pet Photos',
     scheduleMeeting: 'Schedule Meeting',
     shareInstructions: 'Share Instructions',
+    locationShared: 'Location Shared',
+    currentLocation: 'Current Location',
+    viewOnMaps: 'View on Maps',
+    
+    // Chat list page
+    title: 'Chat',
+    noConversations: 'No conversations yet',
+    loading: 'Loading conversations...',
     quickReplies: 'Quick Replies',
     serviceUpdate: 'Service Update',
     requestPhotosMessage: 'Could you please share some photos of your pet? This will help me provide better care.',
