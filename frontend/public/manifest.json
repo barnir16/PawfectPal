@@ -7,6 +7,11 @@
       "src": "/vite.svg",
       "type": "image/svg+xml",
       "sizes": "any"
+    },
+    {
+      "src": "/favicon.ico",
+      "type": "image/x-icon",
+      "sizes": "16x16 32x32"
     }
   ],
   "start_url": "/",
@@ -15,5 +20,14 @@
   "background_color": "#ffffff",
   "orientation": "portrait-primary",
   "scope": "/",
-  "lang": "en"
+  "lang": "en",
+  "categories": ["lifestyle", "utilities", "productivity"],
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.png",
+      "type": "image/png",
+      "sizes": "390x844",
+      "form_factor": "narrow"
+    }
+  ]
 }
