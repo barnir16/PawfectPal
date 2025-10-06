@@ -21,13 +21,5 @@
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "en",
-  "categories": ["lifestyle", "utilities", "productivity"],
-  "screenshots": [
-    {
-      "src": "/screenshot-mobile.png",
-      "type": "image/png",
-      "sizes": "390x844",
-      "form_factor": "narrow"
-    }
-  ]
+  "categories": ["lifestyle", "utilities", "productivity"]
 }
