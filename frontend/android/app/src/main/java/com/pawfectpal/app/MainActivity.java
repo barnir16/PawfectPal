@@ -1,0 +1,5 @@
+package com.pawfectpal.app;
+
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {}

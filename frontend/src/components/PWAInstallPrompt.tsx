@@ -117,3 +117,4 @@ export const PWAInstallPrompt: React.FC = () => {
     </Snackbar>
   );
 };
+
