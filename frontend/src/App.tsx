@@ -37,6 +37,7 @@ import { ChatListPage } from "./features/chat/pages/ChatListPage";
 import { ChatPage } from "./features/chat/pages/ChatPage";
 import "./utils/testVaccines"; // Import test utility
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 
 const App = () => {
   return (
@@ -181,6 +182,9 @@ const AppContent = () => {
 
       {/* Notifications */}
       <NotificationContainer />
+      
+      {/* PWA Install Prompt */}
+      <PWAInstallPrompt />
     </Box>
   );
 };
