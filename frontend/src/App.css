@@ -70,6 +70,20 @@
   .MuiToolbar-root {
     min-height: 56px !important;
   }
+  
+  /* Prevent text overflow in sidebar */
+  .MuiListItemText-primary {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 180px !important;
+  }
+  
+  /* Better spacing for mobile sidebar */
+  .MuiListItemButton-root {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
 }
 
 /* Tablet optimizations */
