@@ -111,7 +111,7 @@ export const Sidebar = ({
           justifyContent: "space-between",
         }}
       >
-        {open && (
+        {(open || isMobile) && (
           <Typography variant="h6" noWrap component="div">
             PawfectPal
           </Typography>
@@ -124,8 +124,8 @@ export const Sidebar = ({
             "&:hover": {
               backgroundColor: "rgba(0,0,0,0.05)",
             },
-            ml: open ? 0 : "auto",
-            mr: open ? 0 : "auto",
+            ml: (open || isMobile) ? 0 : "auto",
+            mr: (open || isMobile) ? 0 : "auto",
           }}
         >
           <MenuIcon fontSize="small" />
@@ -143,8 +143,8 @@ export const Sidebar = ({
               sx={{
                 flexDirection: isRTL ? "row-reverse" : "row",
                 minHeight: 48,
-                px: open ? 2 : 1.5,
-                justifyContent: open ? "flex-start" : "center",
+                px: (open || isMobile) ? 2 : 1.5,
+                justifyContent: (open || isMobile) ? "flex-start" : "center",
                 "&.Mui-selected": {
                   backgroundColor: "rgba(255,255,255,0.1)",
                   "&:hover": {
@@ -155,11 +155,11 @@ export const Sidebar = ({
                   backgroundColor: "rgba(255,255,255,0.05)",
                 },
               }}
-              title={!open ? item.text : undefined} // Show tooltip when minimized
+              title={!(open || isMobile) ? item.text : undefined} // Show tooltip when minimized
             >
               <ListItemIcon
                 sx={{
-                  minWidth: open ? 40 : "auto",
+                  minWidth: (open || isMobile) ? 40 : "auto",
                   justifyContent: "center",
                   color:
                     location.pathname === item.path
@@ -169,7 +169,7 @@ export const Sidebar = ({
               >
                 {item.icon}
               </ListItemIcon>
-              {open && (
+              {(open || isMobile) && (
                 <ListItemText
                   primary={item.text}
                   sx={{
