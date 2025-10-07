@@ -27,6 +27,7 @@ def get_provider_by_id(provider_id: int, db: Session = Depends(get_db)):
                 "provider_bio": provider.provider_profile.bio,
                 "provider_hourly_rate": provider.provider_profile.hourly_rate,
                 "provider_rating": provider.provider_profile.rating,
+                "provider_rating_count": provider.provider_profile.rating_count,
             }
         )
     return user_data
@@ -56,6 +57,7 @@ def get_providers(
                     "provider_bio": p.provider_profile.bio,
                     "provider_hourly_rate": p.provider_profile.hourly_rate,
                     "provider_rating": p.provider_profile.rating,
+                    "provider_rating_count": p.provider_profile.rating_count,
                 }
             )
         results.append(user_data)

@@ -3,6 +3,7 @@ export const he = {
   common: {
     save: 'שמור',
     cancel: 'ביטול',
+    submit: 'שלח',
     delete: 'מחק',
     edit: 'ערוך',
     add: 'הוסף',
@@ -1116,6 +1117,9 @@ export const he = {
     serviceType: 'סוג שירות',
     selectServiceType: 'בחר סוג שירות',
     allServices: 'כל השירותים',
+    writeReview: 'כתוב ביקורת',
+    yourRating: 'דירוגך',
+    yourComment: 'הערה שלך',
     status: {
       label: 'סטטוס',
       open: 'פתוח',

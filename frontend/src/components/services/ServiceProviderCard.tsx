@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Card,
   CardContent,
@@ -14,6 +14,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Rating,
+  TextField,
 } from '@mui/material';
 import {
   LocationOn,
@@ -27,6 +29,7 @@ import {
 import { useLocalization } from '../../contexts/LocalizationContext';
 import { ServiceRequestForm } from './ServiceRequestForm';
 import type { ServiceProvider } from '../../types/services';
+import { createProviderReview, getProviderReviewEligibility } from '../../features/services/servicesApi';
 
 interface ServiceProviderCardProps {
   provider: ServiceProvider;
@@ -43,6 +46,13 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
 }) => {
   const { t } = useLocalization();
   const [requestModalOpen, setRequestModalOpen] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewRating, setReviewRating] = useState<number | null>(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  const [eligibility, setEligibility] = useState<{ eligible: boolean; reason?: string } | null>(null);
+  const [eligibilityLoading, setEligibilityLoading] = useState(false);
 
   const getServiceTypeColor = (serviceType: string) => {
     const colors: { [key: string]: 'primary' | 'secondary' | 'success' | 'warning' | 'error' } = {
@@ -61,6 +71,50 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
 
   const getAvailabilityText = (isAvailable: boolean) => {
     return isAvailable ? t('services.available') : t('services.unavailable');
+  };
+
+  const checkEligibility = async () => {
+    try {
+      setEligibilityLoading(true);
+      const res = await getProviderReviewEligibility(provider.id);
+      setEligibility(res);
+    } catch (e: any) {
+      // If unauthenticated, mark ineligible with reason
+      setEligibility({ eligible: false, reason: 'auth_required' });
+    } finally {
+      setEligibilityLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Prefetch eligibility so the button state is correct
+    checkEligibility();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [provider.id]);
+
+  const avgRating = provider.average_rating ?? provider.provider_rating ?? 0;
+  const reviewsCount = provider.reviews_count ?? undefined;
+
+  const handleSubmitReview = async () => {
+    if (!reviewRating) return;
+    setSubmittingReview(true);
+    setReviewError(null);
+    try {
+      await createProviderReview(provider.id, reviewRating, reviewComment || undefined);
+      setReviewOpen(false);
+      setReviewComment('');
+      // Optimistic UI: adjust local values if present
+      if (reviewsCount !== undefined) {
+        const newCount = (provider.reviews_count || 0) + 1;
+        const newAvg = ((avgRating || 0) * (provider.reviews_count || 0) + reviewRating) / newCount;
+        (provider as any).reviews_count = newCount;
+        (provider as any).average_rating = newAvg;
+      }
+    } catch (e: any) {
+      setReviewError(e?.message || 'Failed to submit review');
+    } finally {
+      setSubmittingReview(false);
+    }
   };
 
   return (
@@ -148,6 +202,18 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
 
         {/* Provider Stats */}
         <Grid container spacing={1} sx={{ mb: 2 }}>
+          {/* Rating */}
+          {(avgRating > 0) && (
+            <Grid size={{ xs: 12 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Rating value={avgRating} precision={0.1} readOnly size="small" />
+                <Typography variant="body2" color="text.secondary">
+                  {avgRating.toFixed(1)}{reviewsCount ? ` (${reviewsCount})` : ''}
+                </Typography>
+                <Box sx={{ flexGrow: 1 }} />
+              </Box>
+            </Grid>
+          )}
           {provider.provider_hourly_rate && (
             <Grid size={{ xs: 6 }}>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -215,6 +281,28 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
           >
             {t('services.contactProvider')}
           </Button>
+          <Button
+            variant="outlined"
+            fullWidth
+            onClick={async () => {
+              if (!eligibility) {
+                await checkEligibility();
+              }
+              if ((eligibility?.eligible) === true) {
+                setReviewOpen(true);
+              }
+            }}
+            disabled={eligibilityLoading || eligibility?.eligible === false}
+            title={eligibility?.eligible === false
+              ? (eligibility?.reason === 'auth_required'
+                  ? t('auth.authenticationRequired')
+                  : eligibility?.reason === 'already_reviewed'
+                    ? 'You have already reviewed this provider'
+                    : 'You can only review providers you completed a service with')
+              : undefined}
+          >
+            {t('services.writeReview')}
+          </Button>
         </Box>
         
         <Box sx={{ display: 'flex', gap: 1 }}>
@@ -254,6 +342,34 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
             onCancel={() => setRequestModalOpen(false)}
           />
         </DialogContent>
+      </Dialog>
+
+      {/* Review Dialog */}
+      <Dialog open={reviewOpen} onClose={() => setReviewOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('services.writeReview')}</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+            <Typography variant="body2">{t('services.yourRating')}</Typography>
+            <Rating value={reviewRating} onChange={(_, v) => setReviewRating(v)} />
+          </Box>
+          <TextField
+            label={t('services.yourComment')}
+            multiline
+            minRows={3}
+            fullWidth
+            value={reviewComment}
+            onChange={(e) => setReviewComment(e.target.value)}
+          />
+          {reviewError && (
+            <Typography color="error" variant="body2" sx={{ mt: 1 }}>{reviewError}</Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setReviewOpen(false)} disabled={submittingReview}>{t('common.cancel')}</Button>
+          <Button onClick={handleSubmitReview} variant="contained" disabled={submittingReview || !reviewRating}>
+            {t('common.submit')}
+          </Button>
+        </DialogActions>
       </Dialog>
     </Card>
   );
