@@ -1,7 +1,16 @@
 // src/features/chat/pages/ChatPage.tsx
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { Box, CircularProgress, Typography } from "@mui/material";
+import { useParams, useNavigate } from "react-router-dom";
+import { 
+  Box, 
+  CircularProgress, 
+  Typography, 
+  Breadcrumbs, 
+  Link,
+  IconButton,
+  Paper,
+} from "@mui/material";
+import { ArrowBack, Home, Message } from "@mui/icons-material";
 import { EnhancedChatWindow } from "../../../components/services/EnhancedChatWindow";
 import type {
   ChatConversation,
@@ -12,6 +21,7 @@ import { chatService } from "../../../services/chat/chatService";
 
 export const ChatPage = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [conversation, setConversation] = useState<ChatConversation | null>(
     null
   );
@@ -41,11 +51,7 @@ export const ChatPage = () => {
     if (!conversation) return;
     try {
       setSending(true);
-<<<<<<< HEAD
       const newMsg: ChatMessage = await chatService.sendMessage(
-=======
-      const newMsg: ChatMessage = await MockChatService.sendMessage(
->>>>>>> origin/merged-zoroflamingo
         conversation.service_request_id,
         msg
       );
@@ -84,46 +90,47 @@ export const ChatPage = () => {
   }
 
   return (
-    <Box
-      sx={{
-        height: "100vh",
-        display: "flex",
-<<<<<<< HEAD
-        justifyContent: "center",
-        alignItems: "flex-start",
-        overflow: "hidden",
-        pt: "5px",
-=======
-        justifyContent: "center", // horizontal centering
-        alignItems: "flex-start", // top alignment instead of center
-        overflow: "hidden",
-        pt: "5px", // optional padding from top/header
->>>>>>> origin/merged-zoroflamingo
-      }}
-    >
-      <Box
-        sx={{
-<<<<<<< HEAD
-          transform: "translateX(-20px)",
-          width: "700px",
-          height: "calc(100vh - 10px)", // Use full height minus padding
-=======
-          transform: "translateX(-20px)", // keep your horizontal nudge
-          width: "700px",
-          height: "85vh", // fill most of viewport height
->>>>>>> origin/merged-zoroflamingo
-          maxWidth: "90%",
-        }}
-      >
+    <Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+      {/* Breadcrumb Navigation */}
+      <Paper elevation={1} sx={{ p: 2, borderRadius: 0 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <IconButton onClick={() => navigate("/chat-list")} size="small">
+            <ArrowBack />
+          </IconButton>
+          <Breadcrumbs>
+            <Link
+              component="button"
+              variant="body2"
+              onClick={() => navigate("/dashboard")}
+              sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+            >
+              <Home fontSize="small" />
+              Dashboard
+            </Link>
+            <Link
+              component="button"
+              variant="body2"
+              onClick={() => navigate("/chat-list")}
+              sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+            >
+              <Message fontSize="small" />
+              Chats
+            </Link>
+            <Typography variant="body2" color="text.primary">
+              Service #{id}
+            </Typography>
+          </Breadcrumbs>
+        </Box>
+      </Paper>
+
+      {/* Chat Window */}
+      <Box sx={{ flex: 1, overflow: "hidden" }}>
         <EnhancedChatWindow
           messages={conversation.messages}
           onSendMessage={handleSendMessage}
           onQuickAction={handleQuickAction}
           isSending={sending}
-<<<<<<< HEAD
           serviceRequestId={conversation.service_request_id}
-=======
->>>>>>> origin/merged-zoroflamingo
         />
       </Box>
     </Box>

@@ -61,7 +61,8 @@ export const ServiceRequestDetails: React.FC = () => {
 
   const handleStartChat = () => {
     if (request) {
-      navigate(`/service-requests/${request.id}/chat`);
+      // Navigate to the dedicated chat page for better UX
+      navigate(`/chat/${request.id}`);
     }
   };
 
