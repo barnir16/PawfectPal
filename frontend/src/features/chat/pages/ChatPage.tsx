@@ -41,7 +41,11 @@ export const ChatPage = () => {
     if (!conversation) return;
     try {
       setSending(true);
+<<<<<<< HEAD
       const newMsg: ChatMessage = await chatService.sendMessage(
+=======
+      const newMsg: ChatMessage = await MockChatService.sendMessage(
+>>>>>>> origin/merged-zoroflamingo
         conversation.service_request_id,
         msg
       );
@@ -84,17 +88,30 @@ export const ChatPage = () => {
       sx={{
         height: "100vh",
         display: "flex",
+<<<<<<< HEAD
         justifyContent: "center",
         alignItems: "flex-start",
         overflow: "hidden",
         pt: "5px",
+=======
+        justifyContent: "center", // horizontal centering
+        alignItems: "flex-start", // top alignment instead of center
+        overflow: "hidden",
+        pt: "5px", // optional padding from top/header
+>>>>>>> origin/merged-zoroflamingo
       }}
     >
       <Box
         sx={{
+<<<<<<< HEAD
           transform: "translateX(-20px)",
           width: "700px",
           height: "calc(100vh - 10px)", // Use full height minus padding
+=======
+          transform: "translateX(-20px)", // keep your horizontal nudge
+          width: "700px",
+          height: "85vh", // fill most of viewport height
+>>>>>>> origin/merged-zoroflamingo
           maxWidth: "90%",
         }}
       >
@@ -103,7 +120,10 @@ export const ChatPage = () => {
           onSendMessage={handleSendMessage}
           onQuickAction={handleQuickAction}
           isSending={sending}
+<<<<<<< HEAD
           serviceRequestId={conversation.service_request_id}
+=======
+>>>>>>> origin/merged-zoroflamingo
         />
       </Box>
     </Box>

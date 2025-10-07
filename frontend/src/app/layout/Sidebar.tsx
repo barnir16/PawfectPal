@@ -124,8 +124,13 @@ export const Sidebar = ({
             "&:hover": {
               backgroundColor: "rgba(0,0,0,0.05)",
             },
+<<<<<<< HEAD
             ml: (open || isMobile) ? 0 : "auto",
             mr: (open || isMobile) ? 0 : "auto",
+=======
+            ml: open ? 0 : "auto",
+            mr: open ? 0 : "auto",
+>>>>>>> origin/merged-zoroflamingo
           }}
         >
           <MenuIcon fontSize="small" />
@@ -143,8 +148,13 @@ export const Sidebar = ({
               sx={{
                 flexDirection: isRTL ? "row-reverse" : "row",
                 minHeight: 48,
+<<<<<<< HEAD
                 px: (open || isMobile) ? 2 : 1.5,
                 justifyContent: (open || isMobile) ? "flex-start" : "center",
+=======
+                px: open ? 2 : 1.5,
+                justifyContent: open ? "flex-start" : "center",
+>>>>>>> origin/merged-zoroflamingo
                 "&.Mui-selected": {
                   backgroundColor: "rgba(255,255,255,0.1)",
                   "&:hover": {
@@ -159,7 +169,11 @@ export const Sidebar = ({
             >
               <ListItemIcon
                 sx={{
+<<<<<<< HEAD
                   minWidth: (open || isMobile) ? 40 : "auto",
+=======
+                  minWidth: open ? 40 : "auto",
+>>>>>>> origin/merged-zoroflamingo
                   justifyContent: "center",
                   color:
                     location.pathname === item.path
@@ -169,7 +183,11 @@ export const Sidebar = ({
               >
                 {item.icon}
               </ListItemIcon>
+<<<<<<< HEAD
               {(open || isMobile) && (
+=======
+              {open && (
+>>>>>>> origin/merged-zoroflamingo
                 <ListItemText
                   primary={item.text}
                   sx={{

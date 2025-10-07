@@ -109,7 +109,7 @@ export class WeightMonitoringService {
           message: t ? t('weight.suddenChange') : `Sudden weight ${current.weight > previous.weight ? 'gain' : 'loss'} of ${(changePercent * 100).toFixed(1)}% detected`,
           date: current.date,
           isAcknowledged: false,
-          recommendedAction: t ? t('weight.consultVetNutrition') : 'Please consult with your veterinarian to rule out underlying health issues.'
+          recommendedAction: t ? t('weight.consultVeterinarian') : 'Please consult with your veterinarian to rule out underlying health issues.'
         };
         
         alerts.push(alert);
@@ -134,7 +134,7 @@ export class WeightMonitoringService {
       message: t ? t('weight.trendWarning') : `Sustained weight ${trend.direction} trend detected: ${trend.changeRate.toFixed(2)} ${records[0].weightUnit}/week over ${Math.round(trend.period)} days`,
       date: new Date(),
       isAcknowledged: false,
-      recommendedAction: t ? t('weight.consultVetNutrition') : `Monitor your pet's eating habits and activity level. Consider consulting your veterinarian if the trend continues.`
+      recommendedAction: t ? t('weight.consultVeterinarian') : `Monitor your pet's eating habits and activity level. Consider consulting your veterinarian if the trend continues.`
     };
     
     return [alert];
@@ -159,7 +159,7 @@ export class WeightMonitoringService {
         message: t ? t('weight.weightOutsideRange').replace('{weight}', `${latestRecord.weight}`).replace('{unit}', latestRecord.weightUnit).replace('{range}', `${healthRange.minWeight}-${healthRange.maxWeight} ${latestRecord.weightUnit}`) : `Weight (${latestRecord.weight} ${latestRecord.weightUnit}) is below healthy minimum (${healthRange.minWeight} ${healthRange.weightUnit})`,
         date: new Date(),
         isAcknowledged: false,
-        recommendedAction: t ? t('weight.consultVetNutrition') : 'Consult your veterinarian about proper nutrition and feeding schedule.'
+        recommendedAction: t ? t('weight.consultVeterinarian') : 'Consult your veterinarian about proper nutrition and feeding schedule.'
       });
     }
     
@@ -371,7 +371,7 @@ export class WeightMonitoringService {
         message: t ? t('weight.belowAverageWeightMessage') : `${petName} seems to be below the average weight for its breed`,
         date: new Date(),
         isAcknowledged: false,
-        recommendedAction: t ? t('weight.consultVetNutrition') : 'Please consult your veterinarian about proper nutrition and feeding schedule.'
+        recommendedAction: t ? t('weight.consultVeterinarian') : 'Please consult your veterinarian about proper nutrition and feeding schedule.'
       });
     } else if (currentWeight > aboveThreshold) {
       warnings.push({

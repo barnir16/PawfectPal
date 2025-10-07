@@ -81,7 +81,14 @@ export const PetImageUpload = ({
         disabled={disabled}
       />
 
-      <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 1,
+          alignItems: "center",
+        }}
+      >
         <label htmlFor="pet-photo-upload">
           <Button
             component="span"
@@ -89,7 +96,7 @@ export const PetImageUpload = ({
             startIcon={<AddPhotoIcon />}
             disabled={disabled}
           >
-            {preview ? t('pets.changePhoto') : t('pets.addPhoto')}
+            {preview ? t("pets.changePhoto") : t("pets.addPhoto")}
           </Button>
         </label>
 
@@ -101,7 +108,7 @@ export const PetImageUpload = ({
             onClick={handleRemove}
             disabled={disabled}
           >
-            {t('common.delete')}
+            {t("common.delete")}
           </Button>
         )}
       </Box>
