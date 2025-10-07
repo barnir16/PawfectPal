@@ -88,12 +88,6 @@ class ChatService {
         service_request_id: serviceRequestId,
         message: address || fallback || 'Location shared',
         message_type: 'location',
-        message_data: {
-          latitude,
-          longitude,
-          address,
-          fallback
-        }
       };
       
       return await this.sendMessage(serviceRequestId, messageData);
@@ -104,28 +98,49 @@ class ChatService {
   }
 
   /**
-   * Send service update message
+   * Send a message with file attachments
    */
-  async sendServiceUpdate(
+  async sendMessageWithFiles(
     serviceRequestId: number,
-    status?: string,
-    message?: string
+    message: string,
+    files: File[],
+    messageType: string = "text"
   ): Promise<ChatMessage> {
     try {
-      const messageData: ChatMessageCreate = {
-        service_request_id: serviceRequestId,
-        message: message || `Service status updated to: ${status}`,
-        message_type: 'system',
-        message_data: {
-          status,
-          type: 'service_update'
-        }
-      };
+      const formData = new FormData();
+      formData.append('service_request_id', serviceRequestId.toString());
+      formData.append('message', message);
+      formData.append('message_type', messageType);
       
-      return await this.sendMessage(serviceRequestId, messageData);
-    } catch (error) {
-      console.error('Failed to send service update:', error);
-      throw new Error('Failed to send service update');
+      // Add files to FormData
+      files.forEach((file) => {
+        formData.append('files', file);
+      });
+
+      console.log('📤 Sending message with files:', {
+        serviceRequestId,
+        message,
+        messageType,
+        fileCount: files.length,
+        files: files.map(f => ({ name: f.name, size: f.size, type: f.type }))
+      });
+
+      const response = await apiClient.post('/chat/messages-with-files', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      console.log('📤 Message with files sent successfully:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Failed to send message with files:', error);
+      console.error('Error details:', {
+        status: error?.response?.status,
+        statusText: error?.response?.statusText,
+        data: error?.response?.data
+      });
+      throw new Error('Failed to send message with files');
     }
   }
 }

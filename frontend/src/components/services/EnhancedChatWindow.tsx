@@ -52,6 +52,7 @@ import type {
   ChatMessageCreate,
   MediaAttachment,
 } from "../../types/services/chat";
+import { chatService } from "../../services/chat/chatService";
 
 interface EnhancedChatWindowProps {
   messages: ChatMessage[];
@@ -125,11 +126,121 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     },
   ];
 
+  // File validation constants
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  const MAX_FILES = 5;
+  const ALLOWED_FILE_TYPES = [
+    'image/jpeg',
+    'image/png', 
+    'image/gif',
+    'image/webp',
+    'application/pdf',
+    'text/plain',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  ];
+
+  const validateFile = (file: File): string | null => {
+    // Check file size
+    if (file.size > MAX_FILE_SIZE) {
+      return `File "${file.name}" is too large. Maximum size is ${MAX_FILE_SIZE / (1024 * 1024)}MB`;
+    }
+    
+    // Check file type
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      return `File "${file.name}" has an unsupported type. Allowed types: images, PDF, text, Word documents`;
+    }
+    
+    return null;
+  };
+
+  const validateFiles = (files: File[]): string | null => {
+    // Check file count
+    if (files.length > MAX_FILES) {
+      return `Too many files. Maximum ${MAX_FILES} files allowed`;
+    }
+    
+    // Validate each file
+    for (const file of files) {
+      const error = validateFile(file);
+      if (error) return error;
+    }
+    
+    return null;
+  };
+
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop =
         messagesContainerRef.current.scrollHeight;
     }
+  };
+
+  // Helper function to parse attachment data from message
+  const parseMessageAttachments = (message: ChatMessage): MediaAttachment[] => {
+    try {
+      // Try to parse JSON data from message
+      const parsed = JSON.parse(message.message);
+      if (parsed.attachments && Array.isArray(parsed.attachments)) {
+        return parsed.attachments.map((att: any) => ({
+          id: att.id,
+          file_name: att.file_name,
+          file_url: att.file_url,
+          file_type: att.file_type,
+          file_size: att.file_size,
+          created_at: att.created_at,
+        }));
+      }
+    } catch (e) {
+      // Not JSON, return empty array
+    }
+    return [];
+  };
+
+  // Helper function to get display message text
+  const getDisplayMessage = (message: ChatMessage): string => {
+    try {
+      const parsed = JSON.parse(message.message);
+      return parsed.original_message || message.message;
+    } catch (e) {
+      return message.message;
+    }
+  };
+
+  // Helper function to render location messages
+  const renderLocationMessage = (message: ChatMessage) => {
+    const text = getDisplayMessage(message);
+    if (message.message_type === "location" && text.includes("📍 Location shared")) {
+      const lines = text.split('\n');
+      const latLine = lines.find(line => line.startsWith('Lat:'));
+      const lngLine = lines.find(line => line.startsWith('Lng:'));
+      
+      if (latLine && lngLine) {
+        const lat = parseFloat(latLine.replace('Lat:', '').trim());
+        const lng = parseFloat(lngLine.replace('Lng:', '').trim());
+        
+        return (
+          <Box sx={{ mt: 1 }}>
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              📍 Shared location
+            </Typography>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<LocationOn />}
+              onClick={() => {
+                const url = `https://www.google.com/maps?q=${lat},${lng}`;
+                window.open(url, '_blank');
+              }}
+              sx={{ fontSize: '0.75rem' }}
+            >
+              Open in Maps
+            </Button>
+          </Box>
+        );
+      }
+    }
+    return null;
   };
 
   useEffect(() => {
@@ -157,13 +268,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     }
 
     const newMessage: ChatMessageCreate = {
-<<<<<<< HEAD
       service_request_id: serviceRequestId,
       message: messageText,
-=======
-      message:
-        input.trim() || (selectedFiles.length > 0 ? "📎 Shared files" : ""),
->>>>>>> origin/merged-zoroflamingo
       message_type: selectedFiles.length > 0 ? "image" : "text",
       attachments:
         selectedFiles.length > 0
@@ -181,13 +287,37 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     });
 
     try {
-      await onSendMessage(newMessage);
+      if (selectedFiles.length > 0) {
+        // Use file upload endpoint
+        await chatService.sendMessageWithFiles(
+          serviceRequestId,
+          messageText,
+          selectedFiles,
+          "image"
+        );
+      } else {
+        // Use regular message endpoint
+        await onSendMessage(newMessage);
+      }
+      
       setInput("");
       setSelectedFiles([]);
       scrollToBottom();
     } catch (error) {
       console.error("Failed to send message:", error);
-      setSnackbarMessage("Failed to send message");
+      let errorMessage = "Failed to send message";
+      
+      if (error?.response?.status === 400) {
+        errorMessage = error.response.data?.detail || "Invalid message or file";
+      } else if (error?.response?.status === 413) {
+        errorMessage = "File too large. Please reduce file size and try again.";
+      } else if (error?.response?.status === 403) {
+        errorMessage = "You don't have permission to send messages in this chat.";
+      } else if (error?.response?.status === 404) {
+        errorMessage = "Service request not found.";
+      }
+      
+      setSnackbarMessage(errorMessage);
       setSnackbarOpen(true);
     }
   };
@@ -198,6 +328,18 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       "📁 Files selected:",
       files.map((f) => ({ name: f.name, size: f.size, type: f.type }))
     );
+
+    // Validate files first
+    const validationError = validateFiles(files);
+    if (validationError) {
+      setSnackbarMessage(validationError);
+      setSnackbarOpen(true);
+      // Clear the input
+      if (event.target) {
+        event.target.value = '';
+      }
+      return;
+    }
 
     // Separate images vs other files
     const imageFiles = files.filter((file) => file.type.startsWith("image/"));
@@ -257,17 +399,9 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         const { latitude, longitude } = position.coords;
 
         const locationMessage: ChatMessageCreate = {
-<<<<<<< HEAD
           service_request_id: serviceRequestId,
-          message: "📍 Shared location",
-          message_type: "text",
-=======
-          message: "📍 Shared location",
+          message: `📍 Location shared\nLat: ${latitude.toFixed(6)}\nLng: ${longitude.toFixed(6)}`,
           message_type: "location",
-          metadata: {
-            location: { latitude, longitude },
-          },
->>>>>>> origin/merged-zoroflamingo
         };
 
         try {
@@ -487,57 +621,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     );
   };
 
-<<<<<<< HEAD
   // Location sharing function removed since message_data doesn't exist
-=======
-  const renderLocationMessage = (metadata: any) => {
-    if (!metadata?.location) return null;
-
-    const { latitude, longitude, address, fallback } = metadata.location;
-
-    return (
-      <Box sx={{ mt: 1 }}>
-        <Card sx={{ maxWidth: 250 }}>
-          <CardContent sx={{ p: 2 }}>
-            <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-              <LocationOn color="primary" sx={{ mr: 1 }} />
-              <Typography variant="subtitle2">
-                {t("services.locationShared")}
-              </Typography>
-            </Box>
-            <Typography variant="body2" color="text.secondary">
-              {address || t("services.currentLocation")}
-            </Typography>
-            {!fallback && latitude && longitude ? (
-              <Button
-                size="small"
-                startIcon={<Visibility />}
-                onClick={() => {
-                  window.open(
-                    `https://maps.google.com/?q=${latitude},${longitude}`,
-                    "_blank"
-                  );
-                }}
-                sx={{ mt: 1 }}
-              >
-                {t("services.viewOnMaps")}
-              </Button>
-            ) : (
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ mt: 1, display: "block" }}
-              >
-                {t("services.locationShared")} -{" "}
-                {address || t("services.currentLocation")}
-              </Typography>
-            )}
-          </CardContent>
-        </Card>
-      </Box>
-    );
-  };
->>>>>>> origin/merged-zoroflamingo
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -557,16 +641,11 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       sx={{
         display: "flex",
         flexDirection: "column",
-<<<<<<< HEAD
         height: "100%",
         minHeight: { xs: "300px", md: "500px" },
         borderRadius: { xs: 0, md: 2 },
         overflow: "hidden",
         boxShadow: { xs: 0, md: 3 },
-=======
-        height: "80vh", // fill full viewport
-        borderRadius: 2,
->>>>>>> origin/merged-zoroflamingo
       }}
     >
       {/* Header */}
@@ -594,20 +673,12 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       <Box
         ref={messagesContainerRef}
         sx={{
-<<<<<<< HEAD
           flex: 1,
           overflowY: "auto",
           p: { xs: 1, md: 3 },
           backgroundColor: (theme) =>
             theme.palette.mode === "dark" ? "grey.900" : "grey.50",
           fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-=======
-          flex: 1, // take all remaining vertical space
-          overflowY: "auto", // scroll if content overflows
-          p: 3,
-          backgroundColor: (theme) =>
-            theme.palette.mode === "dark" ? "grey.900" : "grey.50",
->>>>>>> origin/merged-zoroflamingo
           display: "flex",
           flexDirection: "column",
         }}
@@ -643,12 +714,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                   sender_id: msg.sender_id,
                 });
 
-<<<<<<< HEAD
                 // Fix: Properly identify own messages - check both user ID and sender_id: 0 (mock data)
                 const isOwn = msg.sender_id === user?.id || msg.sender_id === 0;
-=======
-                const isOwn = msg.sender_id === user?.id;
->>>>>>> origin/merged-zoroflamingo
                 const isSystem = msg.message_type === "system";
 
                 return (
@@ -729,13 +796,15 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                   fontWeight: 400,
                                 }}
                               >
-                                {msg.message}
+                                {getDisplayMessage(msg)}
                               </Typography>
 
-                              {/* Render attachments */}
-                              {msg.attachments &&
-                                msg.attachments.length > 0 &&
-                                renderMessageAttachments(msg.attachments)}
+                              {/* Render attachments from parsed message */}
+                              {parseMessageAttachments(msg).length > 0 &&
+                                renderMessageAttachments(parseMessageAttachments(msg))}
+
+                              {/* Render location message */}
+                              {renderLocationMessage(msg)}
 
                               {/* Show image message indicator only if no attachments */}
                               {msg.message_type === "image" &&
@@ -762,14 +831,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                   </Box>
                                 )}
 
-<<<<<<< HEAD
                               {/* Render location - removed since message_data doesn't exist */}
-=======
-                              {/* Render location */}
-                              {msg.message_type === "location" &&
-                                msg.metadata &&
-                                renderLocationMessage(msg.metadata)}
->>>>>>> origin/merged-zoroflamingo
 
                               <Box
                                 sx={{
@@ -925,19 +987,12 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       {/* Input */}
       <Paper
         sx={{
-<<<<<<< HEAD
           p: { xs: 1, md: 2 },
-=======
-          p: 2,
->>>>>>> origin/merged-zoroflamingo
           borderTop: 1,
           borderColor: "divider",
           backgroundColor: "white",
           borderRadius: 0,
-<<<<<<< HEAD
           minHeight: { xs: "60px", md: "auto" }
-=======
->>>>>>> origin/merged-zoroflamingo
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>

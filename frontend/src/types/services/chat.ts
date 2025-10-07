@@ -48,7 +48,6 @@ export interface ChatMessageCreate {
   message: string;
   message_type?: MessageType;
   attachments?: ChatAttachmentCreate[];
-  message_data?: ServiceMessageMetadata;
 }
 
 export interface ChatAttachmentCreate {

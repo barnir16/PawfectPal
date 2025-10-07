@@ -14,7 +14,7 @@ class MediaAttachment(BaseModel):
 
 class ChatMessageBase(BaseModel):
     message: str = Field(..., min_length=1, max_length=2000, description="Message content")
-    message_type: str = Field("text", pattern="^(text|image|file|system)$", description="Type of message")
+    message_type: str = Field("text", pattern="^(text|image|file|system|location)$", description="Type of message")
 
 class ChatMessageCreate(ChatMessageBase):
     service_request_id: int = Field(..., description="ID of the service request")
