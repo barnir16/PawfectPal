@@ -3,6 +3,7 @@ export const en = {
   common: {
     save: 'Save',
     cancel: 'Cancel',
+    submit: 'Submit',
     delete: 'Delete',
     edit: 'Edit',
     add: 'Add',
@@ -1064,6 +1065,9 @@ export const en = {
     serviceType: 'Service Type',
     selectServiceType: 'Select Service Type',
     allServices: 'All Services',
+    writeReview: 'Write review',
+    yourRating: 'Your rating',
+    yourComment: 'Your comment',
     status: {
       label: 'Status',
       open: 'Open',

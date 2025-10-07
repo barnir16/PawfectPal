@@ -58,6 +58,7 @@ class UserRead(ProviderExtras, UserContact, UserBase):
             data["provider_bio"] = obj.provider_profile.bio
             data["provider_hourly_rate"] = obj.provider_profile.hourly_rate
             data["provider_rating"] = obj.provider_profile.rating
+            data["provider_rating_count"] = obj.provider_profile.rating_count
         return super().model_validate(data, **kwargs)
 
     class Config:

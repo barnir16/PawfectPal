@@ -14,6 +14,7 @@ from app.routers import (
     weight_record,
     weight_goal,
     provider,
+    provider_reviews,
     service_requests,
     chat,
 )
@@ -144,6 +145,7 @@ if AI_AVAILABLE:
 else:
     print("⚠️ AI router skipped due to configuration issues")
 app.include_router(provider.router)
+app.include_router(provider_reviews.router)
 app.include_router(service_requests.router)
 app.include_router(chat.router)
 

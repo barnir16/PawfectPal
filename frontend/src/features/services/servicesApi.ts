@@ -13,6 +13,7 @@ interface BackendUserRead {
   is_provider: boolean;
   provider_services?: string | ServiceType[]; // Can be JSON string or array
   provider_rating?: number;
+  provider_rating_count?: number;
   provider_bio?: string;
   provider_hourly_rate?: number;
   address?: string;
@@ -41,18 +42,22 @@ export async function getServices(status: "active" | "history"): Promise<Service
 
 // Transform backend UserRead to frontend ServiceProvider
 function transformUserToServiceProvider(user: BackendUserRead): ServiceProvider {
-  // Parse provider_services if it's a JSON string
-  let provider_services: string[] = [];
+  // Parse provider_services if it's a JSON string and narrow to ServiceType[]
+  const allowed: ServiceType[] = ['walking', 'sitting', 'boarding', 'grooming', 'veterinary'];
+  let provider_services: ServiceType[] = [];
   if (user.provider_services) {
+    let raw: string[] = [];
     if (typeof user.provider_services === 'string') {
       try {
-        provider_services = JSON.parse(user.provider_services);
+        const parsed = JSON.parse(user.provider_services);
+        raw = Array.isArray(parsed) ? parsed : [parsed];
       } catch (e) {
-        provider_services = [user.provider_services];
+        raw = [user.provider_services];
       }
     } else {
-      provider_services = user.provider_services;
+      raw = user.provider_services as string[];
     }
+    provider_services = raw.filter((v): v is ServiceType => (allowed as string[]).includes(v));
   }
 
   return {
@@ -76,7 +81,7 @@ function transformUserToServiceProvider(user: BackendUserRead): ServiceProvider 
     last_online: undefined,
     profile_image: user.profile_image,
     verified: true, // Default to verified
-    reviews_count: undefined,
+    reviews_count: user.provider_rating_count,
     average_rating: user.provider_rating,
   };
 }
@@ -95,4 +100,37 @@ export async function getProviders(filter?: string[]): Promise<ServiceProvider[]
     console.error('Error loading mock providers:', mockError);
     return [];
   }
+}
+
+// Create a provider review (rating with optional comment)
+export async function createProviderReview(providerId: number, rating: number, comment?: string) {
+  const token = await getToken();
+  const res = await fetch(`${getBaseUrl()}/providers/${providerId}/reviews`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ rating, comment }),
+  });
+  if (!res.ok) throw new Error(`Failed to create review (${res.status})`);
+  return await res.json();
+}
+
+// Get provider reviews (paginated)
+export async function getProviderReviews(providerId: number, limit = 20, offset = 0) {
+  const res = await fetch(`${getBaseUrl()}/providers/${providerId}/reviews?limit=${limit}&offset=${offset}`);
+  if (!res.ok) throw new Error(`Failed to load reviews (${res.status})`);
+  return await res.json();
+}
+
+// Check if current user is eligible to review a provider
+export async function getProviderReviewEligibility(providerId: number): Promise<{ eligible: boolean; reason?: string }> {
+  const token = await getToken();
+  const res = await fetch(`${getBaseUrl()}/providers/${providerId}/review-eligibility`, {
+    headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
+  });
+  if (res.status === 401) throw new Error('Authentication required');
+  if (!res.ok) throw new Error(`Failed to check eligibility (${res.status})`);
+  return await res.json();
 }
