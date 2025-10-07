@@ -1,4 +1,9 @@
-import type { ChatConversation, ChatMessage, ChatMessageCreate, MessageType } from "../../types/services/chat";
+import type {
+  ChatConversation,
+  ChatMessage,
+  ChatMessageCreate,
+  MessageType,
+} from "../../types/services/chat";
 
 // Initial mock conversations
 const mockConversations: ChatConversation[] = [
@@ -8,7 +13,7 @@ const mockConversations: ChatConversation[] = [
       {
         id: 101,
         service_request_id: 1,
-        sender_id: 2,
+        sender_id: 2, // someone else
         message: "Hello! This is a mock conversation.",
         message_type: "text" as MessageType,
         is_read: true,
@@ -18,7 +23,7 @@ const mockConversations: ChatConversation[] = [
       {
         id: 102,
         service_request_id: 1,
-        sender_id: 0,
+        sender_id: 1, // 👈 this will be treated as “you”
         message: "Hi there! Replying from the mock user.",
         message_type: "text" as MessageType,
         is_read: true,
@@ -48,7 +53,10 @@ const mockConversations: ChatConversation[] = [
 
 // Map to track last message ID per conversation
 const lastMessageIds = new Map<number, number>(
-  mockConversations.map((c) => [c.service_request_id, Math.max(...c.messages.map((m) => m.id))])
+  mockConversations.map((c) => [
+    c.service_request_id,
+    Math.max(...c.messages.map((m) => m.id)),
+  ])
 );
 
 const getNextMessageId = (service_request_id: number) => {
@@ -60,43 +68,51 @@ const getNextMessageId = (service_request_id: number) => {
 
 const MockChatService = {
   async getMyConversations(): Promise<ChatConversation[]> {
-    return Promise.resolve(mockConversations);
+    return Promise.resolve(structuredClone(mockConversations));
   },
 
-  async getConversation(service_request_id: number): Promise<ChatConversation | undefined> {
-    return Promise.resolve(
-      mockConversations.find((c) => c.service_request_id === service_request_id)
+  async getConversation(
+    service_request_id: number
+  ): Promise<ChatConversation | undefined> {
+    const conversation = mockConversations.find(
+      (c) => c.service_request_id === service_request_id
     );
+    return Promise.resolve(conversation ? structuredClone(conversation) : undefined);
   },
 
-async sendMessage(service_request_id: number, newMessage: ChatMessageCreate): Promise<ChatMessage> {
-  const conversation = mockConversations.find(
-    (c) => c.service_request_id === service_request_id
-  );
-  if (!conversation) throw new Error("Conversation not found");
+  async sendMessage(
+    service_request_id: number,
+    newMessage: ChatMessageCreate,
+    currentUserId: number = 1 // 👈 default mock user id
+  ): Promise<ChatMessage> {
+    const conversationIndex = mockConversations.findIndex(
+      (c) => c.service_request_id === service_request_id
+    );
+    if (conversationIndex === -1)
+      throw new Error(`Conversation ${service_request_id} not found`);
 
-  const msg: ChatMessage = {
-    ...newMessage,
-    id: getNextMessageId(service_request_id),
-    sender_id: 0,
-    is_read: false,
-    is_edited: false,
-    created_at: new Date().toISOString(),
-    message_type: newMessage.message_type || "text",
-  };
+    const conversation = mockConversations[conversationIndex];
 
-  // Return a **new array** instead of mutating
-  const updatedMessages = [...conversation.messages, msg];
-  // Update mockConversations immutably
-  mockConversations.splice(
-    mockConversations.findIndex(c => c.service_request_id === service_request_id),
-    1,
-    { ...conversation, messages: updatedMessages }
-  );
+    const msg: ChatMessage = {
+      ...newMessage,
+      id: getNextMessageId(service_request_id),
+      sender_id: currentUserId, // 👈 dynamic sender ID
+      is_read: false,
+      is_edited: false,
+      created_at: new Date().toISOString(),
+      message_type: newMessage.message_type || "text",
+    };
 
-  return Promise.resolve(msg);
-}
+    const updatedConversation: ChatConversation = {
+      ...conversation,
+      messages: [...conversation.messages, msg],
+    };
 
+    // Update in mock data immutably
+    mockConversations.splice(conversationIndex, 1, updatedConversation);
+
+    return Promise.resolve(structuredClone(msg));
+  },
 };
 
 export default MockChatService;

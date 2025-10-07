@@ -157,8 +157,13 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     }
 
     const newMessage: ChatMessageCreate = {
+<<<<<<< HEAD
       service_request_id: serviceRequestId,
       message: messageText,
+=======
+      message:
+        input.trim() || (selectedFiles.length > 0 ? "📎 Shared files" : ""),
+>>>>>>> origin/merged-zoroflamingo
       message_type: selectedFiles.length > 0 ? "image" : "text",
       attachments:
         selectedFiles.length > 0
@@ -252,9 +257,17 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         const { latitude, longitude } = position.coords;
 
         const locationMessage: ChatMessageCreate = {
+<<<<<<< HEAD
           service_request_id: serviceRequestId,
           message: "📍 Shared location",
           message_type: "text",
+=======
+          message: "📍 Shared location",
+          message_type: "location",
+          metadata: {
+            location: { latitude, longitude },
+          },
+>>>>>>> origin/merged-zoroflamingo
         };
 
         try {
@@ -474,7 +487,57 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     );
   };
 
+<<<<<<< HEAD
   // Location sharing function removed since message_data doesn't exist
+=======
+  const renderLocationMessage = (metadata: any) => {
+    if (!metadata?.location) return null;
+
+    const { latitude, longitude, address, fallback } = metadata.location;
+
+    return (
+      <Box sx={{ mt: 1 }}>
+        <Card sx={{ maxWidth: 250 }}>
+          <CardContent sx={{ p: 2 }}>
+            <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+              <LocationOn color="primary" sx={{ mr: 1 }} />
+              <Typography variant="subtitle2">
+                {t("services.locationShared")}
+              </Typography>
+            </Box>
+            <Typography variant="body2" color="text.secondary">
+              {address || t("services.currentLocation")}
+            </Typography>
+            {!fallback && latitude && longitude ? (
+              <Button
+                size="small"
+                startIcon={<Visibility />}
+                onClick={() => {
+                  window.open(
+                    `https://maps.google.com/?q=${latitude},${longitude}`,
+                    "_blank"
+                  );
+                }}
+                sx={{ mt: 1 }}
+              >
+                {t("services.viewOnMaps")}
+              </Button>
+            ) : (
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ mt: 1, display: "block" }}
+              >
+                {t("services.locationShared")} -{" "}
+                {address || t("services.currentLocation")}
+              </Typography>
+            )}
+          </CardContent>
+        </Card>
+      </Box>
+    );
+  };
+>>>>>>> origin/merged-zoroflamingo
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -494,11 +557,16 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       sx={{
         display: "flex",
         flexDirection: "column",
+<<<<<<< HEAD
         height: "100%",
         minHeight: { xs: "300px", md: "500px" },
         borderRadius: { xs: 0, md: 2 },
         overflow: "hidden",
         boxShadow: { xs: 0, md: 3 },
+=======
+        height: "80vh", // fill full viewport
+        borderRadius: 2,
+>>>>>>> origin/merged-zoroflamingo
       }}
     >
       {/* Header */}
@@ -526,12 +594,20 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       <Box
         ref={messagesContainerRef}
         sx={{
+<<<<<<< HEAD
           flex: 1,
           overflowY: "auto",
           p: { xs: 1, md: 3 },
           backgroundColor: (theme) =>
             theme.palette.mode === "dark" ? "grey.900" : "grey.50",
           fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+=======
+          flex: 1, // take all remaining vertical space
+          overflowY: "auto", // scroll if content overflows
+          p: 3,
+          backgroundColor: (theme) =>
+            theme.palette.mode === "dark" ? "grey.900" : "grey.50",
+>>>>>>> origin/merged-zoroflamingo
           display: "flex",
           flexDirection: "column",
         }}
@@ -567,8 +643,12 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                   sender_id: msg.sender_id,
                 });
 
+<<<<<<< HEAD
                 // Fix: Properly identify own messages - check both user ID and sender_id: 0 (mock data)
                 const isOwn = msg.sender_id === user?.id || msg.sender_id === 0;
+=======
+                const isOwn = msg.sender_id === user?.id;
+>>>>>>> origin/merged-zoroflamingo
                 const isSystem = msg.message_type === "system";
 
                 return (
@@ -682,7 +762,14 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                   </Box>
                                 )}
 
+<<<<<<< HEAD
                               {/* Render location - removed since message_data doesn't exist */}
+=======
+                              {/* Render location */}
+                              {msg.message_type === "location" &&
+                                msg.metadata &&
+                                renderLocationMessage(msg.metadata)}
+>>>>>>> origin/merged-zoroflamingo
 
                               <Box
                                 sx={{
@@ -838,12 +925,19 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       {/* Input */}
       <Paper
         sx={{
+<<<<<<< HEAD
           p: { xs: 1, md: 2 },
+=======
+          p: 2,
+>>>>>>> origin/merged-zoroflamingo
           borderTop: 1,
           borderColor: "divider",
           backgroundColor: "white",
           borderRadius: 0,
+<<<<<<< HEAD
           minHeight: { xs: "60px", md: "auto" }
+=======
+>>>>>>> origin/merged-zoroflamingo
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
