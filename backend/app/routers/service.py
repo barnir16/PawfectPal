@@ -72,11 +72,8 @@ def create_service(
     if not pet:
         raise HTTPException(status_code=404, detail="Pet not found")
 
-    service_type = (
-        db.query(ServiceTypeORM).filter_by(id=service.service_type_id).first()
-    )
-    if not service_type:
-        raise HTTPException(status_code=404, detail="Service type not found")
+    # Service type is now stored as a string, not a foreign key
+    service_type_name = service.service_type
 
     db_service = ServiceORM(user_id=current_user.id, **service.model_dump())
 

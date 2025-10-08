@@ -214,7 +214,7 @@ def update_user(
                 if schema_field == "provider_services":
                     service_objs = (
                         db.query(ServiceTypeORM)
-                        .filter(ServiceTypeORM.id.in_(value))
+                        .filter(ServiceTypeORM.name.in_(value))
                         .all()
                     )
                     setattr(profile, orm_field, service_objs)  # can be empty list
