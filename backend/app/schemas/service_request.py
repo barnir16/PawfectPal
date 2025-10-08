@@ -38,6 +38,7 @@ class ServiceRequestUpdate(BaseModel):
 class ServiceRequestRead(ServiceRequestBase):
     id: int
     user_id: int
+    assigned_provider_id: Optional[int] = None
     status: str
     views_count: int
     responses_count: int
@@ -47,6 +48,7 @@ class ServiceRequestRead(ServiceRequestBase):
     
     # Relationships
     user: Optional[UserRead] = None
+    assigned_provider: Optional[UserRead] = None
     pets: Optional[List[PetRead]] = None
     
     class Config:
