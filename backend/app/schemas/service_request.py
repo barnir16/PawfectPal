@@ -48,7 +48,7 @@ class ServiceRequestRead(ServiceRequestBase):
     
     # Relationships
     user: Optional[UserRead] = None
-    assigned_provider: Optional[UserRead] = None
+    # assigned_provider: Optional[UserRead] = None  # Temporarily disabled until DB migration
     pets: Optional[List[PetRead]] = None
     
     class Config:
