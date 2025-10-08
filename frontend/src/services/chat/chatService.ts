@@ -25,13 +25,18 @@ class ChatService {
    */
   async getConversation(serviceRequestId: number): Promise<ChatConversation> {
     try {
+      console.log(`🔍 ChatService: Fetching conversation for service request ${serviceRequestId}`);
       const response = await apiClient.get(`/chat/conversations/${serviceRequestId}`);
+      console.log(`🔍 ChatService: Conversation fetched successfully`, response.data);
       return response.data;
     } catch (error: any) {
-      console.error('Failed to fetch conversation:', error);
+      console.error('❌ ChatService: Failed to fetch conversation:', error);
+      console.error('❌ ChatService: Error status:', error?.status);
+      console.error('❌ ChatService: Error response:', error?.response?.data);
       
       // If it's a 404, return empty conversation (new chat)
       if (error?.status === 404) {
+        console.log('🔍 ChatService: 404 - returning empty conversation');
         return {
           service_request_id: serviceRequestId,
           messages: [],
@@ -41,9 +46,11 @@ class ChatService {
       
       // If it's a 403, user doesn't have access
       if (error?.status === 403) {
+        console.log('❌ ChatService: 403 - Access denied');
         throw new Error('You do not have access to this conversation');
       }
       
+      console.log('❌ ChatService: Unknown error, throwing generic error');
       throw new Error('Failed to fetch conversation');
     }
   }
