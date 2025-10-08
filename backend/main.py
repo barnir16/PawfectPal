@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from routers import (
+from app.routers import (
     pet,
     references,
     image_upload,
@@ -20,7 +20,7 @@ from routers import (
 
 # Import AI router conditionally to avoid startup errors
 try:
-    from routers import ai_simple as ai
+    from app.routers import ai_simple as ai
     AI_AVAILABLE = True
     print("AI router imported successfully")
 except Exception as e:
@@ -110,17 +110,17 @@ app.include_router(weight_record.router)
 app.include_router(weight_goal.router)
 if AI_AVAILABLE:
     app.include_router(ai.router)
-    print("✅ AI router included")
+    print("AI router included")
 else:
-    print("⚠️ AI router skipped due to configuration issues")
+    print("AI router skipped due to configuration issues")
 
 # Import and include AI conversations router
 try:
-    from routers import ai_conversations
+    from app.routers import ai_conversations
     app.include_router(ai_conversations.router)
-    print("✅ AI conversations router included")
+    print("AI conversations router included")
 except Exception as e:
-    print(f"⚠️ AI conversations router not available: {e}")
+    print(f"AI conversations router not available: {e}")
 app.include_router(provider.router)
 app.include_router(service_requests.router)
 app.include_router(chat.router)

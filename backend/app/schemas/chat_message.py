@@ -32,6 +32,7 @@ class ChatMessageRead(ChatMessageBase):
     is_edited: bool
     edited_at: Optional[datetime]
     created_at: datetime
+    message_metadata: Optional[dict] = None
     attachments: Optional[List[MediaAttachment]] = None
     
     # Relationships

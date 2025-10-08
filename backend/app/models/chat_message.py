@@ -20,6 +20,7 @@ class ChatMessageORM(Base):
     # Message content
     message: Mapped[str] = mapped_column(Text, nullable=False)
     message_type: Mapped[str] = mapped_column(String, default="text")  # text, image, file, system
+    message_metadata: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)  # Store attachments and other metadata
     
     # Message metadata
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)

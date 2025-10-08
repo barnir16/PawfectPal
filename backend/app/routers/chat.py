@@ -57,6 +57,18 @@ def validate_message_type(message_type: str) -> bool:
     allowed_types = {'text', 'image', 'file', 'system', 'location'}
     return message_type in allowed_types
 
+def sanitize_filename(filename: str) -> str:
+    """Sanitize filename for safe storage"""
+    import re
+    # Remove or replace unsafe characters
+    filename = re.sub(r'[<>:"/\\|?*]', '_', filename)
+    # Remove leading/trailing dots and spaces
+    filename = filename.strip('. ')
+    # Ensure filename is not empty
+    if not filename:
+        filename = 'file'
+    return filename
+
 
 @router.post("/messages-with-files", response_model=ChatMessageRead)
 async def send_message_with_files(
@@ -148,23 +160,16 @@ async def send_message_with_files(
                 
                 print(f"💬 File uploaded: {safe_filename} -> {file_path}")
 
-    # Create enhanced message with attachment info
-    enhanced_message = sanitized_message
-    if attachments_info:
-        enhanced_message += f"\n\n📎 Attachments: {len(attachments_info)} file(s)"
-        # Store attachment info as JSON in message (temporary solution)
-        attachment_data = {
-            "attachments": attachments_info,
-            "original_message": sanitized_message
-        }
-        enhanced_message = json.dumps(attachment_data)
-
-    # Create the message
+    # Create the message with proper metadata
     db_message = ChatMessageORM(
         service_request_id=service_request_id,
         sender_id=current_user.id,
-        message=enhanced_message,
+        message=sanitized_message,
         message_type="image" if files else message_type,
+        message_metadata={
+            "attachments": attachments_info,
+            "original_message": sanitized_message
+        } if attachments_info else None
     )
 
     db.add(db_message)
