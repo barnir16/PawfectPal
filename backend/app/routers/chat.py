@@ -72,7 +72,7 @@ def sanitize_filename(filename: str) -> str:
 
 @router.post("/messages-with-files", response_model=ChatMessageRead)
 async def send_message_with_files(
-    service_request_id: int = Form(...),
+    service_request_id: str = Form(...),
     message: str = Form(...),
     message_type: str = Form("text"),
     files: List[UploadFile] = File(default=[]),
@@ -80,10 +80,16 @@ async def send_message_with_files(
     current_user: UserORM = Depends(get_current_user),
 ):
     """Send a message with file attachments"""
+    # Convert service_request_id to int
+    try:
+        service_request_id_int = int(service_request_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid service_request_id")
+    
     # Verify the service request exists and user has access
     service_request = (
         db.query(ServiceRequestORM)
-        .filter(ServiceRequestORM.id == service_request_id)
+        .filter(ServiceRequestORM.id == service_request_id_int)
         .first()
     )
 
@@ -162,7 +168,7 @@ async def send_message_with_files(
 
     # Create the message with proper metadata
     db_message = ChatMessageORM(
-        service_request_id=service_request_id,
+        service_request_id=service_request_id_int,
         sender_id=current_user.id,
         message=sanitized_message,
         message_type="image" if files else message_type,
