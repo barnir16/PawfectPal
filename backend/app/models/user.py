@@ -62,7 +62,7 @@ class UserORM(Base):
         "ServiceORM", foreign_keys="ServiceORM.user_id", back_populates="user"
     )
     service_requests: Mapped[List["ServiceRequestORM"]] = relationship(
-        "ServiceRequestORM", back_populates="user"
+        "ServiceRequestORM", foreign_keys="ServiceRequestORM.user_id", back_populates="user"
     )
     chat_messages: Mapped[List["ChatMessageORM"]] = relationship(
         "ChatMessageORM", back_populates="sender"
