@@ -33,7 +33,14 @@ def create_service_request(
         raise HTTPException(status_code=400, detail="Some pets don't belong to you")
 
     # Create the service request
+    print(f"🔍 Service Request Creation Debug:")
+    print(f"  Current User ID: {current_user.id}")
+    print(f"  Current User Username: {current_user.username}")
+    print(f"  Pet IDs: {request.pet_ids}")
+    
     db_request = ServiceRequestORM(user_id=current_user.id, **request.dict())
+    
+    print(f"  Created Service Request User ID: {db_request.user_id}")
 
     db.add(db_request)
     db.commit()
