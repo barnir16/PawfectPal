@@ -13,7 +13,13 @@ export interface ChatMessage {
   edited_at?: string;
   created_at: string;
   
-  // Media attachments
+  // Message metadata (includes attachments)
+  message_metadata?: {
+    attachments?: MediaAttachment[];
+    original_message?: string;
+  };
+  
+  // Media attachments (for backward compatibility)
   attachments?: MediaAttachment[];
   
   // Relationships

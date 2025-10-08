@@ -104,6 +104,10 @@ export const ChatListPage = () => {
     }
   };
 
+  const handleOpenConversation = (conversation: ChatConversation) => {
+    navigate(`/chat/${conversation.service_request_id}`);
+  };
+
   const renderContent = () => {
     if (loading) {
       return (
