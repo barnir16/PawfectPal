@@ -86,21 +86,60 @@ function transformUserToServiceProvider(user: BackendUserRead): ServiceProvider 
   };
 }
 
-export async function getProviders(filter?: string[]): Promise<ServiceProvider[]> {
-  // For now, use mock data directly to avoid CORS issues
-  console.log('📊 Using mock provider data');
-  
-  try {
-    // If filter is empty array or undefined, get all providers
-    const serviceType = filter && filter.length > 0 ? filter[0] : undefined;
-    const providers = await MockProviderService.getProviders(serviceType);
-    console.log(`📊 Loaded ${providers.length} mock providers`);
-    return providers;
-  } catch (mockError) {
-    console.error('Error loading mock providers:', mockError);
-    return [];
+// [HYBRID_PROVIDER_FETCH - START]
+// New system: fetch providers from backend and mock simultaneously, merge results.
+async function fetchBackendProviders(filter?: string[]): Promise<ServiceProvider[]> {
+  const token = await getToken();
+  const params = new URLSearchParams();
+  if (filter && filter.length) {
+    // Backend expects repeated query params or a single param; we’ll append all values
+    for (const f of filter) params.append('filter', f);
   }
+  const res = await fetch(`${getBaseUrl()}/providers/?${params.toString()}`, {
+    headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch backend providers (${res.status})`);
+  }
+  const data: BackendUserRead[] = await res.json();
+  return data.map(transformUserToServiceProvider);
 }
+
+export async function getProviders(filter?: string[]): Promise<ServiceProvider[]> {
+  // Old mock-only implementation preserved for future reference:
+  // console.log('📊 Using mock provider data');
+  // try {
+  //   const serviceType = filter && filter.length > 0 ? filter[0] : undefined;
+  //   const providers = await MockProviderService.getProviders(serviceType);
+  //   console.log(`📊 Loaded ${providers.length} mock providers`);
+  //   return providers;
+  // } catch (mockError) {
+  //   console.error('Error loading mock providers:', mockError);
+  //   return [];
+  // }
+
+  const serviceType = filter && filter.length > 0 ? filter[0] : undefined;
+  const mockPromise = MockProviderService.getProviders(serviceType).catch((e) => {
+    console.warn('Mock providers failed:', e);
+    return [] as ServiceProvider[];
+  });
+  const backendPromise = fetchBackendProviders(filter).catch((e) => {
+    console.warn('Backend providers failed:', e);
+    return [] as ServiceProvider[];
+  });
+
+  const [mockProviders, backendProviders] = await Promise.all([mockPromise, backendPromise]);
+
+  // Merge by provider id; prefer backend data when duplicate ids exist
+  const byId = new Map<number, ServiceProvider>();
+  for (const p of mockProviders) byId.set(p.id, p);
+  for (const p of backendProviders) byId.set(p.id, p); // backend overrides
+
+  const merged = Array.from(byId.values());
+  console.log(`📊 Providers merged: mock=${mockProviders.length}, backend=${backendProviders.length}, merged=${merged.length}`);
+  return merged;
+}
+// [HYBRID_PROVIDER_FETCH - END]
 
 // Create a provider review (rating with optional comment)
 export async function createProviderReview(providerId: number, rating: number, comment?: string) {

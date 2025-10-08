@@ -26,19 +26,24 @@ def create_review(
 
     provider_profile: ProviderORM = provider_user.provider_profile
 
+    # [OPEN_REVIEW_POLICY - START]
+    # NOTE: Open review policy enabled (MVP): allow all users to review any provider.
+    # The previous eligibility rule (require completed service) is preserved below for future use.
+    #
     # Eligibility: require at least one completed service with this provider
-    has_completed = (
-        db.query(ServiceORM)
-        .filter(
-            ServiceORM.user_id == current_user.id,
-            ServiceORM.provider_id == provider_user.id,
-            ServiceORM.status == "completed",
-        )
-        .first()
-        is not None
-    )
-    if not has_completed:
-        raise HTTPException(status_code=403, detail="You can only review providers you have completed a service with")
+    # has_completed = (
+    #     db.query(ServiceORM)
+    #     .filter(
+    #         ServiceORM.user_id == current_user.id,
+    #         ServiceORM.provider_id == provider_user.id,
+    #         ServiceORM.status == "completed",
+    #     )
+    #     .first()
+    #     is not None
+    # )
+    # if not has_completed:
+    #     raise HTTPException(status_code=403, detail="You can only review providers you have completed a service with")
+    # [OPEN_REVIEW_POLICY - END]
 
     # Prevent duplicate review per user/provider (MVP rule)
     existing = (
@@ -104,35 +109,41 @@ def review_eligibility(
     db: Session = Depends(get_db),
     current_user: UserORM = Depends(get_current_user),
 ):
-    provider_user = (
-        db.query(UserORM).filter(UserORM.id == provider_id, UserORM.is_provider).first()
-    )
-    if not provider_user or not provider_user.provider_profile:
-        raise HTTPException(status_code=404, detail="Provider not found")
-    provider_profile: ProviderORM = provider_user.provider_profile
-
-    has_completed = (
-        db.query(ServiceORM)
-        .filter(
-            ServiceORM.user_id == current_user.id,
-            ServiceORM.provider_id == provider_user.id,
-            ServiceORM.status == "completed",
-        )
-        .first()
-        is not None
-    )
-    if not has_completed:
-        return {"eligible": False, "reason": "no_completed_service"}
-
-    existing = (
-        db.query(ProviderReviewORM)
-        .filter(
-            ProviderReviewORM.provider_id == provider_profile.id,
-            ProviderReviewORM.user_id == current_user.id,
-        )
-        .first()
-    )
-    if existing:
-        return {"eligible": False, "reason": "already_reviewed"}
-
+    """
+    [OPEN_REVIEW_POLICY - START]
+    Open review policy: everyone is eligible to review any provider (one review limit still enforced on POST).
+    The stricter logic is retained below as comments for future reactivation.
+    [OPEN_REVIEW_POLICY - END]
+    """
+    # Previous stricter logic preserved for future use:
+    # provider_user = (
+    #     db.query(UserORM).filter(UserORM.id == provider_id, UserORM.is_provider).first()
+    # )
+    # if not provider_user or not provider_user.provider_profile:
+    #     raise HTTPException(status_code=404, detail="Provider not found")
+    # provider_profile: ProviderORM = provider_user.provider_profile
+    # has_completed = (
+    #     db.query(ServiceORM)
+    #     .filter(
+    #         ServiceORM.user_id == current_user.id,
+    #         ServiceORM.provider_id == provider_user.id,
+    #         ServiceORM.status == "completed",
+    #     )
+    #     .first()
+    #     is not None
+    # )
+    # if not has_completed:
+    #     return {"eligible": False, "reason": "no_completed_service"}
+    # existing = (
+    #     db.query(ProviderReviewORM)
+    #     .filter(
+    #         ProviderReviewORM.provider_id == provider_profile.id,
+    #         ProviderReviewORM.user_id == current_user.id,
+    #     )
+    #     .first()
+    # )
+    # if existing:
+    #     return {"eligible": False, "reason": "already_reviewed"}
+    # [OPEN_REVIEW_POLICY - START]
     return {"eligible": True}
+    # [OPEN_REVIEW_POLICY - END]

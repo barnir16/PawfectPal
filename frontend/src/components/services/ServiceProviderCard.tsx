@@ -51,8 +51,9 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
   const [reviewComment, setReviewComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
-  const [eligibility, setEligibility] = useState<{ eligible: boolean; reason?: string } | null>(null);
-  const [eligibilityLoading, setEligibilityLoading] = useState(false);
+  // Open review policy (MVP): comment out eligibility logic but keep for future use
+  // const [eligibility, setEligibility] = useState<{ eligible: boolean; reason?: string } | null>(null);
+  // const [eligibilityLoading, setEligibilityLoading] = useState(false);
 
   const getServiceTypeColor = (serviceType: string) => {
     const colors: { [key: string]: 'primary' | 'secondary' | 'success' | 'warning' | 'error' } = {
@@ -72,25 +73,24 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
   const getAvailabilityText = (isAvailable: boolean) => {
     return isAvailable ? t('services.available') : t('services.unavailable');
   };
+  // const checkEligibility = async () => {
+  //   try {
+  //     setEligibilityLoading(true);
+  //     const res = await getProviderReviewEligibility(provider.id);
+  //     setEligibility(res);
+  //   } catch (e: any) {
+  //     // If unauthenticated, mark ineligible with reason
+  //     setEligibility({ eligible: false, reason: 'auth_required' });
+  //   } finally {
+  //     setEligibilityLoading(false);
+  //   }
+  // };
 
-  const checkEligibility = async () => {
-    try {
-      setEligibilityLoading(true);
-      const res = await getProviderReviewEligibility(provider.id);
-      setEligibility(res);
-    } catch (e: any) {
-      // If unauthenticated, mark ineligible with reason
-      setEligibility({ eligible: false, reason: 'auth_required' });
-    } finally {
-      setEligibilityLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    // Prefetch eligibility so the button state is correct
-    checkEligibility();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [provider.id]);
+  // useEffect(() => {
+  //   // Prefetch eligibility so the button state is correct
+  //   checkEligibility();
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [provider.id]);
 
   const avgRating = provider.average_rating ?? provider.provider_rating ?? 0;
   const reviewsCount = provider.reviews_count ?? undefined;
@@ -284,22 +284,16 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
           <Button
             variant="outlined"
             fullWidth
-            onClick={async () => {
-              if (!eligibility) {
-                await checkEligibility();
-              }
-              if ((eligibility?.eligible) === true) {
-                setReviewOpen(true);
-              }
-            }}
-            disabled={eligibilityLoading || eligibility?.eligible === false}
-            title={eligibility?.eligible === false
-              ? (eligibility?.reason === 'auth_required'
-                  ? t('auth.authenticationRequired')
-                  : eligibility?.reason === 'already_reviewed'
-                    ? 'You have already reviewed this provider'
-                    : 'You can only review providers you completed a service with')
-              : undefined}
+            onClick={() => setReviewOpen(true)}
+            // Open review policy (MVP): always enabled
+            // disabled={eligibilityLoading || eligibility?.eligible === false}
+            // title={eligibility?.eligible === false
+            //   ? (eligibility?.reason === 'auth_required'
+            //       ? t('auth.authenticationRequired')
+            //       : eligibility?.reason === 'already_reviewed'
+            //         ? 'You have already reviewed this provider'
+            //         : 'You can only review providers you completed a service with')
+            //   : undefined}
           >
             {t('services.writeReview')}
           </Button>
