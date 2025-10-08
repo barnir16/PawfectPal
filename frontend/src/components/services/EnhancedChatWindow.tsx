@@ -178,8 +178,20 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
   // Helper function to parse attachment data from message
   const parseMessageAttachments = (message: ChatMessage): MediaAttachment[] => {
+    // First try to get attachments from message_metadata
+    if (message.message_metadata?.attachments && Array.isArray(message.message_metadata.attachments)) {
+      return message.message_metadata.attachments.map((att: any) => ({
+        id: att.id,
+        file_name: att.file_name,
+        file_url: att.file_url,
+        file_type: att.file_type,
+        file_size: att.file_size,
+        created_at: att.created_at,
+      }));
+    }
+    
+    // Fallback: try to parse JSON data from message (backward compatibility)
     try {
-      // Try to parse JSON data from message
       const parsed = JSON.parse(message.message);
       if (parsed.attachments && Array.isArray(parsed.attachments)) {
         return parsed.attachments.map((att: any) => ({
@@ -199,6 +211,12 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
   // Helper function to get display message text
   const getDisplayMessage = (message: ChatMessage): string => {
+    // First try to get original message from message_metadata
+    if (message.message_metadata?.original_message) {
+      return message.message_metadata.original_message;
+    }
+    
+    // Fallback: try to parse JSON data from message (backward compatibility)
     try {
       const parsed = JSON.parse(message.message);
       return parsed.original_message || message.message;
@@ -504,31 +522,9 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   };
 
   const formatTimestamp = (timestamp: string) => {
-    console.log("🕐 Formatting timestamp:", timestamp);
-
-    // Parse the timestamp as UTC to avoid timezone issues
     const date = new Date(timestamp);
     const now = new Date();
-
-    // Calculate difference in minutes
-    const diffInMinutes = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60)
-    );
-
-    console.log("🕐 Timestamp debug:", {
-      timestamp,
-      date: date.toISOString(),
-      now: now.toISOString(),
-      diffInMinutes,
-      localDate: date.toLocaleString(),
-      localNow: now.toLocaleString(),
-      utcDate: date.toUTCString(),
-      utcNow: now.toUTCString(),
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      dateTime: date.getTime(),
-      nowTime: now.getTime(),
-      timeDiff: now.getTime() - date.getTime(),
-    });
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
 
     // Handle negative differences (future timestamps)
     if (diffInMinutes < 0) return t("services.justNow");
