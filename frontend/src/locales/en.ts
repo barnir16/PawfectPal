@@ -1068,6 +1068,7 @@ export const en = {
     writeReview: 'Write review',
     yourRating: 'Your rating',
     yourComment: 'Your comment',
+    sendEmail: 'Send Email',
     status: {
       label: 'Status',
       open: 'Open',
