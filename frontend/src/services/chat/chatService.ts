@@ -84,9 +84,18 @@ class ChatService {
     fallback?: string
   ): Promise<ChatMessage> {
     try {
+      // Format the location message to match what the render function expects
+      let locationMessage = '📍 Location shared';
+      if (latitude && longitude) {
+        locationMessage += `\nLat: ${latitude}\nLng: ${longitude}`;
+      }
+      if (address) {
+        locationMessage += `\nAddress: ${address}`;
+      }
+      
       const messageData: ChatMessageCreate = {
         service_request_id: serviceRequestId,
-        message: address || fallback || 'Location shared',
+        message: locationMessage,
         message_type: 'location',
       };
       

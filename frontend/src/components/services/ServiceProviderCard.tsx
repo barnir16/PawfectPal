@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   CardContent,
@@ -42,6 +43,7 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
   onViewProfile,
 }) => {
   const { t } = useLocalization();
+  const navigate = useNavigate();
   const [requestModalOpen, setRequestModalOpen] = useState(false);
 
   const getServiceTypeColor = (serviceType: string) => {
@@ -250,6 +252,8 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
                 onRequestService(provider);
               }
               setRequestModalOpen(false);
+              // Navigate to chat page
+              navigate(`/chat/${requestId}`);
             }}
             onCancel={() => setRequestModalOpen(false)}
           />
