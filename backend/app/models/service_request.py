@@ -52,7 +52,7 @@ class ServiceRequestORM(Base):
     
     # Relationships
     user: Mapped["UserORM"] = relationship("UserORM", back_populates="service_requests")
-    # assigned_provider: Mapped[Optional["UserORM"]] = relationship("UserORM", foreign_keys=[assigned_provider_id])  # Temporarily disabled until DB migration
+    assigned_provider: Mapped[Optional["UserORM"]] = relationship("UserORM", foreign_keys=[assigned_provider_id])
     pets: Mapped[List["PetORM"]] = relationship("PetORM", secondary="service_request_pets")
     chat_messages: Mapped[List["ChatMessageORM"]] = relationship("ChatMessageORM", back_populates="service_request")
     
