@@ -259,13 +259,19 @@ def _get_conversation_data(service_request_id: int, db: Session, current_user: U
     print(f"🔍 Chat Access Debug:")
     print(f"  Service Request ID: {service_request_id}")
     print(f"  Service Request User ID: {service_request.user_id}")
+    print(f"  Service Request Assigned Provider ID: {service_request.assigned_provider_id}")
     print(f"  Current User ID: {current_user.id}")
     print(f"  Current User Username: {current_user.username}")
     print(f"  Current User Is Provider: {current_user.is_provider}")
-    print(f"  Access Check: {service_request.user_id} != {current_user.id} and not {current_user.is_provider}")
 
-    # Check if user is either the request owner or a provider
-    if service_request.user_id != current_user.id and not current_user.is_provider:
+    # Industry standard access control: Owner OR Assigned Provider
+    is_owner = service_request.user_id == current_user.id
+    is_assigned_provider = service_request.assigned_provider_id == current_user.id
+    
+    print(f"  Is Owner: {is_owner}")
+    print(f"  Is Assigned Provider: {is_assigned_provider}")
+    
+    if not (is_owner or is_assigned_provider):
         print(f"❌ Access denied for user {current_user.username} (ID: {current_user.id}) to service request {service_request_id}")
         raise HTTPException(status_code=403, detail="Access denied")
     

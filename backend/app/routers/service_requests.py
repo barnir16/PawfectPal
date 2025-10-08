@@ -121,6 +121,46 @@ def get_service_request(
     return request
 
 
+@router.post("/{request_id}/assign-provider", response_model=ServiceRequestRead)
+def assign_provider(
+    request_id: int,
+    provider_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserORM = Depends(get_current_user),
+):
+    """Assign a provider to a service request (only request owner can do this)"""
+    # Get the service request
+    request = (
+        db.query(ServiceRequestORM).filter(ServiceRequestORM.id == request_id).first()
+    )
+    
+    if not request:
+        raise HTTPException(status_code=404, detail="Service request not found")
+    
+    # Only the request owner can assign providers
+    if request.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Only the request owner can assign providers")
+    
+    # Verify the provider exists and is actually a provider
+    provider = db.query(UserORM).filter(UserORM.id == provider_id).first()
+    if not provider:
+        raise HTTPException(status_code=404, detail="Provider not found")
+    
+    if not provider.is_provider:
+        raise HTTPException(status_code=400, detail="User is not a provider")
+    
+    # Assign the provider
+    request.assigned_provider_id = provider_id
+    request.status = "in_progress"
+    
+    db.commit()
+    db.refresh(request)
+    
+    print(f"✅ Provider {provider.username} (ID: {provider_id}) assigned to service request {request_id}")
+    
+    return request
+
+
 @router.put("/{request_id}/", response_model=ServiceRequestRead)
 def update_service_request(
     request_id: int,
