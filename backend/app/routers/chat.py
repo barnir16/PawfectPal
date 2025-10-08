@@ -255,9 +255,21 @@ def _get_conversation_data(service_request_id: int, db: Session, current_user: U
     if not service_request:
         raise HTTPException(status_code=404, detail="Service request not found")
 
+    # Debug logging for access control
+    print(f"🔍 Chat Access Debug:")
+    print(f"  Service Request ID: {service_request_id}")
+    print(f"  Service Request User ID: {service_request.user_id}")
+    print(f"  Current User ID: {current_user.id}")
+    print(f"  Current User Username: {current_user.username}")
+    print(f"  Current User Is Provider: {current_user.is_provider}")
+    print(f"  Access Check: {service_request.user_id} != {current_user.id} and not {current_user.is_provider}")
+
     # Check if user is either the request owner or a provider
     if service_request.user_id != current_user.id and not current_user.is_provider:
+        print(f"❌ Access denied for user {current_user.username} (ID: {current_user.id}) to service request {service_request_id}")
         raise HTTPException(status_code=403, detail="Access denied")
+    
+    print(f"✅ Access granted for user {current_user.username} (ID: {current_user.id}) to service request {service_request_id}")
 
     # Get all messages for this service request
     messages = (
