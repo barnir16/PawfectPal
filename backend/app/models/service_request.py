@@ -51,7 +51,7 @@ class ServiceRequestORM(Base):
     expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     
     # Relationships
-    user: Mapped["UserORM"] = relationship("UserORM", back_populates="service_requests")
+    user: Mapped["UserORM"] = relationship("UserORM", foreign_keys=[user_id], back_populates="service_requests")
     assigned_provider: Mapped[Optional["UserORM"]] = relationship("UserORM", foreign_keys=[assigned_provider_id])
     pets: Mapped[List["PetORM"]] = relationship("PetORM", secondary="service_request_pets")
     chat_messages: Mapped[List["ChatMessageORM"]] = relationship("ChatMessageORM", back_populates="service_request")
