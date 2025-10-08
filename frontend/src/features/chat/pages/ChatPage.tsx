@@ -9,6 +9,8 @@ import {
   Link,
   IconButton,
   Paper,
+  Alert,
+  Button,
 } from "@mui/material";
 import { ArrowBack, Home, Message } from "@mui/icons-material";
 import { EnhancedChatWindow } from "../../../components/services/EnhancedChatWindow";
@@ -18,33 +20,52 @@ import type {
   ChatMessageCreate,
 } from "../../../types/services/chat";
 import { chatService } from "../../../services/chat/chatService";
+import { ServiceRequestService } from "../../../services/serviceRequests/serviceRequestService";
+import type { ServiceRequest } from "../../../types/services/serviceRequest";
 
 export const ChatPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [conversation, setConversation] = useState<ChatConversation | null>(
-    null
-  );
+  const [conversation, setConversation] = useState<ChatConversation | null>(null);
+  const [serviceRequest, setServiceRequest] = useState<ServiceRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchConversation = async () => {
+    const fetchData = async () => {
+      if (!id) return;
+      
       try {
         setLoading(true);
-        const data = await chatService.getConversation(Number(id));
-        setConversation(data);
-      } catch (err) {
-        console.error("Failed to fetch conversation", err);
-        setConversation(null);
+        setError(null);
+        
+        // First, verify the service request exists
+        const serviceRequestData = await ServiceRequestService.getServiceRequest(Number(id));
+        setServiceRequest(serviceRequestData);
+        
+        // Then fetch the conversation
+        try {
+          const conversationData = await chatService.getConversation(Number(id));
+          setConversation(conversationData);
+        } catch (conversationError: any) {
+          console.warn("Could not fetch conversation, starting with empty chat:", conversationError);
+          // Create empty conversation if it doesn't exist
+          setConversation({
+            service_request_id: Number(id),
+            messages: [],
+            unread_count: 0
+          });
+        }
+      } catch (err: any) {
+        console.error("Failed to fetch chat data:", err);
+        setError(err.message || "Failed to load chat");
       } finally {
         setLoading(false);
       }
     };
 
-    if (id) {
-      fetchConversation();
-    }
+    fetchData();
   }, [id]);
 
   const handleSendMessage = async (msg: ChatMessageCreate) => {
@@ -81,11 +102,29 @@ export const ChatPage = () => {
     );
   }
 
-  if (!conversation) {
+  if (error) {
     return (
-      <Typography variant="h6" sx={{ mt: 4, textAlign: "center" }}>
-        Conversation not found
-      </Typography>
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+        <Button onClick={() => navigate("/chat-list")}>
+          Back to Chats
+        </Button>
+      </Box>
+    );
+  }
+
+  if (!serviceRequest || !conversation) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Service request not found or you don't have access to this chat.
+        </Alert>
+        <Button onClick={() => navigate("/chat-list")}>
+          Back to Chats
+        </Button>
+      </Box>
     );
   }
 
@@ -117,7 +156,7 @@ export const ChatPage = () => {
               Chats
             </Link>
             <Typography variant="body2" color="text.primary">
-              Service #{id}
+              {serviceRequest.title || `Service #${id}`}
             </Typography>
           </Breadcrumbs>
         </Box>
