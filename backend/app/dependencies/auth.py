@@ -5,11 +5,7 @@ from app.auth.utils import oauth2_scheme, get_user_by_username
 from config import ALGORITHM, SECRET_KEY
 from .db import get_db
 from typing import Optional
-<<<<<<< HEAD:backend/dependencies/auth.py
-from models import UserORM
-=======
 from app.models import UserORM
->>>>>>> origin/merged-zoroflamingo:backend/app/dependencies/auth.py
 
 
 def get_current_user(

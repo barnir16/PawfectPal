@@ -61,15 +61,12 @@ class UserORM(Base):
     booked_services: Mapped[List["ServiceORM"]] = relationship(
         "ServiceORM", foreign_keys="ServiceORM.user_id", back_populates="user"
     )
-<<<<<<< HEAD:backend/models/user.py
-    service_requests: Mapped[List["ServiceRequestORM"]] = relationship("ServiceRequestORM", back_populates="user")
-    chat_messages: Mapped[List["ChatMessageORM"]] = relationship("ChatMessageORM", back_populates="sender")
-    ai_conversations: Mapped[List["AIConversationORM"]] = relationship("AIConversationORM", back_populates="user")
-=======
     service_requests: Mapped[List["ServiceRequestORM"]] = relationship(
         "ServiceRequestORM", back_populates="user"
     )
     chat_messages: Mapped[List["ChatMessageORM"]] = relationship(
         "ChatMessageORM", back_populates="sender"
     )
->>>>>>> origin/merged-zoroflamingo:backend/app/models/user.py
+    ai_conversations: Mapped[List["AIConversationORM"]] = relationship(
+        "AIConversationORM", back_populates="user"
+    )
