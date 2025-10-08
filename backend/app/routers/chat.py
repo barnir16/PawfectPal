@@ -297,11 +297,19 @@ def _get_conversation_data(service_request_id: int, db: Session, current_user: U
     # Convert messages to proper response format
     serialized_messages = [ChatMessageRead.model_validate(msg) for msg in messages]
 
-    return ChatConversation(
+    conversation = ChatConversation(
         service_request_id=service_request_id,
         messages=serialized_messages,
         unread_count=unread_count,
     )
+    
+    print(f"🔍 Chat Response Debug:")
+    print(f"  Service Request ID: {service_request_id}")
+    print(f"  Messages Count: {len(serialized_messages)}")
+    print(f"  Unread Count: {unread_count}")
+    print(f"  Conversation Object: {conversation}")
+    
+    return conversation
 
 
 @router.get("/conversations/{service_request_id}", response_model=ChatConversation)
