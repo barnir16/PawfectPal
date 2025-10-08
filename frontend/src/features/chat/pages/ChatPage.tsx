@@ -41,12 +41,16 @@ export const ChatPage = () => {
         setError(null);
         
         // First, verify the service request exists
+        console.log('🔍 ChatPage: Fetching service request', id);
         const serviceRequestData = await ServiceRequestService.getServiceRequest(Number(id));
+        console.log('🔍 ChatPage: Service request fetched', serviceRequestData);
         setServiceRequest(serviceRequestData);
         
         // Then fetch the conversation
         try {
+          console.log('🔍 ChatPage: Fetching conversation', id);
           const conversationData = await chatService.getConversation(Number(id));
+          console.log('🔍 ChatPage: Conversation fetched', conversationData);
           setConversation(conversationData);
         } catch (conversationError: any) {
           console.warn("Could not fetch conversation, starting with empty chat:", conversationError);
@@ -119,7 +123,7 @@ export const ChatPage = () => {
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="warning" sx={{ mb: 2 }}>
-          Service request not found or you don't have access to this chat.
+          Service request not found or you don't have access to this chat. (Debug: ID {id})
         </Alert>
         <Button onClick={() => navigate("/chat-list")}>
           Back to Chats
