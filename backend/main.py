@@ -14,6 +14,7 @@ from app.routers import (
     weight_record,
     weight_goal,
     provider,
+    provider_reviews,
     service_requests,
     chat,
 )
@@ -122,6 +123,7 @@ try:
 except Exception as e:
     print(f"AI conversations router not available: {e}")
 app.include_router(provider.router)
+app.include_router(provider_reviews.router)
 app.include_router(service_requests.router)
 app.include_router(chat.router)
 
