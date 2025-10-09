@@ -59,7 +59,7 @@ def get_providers(
     providers = query.all()
     print(providers)
     if not providers:
-        raise HTTPException(status_code=404, detail="Providers not found")
+        return []  # Return empty list instead of 404
 
     results = []
     for p in providers:
