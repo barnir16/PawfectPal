@@ -32,6 +32,7 @@ class ProviderORM(Base):
     bio: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     hourly_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     rating: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    rating_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, default=0)
 
     # Relationship back to User
     user = relationship("UserORM", back_populates="provider_profile")

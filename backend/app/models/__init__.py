@@ -11,6 +11,7 @@ from .weight_record import WeightRecordORM
 from .weight_goal import WeightGoalORM
 from .references import VaccineORM, AgeRestrictionORM
 from .provider import ProviderORM
+from .provider_review import ProviderReviewORM
 from .service_request import ServiceRequestORM
 from .chat_message import ChatMessageORM
 from .ai_conversation import AIConversationORM, AIConversationMessageORM
