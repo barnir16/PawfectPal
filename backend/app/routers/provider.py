@@ -19,17 +19,33 @@ def get_provider_by_id(provider_id: int, db: Session = Depends(get_db)):
     # Flatten provider fields
     user_data = UserRead.model_validate(provider).model_dump()
     if provider.provider_profile:
-        user_data.update(
-            {
-                "provider_services": [service.name for service in provider.provider_profile.services]
-                if provider.provider_profile.services
-                else [],
-                "provider_bio": provider.provider_profile.bio,
-                "provider_hourly_rate": provider.provider_profile.hourly_rate,
-                "provider_rating": provider.provider_profile.rating,
-                "provider_rating_count": provider.provider_profile.rating_count,
-            }
-        )
+        try:
+            # Safely get services
+            services = []
+            if provider.provider_profile.services:
+                services = [service.name for service in provider.provider_profile.services]
+            
+            user_data.update(
+                {
+                    "provider_services": services,
+                    "provider_bio": provider.provider_profile.bio,
+                    "provider_hourly_rate": provider.provider_profile.hourly_rate,
+                    "provider_rating": provider.provider_profile.rating,
+                    "provider_rating_count": provider.provider_profile.rating_count or 0,
+                }
+            )
+        except Exception as e:
+            print(f"Error processing provider {provider.id}: {e}")
+            # Add default values if there's an error
+            user_data.update(
+                {
+                    "provider_services": [],
+                    "provider_bio": None,
+                    "provider_hourly_rate": None,
+                    "provider_rating": None,
+                    "provider_rating_count": 0,
+                }
+            )
     return user_data
 
 
@@ -49,17 +65,33 @@ def get_providers(
     for p in providers:
         user_data = UserRead.model_validate(p).model_dump()
         if p.provider_profile:
-            user_data.update(
-                {
-                    "provider_services": [service.name for service in p.provider_profile.services]
-                    if p.provider_profile.services
-                    else [],
-                    "provider_bio": p.provider_profile.bio,
-                    "provider_hourly_rate": p.provider_profile.hourly_rate,
-                    "provider_rating": p.provider_profile.rating,
-                    "provider_rating_count": p.provider_profile.rating_count,
-                }
-            )
+            try:
+                # Safely get services
+                services = []
+                if p.provider_profile.services:
+                    services = [service.name for service in p.provider_profile.services]
+                
+                user_data.update(
+                    {
+                        "provider_services": services,
+                        "provider_bio": p.provider_profile.bio,
+                        "provider_hourly_rate": p.provider_profile.hourly_rate,
+                        "provider_rating": p.provider_profile.rating,
+                        "provider_rating_count": p.provider_profile.rating_count or 0,
+                    }
+                )
+            except Exception as e:
+                print(f"Error processing provider {p.id}: {e}")
+                # Add default values if there's an error
+                user_data.update(
+                    {
+                        "provider_services": [],
+                        "provider_bio": None,
+                        "provider_hourly_rate": None,
+                        "provider_rating": None,
+                        "provider_rating_count": 0,
+                    }
+                )
         results.append(user_data)
     print(results)
 
