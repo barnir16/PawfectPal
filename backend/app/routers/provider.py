@@ -21,7 +21,7 @@ def get_provider_by_id(provider_id: int, db: Session = Depends(get_db)):
     if provider.provider_profile:
         user_data.update(
             {
-                "provider_services": provider.provider_profile.services.split(",")
+                "provider_services": [service.name for service in provider.provider_profile.services]
                 if provider.provider_profile.services
                 else [],
                 "provider_bio": provider.provider_profile.bio,
@@ -51,7 +51,7 @@ def get_providers(
         if p.provider_profile:
             user_data.update(
                 {
-                    "provider_services": p.provider_profile.services.split(",")
+                    "provider_services": [service.name for service in p.provider_profile.services]
                     if p.provider_profile.services
                     else [],
                     "provider_bio": p.provider_profile.bio,
