@@ -36,6 +36,89 @@ export const ChatListPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Skeleton loading component for chat list
+  const ChatListSkeleton = () => (
+    <List sx={{ p: 0 }}>
+      {[1, 2, 3].map((index) => (
+        <Card
+          key={index}
+          variant="outlined"
+          sx={{
+            mb: 2,
+            borderRadius: 3,
+            border: "1px solid",
+            borderColor: (theme) => 
+              theme.palette.mode === "dark" 
+                ? "rgba(255,255,255,0.1)" 
+                : "rgba(0,0,0,0.08)",
+          }}
+        >
+          <CardContent>
+            <Stack
+              direction="row"
+              alignItems="flex-start"
+              justifyContent="space-between"
+              spacing={2}
+            >
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  sx={{ mb: 1 }}
+                >
+                  <Box
+                    sx={{
+                      width: 120,
+                      height: 24,
+                      backgroundColor: (theme) =>
+                        theme.palette.mode === "dark"
+                          ? "rgba(255,255,255,0.1)"
+                          : "rgba(0,0,0,0.1)",
+                      borderRadius: 1,
+                      animation: "pulse 1.5s ease-in-out infinite",
+                      "@keyframes pulse": {
+                        "0%": { opacity: 0.6 },
+                        "50%": { opacity: 0.3 },
+                        "100%": { opacity: 0.6 },
+                      },
+                    }}
+                  />
+                  <Box
+                    sx={{
+                      width: 40,
+                      height: 16,
+                      backgroundColor: (theme) =>
+                        theme.palette.mode === "dark"
+                          ? "rgba(255,255,255,0.1)"
+                          : "rgba(0,0,0,0.1)",
+                      borderRadius: 1,
+                      animation: "pulse 1.5s ease-in-out infinite",
+                    }}
+                  />
+                </Stack>
+                
+                <Box
+                  sx={{
+                    width: "80%",
+                    height: 16,
+                    backgroundColor: (theme) =>
+                      theme.palette.mode === "dark"
+                        ? "rgba(255,255,255,0.1)"
+                        : "rgba(0,0,0,0.1)",
+                    borderRadius: 1,
+                    animation: "pulse 1.5s ease-in-out infinite",
+                    mt: 0.5,
+                  }}
+                />
+              </Box>
+            </Stack>
+          </CardContent>
+        </Card>
+      ))}
+    </List>
+  );
+
   // Auto-refresh conversations every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => {
@@ -106,14 +189,7 @@ export const ChatListPage = () => {
 
   const renderContent = () => {
     if (loading) {
-      return (
-        <Box sx={{ p: 5, textAlign: "center" }}>
-          <CircularProgress />
-          <Typography sx={{ mt: 2, fontWeight: 500 }}>
-            {t("chat.loadingConversations")}
-          </Typography>
-        </Box>
-      );
+      return <ChatListSkeleton />;
     }
 
     if (error) {
