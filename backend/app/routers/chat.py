@@ -344,7 +344,16 @@ def _get_conversation_data(service_request_id: int, db: Session, current_user: U
     db.commit()
 
     # Convert messages to proper response format
-    serialized_messages = [ChatMessageRead.model_validate(msg) for msg in messages]
+    serialized_messages = []
+    for msg in messages:
+        try:
+            serialized_msg = ChatMessageRead.model_validate(msg)
+            serialized_messages.append(serialized_msg)
+        except Exception as e:
+            print(f"❌ Error serializing message {msg.id}: {e}")
+            print(f"❌ Message data: {msg.__dict__}")
+            # Skip this message and continue
+            continue
 
     conversation = ChatConversation(
         service_request_id=service_request_id,
