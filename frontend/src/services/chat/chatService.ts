@@ -14,10 +14,10 @@ class ChatService {
       console.log('🔍 ChatService: Fetching my conversations...');
       const response = await apiClient.get('/chat/my-conversations');
       console.log('🔍 ChatService: Raw response:', response);
-      console.log('🔍 ChatService: Response data:', response.data);
-      console.log('🔍 ChatService: Data type:', typeof response.data);
-      console.log('🔍 ChatService: Data length:', response.data?.length);
-      return response.data || [];
+      console.log('🔍 ChatService: Response data:', response);
+      console.log('🔍 ChatService: Data type:', typeof response);
+      console.log('🔍 ChatService: Data length:', Array.isArray(response) ? response.length : 'not array');
+      return response || [];
     } catch (error) {
       console.error('❌ ChatService: Failed to fetch conversations:', error);
       // Return empty array instead of throwing error
@@ -32,8 +32,8 @@ class ChatService {
     try {
       console.log(`🔍 ChatService: Fetching conversation for service request ${serviceRequestId} with limit=${limit}, offset=${offset}`);
       const response = await apiClient.get(`/chat/conversations/${serviceRequestId}?limit=${limit}&offset=${offset}`);
-      console.log(`🔍 ChatService: Conversation fetched successfully`, response.data);
-      return response.data;
+      console.log(`🔍 ChatService: Conversation fetched successfully`, response);
+      return response;
     } catch (error: any) {
       console.error('❌ ChatService: Failed to fetch conversation:', error);
       console.error('❌ ChatService: Error status:', error?.status);
@@ -70,7 +70,7 @@ class ChatService {
   async sendMessage(serviceRequestId: number, message: ChatMessageCreate): Promise<ChatMessage> {
     try {
       const response = await apiClient.post('/chat/messages', message);
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Failed to send message:', error);
       throw new Error('Failed to send message');
@@ -156,8 +156,8 @@ class ChatService {
         },
       });
       
-      console.log('📤 Message with files sent successfully:', response.data);
-      return response.data;
+      console.log('📤 Message with files sent successfully:', response);
+      return response;
     } catch (error: any) {
       console.error('Failed to send message with files:', error);
       console.error('Error details:', {
@@ -176,8 +176,8 @@ class ChatService {
     try {
       console.log(`🔍 ChatService: Loading more messages for service request ${serviceRequestId}, offset=${currentOffset}`);
       const response = await apiClient.get(`/chat/conversations/${serviceRequestId}?limit=${limit}&offset=${currentOffset}`);
-      console.log(`🔍 ChatService: More messages loaded successfully`, response.data);
-      return response.data;
+      console.log(`🔍 ChatService: More messages loaded successfully`, response);
+      return response;
     } catch (error: any) {
       console.error('❌ ChatService: Failed to load more messages:', error);
       throw new Error('Failed to load more messages');
