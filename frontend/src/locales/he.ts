@@ -352,10 +352,6 @@ export const he = {
       overweight: 'החיה נראית שמנה מדי עבור גזע זה',
       healthy: 'משקל החיה בטווח הבריא עבור גזע זה'
     },
-    vaccineTracking: 'מעקב חיסונים',
-    manageYourVaccines: 'נהל את החיסונים שלך',
-    changePhoto: 'שנה תמונה',
-    addPhoto: 'הוסף תמונה',
   },
 
   // Vaccine Tracking
@@ -418,7 +414,6 @@ export const he = {
     syncWithGoogleCalendar: 'סנכרן עם Google Calendar',
     vaccinesExported: 'החיסונים יוצאו ללוח השנה!',
     vaccinesSynced: 'החיסונים סונכרנו עם Google Calendar!',
-    vaccineTracking: 'מעקב חיסונים',
     backToTasks: 'חזור למשימות',
     addVaccine: 'הוסף חיסון',
     filterByPet: 'סנן לפי חיית מחמד',
