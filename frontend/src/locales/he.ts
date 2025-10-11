@@ -1,4 +1,18 @@
 export const he = {
+  // Root level keys for direct access
+  Search: 'חיפוש',
+  filterByStatus: 'סנן לפי סטטוס',
+  All: 'הכל',
+  'In Progress': 'בתהליך',
+  Completed: 'הושלם',
+  Cancelled: 'בוטל',
+  walking: 'הליכה עם כלב',
+  sitting: 'שמירה על חיות מחמד',
+  boarding: 'פנסיון לחיות מחמד',
+  for: 'עבור',
+  in_progress: 'בתהליך',
+  Details: 'פרטים',
+
   // Common
   common: {
     save: 'שמור',

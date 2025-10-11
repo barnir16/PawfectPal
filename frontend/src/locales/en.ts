@@ -1,4 +1,18 @@
 export const en = {
+  // Root level keys for direct access
+  Search: 'Search',
+  filterByStatus: 'Filter by Status',
+  All: 'All',
+  'In Progress': 'In Progress',
+  Completed: 'Completed',
+  Cancelled: 'Cancelled',
+  walking: 'Dog Walking',
+  sitting: 'Pet Sitting',
+  boarding: 'Pet Boarding',
+  for: 'for',
+  in_progress: 'In Progress',
+  Details: 'Details',
+
   // Common
   common: {
     save: 'Save',
