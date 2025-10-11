@@ -1124,6 +1124,17 @@ export const en = {
     inProgress: 'In Progress',
     completed: 'Completed',
     cancelled: 'Cancelled',
+    // Additional status keys for compatibility
+    'In Progress': 'In Progress',
+    'Completed': 'Completed',
+    'Cancelled': 'Cancelled',
+    // Common filter keys
+    'All': 'All',
+    'for': 'for',
+    'in_progress': 'In Progress',
+    'Details': 'Details',
+    'Search': 'Search',
+    'filterByStatus': 'Filter by Status',
     // Booking form fields
     duration: 'Duration',
     price: 'Price',
