@@ -50,6 +50,7 @@ import {
   Favorite,
   ThumbUp,
   ThumbDown,
+  Message,
 } from "@mui/icons-material";
 import { useLocalization } from "../../contexts/LocalizationContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -848,18 +849,41 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       {/* Header */}
       <Box
         sx={{
-          p: 2,
+          p: 3,
           borderBottom: 1,
           borderColor: "divider",
+          backgroundColor: (theme) => theme.palette.mode === "dark" ? "grey.800" : "white",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
         }}
       >
-        <Typography variant="h6">{t("services.conversation")}</Typography>{" "}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Avatar sx={{ width: 40, height: 40, backgroundColor: "primary.main" }}>
+            <Pets />
+          </Avatar>
+          <Box>
+            <Typography variant="h6" fontWeight={600}>
+              {t("services.conversation")}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {messages.length} {messages.length === 1 ? t("message") : t("messages")}
+            </Typography>
+          </Box>
+        </Box>
+        
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Tooltip title="Quick Actions">
-            <IconButton onClick={handleMenuOpen}>
+            <IconButton 
+              onClick={handleMenuOpen}
+              sx={{
+                backgroundColor: "transparent",
+                color: "text.secondary",
+                "&:hover": {
+                  backgroundColor: "grey.100",
+                },
+              }}
+            >
               <MoreVert />
             </IconButton>
           </Tooltip>
@@ -872,29 +896,51 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         sx={{
           flex: 1,
           overflowY: "auto",
-          p: { xs: 1, md: 3 },
+          p: { xs: 2, md: 3 },
           backgroundColor: (theme) =>
             theme.palette.mode === "dark" ? "grey.900" : "grey.50",
           fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
           display: "flex",
           flexDirection: "column",
+          "&::-webkit-scrollbar": {
+            width: "6px",
+          },
+          "&::-webkit-scrollbar-track": {
+            backgroundColor: "transparent",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            backgroundColor: (theme) => theme.palette.grey[400],
+            borderRadius: "3px",
+          },
+          "&::-webkit-scrollbar-thumb:hover": {
+            backgroundColor: (theme) => theme.palette.grey[600],
+          },
         }}
       >
         {" "}
         {messages.length === 0 ? (
-          <Box sx={{ textAlign: "center", mt: 4 }}>
-            <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+          <Box sx={{ 
+            flex: 1, 
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: "center",
+            flexDirection: "column",
+            gap: 2,
+          }}>
+            <Message sx={{ fontSize: 64, color: "text.secondary", opacity: 0.5 }} />
+            <Typography variant="h6" color="text.secondary" textAlign="center">
               {t("services.noMessagesYet")}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            <Typography variant="body2" color="text.secondary" textAlign="center">
               {t("services.startConversation")}
             </Typography>
             <Button
               variant="outlined"
               onClick={() => setShowQuickReplies(!showQuickReplies)}
               startIcon={<Reply />}
+              sx={{ mt: 2 }}
             >
-              Quick Replies
+              {t("chat.quickReplies")}
             </Button>
           </Box>
         ) : (
@@ -1291,7 +1337,18 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         )}
         {/* Quick Replies */}
         {showQuickReplies && (
-          <Paper sx={{ mt: 2, p: 2 }}>
+          <Paper 
+            elevation={0}
+            sx={{ 
+              mt: 2, 
+              p: 3,
+              borderRadius: 3,
+              backgroundColor: (theme) => theme.palette.mode === "dark" ? "grey.800" : "grey.50",
+              border: (theme) => theme.palette.mode === "dark" 
+                ? "1px solid rgba(255,255,255,0.1)" 
+                : "1px solid rgba(0,0,0,0.1)",
+            }}
+          >
             <Box
               sx={{
                 display: "flex",
@@ -1300,23 +1357,48 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                 mb: 2,
               }}
             >
-              <Typography variant="subtitle2">Quick Replies</Typography>
+              <Typography variant="h6" fontWeight={600} color="text.primary">
+                {t("chat.quickReplies")}
+              </Typography>
               <IconButton
                 size="small"
                 onClick={() => setShowQuickReplies(false)}
+                sx={{
+                  backgroundColor: "transparent",
+                  color: "text.secondary",
+                  "&:hover": {
+                    backgroundColor: (theme) => theme.palette.error.light + "20",
+                    color: "error.main",
+                  },
+                }}
               >
                 <Close />
               </IconButton>
             </Box>
-            <Stack spacing={1}>
+            <Stack spacing={1.5}>
               {quickReplies.map((reply) => (
                 <Button
                   key={reply.id}
                   variant="outlined"
-                  size="small"
+                  size="medium"
                   startIcon={reply.icon}
                   onClick={() => handleQuickReply(reply)}
-                  sx={{ justifyContent: "flex-start" }}
+                  sx={{ 
+                    justifyContent: "flex-start",
+                    borderRadius: 2,
+                    textTransform: "none",
+                    py: 1.5,
+                    px: 2,
+                    transition: "all 0.2s ease-in-out",
+                    "&:hover": {
+                      backgroundColor: (theme) => theme.palette.primary.light + "10",
+                      borderColor: (theme) => theme.palette.primary.main,
+                      transform: "translateY(-1px)",
+                      boxShadow: (theme) => theme.palette.mode === "dark" 
+                        ? "0 4px 12px rgba(0,0,0,0.3)" 
+                        : "0 4px 12px rgba(0,0,0,0.1)",
+                    },
+                  }}
                 >
                   {reply.text}
                 </Button>
@@ -1328,35 +1410,94 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
       {/* File Preview */}
       {selectedFiles.length > 0 && (
-        <Paper sx={{ p: 1, borderTop: 1, borderColor: "divider" }}>
-          <Typography variant="caption" sx={{ mb: 1, display: "block" }}>
-            Selected files ({selectedFiles.length}):
-          </Typography>
-          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+        <Paper 
+          elevation={0}
+          sx={{ 
+            p: 2, 
+            borderTop: 1, 
+            borderColor: "divider",
+            backgroundColor: (theme) => theme.palette.mode === "dark" ? "grey.800" : "white",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+            <Typography variant="subtitle2" fontWeight={600} color="text.primary">
+              {t("chat.selectedFiles")} ({selectedFiles.length})
+            </Typography>
+            <IconButton
+              size="small"
+              onClick={() => setSelectedFiles([])}
+              sx={{
+                backgroundColor: "transparent",
+                color: "text.secondary",
+                "&:hover": {
+                  backgroundColor: (theme) => theme.palette.error.light + "20",
+                  color: "error.main",
+                },
+              }}
+            >
+              <Close fontSize="small" />
+            </IconButton>
+          </Box>
+          <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
             {selectedFiles.map((file, index) => (
-              <Card key={index} sx={{ maxWidth: 120, position: "relative" }}>
+              <Card 
+                key={index} 
+                sx={{ 
+                  maxWidth: 140, 
+                  position: "relative",
+                  borderRadius: 2,
+                  overflow: "hidden",
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover": {
+                    transform: "translateY(-2px)",
+                    boxShadow: (theme) => theme.palette.mode === "dark" 
+                      ? "0 4px 12px rgba(0,0,0,0.3)" 
+                      : "0 4px 12px rgba(0,0,0,0.15)",
+                  },
+                }}
+              >
                 {file.type.startsWith("image/") ? (
                   <CardMedia
                     component="img"
-                    height="60"
+                    height="80"
                     image={URL.createObjectURL(file)}
                     alt={file.name}
+                    sx={{ objectFit: "cover" }}
                   />
                 ) : (
                   <Box
                     sx={{
-                      height: 60,
+                      height: 80,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
+                      backgroundColor: (theme) => theme.palette.mode === "dark" ? "grey.700" : "grey.100",
                     }}
                   >
                     <InsertDriveFile fontSize="large" color="action" />
                   </Box>
                 )}
-                <CardContent sx={{ p: 0.5 }}>
-                  <Typography variant="caption" noWrap>
+                <CardContent sx={{ p: 1 }}>
+                  <Typography 
+                    variant="caption" 
+                    noWrap
+                    sx={{ 
+                      fontSize: "0.75rem",
+                      fontWeight: 500,
+                      color: "text.primary",
+                    }}
+                  >
                     {file.name}
+                  </Typography>
+                  <Typography 
+                    variant="caption" 
+                    sx={{ 
+                      fontSize: "0.7rem",
+                      color: "text.secondary",
+                      display: "block",
+                    }}
+                  >
+                    {(file.size / 1024).toFixed(1)} KB
                   </Typography>
                 </CardContent>
                 <IconButton
@@ -1366,9 +1507,15 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                     position: "absolute",
                     top: 4,
                     right: 4,
-                    backgroundColor: "rgba(0,0,0,0.5)",
+                    backgroundColor: "rgba(0,0,0,0.6)",
                     color: "white",
-                    "&:hover": { backgroundColor: "rgba(0,0,0,0.7)" },
+                    width: 24,
+                    height: 24,
+                    "&:hover": { 
+                      backgroundColor: "rgba(0,0,0,0.8)",
+                      transform: "scale(1.1)",
+                    },
+                    transition: "all 0.2s ease-in-out",
                   }}
                 >
                   <Close fontSize="small" />
@@ -1379,18 +1526,20 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         </Paper>
       )}
 
-      {/* Input */}
+      {/* Input Area */}
       <Paper
+        elevation={0}
         sx={{
-          p: { xs: 1, md: 2 },
+          p: { xs: 2, md: 3 },
           borderTop: 1,
           borderColor: "divider",
-          backgroundColor: "white",
+          backgroundColor: (theme) => theme.palette.mode === "dark" ? "grey.800" : "white",
           borderRadius: 0,
-          minHeight: { xs: "60px", md: "auto" }
+          minHeight: { xs: "80px", md: "auto" },
+          position: "relative",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "flex-end", gap: 1.5 }}>
           <input
             ref={fileInputRef}
             type="file"
@@ -1407,33 +1556,73 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             style={{ display: "none" }}
           />
 
-          {/* Attach File */}
-          <Tooltip title="Attach File">
-            <IconButton
-              size="small"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <AttachFile />
-            </IconButton>
-          </Tooltip>
+          {/* Action Buttons */}
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+            {/* Attach File */}
+            <Tooltip title={t("chat.attachFile")}>
+              <IconButton
+                size="small"
+                onClick={() => fileInputRef.current?.click()}
+                sx={{
+                  backgroundColor: "transparent",
+                  color: "text.secondary",
+                  borderRadius: 2,
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover": {
+                    backgroundColor: (theme) => theme.palette.primary.light + "20",
+                    color: "primary.main",
+                    transform: "scale(1.1)",
+                  },
+                }}
+              >
+                <AttachFile fontSize="small" />
+              </IconButton>
+            </Tooltip>
 
-          {/* Share Photo */}
-          <Tooltip title="Share Photo">
-            <IconButton
-              size="small"
-              onClick={() => imageInputRef.current?.click()}
-            >
-              <Image />
-            </IconButton>
-          </Tooltip>
+            {/* Share Photo */}
+            <Tooltip title={t("chat.sharePhoto")}>
+              <IconButton
+                size="small"
+                onClick={() => imageInputRef.current?.click()}
+                sx={{
+                  backgroundColor: "transparent",
+                  color: "text.secondary",
+                  borderRadius: 2,
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover": {
+                    backgroundColor: (theme) => theme.palette.primary.light + "20",
+                    color: "primary.main",
+                    transform: "scale(1.1)",
+                  },
+                }}
+              >
+                <Image fontSize="small" />
+              </IconButton>
+            </Tooltip>
 
-          {/* Share Location */}
-          <Tooltip title="Share Location">
-            <IconButton size="small" onClick={handleShareLocation}>
-              <LocationOn />
-            </IconButton>
-          </Tooltip>
+            {/* Share Location */}
+            <Tooltip title={t("chat.shareLocation")}>
+              <IconButton 
+                size="small" 
+                onClick={handleShareLocation}
+                sx={{
+                  backgroundColor: "transparent",
+                  color: "text.secondary",
+                  borderRadius: 2,
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover": {
+                    backgroundColor: (theme) => theme.palette.primary.light + "20",
+                    color: "primary.main",
+                    transform: "scale(1.1)",
+                  },
+                }}
+              >
+                <LocationOn fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
 
+          {/* Message Input */}
           <TextField
             fullWidth
             multiline
@@ -1475,18 +1664,37 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             sx={{
               "& .MuiOutlinedInput-root": {
                 backgroundColor: (theme) =>
-                  theme.palette.mode === "dark" ? "grey.800" : "white",
-                borderRadius: 3,
-                boxShadow: 1,
-                paddingY: 0, // reduce vertical padding
+                  theme.palette.mode === "dark" ? "grey.700" : "grey.50",
+                borderRadius: 4,
+                boxShadow: (theme) => theme.palette.mode === "dark" 
+                  ? "0 2px 8px rgba(0,0,0,0.3)" 
+                  : "0 2px 8px rgba(0,0,0,0.1)",
+                border: (theme) => theme.palette.mode === "dark" 
+                  ? "1px solid rgba(255,255,255,0.1)" 
+                  : "1px solid rgba(0,0,0,0.1)",
+                transition: "all 0.2s ease-in-out",
+                "&:hover": {
+                  borderColor: (theme) => theme.palette.primary.main,
+                  boxShadow: (theme) => theme.palette.mode === "dark" 
+                    ? "0 4px 12px rgba(0,0,0,0.4)" 
+                    : "0 4px 12px rgba(0,0,0,0.15)",
+                },
+                "&.Mui-focused": {
+                  borderColor: (theme) => theme.palette.primary.main,
+                  boxShadow: (theme) => theme.palette.mode === "dark" 
+                    ? "0 4px 12px rgba(0,0,0,0.4)" 
+                    : "0 4px 12px rgba(0,0,0,0.15)",
+                },
               },
               "& .MuiInputBase-input": {
-                fontSize: "0.875rem",
-                padding: "8px 12px", // shrink input padding
+                fontSize: "0.9rem",
+                padding: "12px 16px",
+                lineHeight: 1.4,
               },
             }}
           />
 
+          {/* Send Button */}
           <IconButton
             color="primary"
             onClick={handleSend}
@@ -1494,13 +1702,26 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
               (!input.trim() && selectedFiles.length === 0) || isSending
             }
             sx={{
+              backgroundColor: (theme) => theme.palette.primary.main,
+              color: "white",
+              borderRadius: 3,
+              width: 48,
+              height: 48,
               transition: "all 0.2s ease-in-out",
+              boxShadow: (theme) => theme.palette.mode === "dark" 
+                ? "0 2px 8px rgba(0,0,0,0.3)" 
+                : "0 2px 8px rgba(0,0,0,0.15)",
               "&:hover": {
-                transform: "scale(1.1)",
-                backgroundColor: (theme) => theme.palette.primary.light,
+                transform: "scale(1.05)",
+                backgroundColor: (theme) => theme.palette.primary.dark,
+                boxShadow: (theme) => theme.palette.mode === "dark" 
+                  ? "0 4px 12px rgba(0,0,0,0.4)" 
+                  : "0 4px 12px rgba(0,0,0,0.2)",
               },
               "&:disabled": {
-                opacity: 0.6,
+                opacity: 0.5,
+                backgroundColor: (theme) => theme.palette.grey[400],
+                transform: "none",
               },
             }}
           >
@@ -1508,7 +1729,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
               <CircularProgress 
                 size={20} 
                 sx={{ 
-                  color: "primary.contrastText",
+                  color: "white",
                   animation: "spin 1s linear infinite",
                   "@keyframes spin": {
                     "0%": { transform: "rotate(0deg)" },
@@ -1524,6 +1745,20 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             )}
           </IconButton>
         </Box>
+        
+        {/* Character Count */}
+        {input.length > 0 && (
+          <Box sx={{ 
+            position: "absolute", 
+            bottom: 8, 
+            right: 8,
+            opacity: 0.6,
+          }}>
+            <Typography variant="caption" color="text.secondary">
+              {input.length}/2000
+            </Typography>
+          </Box>
+        )}
       </Paper>
 
       {/* Quick Actions Menu */}
@@ -1605,9 +1840,16 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       </Dialog>
 
       {/* Demo Typing Indicator Button - Remove in production */}
-      <Box sx={{ p: 2, borderTop: 1, borderColor: "divider" }}>
+      <Box sx={{ 
+        p: 1.5, 
+        borderTop: 1, 
+        borderColor: "divider",
+        backgroundColor: (theme) => theme.palette.mode === "dark" ? "grey.900" : "grey.100",
+        display: "flex",
+        justifyContent: "center",
+      }}>
         <Button
-          variant="outlined"
+          variant="text"
           size="small"
           onClick={() => {
             if (otherUserTyping) {
@@ -1618,7 +1860,16 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
               setTimeout(() => setOtherUserTyping(false), 3000);
             }
           }}
-          sx={{ fontSize: "0.75rem" }}
+          sx={{ 
+            fontSize: "0.7rem",
+            textTransform: "none",
+            color: "text.secondary",
+            opacity: 0.7,
+            "&:hover": {
+              backgroundColor: "transparent",
+              opacity: 1,
+            },
+          }}
         >
           {otherUserTyping ? "Stop Typing Demo" : "Start Typing Demo"}
         </Button>
