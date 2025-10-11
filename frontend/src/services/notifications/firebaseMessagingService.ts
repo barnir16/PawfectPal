@@ -4,7 +4,7 @@
  */
 import { getMessaging, getToken, onMessage, Messaging } from 'firebase/messaging';
 import { initializeApp, FirebaseApp } from 'firebase/app';
-import { configService } from './config/firebaseConfigService';
+import { configService } from '../config/firebaseConfigService';
 
 export interface PushNotificationData {
   title: string;
