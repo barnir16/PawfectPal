@@ -505,6 +505,35 @@ export const ChatPage = () => {
               loadingMore={loadingMore}
               isSending={sending}
               serviceRequestId={conversation.service_request_id}
+              serviceRequest={serviceRequest ? {
+                id: serviceRequest.id,
+                title: serviceRequest.title,
+                service_type: serviceRequest.service_type,
+                description: serviceRequest.description,
+                status: serviceRequest.status,
+                location: serviceRequest.location,
+                budget_min: serviceRequest.budget_min,
+                budget_max: serviceRequest.budget_max,
+                is_urgent: serviceRequest.is_urgent,
+                user: serviceRequest.user ? {
+                  id: serviceRequest.user.id,
+                  username: serviceRequest.user.username,
+                  full_name: serviceRequest.user.full_name,
+                  is_provider: serviceRequest.user.is_provider,
+                } : undefined,
+                assigned_provider: serviceRequest.assigned_provider ? {
+                  id: serviceRequest.assigned_provider.id,
+                  username: serviceRequest.assigned_provider.username,
+                  full_name: serviceRequest.assigned_provider.full_name,
+                  is_provider: serviceRequest.assigned_provider.is_provider,
+                } : undefined,
+                pets: serviceRequest.pets?.map(pet => ({
+                  id: pet.id,
+                  name: pet.name,
+                  species: pet.species,
+                  breed: pet.breed,
+                })),
+              } : undefined}
             />
       </Box>
     </Box>

@@ -15,12 +15,13 @@ import { useLocalization } from "../../../contexts/LocalizationContext";
 import { useNotifications } from "../../../contexts/NotificationContext";
 import { createTaskNotificationService } from "../../../services/notifications/taskNotificationService";
 import { vaccineNameTranslations } from "../../../data/vaccines/israeliVaccines";
+import { ProviderDashboard } from "../../provider/pages/ProviderDashboard";
 
 
 
 export const Dashboard = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { t, currentLanguage } = useLocalization();
   const { addNotification } = useNotifications();
   const [pets, setPets] = useState<any[]>([]);
@@ -31,6 +32,11 @@ export const Dashboard = () => {
   const [weightHealthData, setWeightHealthData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Show provider dashboard for providers
+  if (user?.is_provider) {
+    return <ProviderDashboard />;
+  }
 
   // Get translated vaccine name
   const getTranslatedVaccineName = (name: string): string => {

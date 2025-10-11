@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -201,32 +201,47 @@ export const ChatListPage = () => {
     return formatChatListTime(lastMessage.created_at);
   };
 
+  // Memoized service type map for better performance
+  const serviceTypeMap = useMemo(() => ({
+    'walking': t("walking"),
+    'walk': t("walking"),
+    'sitting': t("sitting"),
+    'sit': t("sitting"),
+    'boarding': t("boarding"),
+    'board': t("boarding"),
+    'grooming': t("grooming"),
+    'groom': t("grooming"),
+    'vet': t("veterinary"),
+    'veterinary': t("veterinary"),
+    'care': t("petCare"),
+    'service': t("petCare"),
+  }), [t]);
+
   const getChatTitle = (conversation: ChatConversation): string => {
     // If there are messages, create a meaningful title
     if (conversation.messages.length > 0) {
       const firstMessage = conversation.messages[0];
       const messageText = firstMessage.message;
       
-      // Extract service type from message content
+      // Extract service type from message content (more efficient approach)
       let serviceType = "";
       const lowerMessage = messageText.toLowerCase();
       
-      if (lowerMessage.includes('walking') || lowerMessage.includes('walk')) {
-        serviceType = t("walking"); // "Dog Walking" or localized equivalent
-      } else if (lowerMessage.includes('sitting') || lowerMessage.includes('sit')) {
-        serviceType = t("sitting"); // "Pet Sitting" or localized equivalent
-      } else if (lowerMessage.includes('boarding') || lowerMessage.includes('board')) {
-        serviceType = t("boarding"); // "Pet Boarding" or localized equivalent
-      } else if (lowerMessage.includes('grooming') || lowerMessage.includes('groom')) {
-        serviceType = t("grooming"); // "Pet Grooming" or localized equivalent
-      } else if (lowerMessage.includes('vet') || lowerMessage.includes('veterinary')) {
-        serviceType = t("veterinary"); // "Veterinary" or localized equivalent
-      } else {
-        serviceType = t("petCare"); // "Pet Care" or localized equivalent
+      // Find the first matching service type
+      for (const [keyword, translation] of Object.entries(serviceTypeMap)) {
+        if (lowerMessage.includes(keyword)) {
+          serviceType = translation;
+          break;
+        }
+      }
+      
+      // Fallback if no service type found
+      if (!serviceType) {
+        serviceType = t("petCare");
       }
       
       // Extract provider name (sender of first message)
-      const providerName = firstMessage.sender?.username || t("provider"); // "Provider" or localized equivalent
+      const providerName = firstMessage.sender?.username || t("provider");
       
       // Get initial message preview (first 30 characters)
       const messagePreview = messageText.length > 30 
@@ -238,7 +253,7 @@ export const ChatListPage = () => {
     }
     
     // No messages yet - show generic title
-    return t("newServiceRequest"); // "New Service Request" or localized equivalent
+    return t("newServiceRequest");
   };
 
   const handleOpenConversation = (conversation: ChatConversation) => {
