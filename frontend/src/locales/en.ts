@@ -1231,6 +1231,7 @@ export const en = {
   chat: {
     chatTitle: 'Chat',
     noConversations: 'No conversations yet',
+    noMessagesYet: 'No messages yet',
     loadingConversations: 'Loading conversations...',
     quickReplies: 'Quick Replies',
     serviceUpdate: 'Service Update',
