@@ -212,11 +212,24 @@ async def send_message(
     if not service_request:
         raise HTTPException(status_code=404, detail="Service request not found")
 
-    # Industry standard access control: Owner OR Assigned Provider
+    # Industry standard access control: Owner OR Assigned Provider OR Provider who has sent messages
     is_owner = service_request.user_id == current_user.id
     is_assigned_provider = service_request.assigned_provider_id == current_user.id
     
-    if not (is_owner or is_assigned_provider):
+    # For providers, also check if they've sent messages in this conversation
+    has_sent_messages = False
+    if current_user.is_provider and not is_assigned_provider:
+        message_count = (
+            db.query(ChatMessageORM)
+            .filter(
+                ChatMessageORM.service_request_id == message.service_request_id,
+                ChatMessageORM.sender_id == current_user.id
+            )
+            .count()
+        )
+        has_sent_messages = message_count > 0
+    
+    if not (is_owner or is_assigned_provider or has_sent_messages):
         raise HTTPException(status_code=403, detail="Access denied")
 
     # Create the message
@@ -274,14 +287,28 @@ def _get_conversation_data(service_request_id: int, db: Session, current_user: U
     print(f"  Current User Username: {current_user.username}")
     print(f"  Current User Is Provider: {current_user.is_provider}")
 
-    # Industry standard access control: Owner OR Assigned Provider
+    # Industry standard access control: Owner OR Assigned Provider OR Provider who has sent messages
     is_owner = service_request.user_id == current_user.id
     is_assigned_provider = service_request.assigned_provider_id == current_user.id
     
+    # For providers, also check if they've sent messages in this conversation
+    has_sent_messages = False
+    if current_user.is_provider and not is_assigned_provider:
+        message_count = (
+            db.query(ChatMessageORM)
+            .filter(
+                ChatMessageORM.service_request_id == service_request_id,
+                ChatMessageORM.sender_id == current_user.id
+            )
+            .count()
+        )
+        has_sent_messages = message_count > 0
+    
     print(f"  Is Owner: {is_owner}")
     print(f"  Is Assigned Provider: {is_assigned_provider}")
+    print(f"  Has Sent Messages: {has_sent_messages}")
     
-    if not (is_owner or is_assigned_provider):
+    if not (is_owner or is_assigned_provider or has_sent_messages):
         print(f"❌ Access denied for user {current_user.username} (ID: {current_user.id}) to service request {service_request_id}")
         raise HTTPException(status_code=403, detail="Access denied")
     
@@ -355,25 +382,48 @@ def get_my_conversations(
     db: Session = Depends(get_db), current_user: UserORM = Depends(get_current_user)
 ):
     """Get all conversations for the current user"""
+    conversations = []
+    
     if current_user.is_provider:
-        # For providers, get conversations where they've sent messages
-        service_request_ids = (
+        # For providers, get conversations where they are assigned OR have sent messages
+        # First, get service requests where they are assigned
+        assigned_requests = (
+            db.query(ServiceRequestORM.id)
+            .filter(ServiceRequestORM.assigned_provider_id == current_user.id)
+            .all()
+        )
+        assigned_ids = [req_id[0] for req_id in assigned_requests]
+        
+        # Then, get service requests where they've sent messages (but aren't assigned)
+        message_requests = (
             db.query(ChatMessageORM.service_request_id)
             .filter(ChatMessageORM.sender_id == current_user.id)
             .distinct()
             .all()
         )
-        service_request_ids = [req_id[0] for req_id in service_request_ids]
+        message_ids = [req_id[0] for req_id in message_requests]
+        
+        # Combine both lists and remove duplicates
+        service_request_ids = list(set(assigned_ids + message_ids))
+        
+        print(f"🔍 Provider {current_user.username} conversations:")
+        print(f"  Assigned requests: {assigned_ids}")
+        print(f"  Message requests: {message_ids}")
+        print(f"  Combined: {service_request_ids}")
+        
     else:
-        # For regular users, get their service requests
+        # For regular users, get their service requests (regardless of messages)
         service_request_ids = (
             db.query(ServiceRequestORM.id)
             .filter(ServiceRequestORM.user_id == current_user.id)
             .all()
         )
         service_request_ids = [req_id[0] for req_id in service_request_ids]
+        
+        print(f"🔍 User {current_user.username} conversations:")
+        print(f"  Service requests: {service_request_ids}")
 
-    conversations = []
+    # Create conversations for each service request
     for request_id in service_request_ids:
         try:
             conversation = _get_conversation_data(request_id, db, current_user)
@@ -381,9 +431,11 @@ def get_my_conversations(
         except HTTPException as e:
             # Skip conversations user doesn't have access to
             if e.status_code == 403:
+                print(f"⚠️ Skipping conversation {request_id} - access denied")
                 continue
             raise e
 
+    print(f"🔍 Returning {len(conversations)} conversations")
     return conversations
 
 
