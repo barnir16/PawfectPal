@@ -63,6 +63,12 @@ import {
   CloudOff,
   CloudDone,
   Replay,
+  Business,
+  Home,
+  AttachMoney,
+  Emergency,
+  ExpandMore,
+  ExpandLess,
 } from "@mui/icons-material";
 import { useLocalization } from "../../contexts/LocalizationContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -85,6 +91,35 @@ interface EnhancedChatWindowProps {
   loadingMore?: boolean;
   isSending?: boolean;
   serviceRequestId: number;
+  serviceRequest?: {
+    id: number;
+    title: string;
+    service_type: string;
+    description: string;
+    status: 'open' | 'in_progress' | 'completed' | 'closed';
+    location?: string;
+    budget_min?: number;
+    budget_max?: number;
+    is_urgent: boolean;
+    user?: {
+      id: number;
+      username: string;
+      full_name?: string;
+      is_provider: boolean;
+    };
+    assigned_provider?: {
+      id: number;
+      username: string;
+      full_name?: string;
+      is_provider: boolean;
+    };
+    pets?: Array<{
+      id: number;
+      name: string;
+      species: string;
+      breed?: string;
+    }>;
+  };
 }
 
 interface QuickReply {
@@ -104,6 +139,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   loadingMore = false,
   isSending = false,
   serviceRequestId,
+  serviceRequest,
 }) => {
   const { t } = useLocalization();
   const { user } = useAuth();
@@ -133,12 +169,48 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   const [isRetrying, setIsRetrying] = useState(false);
   const [offlineMessages, setOfflineMessages] = useState<ChatMessageCreate[]>([]);
   
+  // Service request context panel
+  const [showServiceContext, setShowServiceContext] = useState(false);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
-  const quickReplies: QuickReply[] = [
+  const quickReplies: QuickReply[] = user?.is_provider ? [
+    // Provider-specific quick replies
+    {
+      id: "greeting",
+      text: "Hi! I'm interested in providing this service for you.",
+      icon: <Pets />,
+    },
+    {
+      id: "availability",
+      text: "I'm available for this service. When would be a good time to discuss the details?",
+      icon: <Schedule />,
+    },
+    {
+      id: "experience",
+      text: "I have extensive experience with this type of service. Would you like to schedule a consultation?",
+      icon: <Star />,
+    },
+    {
+      id: "location",
+      text: "I'm located nearby. Would you like to meet in person to discuss the service?",
+      icon: <LocationOn />,
+    },
+    {
+      id: "photos",
+      text: "Could you share some photos of your pet? This will help me provide the best care.",
+      icon: <Image />,
+    },
+    {
+      id: "instructions",
+      text: "Please share any special instructions or requirements for your pet's care.",
+      icon: <Pets />,
+    },
+  ] : [
+    // Client-specific quick replies
     {
       id: "greeting",
       text: "Hi! I'm interested in your service request.",
@@ -1014,9 +1086,20 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                 <Pets />
               </Avatar>
               <Box>
-                <Typography variant="h6" fontWeight={600}>
-                  {t("services.conversation")}
-                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography variant="h6" fontWeight={600}>
+                    {t("services.conversation")}
+                  </Typography>
+                  {user?.is_provider && (
+                    <Chip
+                      label="Provider"
+                      size="small"
+                      color="primary"
+                      icon={<Business />}
+                      sx={{ fontSize: "0.7rem", height: 20 }}
+                    />
+                  )}
+                </Box>
                 <Typography variant="caption" color="text.secondary">
                   {messages.length} {messages.length === 1 ? t("message") : t("messages")}
                 </Typography>
@@ -1024,6 +1107,25 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             </Box>
             
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              {/* Service Context Toggle */}
+              {serviceRequest && (
+                <Tooltip title={showServiceContext ? "Hide service details" : "Show service details"}>
+                  <IconButton 
+                    onClick={() => setShowServiceContext(!showServiceContext)}
+                    sx={{
+                      backgroundColor: "transparent",
+                      color: "text.secondary",
+                      "&:hover": {
+                        backgroundColor: "grey.100",
+                        color: "primary.main",
+                      },
+                    }}
+                  >
+                    {showServiceContext ? <ExpandLess /> : <ExpandMore />}
+                  </IconButton>
+                </Tooltip>
+              )}
+              
               {/* Connection Status Indicator */}
               <Tooltip title={
                 connectionStatus === 'connected' ? 'Connected' :
@@ -1096,30 +1198,150 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             </Collapse>
           )}
 
-          {/* Offline Messages Indicator */}
-          {offlineMessages.length > 0 && (
-            <Alert 
-              severity="info" 
-              sx={{ borderRadius: 0, borderLeft: 0, borderRight: 0 }}
-              action={
-                <Button
-                  color="inherit"
-                  size="small"
-                  onClick={retryOfflineMessages}
-                  disabled={isRetrying}
-                  startIcon={isRetrying ? <CircularProgress size={16} /> : <CloudDone />}
-                >
-                  {isRetrying ? 'Sending...' : 'Send Now'}
-                </Button>
-              }
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <CloudOff />
-                <Typography variant="body2">
-                  {offlineMessages.length} message{offlineMessages.length !== 1 ? 's' : ''} waiting to be sent
-                </Typography>
-              </Box>
-            </Alert>
+          {/* Service Request Context Panel */}
+          {serviceRequest && (
+            <Collapse in={showServiceContext}>
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  borderRadius: 0,
+                  borderLeft: 0,
+                  borderRight: 0,
+                  borderBottom: 1,
+                  borderColor: "divider",
+                  backgroundColor: (theme) => theme.palette.mode === "dark" ? "grey.800" : "grey.50",
+                }}
+              >
+                <Box sx={{ p: 3 }}>
+                  {/* Service Request Header */}
+                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Business color="primary" />
+                      <Typography variant="h6" fontWeight={600}>
+                        {serviceRequest.title}
+                      </Typography>
+                      {serviceRequest.is_urgent && (
+                        <Chip
+                          label="Urgent"
+                          size="small"
+                          color="error"
+                          icon={<Emergency />}
+                        />
+                      )}
+                    </Box>
+                    <Chip
+                      label={serviceRequest.status.replace('_', ' ').toUpperCase()}
+                      size="small"
+                      color={
+                        serviceRequest.status === 'completed' ? 'success' :
+                        serviceRequest.status === 'in_progress' ? 'primary' :
+                        serviceRequest.status === 'closed' ? 'default' :
+                        'warning'
+                      }
+                    />
+                  </Box>
+
+                  {/* Service Details Grid */}
+                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 }}>
+                    {/* Left Column - Service Info */}
+                    <Box>
+                      <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+                        Service Details
+                      </Typography>
+                      <Stack spacing={1}>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                          <Pets fontSize="small" color="action" />
+                          <Typography variant="body2">
+                            <strong>Type:</strong> {serviceRequest.service_type}
+                          </Typography>
+                        </Box>
+                        
+                        {serviceRequest.location && (
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            <LocationOn fontSize="small" color="action" />
+                            <Typography variant="body2">
+                              <strong>Location:</strong> {serviceRequest.location}
+                            </Typography>
+                          </Box>
+                        )}
+                        
+                        {(serviceRequest.budget_min || serviceRequest.budget_max) && (
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            <AttachMoney fontSize="small" color="action" />
+                            <Typography variant="body2">
+                              <strong>Budget:</strong> 
+                              {serviceRequest.budget_min && serviceRequest.budget_max 
+                                ? ` $${serviceRequest.budget_min} - $${serviceRequest.budget_max}`
+                                : serviceRequest.budget_min 
+                                  ? ` From $${serviceRequest.budget_min}`
+                                  : ` Up to $${serviceRequest.budget_max}`
+                              }
+                            </Typography>
+                          </Box>
+                        )}
+                      </Stack>
+                    </Box>
+
+                    {/* Right Column - People & Pets */}
+                    <Box>
+                      <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+                        People & Pets
+                      </Typography>
+                      <Stack spacing={1}>
+                        {/* Client Info */}
+                        {serviceRequest.user && (
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            <Person fontSize="small" color="action" />
+                            <Typography variant="body2">
+                              <strong>Client:</strong> {serviceRequest.user.full_name || serviceRequest.user.username}
+                            </Typography>
+                          </Box>
+                        )}
+                        
+                        {/* Assigned Provider */}
+                        {serviceRequest.assigned_provider && (
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            <Business fontSize="small" color="primary" />
+                            <Typography variant="body2">
+                              <strong>Provider:</strong> {serviceRequest.assigned_provider.full_name || serviceRequest.assigned_provider.username}
+                            </Typography>
+                          </Box>
+                        )}
+                        
+                        {/* Pets */}
+                        {serviceRequest.pets && serviceRequest.pets.length > 0 && (
+                          <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
+                            <Pets fontSize="small" color="action" />
+                            <Box>
+                              <Typography variant="body2">
+                                <strong>Pet{serviceRequest.pets.length > 1 ? 's' : ''}:</strong>
+                              </Typography>
+                              {serviceRequest.pets.map((pet, index) => (
+                                <Typography key={pet.id} variant="caption" sx={{ display: "block", ml: 1 }}>
+                                  {pet.name} ({pet.species}{pet.breed ? ` - ${pet.breed}` : ''})
+                                </Typography>
+                              ))}
+                            </Box>
+                          </Box>
+                        )}
+                      </Stack>
+                    </Box>
+                  </Box>
+
+                  {/* Description */}
+                  {serviceRequest.description && (
+                    <Box sx={{ mt: 2 }}>
+                      <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+                        Description
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {serviceRequest.description}
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              </Paper>
+            </Collapse>
           )}
 
       {/* Messages container */}
@@ -2053,22 +2275,51 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
       >
-        <MenuItem onClick={handleShareLocation}>
-          <LocationOn sx={{ mr: 1 }} />
-          Share Location
-        </MenuItem>
-        <MenuItem onClick={() => handleAction("request_photos")}>
-          <Image sx={{ mr: 1 }} />
-          Request Pet Photos
-        </MenuItem>
-        <MenuItem onClick={() => handleAction("schedule_meeting")}>
-          <Schedule sx={{ mr: 1 }} />
-          Schedule Meeting
-        </MenuItem>
-        <MenuItem onClick={() => handleAction("share_instructions")}>
-          <Pets sx={{ mr: 1 }} />
-          Share Instructions
-        </MenuItem>
+        {user?.is_provider ? (
+          // Provider-specific actions
+          <>
+            <MenuItem onClick={handleShareLocation}>
+              <LocationOn sx={{ mr: 1 }} />
+              Share My Location
+            </MenuItem>
+            <MenuItem onClick={() => handleAction("request_photos")}>
+              <Image sx={{ mr: 1 }} />
+              Request Pet Photos
+            </MenuItem>
+            <MenuItem onClick={() => handleAction("schedule_meeting")}>
+              <Schedule sx={{ mr: 1 }} />
+              Schedule Consultation
+            </MenuItem>
+            <MenuItem onClick={() => handleAction("share_instructions")}>
+              <Pets sx={{ mr: 1 }} />
+              Request Care Instructions
+            </MenuItem>
+            <MenuItem onClick={() => handleAction("share_experience")}>
+              <Star sx={{ mr: 1 }} />
+              Share My Experience
+            </MenuItem>
+          </>
+        ) : (
+          // Client-specific actions
+          <>
+            <MenuItem onClick={handleShareLocation}>
+              <LocationOn sx={{ mr: 1 }} />
+              Share Location
+            </MenuItem>
+            <MenuItem onClick={() => handleAction("request_photos")}>
+              <Image sx={{ mr: 1 }} />
+              Request Pet Photos
+            </MenuItem>
+            <MenuItem onClick={() => handleAction("schedule_meeting")}>
+              <Schedule sx={{ mr: 1 }} />
+              Schedule Meeting
+            </MenuItem>
+            <MenuItem onClick={() => handleAction("share_instructions")}>
+              <Pets sx={{ mr: 1 }} />
+              Share Instructions
+            </MenuItem>
+          </>
+        )}
       </Menu>
 
       {/* Media Dialog */}
