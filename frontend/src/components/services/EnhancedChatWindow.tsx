@@ -1370,6 +1370,10 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             backgroundColor: (theme) => theme.palette.grey[600],
           },
         }}
+        role="log"
+        aria-label="Chat messages"
+        aria-live="polite"
+        aria-atomic="false"
       >
         {" "}
         {messages.length === 0 ? (
@@ -1658,51 +1662,73 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                   {formatMessageTime(msg.created_at)}
                                 </Typography>
                                 
-                                {/* Message status indicators for own messages */}
+                                {/* Enhanced Message Status Indicators for own messages */}
                                 {isOwn && (
-                                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
+                                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                                     {/* Sent indicator */}
-                                    <Box
-                                      sx={{
-                                        width: 12,
-                                        height: 12,
-                                        borderRadius: "50%",
-                                        backgroundColor: msg.is_read 
-                                          ? (theme) => theme.palette.success.main
-                                          : (theme) => theme.palette.grey[400],
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                      }}
-                                    >
-                                      <CheckCircle
-                                        sx={{
-                                          fontSize: 8,
-                                          color: "white",
-                                        }}
-                                      />
-                                    </Box>
-                                    
-                                    {/* Read indicator */}
-                                    {msg.is_read && (
+                                    <Tooltip title="Message sent">
                                       <Box
                                         sx={{
-                                          width: 12,
-                                          height: 12,
+                                          width: 16,
+                                          height: 16,
                                           borderRadius: "50%",
-                                          backgroundColor: (theme) => theme.palette.success.main,
+                                          backgroundColor: msg.delivery_status === 'sent' 
+                                            ? (theme) => theme.palette.grey[400]
+                                            : (theme) => theme.palette.success.main,
                                           display: "flex",
                                           alignItems: "center",
                                           justifyContent: "center",
+                                          transition: "all 0.2s ease-in-out",
                                         }}
                                       >
-                                        <CheckCircle
-                                          sx={{
-                                            fontSize: 8,
-                                            color: "white",
-                                          }}
-                                        />
+                                        <CheckCircle sx={{ fontSize: 10, color: "white" }} />
                                       </Box>
+                                    </Tooltip>
+                                    
+                                    {/* Delivered indicator */}
+                                    {msg.delivery_status === 'delivered' && (
+                                      <Tooltip title={`Delivered at ${msg.delivered_at ? formatMessageTime(msg.delivered_at) : 'unknown time'}`}>
+                                        <Box
+                                          sx={{
+                                            width: 16,
+                                            height: 16,
+                                            borderRadius: "50%",
+                                            backgroundColor: (theme) => theme.palette.success.main,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            transition: "all 0.2s ease-in-out",
+                                          }}
+                                        >
+                                          <CheckCircle sx={{ fontSize: 10, color: "white" }} />
+                                        </Box>
+                                      </Tooltip>
+                                    )}
+                                    
+                                    {/* Read indicator */}
+                                    {msg.delivery_status === 'read' && (
+                                      <Tooltip title={`Read at ${msg.read_at ? formatMessageTime(msg.read_at) : 'unknown time'}`}>
+                                        <Box
+                                          sx={{
+                                            width: 16,
+                                            height: 16,
+                                            borderRadius: "50%",
+                                            backgroundColor: (theme) => theme.palette.primary.main,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            transition: "all 0.2s ease-in-out",
+                                            animation: "pulse 2s infinite",
+                                            "@keyframes pulse": {
+                                              "0%": { opacity: 1 },
+                                              "50%": { opacity: 0.7 },
+                                              "100%": { opacity: 1 },
+                                            },
+                                          }}
+                                        >
+                                          <Visibility sx={{ fontSize: 10, color: "white" }} />
+                                        </Box>
+                                      </Tooltip>
                                     )}
                                   </Box>
                                 )}
@@ -2169,6 +2195,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             disabled={isSending}
             variant="outlined"
             size="small"
+            aria-label="Type your message"
+            aria-describedby="message-input-help"
             sx={{
               "& .MuiOutlinedInput-root": {
                 backgroundColor: (theme) =>
@@ -2209,6 +2237,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             disabled={
               (!input.trim() && selectedFiles.length === 0) || isSending
             }
+            aria-label={isSending ? "Sending message" : "Send message"}
+            aria-describedby="send-button-help"
             sx={{
               backgroundColor: (theme) => theme.palette.primary.main,
               color: "white",
@@ -2267,6 +2297,17 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             </Typography>
           </Box>
         )}
+        
+        {/* Hidden help text for screen readers */}
+        <Box sx={{ display: "none" }}>
+          <Typography id="message-input-help">
+            Type your message here. Press Enter to send, Shift+Enter for new line.
+            Maximum 2000 characters.
+          </Typography>
+          <Typography id="send-button-help">
+            Click to send your message. Button is disabled when message is empty or sending.
+          </Typography>
+        </Box>
       </Paper>
 
       {/* Quick Actions Menu */}
