@@ -18,10 +18,18 @@ export interface ChatMessage {
   delivered_at?: string;
   read_at?: string;
   
-  // Message metadata (includes attachments)
+  // Message metadata (includes attachments and threading)
   message_metadata?: {
     attachments?: MediaAttachment[];
     original_message?: string;
+    reply_to?: {
+      message_id: number;
+      sender_name: string;
+      message_preview: string;
+      message_type: MessageType;
+    };
+    reactions?: MessageReaction[];
+    thread_id?: string;
   };
   
   // Media attachments (for backward compatibility)
@@ -59,10 +67,26 @@ export interface ChatMessageCreate {
   message: string;
   message_type?: MessageType;
   attachments?: ChatAttachmentCreate[];
+  reply_to?: ReplyToMessage;
 }
 
 export interface ChatAttachmentCreate {
   file: File;
+}
+
+export interface MessageReaction {
+  id: string;
+  emoji: string;
+  user_id: number;
+  user_name: string;
+  created_at: string;
+}
+
+export interface ReplyToMessage {
+  message_id: number;
+  sender_name: string;
+  message_preview: string;
+  message_type: MessageType;
 }
 
 export interface ChatConversation {

@@ -69,6 +69,7 @@ import {
   Emergency,
   ExpandMore,
   ExpandLess,
+  Search,
 } from "@mui/icons-material";
 import { useLocalization } from "../../contexts/LocalizationContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -76,9 +77,16 @@ import type {
   ChatMessage,
   ChatMessageCreate,
   MediaAttachment,
+  ReplyToMessage,
 } from "../../types/services/chat";
 import { chatService } from "../../services/chat/chatService";
 import { formatMessageTime } from "../../utils/timeUtils";
+import { ReplyMessage } from "./ReplyMessage";
+import { ReplyButton } from "./ReplyButton";
+import { MessageReactions } from "./MessageReactions";
+import { MessageSearch } from "./MessageSearch";
+import { FilePreview } from "./FilePreview";
+import { FileUploadProgress } from "./FileUploadProgress";
 
 interface EnhancedChatWindowProps {
   messages: ChatMessage[];
@@ -171,6 +179,17 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   
   // Service request context panel
   const [showServiceContext, setShowServiceContext] = useState(false);
+  
+  // Reply functionality
+  const [replyingTo, setReplyingTo] = useState<ReplyToMessage | null>(null);
+  const [messageReactions, setMessageReactions] = useState<Map<number, any[]>>(new Map());
+  
+  // Search functionality
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<number | null>(null);
+  
+  // File upload progress
+  const [uploadProgress, setUploadProgress] = useState<Map<string, { progress: number; status: 'uploading' | 'completed' | 'error'; error?: string }>>(new Map());
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -477,35 +496,6 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     }
   };
 
-  // Message action handlers
-  const handleCopyMessage = async (message: string) => {
-    try {
-      await navigator.clipboard.writeText(message);
-      setSnackbarMessage("Message copied to clipboard");
-      setSnackbarOpen(true);
-    } catch (error) {
-      console.error("Failed to copy message:", error);
-    }
-  };
-
-  const handleReplyToMessage = (message: ChatMessage) => {
-    setInput(`Replying to: ${message.message}\n\n`);
-    // Focus on input field
-    setTimeout(() => {
-      const inputElement = document.querySelector('textarea[placeholder*="message"]') as HTMLTextAreaElement;
-      if (inputElement) {
-        inputElement.focus();
-      }
-    }, 100);
-  };
-
-  const handleDeleteMessage = (messageId: number) => {
-    // TODO: Implement delete message functionality
-    console.log("Delete message:", messageId);
-    setSnackbarMessage("Delete functionality coming soon");
-    setSnackbarOpen(true);
-  };
-
   // Message reaction handlers
   const handleReaction = (messageId: number, reaction: string) => {
     console.log("Reaction:", reaction, "on message:", messageId);
@@ -762,6 +752,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         selectedFiles.length > 0
           ? selectedFiles.map((file) => ({ file }))
           : undefined,
+      reply_to: replyingTo || undefined,
     };
 
     console.log("📤 Created message:", {
@@ -784,6 +775,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       
       setInput("");
       setSelectedFiles([]);
+      setReplyingTo(null); // Clear reply state
       setErrorState({ type: null, message: '', retryable: false });
       scrollToBottom();
     } catch (error) {
@@ -797,6 +789,123 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         handleError(error, 'Send message');
       }
     }
+  };
+
+  // Reply functionality handlers
+  const handleReplyToMessage = (message: ChatMessage) => {
+    const replyTo: ReplyToMessage = {
+      message_id: message.id,
+      sender_name: message.sender?.username || 'Unknown',
+      message_preview: message.message.length > 50 
+        ? message.message.substring(0, 50) + '...' 
+        : message.message,
+      message_type: message.message_type,
+    };
+    setReplyingTo(replyTo);
+    // Focus on input field
+    setTimeout(() => {
+      const inputElement = document.querySelector('textarea[placeholder*="message"]') as HTMLTextAreaElement;
+      if (inputElement) {
+        inputElement.focus();
+      }
+    }, 100);
+  };
+
+  const handleCancelReply = () => {
+    setReplyingTo(null);
+  };
+
+  const handleAddReaction = async (message: ChatMessage, emoji: string) => {
+    try {
+      // TODO: Implement reaction API call
+      console.log(`Adding reaction ${emoji} to message ${message.id}`);
+      setSnackbarMessage(`Added ${emoji} reaction`);
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error('Failed to add reaction:', error);
+    }
+  };
+
+  const handleCopyMessage = async (message: ChatMessage) => {
+    try {
+      await navigator.clipboard.writeText(message.message);
+      setSnackbarMessage("Message copied to clipboard");
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error("Failed to copy message:", error);
+    }
+  };
+
+  const handleDeleteMessage = (message: ChatMessage) => {
+    // TODO: Implement delete message functionality
+    console.log("Delete message:", message.id);
+    setSnackbarMessage("Delete functionality coming soon");
+    setSnackbarOpen(true);
+  };
+
+  // Search functionality handlers
+  const handleOpenSearch = () => {
+    setIsSearchOpen(true);
+  };
+
+  const handleCloseSearch = () => {
+    setIsSearchOpen(false);
+    setHighlightedMessageId(null);
+  };
+
+  const handleSearchMessageClick = (message: ChatMessage) => {
+    setHighlightedMessageId(message.id);
+    // Scroll to the message
+    const messageElement = document.querySelector(`[data-message-id="${message.id}"]`);
+    if (messageElement) {
+      messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Remove highlight after 3 seconds
+      setTimeout(() => {
+        setHighlightedMessageId(null);
+      }, 3000);
+    }
+  };
+
+  // File handling functions
+  const handleFileDownload = async (attachment: MediaAttachment) => {
+    try {
+      const response = await fetch(attachment.file_url);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = attachment.file_name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      setSnackbarMessage(`Downloaded ${attachment.file_name}`);
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error('Failed to download file:', error);
+      setSnackbarMessage('Failed to download file');
+      setSnackbarOpen(true);
+    }
+  };
+
+  const handleFileOpen = (attachment: MediaAttachment) => {
+    window.open(attachment.file_url, '_blank');
+  };
+
+  const handleFileUploadProgress = (fileName: string, progress: number, status: 'uploading' | 'completed' | 'error', error?: string) => {
+    setUploadProgress(prev => {
+      const newMap = new Map(prev);
+      newMap.set(fileName, { progress, status, error });
+      return newMap;
+    });
+  };
+
+  const handleCancelUpload = (fileName: string) => {
+    setUploadProgress(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(fileName);
+      return newMap;
+    });
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -980,63 +1089,17 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
   const renderMessageAttachments = (attachments: MediaAttachment[]) => {
     console.log("🖼️ Rendering attachments:", attachments);
-    console.log(
-      "🖼️ Attachment details:",
-      attachments.map((att) => ({
-        id: att.id,
-        file_name: att.file_name,
-        file_url: att.file_url,
-        file_type: att.file_type,
-      }))
-    );
-
-    // Test each image URL
-    attachments.forEach((att) => {
-      if (att.file_url) {
-        testImageUrl(att.file_url);
-      }
-    });
 
     return (
-      <Box sx={{ mt: 1 }}>
-        {attachments.map((attachment, index) => (
-          <Card
+      <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+        {attachments.map((attachment) => (
+          <FilePreview
             key={attachment.id}
-            sx={{
-              maxWidth: 200,
-              mb: 1,
-              cursor: "pointer",
-            }}
-            onClick={() => openMediaDialog(attachment)}
-          >
-            <CardMedia
-              component="img"
-              height="120"
-              image={attachment.thumbnail_url || attachment.file_url}
-              alt={attachment.file_name}
-              onError={(e) => {
-                console.error("🖼️ Image load error:", {
-                  url: attachment.file_url,
-                  thumbnailUrl: attachment.thumbnail_url,
-                  fileName: attachment.file_name,
-                  error: e,
-                  target: e.target,
-                });
-              }}
-              onLoad={() => {
-                console.log("🖼️ Image loaded successfully:", {
-                  url: attachment.file_url,
-                  thumbnailUrl: attachment.thumbnail_url,
-                  fileName: attachment.file_name,
-                });
-              }}
-            />
-            <CardContent sx={{ p: 1 }}>
-              <Typography variant="caption" noWrap>
-                {attachment.file_name}
-              </Typography>
-            </CardContent>
-          </Card>
+            attachment={attachment}
+            onDownload={handleFileDownload}
+            onOpen={handleFileOpen}
+            compact={true}
+          />
         ))}
       </Box>
     );
@@ -1107,6 +1170,23 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             </Box>
             
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              {/* Search Button */}
+              <Tooltip title={t('chat.searchMessages') || 'Search Messages'}>
+                <IconButton 
+                  onClick={handleOpenSearch}
+                  sx={{
+                    backgroundColor: "transparent",
+                    color: "text.secondary",
+                    "&:hover": {
+                      backgroundColor: "primary.main",
+                      color: "white",
+                    },
+                  }}
+                >
+                  <Search />
+                </IconButton>
+              </Tooltip>
+
               {/* Service Context Toggle */}
               {serviceRequest && (
                 <Tooltip title={showServiceContext ? "Hide service details" : "Show service details"}>
@@ -1437,12 +1517,15 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                 return (
                   <ListItem
                     key={msg.id || index}
+                    data-message-id={msg.id}
                     sx={{
                       flexDirection: isOwn ? "row-reverse" : "row",
                       alignItems: "flex-start",
                       py: 1.5,
                       px: 0,
                       width: "100%",
+                      backgroundColor: highlightedMessageId === msg.id ? 'action.selected' : 'transparent',
+                      transition: 'background-color 0.3s ease-in-out',
                       "&:hover": {
                         backgroundColor: "transparent", // Keep transparent background
                       },
@@ -1596,6 +1679,16 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                   )}
                                 </Typography>
                               )}
+
+                              {/* Reply to message display */}
+                              {msg.message_metadata?.reply_to && (
+                                <Box sx={{ mb: 1 }}>
+                                  <ReplyMessage
+                                    replyTo={msg.message_metadata.reply_to}
+                                    compact={true}
+                                  />
+                                </Box>
+                              )}
                               
                               <Typography
                                 variant="body2"
@@ -1612,6 +1705,15 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                               {/* Render attachments from parsed message */}
                               {parseMessageAttachments(msg).length > 0 &&
                                 renderMessageAttachments(parseMessageAttachments(msg))}
+
+                              {/* Message reactions */}
+                              {msg.message_metadata?.reactions && msg.message_metadata.reactions.length > 0 && (
+                                <MessageReactions
+                                  reactions={msg.message_metadata.reactions}
+                                  onReactionClick={(emoji) => handleAddReaction(msg, emoji)}
+                                  currentUserId={user?.id}
+                                />
+                              )}
 
                               {/* Render location message */}
                               {renderLocationMessage(msg)}
@@ -1761,7 +1863,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                 >
                                   <IconButton
                                     size="small"
-                                    onClick={() => handleCopyMessage(msg.message)}
+                                    onClick={() => handleCopyMessage(msg)}
                                     sx={{
                                       width: 20,
                                       height: 20,
@@ -1837,7 +1939,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                   {isOwn && (
                                     <IconButton
                                       size="small"
-                                      onClick={() => handleDeleteMessage(msg.id)}
+                                      onClick={() => handleDeleteMessage(msg)}
                                       sx={{
                                         width: 20,
                                         height: 20,
@@ -2057,6 +2159,38 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
               </Card>
             ))}
           </Box>
+          
+          {/* Upload Progress */}
+          {Array.from(uploadProgress.entries()).map(([fileName, progress]) => (
+            <FileUploadProgress
+              key={fileName}
+              file={selectedFiles.find(f => f.name === fileName) || new File([], fileName)}
+              progress={progress.progress}
+              status={progress.status}
+              error={progress.error}
+              onCancel={() => handleCancelUpload(fileName)}
+            />
+          ))}
+        </Paper>
+      )}
+
+      {/* Reply Preview */}
+      {replyingTo && (
+        <Paper
+          elevation={0}
+          sx={{
+            p: 2,
+            borderTop: 1,
+            borderColor: "divider",
+            backgroundColor: (theme) => theme.palette.mode === "dark" ? "grey.800" : "grey.50",
+            borderRadius: 0,
+          }}
+        >
+          <ReplyMessage
+            replyTo={replyingTo}
+            onReplyClick={handleCancelReply}
+            compact={true}
+          />
         </Paper>
       )}
 
@@ -2467,6 +2601,14 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           {snackbarMessage}
         </Alert>
       </Snackbar>
+
+      {/* Message Search Modal */}
+      <MessageSearch
+        messages={messages}
+        onMessageClick={handleSearchMessageClick}
+        onClose={handleCloseSearch}
+        open={isSearchOpen}
+      />
     </Paper>
   );
 };
