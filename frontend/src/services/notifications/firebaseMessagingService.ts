@@ -3,7 +3,7 @@
  * Handles push notifications for chat messages
  */
 import { getMessaging, getToken, onMessage, Messaging } from 'firebase/messaging';
-import { initializeApp, FirebaseApp } from 'firebase/app';
+import { initializeApp, FirebaseApp, getApp } from 'firebase/app';
 import { configService } from '../config/firebaseConfigService';
 
 export interface PushNotificationData {
@@ -70,13 +70,20 @@ class FirebaseMessagingService {
       // Get Firebase config
       const firebaseConfig = configService.getAll();
       
-      // Initialize Firebase app
-      this.app = initializeApp({
-        apiKey: firebaseConfig.googleClientId, // Using Google Client ID as API key
-        projectId: 'pawfectpal-ac5d7',
-        messagingSenderId: configService.get('firebaseMessagingSenderId') || '123456789',
-        appId: '1:123456789:web:abcdef'
-      });
+      // Initialize Firebase app (check if already exists)
+      try {
+        this.app = getApp(); // Try to get existing app
+        console.log('🔔 Using existing Firebase app');
+      } catch (error) {
+        // App doesn't exist, create new one
+        this.app = initializeApp({
+          apiKey: firebaseConfig.googleClientId, // Using Google Client ID as API key
+          projectId: 'pawfectpal-ac5d7',
+          messagingSenderId: configService.get('firebaseMessagingSenderId') || '123456789',
+          appId: '1:123456789:web:abcdef'
+        });
+        console.log('🔔 Created new Firebase app');
+      }
 
       // Initialize messaging
       this.messaging = getMessaging(this.app);

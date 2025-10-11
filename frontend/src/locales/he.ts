@@ -1278,6 +1278,7 @@ export const he = {
   chat: {
     chatTitle: 'צ\'אט',
     noConversations: 'אין שיחות עדיין',
+    noMessagesYet: 'אין הודעות עדיין',
     loadingConversations: 'טוען שיחות...',
     quickReplies: 'תשובות מהירות',
     serviceUpdate: 'עדכון שירות',
