@@ -1610,8 +1610,10 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           variant="outlined"
           size="small"
           onClick={() => {
-            setOtherUserTyping(!otherUserTyping);
             if (otherUserTyping) {
+              setOtherUserTyping(false);
+            } else {
+              setOtherUserTyping(true);
               // Auto-hide after 3 seconds
               setTimeout(() => setOtherUserTyping(false), 3000);
             }

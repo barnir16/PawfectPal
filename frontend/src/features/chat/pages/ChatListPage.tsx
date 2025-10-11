@@ -183,6 +183,42 @@ export const ChatListPage = () => {
     return formatChatListTime(lastMessage.created_at);
   };
 
+  const getChatTitle = (conversation: ChatConversation): string => {
+    // If there are messages, try to create a meaningful title
+    if (conversation.messages.length > 0) {
+      const firstMessage = conversation.messages[0];
+      const lastMessage = conversation.messages[conversation.messages.length - 1];
+      
+      // Check if it's a service-related conversation
+      if (firstMessage.message.toLowerCase().includes('service') || 
+          firstMessage.message.toLowerCase().includes('pet') ||
+          firstMessage.message.toLowerCase().includes('care')) {
+        
+        // Extract service type or pet name from first message
+        const messageText = firstMessage.message.toLowerCase();
+        if (messageText.includes('walking')) return `🐕 Dog Walking - Service #${conversation.service_request_id}`;
+        if (messageText.includes('sitting')) return `🏠 Pet Sitting - Service #${conversation.service_request_id}`;
+        if (messageText.includes('boarding')) return `🏨 Pet Boarding - Service #${conversation.service_request_id}`;
+        if (messageText.includes('grooming')) return `✂️ Pet Grooming - Service #${conversation.service_request_id}`;
+        
+        // Try to extract pet name (look for common patterns)
+        const petNameMatch = firstMessage.message.match(/(?:my|our)\s+(\w+)/i);
+        if (petNameMatch) {
+          return `🐾 ${petNameMatch[1]}'s Care - Service #${conversation.service_request_id}`;
+        }
+        
+        // Default meaningful title
+        return `Pet Care Service #${conversation.service_request_id}`;
+      }
+      
+      // For other conversations, use a generic title
+      return `Conversation #${conversation.service_request_id}`;
+    }
+    
+    // No messages yet - use service request ID
+    return `Service Request #${conversation.service_request_id}`;
+  };
+
   const handleOpenConversation = (conversation: ChatConversation) => {
     navigate(`/chat/${conversation.service_request_id}`);
   };
@@ -271,7 +307,7 @@ export const ChatListPage = () => {
                         fontSize: "1.1rem",
                       }}
                     >
-                      Service #{conv.service_request_id}
+                      {getChatTitle(conv)}
                     </Typography>
                     <Stack direction="row" alignItems="center" spacing={1}>
                       {conv.unread_count > 0 && (
