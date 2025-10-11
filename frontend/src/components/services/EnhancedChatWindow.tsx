@@ -47,6 +47,9 @@ import {
   ContentCopy,
   Delete,
   Person,
+  Favorite,
+  ThumbUp,
+  ThumbDown,
 } from "@mui/icons-material";
 import { useLocalization } from "../../contexts/LocalizationContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -186,6 +189,95 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     return null;
   };
 
+  // Typing indicator component
+  const TypingIndicator = ({ username }: { username: string }) => (
+    <ListItem sx={{ mb: 1 }}>
+      <ListItemAvatar sx={{ minWidth: 40 }}>
+        <Avatar sx={{ width: 32, height: 32 }}>
+          <Person />
+        </Avatar>
+      </ListItemAvatar>
+      <ListItemText
+        sx={{
+          maxWidth: "75%",
+          ml: 2,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start",
+        }}
+        primary={
+          <Paper
+            sx={{
+              p: 2.5,
+              backgroundColor: (theme) =>
+                theme.palette.mode === "dark"
+                  ? "grey.800"
+                  : "white",
+              borderRadius: "20px 20px 20px 6px",
+              boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
+              border: (theme) =>
+                theme.palette.mode === "dark"
+                  ? "1px solid rgba(255,255,255,0.1)"
+                  : "1px solid rgba(0,0,0,0.05)",
+              position: "relative",
+              "&::before": {
+                content: '""',
+                position: "absolute",
+                bottom: 0,
+                left: -6,
+                width: 0,
+                height: 0,
+                borderRight: "6px solid transparent",
+                borderTop: "6px solid",
+                borderTopColor: (theme) =>
+                  theme.palette.mode === "dark"
+                    ? theme.palette.grey[800]
+                    : "white",
+              },
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  fontSize: "0.75rem",
+                  opacity: 0.7,
+                }}
+              >
+                {username} is typing
+              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 0.5,
+                  "& > div": {
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    backgroundColor: (theme) => theme.palette.text.secondary,
+                    animation: "typing 1.4s infinite ease-in-out",
+                    "&:nth-of-type(1)": { animationDelay: "0s" },
+                    "&:nth-of-type(2)": { animationDelay: "0.2s" },
+                    "&:nth-of-type(3)": { animationDelay: "0.4s" },
+                  },
+                  "@keyframes typing": {
+                    "0%, 60%, 100%": { transform: "translateY(0)", opacity: 0.4 },
+                    "30%": { transform: "translateY(-10px)", opacity: 1 },
+                  },
+                }}
+              >
+                <Box />
+                <Box />
+                <Box />
+              </Box>
+            </Box>
+          </Paper>
+        }
+      />
+    </ListItem>
+  );
+
   // Skeleton loading component for messages
   const MessageSkeleton = ({ isOwn }: { isOwn: boolean }) => (
     <ListItem sx={{ mb: 1 }}>
@@ -314,6 +406,13 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     // TODO: Implement delete message functionality
     console.log("Delete message:", messageId);
     setSnackbarMessage("Delete functionality coming soon");
+    setSnackbarOpen(true);
+  };
+
+  // Message reaction handlers
+  const handleReaction = (messageId: number, reaction: string) => {
+    console.log("Reaction:", reaction, "on message:", messageId);
+    setSnackbarMessage(`Added ${reaction} reaction`);
     setSnackbarOpen(true);
   };
 
@@ -1116,6 +1215,45 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                     <Reply sx={{ fontSize: 12 }} />
                                   </IconButton>
                                   
+                                  {/* Reaction buttons */}
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleReaction(msg.id, "👍")}
+                                    sx={{
+                                      width: 20,
+                                      height: 20,
+                                      color: isOwn ? "primary.contrastText" : "text.secondary",
+                                      "&:hover": {
+                                        backgroundColor: isOwn 
+                                          ? "rgba(255,255,255,0.2)" 
+                                          : "rgba(0,0,0,0.1)",
+                                        transform: "scale(1.2)",
+                                      },
+                                    }}
+                                    title="Like message"
+                                  >
+                                    <ThumbUp sx={{ fontSize: 12 }} />
+                                  </IconButton>
+                                  
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleReaction(msg.id, "❤️")}
+                                    sx={{
+                                      width: 20,
+                                      height: 20,
+                                      color: isOwn ? "primary.contrastText" : "text.secondary",
+                                      "&:hover": {
+                                        backgroundColor: isOwn 
+                                          ? "rgba(255,255,255,0.2)" 
+                                          : "rgba(0,0,0,0.1)",
+                                        transform: "scale(1.2)",
+                                      },
+                                    }}
+                                    title="Love message"
+                                  >
+                                    <Favorite sx={{ fontSize: 12 }} />
+                                  </IconButton>
+                                  
                                   {isOwn && (
                                     <IconButton
                                       size="small"
@@ -1144,26 +1282,12 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                 );
               })}
             <div ref={messagesEndRef} />
+            
+            {/* Typing Indicator */}
+            {otherUserTyping && (
+              <TypingIndicator username="Provider" />
+            )}
           </List>
-        )}
-        {/* Typing Indicator */}
-        {otherUserTyping && (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, p: 1 }}>
-            <Avatar sx={{ width: 24, height: 24 }}>
-              <Pets fontSize="small" />
-            </Avatar>
-            <Paper
-              sx={{
-                p: 1,
-                backgroundColor: (theme) =>
-                  theme.palette.mode === "dark" ? "grey.800" : "grey.100",
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                {t("chat.typing")}...
-              </Typography>
-            </Paper>
-          </Box>
         )}
         {/* Quick Replies */}
         {showQuickReplies && (
@@ -1479,6 +1603,24 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           <Button onClick={closeMediaDialog}>Close</Button>
         </DialogActions>
       </Dialog>
+
+      {/* Demo Typing Indicator Button - Remove in production */}
+      <Box sx={{ p: 2, borderTop: 1, borderColor: "divider" }}>
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={() => {
+            setOtherUserTyping(!otherUserTyping);
+            if (otherUserTyping) {
+              // Auto-hide after 3 seconds
+              setTimeout(() => setOtherUserTyping(false), 3000);
+            }
+          }}
+          sx={{ fontSize: "0.75rem" }}
+        >
+          {otherUserTyping ? "Stop Typing Demo" : "Start Typing Demo"}
+        </Button>
+      </Box>
 
       {/* Snackbar for notifications */}
       <Snackbar
