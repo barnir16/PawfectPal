@@ -27,6 +27,9 @@ import {
   CardContent,
   Alert,
   Snackbar,
+  Collapse,
+  LinearProgress,
+  Badge,
 } from "@mui/material";
 import {
   Send,
@@ -51,6 +54,15 @@ import {
   ThumbUp,
   ThumbDown,
   Message,
+  Refresh,
+  Error,
+  Warning,
+  Info,
+  Wifi,
+  WifiOff,
+  CloudOff,
+  CloudDone,
+  Replay,
 } from "@mui/icons-material";
 import { useLocalization } from "../../contexts/LocalizationContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -109,6 +121,18 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   const [otherUserTyping, setOtherUserTyping] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
   const [hoveredMessageId, setHoveredMessageId] = useState<number | null>(null);
+  
+  // Enhanced error handling and connection status
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'reconnecting'>('connected');
+  const [errorState, setErrorState] = useState<{
+    type: 'network' | 'permission' | 'validation' | 'server' | null;
+    message: string;
+    retryable: boolean;
+  }>({ type: null, message: '', retryable: false });
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [offlineMessages, setOfflineMessages] = useState<ChatMessageCreate[]>([]);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -506,6 +530,138 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     scrollToBottom();
   }, [messages]);
 
+  // Connection status monitoring
+  useEffect(() => {
+    const handleOnline = () => {
+      setConnectionStatus('connected');
+      setErrorState({ type: null, message: '', retryable: false });
+      // Retry sending offline messages
+      if (offlineMessages.length > 0) {
+        retryOfflineMessages();
+      }
+    };
+
+    const handleOffline = () => {
+      setConnectionStatus('disconnected');
+      setErrorState({ 
+        type: 'network', 
+        message: 'You are offline. Messages will be sent when connection is restored.', 
+        retryable: true 
+      });
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Check initial connection status
+    if (!navigator.onLine) {
+      handleOffline();
+    }
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [offlineMessages]);
+
+  // Enhanced error handling functions
+  const handleError = (error: any, context: string = '') => {
+    console.error(`❌ ${context}:`, error);
+    
+    let errorType: 'network' | 'permission' | 'validation' | 'server' = 'server';
+    let message = 'An unexpected error occurred';
+    let retryable = false;
+
+    if (error?.response?.status) {
+      switch (error.response.status) {
+        case 400:
+          errorType = 'validation';
+          message = error.response.data?.detail || 'Invalid request. Please check your input.';
+          retryable = false;
+          break;
+        case 401:
+          errorType = 'permission';
+          message = 'Please log in again to continue.';
+          retryable = false;
+          break;
+        case 403:
+          errorType = 'permission';
+          message = 'You don\'t have permission to perform this action.';
+          retryable = false;
+          break;
+        case 404:
+          errorType = 'server';
+          message = 'The requested resource was not found.';
+          retryable = false;
+          break;
+        case 413:
+          errorType = 'validation';
+          message = 'File too large. Please reduce file size and try again.';
+          retryable = false;
+          break;
+        case 429:
+          errorType = 'server';
+          message = 'Too many requests. Please wait a moment and try again.';
+          retryable = true;
+          break;
+        case 500:
+          errorType = 'server';
+          message = 'Server error. Please try again later.';
+          retryable = true;
+          break;
+        default:
+          errorType = 'server';
+          message = error.response.data?.detail || 'An error occurred. Please try again.';
+          retryable = true;
+      }
+    } else if (error?.code === 'NETWORK_ERROR' || !navigator.onLine) {
+      errorType = 'network';
+      message = 'Network error. Please check your connection.';
+      retryable = true;
+    }
+
+    setErrorState({ type: errorType, message, retryable });
+    setSnackbarMessage(message);
+    setSnackbarOpen(true);
+  };
+
+  const retryOfflineMessages = async () => {
+    if (offlineMessages.length === 0) return;
+    
+    setIsRetrying(true);
+    setConnectionStatus('reconnecting');
+    
+    try {
+      for (const message of offlineMessages) {
+        await onSendMessage(message);
+      }
+      setOfflineMessages([]);
+      setConnectionStatus('connected');
+      setErrorState({ type: null, message: '', retryable: false });
+    } catch (error) {
+      handleError(error, 'Retry offline messages');
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
+  const retryLastAction = async () => {
+    if (!errorState.retryable) return;
+    
+    setIsRetrying(true);
+    setRetryCount(prev => prev + 1);
+    
+    try {
+      // This would be implemented based on the last failed action
+      // For now, we'll just clear the error state
+      setErrorState({ type: null, message: '', retryable: false });
+    } catch (error) {
+      handleError(error, 'Retry action');
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
   const handleSend = async () => {
     if (!input.trim() && selectedFiles.length === 0) return;
 
@@ -556,23 +712,18 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       
       setInput("");
       setSelectedFiles([]);
+      setErrorState({ type: null, message: '', retryable: false });
       scrollToBottom();
     } catch (error) {
-      console.error("Failed to send message:", error);
-      let errorMessage = "Failed to send message";
-      
-      if (error?.response?.status === 400) {
-        errorMessage = error.response.data?.detail || "Invalid message or file";
-      } else if (error?.response?.status === 413) {
-        errorMessage = "File too large. Please reduce file size and try again.";
-      } else if (error?.response?.status === 403) {
-        errorMessage = "You don't have permission to send messages in this chat.";
-      } else if (error?.response?.status === 404) {
-        errorMessage = "Service request not found.";
+      // If offline, queue the message
+      if (!navigator.onLine) {
+        setOfflineMessages(prev => [...prev, newMessage]);
+        setInput("");
+        setSelectedFiles([]);
+        handleError(error, 'Send message (offline)');
+      } else {
+        handleError(error, 'Send message');
       }
-      
-      setSnackbarMessage(errorMessage);
-      setSnackbarOpen(true);
     }
   };
 
@@ -846,49 +997,130 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         boxShadow: { xs: 0, md: 3 },
       }}
     >
-      {/* Header */}
-      <Box
-        sx={{
-          p: 3,
-          borderBottom: 1,
-          borderColor: "divider",
-          backgroundColor: (theme) => theme.palette.mode === "dark" ? "grey.800" : "white",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Avatar sx={{ width: 40, height: 40, backgroundColor: "primary.main" }}>
-            <Pets />
-          </Avatar>
-          <Box>
-            <Typography variant="h6" fontWeight={600}>
-              {t("services.conversation")}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {messages.length} {messages.length === 1 ? t("message") : t("messages")}
-            </Typography>
+          {/* Header */}
+          <Box
+            sx={{
+              p: 3,
+              borderBottom: 1,
+              borderColor: "divider",
+              backgroundColor: (theme) => theme.palette.mode === "dark" ? "grey.800" : "white",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Avatar sx={{ width: 40, height: 40, backgroundColor: "primary.main" }}>
+                <Pets />
+              </Avatar>
+              <Box>
+                <Typography variant="h6" fontWeight={600}>
+                  {t("services.conversation")}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {messages.length} {messages.length === 1 ? t("message") : t("messages")}
+                </Typography>
+              </Box>
+            </Box>
+            
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              {/* Connection Status Indicator */}
+              <Tooltip title={
+                connectionStatus === 'connected' ? 'Connected' :
+                connectionStatus === 'disconnected' ? 'Disconnected' :
+                'Reconnecting...'
+              }>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  {connectionStatus === 'connected' && <Wifi color="success" fontSize="small" />}
+                  {connectionStatus === 'disconnected' && <WifiOff color="error" fontSize="small" />}
+                  {connectionStatus === 'reconnecting' && <CircularProgress size={16} />}
+                </Box>
+              </Tooltip>
+              
+              <Tooltip title="Quick Actions">
+                <IconButton 
+                  onClick={handleMenuOpen}
+                  sx={{
+                    backgroundColor: "transparent",
+                    color: "text.secondary",
+                    "&:hover": {
+                      backgroundColor: "grey.100",
+                    },
+                  }}
+                >
+                  <MoreVert />
+                </IconButton>
+              </Tooltip>
+            </Box>
           </Box>
-        </Box>
-        
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Tooltip title="Quick Actions">
-            <IconButton 
-              onClick={handleMenuOpen}
-              sx={{
-                backgroundColor: "transparent",
-                color: "text.secondary",
-                "&:hover": {
-                  backgroundColor: "grey.100",
-                },
-              }}
+
+          {/* Error Banner */}
+          {errorState.type && (
+            <Collapse in={!!errorState.type}>
+              <Alert 
+                severity={
+                  errorState.type === 'network' ? 'warning' :
+                  errorState.type === 'permission' ? 'error' :
+                  errorState.type === 'validation' ? 'info' :
+                  'error'
+                }
+                sx={{ 
+                  borderRadius: 0,
+                  borderLeft: 0,
+                  borderRight: 0,
+                }}
+                action={
+                  errorState.retryable && (
+                    <Button
+                      color="inherit"
+                      size="small"
+                      onClick={retryLastAction}
+                      disabled={isRetrying}
+                      startIcon={isRetrying ? <CircularProgress size={16} /> : <Replay />}
+                    >
+                      {isRetrying ? 'Retrying...' : 'Retry'}
+                    </Button>
+                  )
+                }
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  {errorState.type === 'network' && <WifiOff />}
+                  {errorState.type === 'permission' && <Error />}
+                  {errorState.type === 'validation' && <Warning />}
+                  {errorState.type === 'server' && <CloudOff />}
+                  <Typography variant="body2">
+                    {errorState.message}
+                  </Typography>
+                </Box>
+              </Alert>
+            </Collapse>
+          )}
+
+          {/* Offline Messages Indicator */}
+          {offlineMessages.length > 0 && (
+            <Alert 
+              severity="info" 
+              sx={{ borderRadius: 0, borderLeft: 0, borderRight: 0 }}
+              action={
+                <Button
+                  color="inherit"
+                  size="small"
+                  onClick={retryOfflineMessages}
+                  disabled={isRetrying}
+                  startIcon={isRetrying ? <CircularProgress size={16} /> : <CloudDone />}
+                >
+                  {isRetrying ? 'Sending...' : 'Send Now'}
+                </Button>
+              }
             >
-              <MoreVert />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <CloudOff />
+                <Typography variant="body2">
+                  {offlineMessages.length} message{offlineMessages.length !== 1 ? 's' : ''} waiting to be sent
+                </Typography>
+              </Box>
+            </Alert>
+          )}
 
       {/* Messages container */}
       <Box
@@ -994,9 +1226,31 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                   >
                     {!isOwn && !isSystem && (
                       <ListItemAvatar sx={{ minWidth: 40 }}>
-                        <Avatar sx={{ width: 32, height: 32 }}>
-                          {msg.sender?.username?.[0] || "U"}
-                        </Avatar>
+                        <Box sx={{ position: "relative" }}>
+                          <Avatar sx={{ width: 32, height: 32 }}>
+                            {msg.sender?.username?.[0] || "U"}
+                          </Avatar>
+                          {/* User Role Badge */}
+                          {msg.sender?.is_provider && (
+                            <Chip
+                              label="Provider"
+                              size="small"
+                              sx={{
+                                position: "absolute",
+                                bottom: -8,
+                                left: "50%",
+                                transform: "translateX(-50%)",
+                                fontSize: "0.6rem",
+                                height: 16,
+                                backgroundColor: (theme) => theme.palette.primary.main,
+                                color: "white",
+                                "& .MuiChip-label": {
+                                  px: 0.5,
+                                },
+                              }}
+                            />
+                          )}
+                        </Box>
                       </ListItemAvatar>
                     )}
                     <ListItemText
@@ -1085,6 +1339,38 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                 </Box>
                               )}
                             <Box sx={{ flex: 1 }}>
+                              {/* Sender name for non-own messages */}
+                              {!isOwn && !isSystem && (
+                                <Typography
+                                  variant="caption"
+                                  sx={{
+                                    color: "text.secondary",
+                                    fontWeight: 600,
+                                    fontSize: "0.75rem",
+                                    mb: 0.5,
+                                    display: "block",
+                                  }}
+                                >
+                                  {msg.sender?.username || "Unknown User"}
+                                  {msg.sender?.is_provider && (
+                                    <Chip
+                                      label="Provider"
+                                      size="small"
+                                      sx={{
+                                        ml: 1,
+                                        fontSize: "0.6rem",
+                                        height: 16,
+                                        backgroundColor: (theme) => theme.palette.primary.main,
+                                        color: "white",
+                                        "& .MuiChip-label": {
+                                          px: 0.5,
+                                        },
+                                      }}
+                                    />
+                                  )}
+                                </Typography>
+                              )}
+                              
                               <Typography
                                 variant="body2"
                                 sx={{
