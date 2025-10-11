@@ -20,6 +20,7 @@ import {
   AccessTime,
   Person,
   MoreVert,
+  Refresh,
 } from "@mui/icons-material";
 import { useLocalization } from "../../../contexts/LocalizationContext";
 import type { ChatConversation } from "../../../types/services/chat";
@@ -246,162 +247,283 @@ export const ChatListPage = () => {
 
   const renderContent = () => {
     if (loading) {
-      return <ChatListSkeleton />;
+      return (
+        <Box sx={{ 
+          flex: 1, 
+          display: "flex", 
+          alignItems: "center", 
+          justifyContent: "center",
+          flexDirection: "column",
+          gap: 2,
+        }}>
+          <CircularProgress size={40} />
+          <Typography variant="h6" color="text.secondary">
+            {t("chat.loadingConversations")}
+          </Typography>
+        </Box>
+      );
     }
 
     if (error) {
       return (
-        <Typography
-          color="error"
-          sx={{ p: 5, textAlign: "center", fontWeight: 500 }}
-        >
-          {error}
-        </Typography>
+        <Box sx={{ 
+          flex: 1, 
+          display: "flex", 
+          alignItems: "center", 
+          justifyContent: "center",
+          flexDirection: "column",
+          gap: 2,
+          p: 4,
+        }}>
+          <Typography variant="h6" color="error" textAlign="center">
+            {error}
+          </Typography>
+          <Button 
+            variant="outlined" 
+            onClick={() => fetchConversations()}
+            startIcon={<Refresh />}
+          >
+            {t("retry")}
+          </Button>
+        </Box>
       );
     }
 
     if (conversations.length === 0) {
       return (
-        <Typography
-          sx={{
-            p: 5,
-            textAlign: "center",
-            color: "text.secondary",
-            fontStyle: "italic",
-          }}
-        >
-          {t("chat.noConversations")}
-        </Typography>
+        <Box sx={{ 
+          flex: 1, 
+          display: "flex", 
+          alignItems: "center", 
+          justifyContent: "center",
+          flexDirection: "column",
+          gap: 2,
+          p: 4,
+        }}>
+          <Message sx={{ fontSize: 64, color: "text.secondary", opacity: 0.5 }} />
+          <Typography variant="h6" color="text.secondary" textAlign="center">
+            {t("chat.noConversations")}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" textAlign="center">
+            {t("chat.noConversationsDescription")}
+          </Typography>
+        </Box>
       );
     }
 
     return (
-      <List sx={{ p: 0 }}>
-        {conversations.map((conv) => (
-          <Card
-            key={conv.service_request_id}
-            variant="outlined"
-            sx={{
-              mb: 2,
-              cursor: "pointer",
-              transition: "all 0.2s ease-in-out",
-              borderRadius: 3,
-              border: "1px solid",
-              borderColor: (theme) => 
-                theme.palette.mode === "dark" 
-                  ? "rgba(255,255,255,0.1)" 
-                  : "rgba(0,0,0,0.08)",
-              "&:hover": { 
-                boxShadow: (theme) => 
-                  theme.palette.mode === "dark"
-                    ? "0 8px 32px rgba(0,0,0,0.3)"
-                    : "0 8px 32px rgba(0,0,0,0.12)",
-                transform: "translateY(-2px)",
-                borderColor: (theme) => theme.palette.primary.main,
-              },
-              "&:active": {
-                transform: "translateY(0px)",
-              }
-            }}
-            onClick={() => handleOpenConversation(conv)}
-          >
-            <CardContent>
-              <Stack
-                direction="row"
-                alignItems="flex-start"
-                justifyContent="space-between"
-                spacing={2}
-              >
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    sx={{ mb: 1 }}
-                  >
-                    <Typography 
-                      variant="h6" 
-                      fontWeight={600} 
-                      noWrap
-                      sx={{
-                        color: (theme) => theme.palette.text.primary,
-                        fontSize: "1.1rem",
-                      }}
+      <Box sx={{ 
+        flex: 1, 
+        overflow: "auto",
+        "&::-webkit-scrollbar": {
+          width: "6px",
+        },
+        "&::-webkit-scrollbar-track": {
+          backgroundColor: "transparent",
+        },
+        "&::-webkit-scrollbar-thumb": {
+          backgroundColor: (theme) => theme.palette.grey[400],
+          borderRadius: "3px",
+        },
+        "&::-webkit-scrollbar-thumb:hover": {
+          backgroundColor: (theme) => theme.palette.grey[600],
+        },
+      }}>
+        <List sx={{ p: 0 }}>
+          {conversations.map((conv) => (
+            <Card
+              key={conv.service_request_id}
+              variant="outlined"
+              sx={{
+                mb: 2,
+                cursor: "pointer",
+                transition: "all 0.2s ease-in-out",
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: (theme) => 
+                  theme.palette.mode === "dark" 
+                    ? "rgba(255,255,255,0.1)" 
+                    : "rgba(0,0,0,0.08)",
+                backgroundColor: (theme) => 
+                  theme.palette.mode === "dark" ? "grey.800" : "white",
+                "&:hover": { 
+                  boxShadow: (theme) => 
+                    theme.palette.mode === "dark"
+                      ? "0 8px 32px rgba(0,0,0,0.3)"
+                      : "0 8px 32px rgba(0,0,0,0.12)",
+                  transform: "translateY(-2px)",
+                  borderColor: (theme) => theme.palette.primary.main,
+                },
+                "&:active": {
+                  transform: "translateY(0px)",
+                }
+              }}
+              onClick={() => handleOpenConversation(conv)}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Stack
+                  direction="row"
+                  alignItems="flex-start"
+                  justifyContent="space-between"
+                  spacing={2}
+                >
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      sx={{ mb: 1.5 }}
                     >
-                      {getChatTitle(conv)}
-                    </Typography>
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      {conv.unread_count > 0 && (
-                        <Chip
-                          label={conv.unread_count}
-                          size="small"
-                          color="primary"
-                          sx={{ 
-                            minWidth: 24, 
-                            height: 24,
-                            fontSize: "0.75rem",
-                            fontWeight: 600,
-                            borderRadius: "12px",
-                            backgroundColor: (theme) => theme.palette.primary.main,
-                            color: (theme) => theme.palette.primary.contrastText,
-                          }}
-                        />
-                      )}
                       <Typography 
-                        variant="caption" 
-                        color="text.secondary"
+                        variant="h6" 
+                        fontWeight={600} 
+                        noWrap
                         sx={{
-                          fontSize: "0.8rem",
-                          fontWeight: 500,
+                          color: (theme) => theme.palette.text.primary,
+                          fontSize: "1.1rem",
+                          lineHeight: 1.3,
                         }}
                       >
-                        {formatLastMessageTime(conv)}
+                        {getChatTitle(conv)}
                       </Typography>
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        {conv.unread_count > 0 && (
+                          <Chip
+                            label={conv.unread_count}
+                            size="small"
+                            color="primary"
+                            sx={{ 
+                              minWidth: 24, 
+                              height: 24,
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              borderRadius: "12px",
+                              backgroundColor: (theme) => theme.palette.primary.main,
+                              color: (theme) => theme.palette.primary.contrastText,
+                            }}
+                          />
+                        )}
+                        <Typography 
+                          variant="caption" 
+                          color="text.secondary"
+                          sx={{
+                            fontSize: "0.8rem",
+                            fontWeight: 500,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {formatLastMessageTime(conv)}
+                        </Typography>
+                      </Stack>
                     </Stack>
-                  </Stack>
-                  
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                      lineHeight: 1.5,
-                      fontSize: "0.9rem",
-                      opacity: 0.8,
-                      mt: 0.5,
-                    }}
-                  >
-                    {formatLastMessage(conv)}
-                  </Typography>
-                  
-                  {conv.messages.length > 0 && (
-                    <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 1 }}>
-                      <Message fontSize="small" color="action" />
-                      <Typography variant="caption" color="text.secondary">
-                        {conv.messages.length} message{conv.messages.length !== 1 ? 's' : ''}
-                      </Typography>
-                    </Stack>
-                  )}
-                </Box>
-              </Stack>
-            </CardContent>
-          </Card>
-        ))}
-      </List>
+                    
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        lineHeight: 1.5,
+                        fontSize: "0.9rem",
+                        opacity: 0.8,
+                        mt: 0.5,
+                      }}
+                    >
+                      {formatLastMessage(conv)}
+                    </Typography>
+                    
+                    {conv.messages.length > 0 && (
+                      <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 1.5 }}>
+                        <Message fontSize="small" color="action" />
+                        <Typography variant="caption" color="text.secondary">
+                          {conv.messages.length} {conv.messages.length === 1 ? t("message") : t("messages")}
+                        </Typography>
+                      </Stack>
+                    )}
+                  </Box>
+                </Stack>
+              </CardContent>
+            </Card>
+          ))}
+        </List>
+      </Box>
     );
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 } }}>
-      <Typography variant="h4" gutterBottom fontWeight={700}>
-        {t("chat.chatTitle")}
-      </Typography>
-      <Paper elevation={3} sx={{ mt: 2, borderRadius: 2 }}>
-        {renderContent()}
+    <Box sx={{ 
+      height: "100vh", 
+      display: "flex", 
+      flexDirection: "column",
+      backgroundColor: (theme) => theme.palette.mode === "dark" ? "grey.900" : "grey.50",
+    }}>
+      {/* Header Section */}
+      <Paper 
+        elevation={0}
+        sx={{ 
+          p: 3, 
+          borderRadius: 0,
+          borderBottom: 1,
+          borderColor: "divider",
+          backgroundColor: (theme) => theme.palette.mode === "dark" ? "grey.800" : "white",
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Box>
+            <Typography 
+              variant="h4" 
+              component="h1" 
+              sx={{ 
+                fontWeight: 700,
+                color: (theme) => theme.palette.text.primary,
+                mb: 0.5,
+              }}
+            >
+              {t("chat.chatTitle")}
+            </Typography>
+            <Typography 
+              variant="body2" 
+              color="text.secondary"
+              sx={{ fontSize: "0.9rem" }}
+            >
+              {conversations.length} {conversations.length === 1 ? t("conversation") : t("conversations")}
+            </Typography>
+          </Box>
+          
+          {/* Action Buttons */}
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <IconButton
+              onClick={() => fetchConversations(true)}
+              disabled={refreshing}
+              sx={{
+                backgroundColor: (theme) => theme.palette.primary.main,
+                color: "white",
+                "&:hover": {
+                  backgroundColor: (theme) => theme.palette.primary.dark,
+                },
+                "&:disabled": {
+                  backgroundColor: (theme) => theme.palette.grey[400],
+                },
+              }}
+            >
+              {refreshing ? <CircularProgress size={20} color="inherit" /> : <Refresh />}
+            </IconButton>
+          </Box>
+        </Box>
       </Paper>
+
+      {/* Content Area */}
+      <Box sx={{ 
+        flex: 1, 
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        p: 3,
+      }}>
+        {renderContent()}
+      </Box>
     </Box>
   );
 };
