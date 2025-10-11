@@ -35,6 +35,11 @@ class ChatMessageRead(ChatMessageBase):
     message_metadata: Optional[dict] = None
     attachments: Optional[List[MediaAttachment]] = None
     
+    # Delivery status tracking
+    delivery_status: Optional[str] = "sent"
+    delivered_at: Optional[datetime] = None
+    read_at: Optional[datetime] = None
+    
     # Relationships
     sender: Optional[UserRead] = None
     
@@ -46,6 +51,12 @@ class ChatConversation(BaseModel):
     service_request_id: int
     messages: list[ChatMessageRead]
     unread_count: int
+    
+    # Pagination info
+    total_messages: Optional[int] = None
+    has_more: Optional[bool] = None
+    current_offset: Optional[int] = None
+    limit: Optional[int] = None
     
     class Config:
         from_attributes = True
