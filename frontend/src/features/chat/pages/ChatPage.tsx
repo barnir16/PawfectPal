@@ -1,4 +1,3 @@
-// src/features/chat/pages/ChatPage.tsx
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { 
@@ -27,6 +26,7 @@ import { offlineMessageService, OfflineStatus } from "../../../services/chat/off
 import { ServiceRequestService } from "../../../services/serviceRequests/serviceRequestService";
 import type { ServiceRequest } from "../../../types/services/serviceRequest";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useMessageStatusTracker } from "../../../hooks/useMessageStatusTracker";
 
 export const ChatPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -43,6 +43,12 @@ export const ChatPage = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [offlineStatus, setOfflineStatus] = useState<OfflineStatus>(offlineMessageService.getOfflineStatus());
   const wsInitialized = useRef(false);
+
+  // Initialize message status tracker
+  const messageStatusTracker = useMessageStatusTracker(
+    conversation?.messages || [],
+    user?.id
+  );
 
   // Initialize WebSocket connection
   useEffect(() => {
@@ -163,20 +169,6 @@ export const ChatPage = () => {
 
     initializeFCM();
   }, [id, conversation]);
-
-  // Mark messages as read when they come into view
-  useEffect(() => {
-    if (!conversation || !isWebSocketConnected) return;
-    
-    // Mark all unread messages as read
-    const unreadMessages = conversation.messages.filter(
-      msg => !msg.is_read && msg.sender_id !== user?.id
-    );
-    
-    unreadMessages.forEach(msg => {
-      webSocketService.markMessageAsRead(msg.id);
-    });
-  }, [conversation, isWebSocketConnected, user?.id]);
 
   // Monitor offline status and sync messages
   useEffect(() => {

@@ -90,6 +90,18 @@ class ChatService {
   }
 
   /**
+   * Mark a message as delivered
+   */
+  async markMessageDelivered(messageId: number): Promise<void> {
+    try {
+      await apiClient.put(`/chat/messages/${messageId}/delivered`);
+    } catch (error) {
+      console.error('Failed to mark message as delivered:', error);
+      throw new Error('Failed to mark message as delivered');
+    }
+  }
+
+  /**
    * Share location in a service request conversation
    */
   async shareLocation(
