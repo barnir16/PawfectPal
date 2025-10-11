@@ -1171,6 +1171,17 @@ export const he = {
     inProgress: 'בתהליך',
     completed: 'הושלם',
     cancelled: 'בוטל',
+    // Additional status keys for compatibility
+    'In Progress': 'בתהליך',
+    'Completed': 'הושלם',
+    'Cancelled': 'בוטל',
+    // Common filter keys
+    'All': 'הכל',
+    'for': 'עבור',
+    'in_progress': 'בתהליך',
+    'Details': 'פרטים',
+    'Search': 'חיפוש',
+    'filterByStatus': 'סנן לפי סטטוס',
     // Booking form fields
     duration: 'משך',
     price: 'מחיר',
