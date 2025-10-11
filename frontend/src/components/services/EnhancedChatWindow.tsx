@@ -46,6 +46,7 @@ import {
   InsertDriveFile,
   ContentCopy,
   Delete,
+  Person,
 } from "@mui/icons-material";
 import { useLocalization } from "../../contexts/LocalizationContext";
 import { useAuth } from "../../contexts/AuthContext";
