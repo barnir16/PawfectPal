@@ -11,10 +11,15 @@ class ChatService {
    */
   async getMyConversations(): Promise<ChatConversation[]> {
     try {
+      console.log('🔍 ChatService: Fetching my conversations...');
       const response = await apiClient.get('/chat/my-conversations');
+      console.log('🔍 ChatService: Raw response:', response);
+      console.log('🔍 ChatService: Response data:', response.data);
+      console.log('🔍 ChatService: Data type:', typeof response.data);
+      console.log('🔍 ChatService: Data length:', response.data?.length);
       return response.data || [];
     } catch (error) {
-      console.error('Failed to fetch conversations:', error);
+      console.error('❌ ChatService: Failed to fetch conversations:', error);
       // Return empty array instead of throwing error
       return [];
     }

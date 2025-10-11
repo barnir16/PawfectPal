@@ -59,9 +59,14 @@ export const ChatListPage = () => {
     }
     setError(null);
     try {
+      console.log('🔍 ChatListPage: Fetching conversations...');
       const data = await chatService.getMyConversations();
+      console.log('🔍 ChatListPage: Received conversations:', data);
+      console.log('🔍 ChatListPage: Conversations count:', data.length);
+      console.log('🔍 ChatListPage: First conversation:', data[0]);
       setConversations(data);
     } catch (err: any) {
+      console.error('❌ ChatListPage: Error fetching conversations:', err);
       setError(err.message || t("chat.somethingWentWrong"));
     } finally {
       setLoading(false);
