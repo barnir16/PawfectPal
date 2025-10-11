@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -7,12 +6,12 @@ from unittest.mock import Mock, patch
 import tempfile
 import os
 
-from main import app
-from dependencies.db import get_db
-from models.base import Base
-from models.user import UserORM
-from models.service_request import ServiceRequestORM
-from models.chat_message import ChatMessageORM
+from app.main import app
+from app.dependencies.db import get_db
+from app.models.base import Base
+from app.models.user import UserORM
+from app.models.service_request import ServiceRequestORM
+from app.models.chat_message import ChatMessageORM
 
 # Create a test database
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"

@@ -19,7 +19,6 @@ import { BookService } from "./features/services/pages/BookService";
 import { ServiceRequestBrowser } from "./components/services/ServiceRequestBrowser";
 import { ServiceRequestDetails } from "./components/services/ServiceRequestDetails";
 import { MyServiceRequests } from "./components/services/MyServiceRequests";
-import { ServiceRequestChat } from "./components/services/ServiceRequestChat";
 import ServiceDetailsPage from "./features/services/pages/ServiceDetailsPage";
 import { PetForm } from "./features/pets/components/PetForm/PetForm";
 import { PetDetail } from "./features/pets/components/PetDetail/PetDetail";
@@ -157,10 +156,6 @@ const AppContent = () => {
           <Route
             path="/service-requests/:id"
             element={<ServiceRequestDetails />}
-          />
-          <Route
-            path="/service-requests/:id/chat"
-            element={<ServiceRequestChat />}
           />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<Settings />} />

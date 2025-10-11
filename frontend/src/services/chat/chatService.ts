@@ -23,10 +23,10 @@ class ChatService {
   /**
    * Get conversation for a specific service request
    */
-  async getConversation(serviceRequestId: number): Promise<ChatConversation> {
+  async getConversation(serviceRequestId: number, limit: number = 50, offset: number = 0): Promise<ChatConversation> {
     try {
-      console.log(`🔍 ChatService: Fetching conversation for service request ${serviceRequestId}`);
-      const response = await apiClient.get(`/chat/conversations/${serviceRequestId}`);
+      console.log(`🔍 ChatService: Fetching conversation for service request ${serviceRequestId} with limit=${limit}, offset=${offset}`);
+      const response = await apiClient.get(`/chat/conversations/${serviceRequestId}?limit=${limit}&offset=${offset}`);
       console.log(`🔍 ChatService: Conversation fetched successfully`, response.data);
       return response.data;
     } catch (error: any) {
@@ -40,7 +40,11 @@ class ChatService {
         return {
           service_request_id: serviceRequestId,
           messages: [],
-          unread_count: 0
+          unread_count: 0,
+          total_messages: 0,
+          has_more: false,
+          current_offset: offset,
+          limit: limit
         };
       }
       
@@ -157,6 +161,21 @@ class ChatService {
         data: error?.response?.data
       });
       throw new Error('Failed to send message with files');
+    }
+  }
+
+  /**
+   * Load more messages for pagination
+   */
+  async loadMoreMessages(serviceRequestId: number, currentOffset: number, limit: number = 50): Promise<ChatConversation> {
+    try {
+      console.log(`🔍 ChatService: Loading more messages for service request ${serviceRequestId}, offset=${currentOffset}`);
+      const response = await apiClient.get(`/chat/conversations/${serviceRequestId}?limit=${limit}&offset=${currentOffset}`);
+      console.log(`🔍 ChatService: More messages loaded successfully`, response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ ChatService: Failed to load more messages:', error);
+      throw new Error('Failed to load more messages');
     }
   }
 }

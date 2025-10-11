@@ -27,6 +27,11 @@ class ChatMessageORM(Base):
     is_edited: Mapped[bool] = mapped_column(Boolean, default=False)
     edited_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     
+    # Delivery status tracking
+    delivery_status: Mapped[str] = mapped_column(String, default="sent")  # sent, delivered, read
+    delivered_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    read_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
     

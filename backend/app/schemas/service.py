@@ -7,7 +7,7 @@ import json
 
 class ServiceBase(BaseModel):
     pet_id: int
-    service_type_id: int
+    service_type: str
     status: ServiceStatus = ServiceStatus.PENDING
     start_datetime: datetime  # ISO datetime string
     end_datetime: Optional[datetime] = None  # ISO datetime string

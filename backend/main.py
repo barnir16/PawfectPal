@@ -17,7 +17,9 @@ from app.routers import (
     provider_reviews,
     service_requests,
     chat,
+    fcm_tokens,
 )
+from app.websocket import chat_router as ws_chat
 
 # Import AI router conditionally to avoid startup errors
 try:
@@ -126,6 +128,8 @@ app.include_router(provider.router)
 app.include_router(provider_reviews.router)
 app.include_router(service_requests.router)
 app.include_router(chat.router)
+app.include_router(fcm_tokens.router)  # FCM token management
+app.include_router(ws_chat.router)  # WebSocket chat router
 
 
 # Mount static files for image serving
