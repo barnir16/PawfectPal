@@ -151,8 +151,24 @@ export const ChatListPage = () => {
             sx={{
               mb: 2,
               cursor: "pointer",
-              transition: "0.3s",
-              "&:hover": { boxShadow: 6, transform: "scale(1.01)" },
+              transition: "all 0.2s ease-in-out",
+              borderRadius: 3,
+              border: "1px solid",
+              borderColor: (theme) => 
+                theme.palette.mode === "dark" 
+                  ? "rgba(255,255,255,0.1)" 
+                  : "rgba(0,0,0,0.08)",
+              "&:hover": { 
+                boxShadow: (theme) => 
+                  theme.palette.mode === "dark"
+                    ? "0 8px 32px rgba(0,0,0,0.3)"
+                    : "0 8px 32px rgba(0,0,0,0.12)",
+                transform: "translateY(-2px)",
+                borderColor: (theme) => theme.palette.primary.main,
+              },
+              "&:active": {
+                transform: "translateY(0px)",
+              }
             }}
             onClick={() => handleOpenConversation(conv)}
           >
@@ -170,7 +186,15 @@ export const ChatListPage = () => {
                     justifyContent="space-between"
                     sx={{ mb: 1 }}
                   >
-                    <Typography variant="h6" fontWeight={600} noWrap>
+                    <Typography 
+                      variant="h6" 
+                      fontWeight={600} 
+                      noWrap
+                      sx={{
+                        color: (theme) => theme.palette.text.primary,
+                        fontSize: "1.1rem",
+                      }}
+                    >
                       Service #{conv.service_request_id}
                     </Typography>
                     <Stack direction="row" alignItems="center" spacing={1}>
@@ -179,10 +203,25 @@ export const ChatListPage = () => {
                           label={conv.unread_count}
                           size="small"
                           color="primary"
-                          sx={{ minWidth: 20, height: 20 }}
+                          sx={{ 
+                            minWidth: 24, 
+                            height: 24,
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            borderRadius: "12px",
+                            backgroundColor: (theme) => theme.palette.primary.main,
+                            color: (theme) => theme.palette.primary.contrastText,
+                          }}
                         />
                       )}
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography 
+                        variant="caption" 
+                        color="text.secondary"
+                        sx={{
+                          fontSize: "0.8rem",
+                          fontWeight: 500,
+                        }}
+                      >
                         {formatLastMessageTime(conv)}
                       </Typography>
                     </Stack>
@@ -196,7 +235,10 @@ export const ChatListPage = () => {
                       WebkitLineClamp: 2,
                       WebkitBoxOrient: "vertical",
                       overflow: "hidden",
-                      lineHeight: 1.4,
+                      lineHeight: 1.5,
+                      fontSize: "0.9rem",
+                      opacity: 0.8,
+                      mt: 0.5,
                     }}
                   >
                     {formatLastMessage(conv)}

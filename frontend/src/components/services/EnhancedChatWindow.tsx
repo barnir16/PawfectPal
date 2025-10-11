@@ -733,14 +733,14 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                       primary={
                         <Paper
                           sx={{
-                            p: 2,
+                            p: 2.5,
                             backgroundColor: isOwn
                               ? "primary.main"
                               : isSystem
                                 ? (theme) =>
                                     theme.palette.mode === "dark"
                                       ? "grey.800"
-                                      : "grey.100"
+                                      : "grey.50"
                                 : (theme) =>
                                     theme.palette.mode === "dark"
                                       ? "grey.800"
@@ -749,11 +749,46 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                               ? "primary.contrastText"
                               : "text.primary",
                             borderRadius: isOwn
-                              ? "18px 18px 4px 18px"
-                              : "18px 18px 18px 4px",
-                            boxShadow: 2,
+                              ? "20px 20px 6px 20px"
+                              : "20px 20px 20px 6px",
+                            boxShadow: isOwn
+                              ? "0 2px 8px rgba(0,0,0,0.15)"
+                              : "0 1px 4px rgba(0,0,0,0.1)",
                             maxWidth: "100%",
                             wordWrap: "break-word",
+                            border: isOwn
+                              ? "none"
+                              : (theme) =>
+                                  theme.palette.mode === "dark"
+                                    ? "1px solid rgba(255,255,255,0.1)"
+                                    : "1px solid rgba(0,0,0,0.05)",
+                            position: "relative",
+                            "&::before": isOwn
+                              ? {
+                                  content: '""',
+                                  position: "absolute",
+                                  bottom: 0,
+                                  right: -6,
+                                  width: 0,
+                                  height: 0,
+                                  borderLeft: "6px solid transparent",
+                                  borderTop: "6px solid",
+                                  borderTopColor: (theme) => theme.palette.primary.main,
+                                }
+                              : {
+                                  content: '""',
+                                  position: "absolute",
+                                  bottom: 0,
+                                  left: -6,
+                                  width: 0,
+                                  height: 0,
+                                  borderRight: "6px solid transparent",
+                                  borderTop: "6px solid",
+                                  borderTopColor: (theme) =>
+                                    theme.palette.mode === "dark"
+                                      ? theme.palette.grey[800]
+                                      : "white",
+                                },
                           }}
                         >
                           <Box
@@ -829,21 +864,73 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                 <Typography
                                   variant="caption"
                                   sx={{
-                                    opacity: 0.7,
+                                    opacity: 0.6,
+                                    fontSize: "0.75rem",
+                                    color: isOwn ? "primary.contrastText" : "text.secondary",
                                   }}
                                 >
                                   {formatMessageTime(msg.created_at)}
                                 </Typography>
-                                {msg.is_read && isOwn && (
-                                  <CheckCircle
-                                    fontSize="small"
-                                    sx={{ opacity: 0.7 }}
-                                  />
+                                
+                                {/* Message status indicators for own messages */}
+                                {isOwn && (
+                                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
+                                    {/* Sent indicator */}
+                                    <Box
+                                      sx={{
+                                        width: 12,
+                                        height: 12,
+                                        borderRadius: "50%",
+                                        backgroundColor: msg.is_read 
+                                          ? (theme) => theme.palette.success.main
+                                          : (theme) => theme.palette.grey[400],
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <CheckCircle
+                                        sx={{
+                                          fontSize: 8,
+                                          color: "white",
+                                        }}
+                                      />
+                                    </Box>
+                                    
+                                    {/* Read indicator */}
+                                    {msg.is_read && (
+                                      <Box
+                                        sx={{
+                                          width: 12,
+                                          height: 12,
+                                          borderRadius: "50%",
+                                          backgroundColor: (theme) => theme.palette.success.main,
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                        }}
+                                      >
+                                        <CheckCircle
+                                          sx={{
+                                            fontSize: 8,
+                                            color: "white",
+                                          }}
+                                        />
+                                      </Box>
+                                    )}
+                                  </Box>
                                 )}
+                                
+                                {/* Edited indicator */}
                                 {msg.is_edited && (
                                   <Typography
                                     variant="caption"
-                                    sx={{ opacity: 0.7 }}
+                                    sx={{
+                                      opacity: 0.6,
+                                      fontSize: "0.7rem",
+                                      fontStyle: "italic",
+                                      color: isOwn ? "primary.contrastText" : "text.secondary",
+                                    }}
                                   >
                                     (edited)
                                   </Typography>
