@@ -44,6 +44,8 @@ import {
   Download,
   Visibility,
   InsertDriveFile,
+  ContentCopy,
+  Delete,
 } from "@mui/icons-material";
 import { useLocalization } from "../../contexts/LocalizationContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -101,6 +103,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   const [isTyping, setIsTyping] = useState(false);
   const [otherUserTyping, setOtherUserTyping] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [hoveredMessageId, setHoveredMessageId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -182,11 +185,135 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     return null;
   };
 
+  // Skeleton loading component for messages
+  const MessageSkeleton = ({ isOwn }: { isOwn: boolean }) => (
+    <ListItem sx={{ mb: 1 }}>
+      {!isOwn && (
+        <ListItemAvatar>
+          <Avatar sx={{ width: 32, height: 32 }}>
+            <Person />
+          </Avatar>
+        </ListItemAvatar>
+      )}
+      <ListItemText
+        sx={{
+          maxWidth: "75%",
+          ml: isOwn ? 0 : 2,
+          mr: isOwn ? 2 : 0,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: isOwn ? "flex-end" : "flex-start",
+        }}
+        primary={
+          <Paper
+            sx={{
+              p: 2.5,
+              backgroundColor: isOwn
+                ? "primary.main"
+                : (theme) =>
+                    theme.palette.mode === "dark"
+                      ? "grey.800"
+                      : "white",
+              borderRadius: isOwn
+                ? "20px 20px 6px 20px"
+                : "20px 20px 20px 6px",
+              boxShadow: isOwn
+                ? "0 2px 8px rgba(0,0,0,0.15)"
+                : "0 1px 4px rgba(0,0,0,0.1)",
+              border: isOwn
+                ? "none"
+                : (theme) =>
+                    theme.palette.mode === "dark"
+                      ? "1px solid rgba(255,255,255,0.1)"
+                      : "1px solid rgba(0,0,0,0.05)",
+              position: "relative",
+              "&::before": isOwn
+                ? {
+                    content: '""',
+                    position: "absolute",
+                    bottom: 0,
+                    right: -6,
+                    width: 0,
+                    height: 0,
+                    borderLeft: "6px solid transparent",
+                    borderTop: "6px solid",
+                    borderTopColor: (theme) => theme.palette.primary.main,
+                  }
+                : {
+                    content: '""',
+                    position: "absolute",
+                    bottom: 0,
+                    left: -6,
+                    width: 0,
+                    height: 0,
+                    borderRight: "6px solid transparent",
+                    borderTop: "6px solid",
+                    borderTopColor: (theme) =>
+                      theme.palette.mode === "dark"
+                        ? theme.palette.grey[800]
+                        : "white",
+                  },
+            }}
+          >
+            <Box
+              sx={{
+                width: "100%",
+                height: 20,
+                backgroundColor: isOwn
+                  ? "rgba(255,255,255,0.2)"
+                  : (theme) =>
+                      theme.palette.mode === "dark"
+                        ? "rgba(255,255,255,0.1)"
+                        : "rgba(0,0,0,0.1)",
+                borderRadius: 1,
+                animation: "pulse 1.5s ease-in-out infinite",
+                "@keyframes pulse": {
+                  "0%": { opacity: 0.6 },
+                  "50%": { opacity: 0.3 },
+                  "100%": { opacity: 0.6 },
+                },
+              }}
+            />
+          </Paper>
+        }
+      />
+    </ListItem>
+  );
+
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop =
         messagesContainerRef.current.scrollHeight;
     }
+  };
+
+  // Message action handlers
+  const handleCopyMessage = async (message: string) => {
+    try {
+      await navigator.clipboard.writeText(message);
+      setSnackbarMessage("Message copied to clipboard");
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error("Failed to copy message:", error);
+    }
+  };
+
+  const handleReplyToMessage = (message: ChatMessage) => {
+    setInput(`Replying to: ${message.message}\n\n`);
+    // Focus on input field
+    setTimeout(() => {
+      const inputElement = document.querySelector('textarea[placeholder*="message"]') as HTMLTextAreaElement;
+      if (inputElement) {
+        inputElement.focus();
+      }
+    }, 100);
+  };
+
+  const handleDeleteMessage = (messageId: number) => {
+    // TODO: Implement delete message functionality
+    console.log("Delete message:", messageId);
+    setSnackbarMessage("Delete functionality coming soon");
+    setSnackbarOpen(true);
   };
 
   // Helper function to parse attachment data from message
@@ -712,7 +839,12 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                       py: 1.5,
                       px: 0,
                       width: "100%",
+                      "&:hover": {
+                        backgroundColor: "transparent", // Keep transparent background
+                      },
                     }}
+                    onMouseEnter={() => setHoveredMessageId(msg.id)}
+                    onMouseLeave={() => setHoveredMessageId(null)}
                   >
                     {!isOwn && !isSystem && (
                       <ListItemAvatar sx={{ minWidth: 40 }}>
@@ -935,6 +1067,72 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                     (edited)
                                   </Typography>
                                 )}
+                                
+                                {/* Message actions - only show on hover */}
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.5,
+                                    opacity: hoveredMessageId === msg.id ? 1 : 0,
+                                    transition: "opacity 0.2s ease-in-out",
+                                    ml: 1,
+                                  }}
+                                >
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleCopyMessage(msg.message)}
+                                    sx={{
+                                      width: 20,
+                                      height: 20,
+                                      color: isOwn ? "primary.contrastText" : "text.secondary",
+                                      "&:hover": {
+                                        backgroundColor: isOwn 
+                                          ? "rgba(255,255,255,0.2)" 
+                                          : "rgba(0,0,0,0.1)",
+                                      },
+                                    }}
+                                    title="Copy message"
+                                  >
+                                    <ContentCopy sx={{ fontSize: 12 }} />
+                                  </IconButton>
+                                  
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleReplyToMessage(msg)}
+                                    sx={{
+                                      width: 20,
+                                      height: 20,
+                                      color: isOwn ? "primary.contrastText" : "text.secondary",
+                                      "&:hover": {
+                                        backgroundColor: isOwn 
+                                          ? "rgba(255,255,255,0.2)" 
+                                          : "rgba(0,0,0,0.1)",
+                                      },
+                                    }}
+                                    title="Reply to message"
+                                  >
+                                    <Reply sx={{ fontSize: 12 }} />
+                                  </IconButton>
+                                  
+                                  {isOwn && (
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => handleDeleteMessage(msg.id)}
+                                      sx={{
+                                        width: 20,
+                                        height: 20,
+                                        color: "error.main",
+                                        "&:hover": {
+                                          backgroundColor: "rgba(255,255,255,0.2)",
+                                        },
+                                      }}
+                                      title="Delete message"
+                                    >
+                                      <Delete sx={{ fontSize: 12 }} />
+                                    </IconButton>
+                                  )}
+                                </Box>
                               </Box>
                             </Box>
                           </Box>
@@ -1170,8 +1368,35 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             disabled={
               (!input.trim() && selectedFiles.length === 0) || isSending
             }
+            sx={{
+              transition: "all 0.2s ease-in-out",
+              "&:hover": {
+                transform: "scale(1.1)",
+                backgroundColor: (theme) => theme.palette.primary.light,
+              },
+              "&:disabled": {
+                opacity: 0.6,
+              },
+            }}
           >
-            {isSending ? <CircularProgress size={20} /> : <Send />}
+            {isSending ? (
+              <CircularProgress 
+                size={20} 
+                sx={{ 
+                  color: "primary.contrastText",
+                  animation: "spin 1s linear infinite",
+                  "@keyframes spin": {
+                    "0%": { transform: "rotate(0deg)" },
+                    "100%": { transform: "rotate(360deg)" },
+                  },
+                }} 
+              />
+            ) : (
+              <Send sx={{ 
+                transition: "transform 0.2s ease-in-out",
+                "&:hover": { transform: "translateX(2px)" },
+              }} />
+            )}
           </IconButton>
         </Box>
       </Paper>
