@@ -37,8 +37,8 @@ class ChatMessageRead(ChatMessageBase):
     
     # Delivery status tracking
     delivery_status: Optional[str] = "sent"
-    delivered_at: Optional[datetime] = None
-    read_at: Optional[datetime] = None
+    delivered_at: Optional[str] = None  # Changed to str to handle text columns
+    read_at: Optional[str] = None      # Changed to str to handle text columns
     
     # Relationships
     sender: Optional[UserRead] = None
