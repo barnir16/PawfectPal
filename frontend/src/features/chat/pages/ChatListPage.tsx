@@ -25,6 +25,7 @@ import { useLocalization } from "../../../contexts/LocalizationContext";
 import type { ChatConversation } from "../../../types/services/chat";
 import { useNavigate } from "react-router-dom";
 import { chatService } from "../../../services/chat/chatService";
+import { formatChatListTime } from "../../../utils/timeUtils";
 
 export const ChatListPage = () => {
   const { t } = useLocalization();
@@ -96,17 +97,7 @@ export const ChatListPage = () => {
     }
     
     const lastMessage = conversation.messages[conversation.messages.length - 1];
-    const messageTime = new Date(lastMessage.created_at);
-    const now = new Date();
-    const diffInHours = (now.getTime() - messageTime.getTime()) / (1000 * 60 * 60);
-    
-    if (diffInHours < 1) {
-      return t("chat.justNow");
-    } else if (diffInHours < 24) {
-      return `${Math.floor(diffInHours)}h ago`;
-    } else {
-      return messageTime.toLocaleDateString();
-    }
+    return formatChatListTime(lastMessage.created_at);
   };
 
   const handleOpenConversation = (conversation: ChatConversation) => {

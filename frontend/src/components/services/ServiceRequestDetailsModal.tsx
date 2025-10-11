@@ -29,6 +29,7 @@ import {
 } from '@mui/icons-material';
 import { useLocalization } from '../../contexts/LocalizationContext';
 import type { ServiceRequestSummary } from '../../types/services/serviceRequest';
+import { formatServiceTime } from '../../utils/timeUtils';
 
 interface ServiceRequestDetailsModalProps {
   open: boolean;
@@ -65,17 +66,6 @@ export const ServiceRequestDetailsModal: React.FC<ServiceRequestDetailsModalProp
     if (min) return `₪${min}+`;
     if (max) return `Up to ₪${max}`;
     return 'Budget not specified';
-  };
-
-  const formatTimeAgo = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
-
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${Math.floor(diffInHours)}h ago`;
-    if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`;
-    return date.toLocaleDateString();
   };
 
   return (
@@ -115,7 +105,7 @@ export const ServiceRequestDetailsModal: React.FC<ServiceRequestDetailsModalProp
                 />
               )}
               <Chip
-                label={formatTimeAgo(request.created_at)}
+                label={formatServiceTime(request.created_at)}
                 variant="outlined"
               />
             </Box>
@@ -248,7 +238,7 @@ export const ServiceRequestDetailsModal: React.FC<ServiceRequestDetailsModalProp
                     </Typography>
                   </Box>
                   <Typography variant="body2">
-                    {formatTimeAgo(request.created_at)}
+                    {formatServiceTime(request.created_at)}
                   </Typography>
                 </Paper>
               </Grid>

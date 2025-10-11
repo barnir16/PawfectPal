@@ -53,6 +53,7 @@ import type {
   MediaAttachment,
 } from "../../types/services/chat";
 import { chatService } from "../../services/chat/chatService";
+import { formatMessageTime } from "../../utils/timeUtils";
 
 interface EnhancedChatWindowProps {
   messages: ChatMessage[];
@@ -492,27 +493,6 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     }
   };
 
-  const formatMessageTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
-
-    if (diffInHours < 1) {
-      return "Just now";
-    } else if (diffInHours < 24) {
-      return date.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } else {
-      return (
-        date.toLocaleDateString() +
-        " " +
-        date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-      );
-    }
-  };
-
   const getMessageTypeIcon = (messageType: string) => {
     switch (messageType) {
       case "system":
@@ -526,19 +506,6 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       default:
         return null;
     }
-  };
-
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-
-    // Handle negative differences (future timestamps)
-    if (diffInMinutes < 0) return t("services.justNow");
-    if (diffInMinutes < 1) return t("services.justNow");
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
-    return date.toLocaleDateString();
   };
 
   const testImageUrl = async (url: string) => {
@@ -865,7 +832,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                     opacity: 0.7,
                                   }}
                                 >
-                                  {formatTimestamp(msg.created_at)}
+                                  {formatMessageTime(msg.created_at)}
                                 </Typography>
                                 {msg.is_read && isOwn && (
                                   <CheckCircle
