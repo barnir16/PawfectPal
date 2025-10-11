@@ -15,5 +15,6 @@ from .provider_review import ProviderReviewORM
 from .service_request import ServiceRequestORM
 from .chat_message import ChatMessageORM
 from .ai_conversation import AIConversationORM, AIConversationMessageORM
+from .fcm_token import FCMTokenORM
 from .service_request_pets import service_request_pets
 from .utils import list_to_str, str_to_list, json_to_list, list_to_json

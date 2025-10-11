@@ -16,6 +16,11 @@ interface AppConfig {
   petsApiKey: string;
   geminiApiKey: string;
   
+  // Firebase Configuration
+  firebaseMessagingSenderId: string;
+  firebaseVapidKey: string;
+  firebaseServiceAccountJson: string;
+  
   // Feature Flags
   enableGoogleAuth: boolean;
   enableGpsTracking: boolean;
@@ -54,6 +59,9 @@ class FirebaseConfigService {
     openAiApiKey: SHARED_CONFIG.externalApis.openAiApiKey,
     petsApiKey: SHARED_CONFIG.externalApis.petsApiKey,
     geminiApiKey: SHARED_CONFIG.externalApis.geminiApiKey,
+    firebaseMessagingSenderId: '123456789',
+    firebaseVapidKey: 'YOUR_VAPID_KEY',
+    firebaseServiceAccountJson: '{}',
     enableGoogleAuth: SHARED_CONFIG.features.enableGoogleAuth,
     enableGpsTracking: SHARED_CONFIG.features.enableGpsTracking,
     enableAiChatbot: SHARED_CONFIG.features.enableAiChatbot,
@@ -82,15 +90,23 @@ class FirebaseConfigService {
       const firebaseConfig = SHARED_CONFIG.firebase;
 
       // Check if Firebase config is provided
-      if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-        console.warn('Firebase configuration not found. Using fallback configuration.');
+      if (!firebaseConfig.projectId) {
+        console.warn('Firebase project ID not found. Using fallback configuration.');
         this.config = { ...this.fallbackConfig };
         this.isInitialized = true;
         return;
       }
 
+      // If API key is empty, we'll get it from Remote Config
+      if (!firebaseConfig.apiKey) {
+        console.log('Firebase API key not set in config, will be loaded from Remote Config');
+      }
+
+      // Initialize Firebase with dynamic config
+      const dynamicConfig = { ...firebaseConfig };
+      
       // Initialize Firebase
-      this.app = initializeApp(firebaseConfig);
+      this.app = initializeApp(dynamicConfig);
       this.remoteConfig = getRemoteConfig(this.app);
 
       // Set default values (convert arrays to JSON strings for Firebase)
@@ -103,6 +119,9 @@ class FirebaseConfigService {
         openai_api_key: this.fallbackConfig.openAiApiKey,
         pets_api_key: this.fallbackConfig.petsApiKey,
         gemini_api_key: this.fallbackConfig.geminiApiKey,
+        firebase_messaging_sender_id: this.fallbackConfig.firebaseMessagingSenderId,
+        firebase_vapid_key: this.fallbackConfig.firebaseVapidKey,
+        firebase_service_account_json: this.fallbackConfig.firebaseServiceAccountJson,
         enable_google_auth: this.fallbackConfig.enableGoogleAuth,
         enable_gps_tracking: this.fallbackConfig.enableGpsTracking,
         enable_ai_chatbot: this.fallbackConfig.enableAiChatbot,
@@ -166,6 +185,11 @@ class FirebaseConfigService {
         openAiApiKey: this.getStringValue('openai_api_key'),
         petsApiKey: this.getStringValue('pets_api_key'),
         geminiApiKey: this.getStringValue('gemini_api_key'),
+        
+        // Firebase Configuration
+        firebaseMessagingSenderId: this.getStringValue('firebase_messaging_sender_id'),
+        firebaseVapidKey: this.getStringValue('firebase_vapid_key'),
+        firebaseServiceAccountJson: this.getStringValue('firebase_service_account_json'),
         
         // Feature Flags
         enableGoogleAuth: this.getBooleanValue('enable_google_auth'),

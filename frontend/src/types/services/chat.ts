@@ -13,6 +13,11 @@ export interface ChatMessage {
   edited_at?: string;
   created_at: string;
   
+  // Delivery status tracking
+  delivery_status: 'sent' | 'delivered' | 'read';
+  delivered_at?: string;
+  read_at?: string;
+  
   // Message metadata (includes attachments)
   message_metadata?: {
     attachments?: MediaAttachment[];
@@ -27,7 +32,7 @@ export interface ChatMessage {
 }
 
 export interface MediaAttachment {
-  id: number;
+  id: string;  // Changed from number to string to match backend UUID
   file_name: string;
   file_url: string;
   file_type: string;
@@ -64,4 +69,10 @@ export interface ChatConversation {
   service_request_id: number;
   messages: ChatMessage[];
   unread_count: number;
+  
+  // Pagination info
+  total_messages?: number;
+  has_more?: boolean;
+  current_offset?: number;
+  limit?: number;
 }

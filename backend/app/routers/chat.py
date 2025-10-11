@@ -1,10 +1,11 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query
 from sqlalchemy.orm import Session
-from app.models import ChatMessageORM, ServiceRequestORM, UserORM
+from app.models import ChatMessageORM, ServiceRequestORM, UserORM, FCMTokenORM
 from app.schemas import ChatMessageCreate, ChatMessageRead, ChatConversation
 from app.dependencies.db import get_db
 from app.dependencies.auth import get_current_user
+from app.services.firebase_admin_service import firebase_admin_service
 import json
 import os
 import uuid
@@ -96,8 +97,11 @@ async def send_message_with_files(
     if not service_request:
         raise HTTPException(status_code=404, detail="Service request not found")
 
-    # Check if user is either the request owner or a provider
-    if service_request.user_id != current_user.id and not current_user.is_provider:
+    # Industry standard access control: Owner OR Assigned Provider
+    is_owner = service_request.user_id == current_user.id
+    is_assigned_provider = service_request.assigned_provider_id == current_user.id
+    
+    if not (is_owner or is_assigned_provider):
         raise HTTPException(status_code=403, detail="Access denied")
 
     # Validate inputs
@@ -192,7 +196,7 @@ async def send_message_with_files(
 
 
 @router.post("/messages", response_model=ChatMessageRead)
-def send_message(
+async def send_message(
     message: ChatMessageCreate,
     db: Session = Depends(get_db),
     current_user: UserORM = Depends(get_current_user),
@@ -208,8 +212,11 @@ def send_message(
     if not service_request:
         raise HTTPException(status_code=404, detail="Service request not found")
 
-    # Check if user is either the request owner or a provider
-    if service_request.user_id != current_user.id and not current_user.is_provider:
+    # Industry standard access control: Owner OR Assigned Provider
+    is_owner = service_request.user_id == current_user.id
+    is_assigned_provider = service_request.assigned_provider_id == current_user.id
+    
+    if not (is_owner or is_assigned_provider):
         raise HTTPException(status_code=403, detail="Access denied")
 
     # Create the message
@@ -239,11 +246,14 @@ def send_message(
     print(f"💬 Message timestamp: {db_message.created_at}")
     print(f"💬 Message timestamp type: {type(db_message.created_at)}")
 
+    # Send push notification to the other user
+    await send_push_notification_for_message(db_message, service_request, current_user, db)
+
     # Convert to response model with proper serialization
     return ChatMessageRead.model_validate(db_message)
 
 
-def _get_conversation_data(service_request_id: int, db: Session, current_user: UserORM) -> ChatConversation:
+def _get_conversation_data(service_request_id: int, db: Session, current_user: UserORM, limit: int = 50, offset: int = 0) -> ChatConversation:
     """Helper function to get conversation data without FastAPI dependencies"""
     # Verify the service request exists and user has access
     service_request = (
@@ -277,13 +287,25 @@ def _get_conversation_data(service_request_id: int, db: Session, current_user: U
     
     print(f"✅ Access granted for user {current_user.username} (ID: {current_user.id}) to service request {service_request_id}")
 
-    # Get all messages for this service request
+    # Get total message count for pagination info
+    total_messages = (
+        db.query(ChatMessageORM)
+        .filter(ChatMessageORM.service_request_id == service_request_id)
+        .count()
+    )
+    
+    # Get messages for this service request with pagination
     messages = (
         db.query(ChatMessageORM)
         .filter(ChatMessageORM.service_request_id == service_request_id)
-        .order_by(ChatMessageORM.created_at)
+        .order_by(ChatMessageORM.created_at.desc())  # Get newest messages first
+        .offset(offset)
+        .limit(limit)
         .all()
     )
+    
+    # Reverse to show oldest first in the UI
+    messages = list(reversed(messages))
 
     # Mark messages as read for the current user
     unread_count = 0
@@ -301,6 +323,10 @@ def _get_conversation_data(service_request_id: int, db: Session, current_user: U
         service_request_id=service_request_id,
         messages=serialized_messages,
         unread_count=unread_count,
+        total_messages=total_messages,
+        has_more=offset + len(messages) < total_messages,
+        current_offset=offset,
+        limit=limit,
     )
     
     print(f"🔍 Chat Response Debug:")
@@ -315,11 +341,13 @@ def _get_conversation_data(service_request_id: int, db: Session, current_user: U
 @router.get("/conversations/{service_request_id}", response_model=ChatConversation)
 def get_conversation(
     service_request_id: int,
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
     current_user: UserORM = Depends(get_current_user),
 ):
-    """Get conversation for a service request"""
-    return _get_conversation_data(service_request_id, db, current_user)
+    """Get conversation for a service request with pagination"""
+    return _get_conversation_data(service_request_id, db, current_user, limit, offset)
 
 
 @router.get("/my-conversations", response_model=List[ChatConversation])
@@ -359,6 +387,44 @@ def get_my_conversations(
     return conversations
 
 
+@router.put("/messages/{message_id}/delivered")
+def mark_message_delivered(
+    message_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserORM = Depends(get_current_user),
+):
+    """Mark a message as delivered"""
+    message = db.query(ChatMessageORM).filter(ChatMessageORM.id == message_id).first()
+
+    if not message:
+        raise HTTPException(status_code=404, detail="Message not found")
+
+    # Check if user has access to this message
+    service_request = (
+        db.query(ServiceRequestORM)
+        .filter(ServiceRequestORM.id == message.service_request_id)
+        .first()
+    )
+
+    if not service_request:
+        raise HTTPException(status_code=404, detail="Service request not found")
+
+    # Industry standard access control: Owner OR Assigned Provider
+    is_owner = service_request.user_id == current_user.id
+    is_assigned_provider = service_request.assigned_provider_id == current_user.id
+    
+    if not (is_owner or is_assigned_provider):
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    # Only mark as delivered if not already read
+    if message.delivery_status != "read":
+        message.delivery_status = "delivered"
+        message.delivered_at = datetime.utcnow()
+        db.commit()
+
+    return {"message": "Message marked as delivered"}
+
+
 @router.put("/messages/{message_id}/read")
 def mark_message_read(
     message_id: int,
@@ -381,10 +447,76 @@ def mark_message_read(
     if not service_request:
         raise HTTPException(status_code=404, detail="Service request not found")
 
-    if service_request.user_id != current_user.id and not current_user.is_provider:
+    # Industry standard access control: Owner OR Assigned Provider
+    is_owner = service_request.user_id == current_user.id
+    is_assigned_provider = service_request.assigned_provider_id == current_user.id
+    
+    if not (is_owner or is_assigned_provider):
         raise HTTPException(status_code=403, detail="Access denied")
 
+    # Update read status
     message.is_read = True
+    message.delivery_status = "read"
+    message.read_at = datetime.utcnow()
     db.commit()
 
     return {"message": "Message marked as read"}
+
+
+async def send_push_notification_for_message(
+    message: ChatMessageORM,
+    service_request: ServiceRequestORM,
+    sender: UserORM,
+    db: Session
+):
+    """Send push notification for a new chat message"""
+    try:
+        # Determine the recipient (the other user in the conversation)
+        recipient_id = None
+        if service_request.user_id == sender.id:
+            # Sender is the owner, notify the assigned provider
+            recipient_id = service_request.assigned_provider_id
+        elif service_request.assigned_provider_id == sender.id:
+            # Sender is the provider, notify the owner
+            recipient_id = service_request.user_id
+            
+        if not recipient_id:
+            print("⚠️ No recipient found for push notification")
+            return
+            
+        # Get recipient's FCM tokens
+        fcm_tokens = (
+            db.query(FCMTokenORM)
+            .filter(
+                FCMTokenORM.user_id == recipient_id,
+                FCMTokenORM.is_active == "true"
+            )
+            .all()
+        )
+        
+        if not fcm_tokens:
+            print(f"⚠️ No FCM tokens found for user {recipient_id}")
+            return
+            
+        # Prepare message preview
+        message_preview = message.message
+        if len(message_preview) > 100:
+            message_preview = message_preview[:100] + "..."
+            
+        # Send notification to each token
+        for fcm_token in fcm_tokens:
+            success = firebase_admin_service.send_chat_notification(
+                fcm_token=fcm_token.token,
+                service_request_id=service_request.id,
+                sender_username=sender.username,
+                message_preview=message_preview,
+                notification_type="new_message"
+            )
+            
+            if success:
+                print(f"✅ Push notification sent to user {recipient_id}")
+            else:
+                print(f"❌ Failed to send push notification to user {recipient_id}")
+                
+    except Exception as e:
+        print(f"❌ Error sending push notification: {e}")

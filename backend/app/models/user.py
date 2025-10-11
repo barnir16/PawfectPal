@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from .service_request import ServiceRequestORM
     from .chat_message import ChatMessageORM
     from .ai_conversation import AIConversationORM
+    from .fcm_token import FCMTokenORM
 
 
 class UserORM(Base):
@@ -69,4 +70,7 @@ class UserORM(Base):
     )
     ai_conversations: Mapped[List["AIConversationORM"]] = relationship(
         "AIConversationORM", back_populates="user"
+    )
+    fcm_tokens: Mapped[List["FCMTokenORM"]] = relationship(
+        "FCMTokenORM", back_populates="user"
     )

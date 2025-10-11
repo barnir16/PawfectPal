@@ -114,6 +114,31 @@ def get_service_request(
     if not request:
         raise HTTPException(status_code=404, detail="Service request not found")
 
+    # Debug logging for access control
+    print(f"🔍 Service Request Access Debug:")
+    print(f"  Service Request ID: {request_id}")
+    print(f"  Service Request User ID: {request.user_id}")
+    print(f"  Service Request Assigned Provider ID: {request.assigned_provider_id}")
+    print(f"  Current User ID: {current_user.id}")
+    print(f"  Current User Username: {current_user.username}")
+    print(f"  Current User Is Provider: {current_user.is_provider}")
+
+    # Industry standard access control: Owner OR Assigned Provider OR Public (if open)
+    is_owner = request.user_id == current_user.id
+    is_assigned_provider = request.assigned_provider_id == current_user.id
+    is_public_open = request.status == "open"  # Open requests can be viewed by providers
+    
+    print(f"  Is Owner: {is_owner}")
+    print(f"  Is Assigned Provider: {is_assigned_provider}")
+    print(f"  Is Public Open: {is_public_open}")
+    
+    # Allow access if: Owner OR Assigned Provider OR (Provider viewing open request)
+    if not (is_owner or is_assigned_provider or (is_public_open and current_user.is_provider)):
+        print(f"❌ Access denied for user {current_user.username} (ID: {current_user.id}) to service request {request_id}")
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    print(f"✅ Access granted for user {current_user.username} (ID: {current_user.id}) to service request {request_id}")
+
     # Increment view count
     request.views_count += 1
     db.commit()

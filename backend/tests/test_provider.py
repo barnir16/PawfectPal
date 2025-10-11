@@ -9,9 +9,12 @@ BASE = "/providers"
 
 
 @pytest.mark.asyncio
-async def test_get_providers_404_when_none(client):
+async def test_get_providers_empty_list_when_none(client):
     resp = await client.get(f"{BASE}/")
-    assert resp.status_code == status.HTTP_404_NOT_FOUND
+    assert resp.status_code == status.HTTP_200_OK
+    data = resp.json()
+    assert isinstance(data, list)
+    assert len(data) == 0
 
 
 @pytest.fixture

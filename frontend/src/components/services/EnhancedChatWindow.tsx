@@ -57,7 +57,12 @@ import { chatService } from "../../services/chat/chatService";
 interface EnhancedChatWindowProps {
   messages: ChatMessage[];
   onSendMessage: (message: ChatMessageCreate) => Promise<void>;
+  onSendMessageWithFiles?: (message: string, files: File[]) => Promise<void>;
   onQuickAction?: (action: string, data?: any) => void;
+  onTypingChange?: (isTyping: boolean) => void;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  loadingMore?: boolean;
   isSending?: boolean;
   serviceRequestId: number;
 }
@@ -71,7 +76,12 @@ interface QuickReply {
 export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   messages,
   onSendMessage,
+  onSendMessageWithFiles,
   onQuickAction,
+  onTypingChange,
+  onLoadMore,
+  hasMore = false,
+  loadingMore = false,
   isSending = false,
   serviceRequestId,
 }) => {
@@ -88,6 +98,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [otherUserTyping, setOtherUserTyping] = useState(false);
+  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -305,14 +317,9 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     });
 
     try {
-      if (selectedFiles.length > 0) {
+      if (selectedFiles.length > 0 && onSendMessageWithFiles) {
         // Use file upload endpoint
-        await chatService.sendMessageWithFiles(
-          serviceRequestId,
-          messageText,
-          selectedFiles,
-          "image"
-        );
+        await onSendMessageWithFiles(messageText, selectedFiles);
       } else {
         // Use regular message endpoint
         await onSendMessage(newMessage);
@@ -698,6 +705,21 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           </Box>
         ) : (
           <List>
+            {/* Load More Button */}
+            {hasMore && (
+              <Box sx={{ p: 2, textAlign: "center" }}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={onLoadMore}
+                  disabled={loadingMore}
+                  startIcon={loadingMore ? <CircularProgress size={16} /> : undefined}
+                >
+                  {loadingMore ? "Loading..." : "Load More Messages"}
+                </Button>
+              </Box>
+            )}
+            
             {messages
               .filter((msg) => msg)
               .map((msg, index) => {
@@ -710,8 +732,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                   sender_id: msg.sender_id,
                 });
 
-                // Fix: Properly identify own messages - check both user ID and sender_id: 0 (mock data)
-                const isOwn = msg.sender_id === user?.id || msg.sender_id === 0;
+                // Properly identify own messages - only check user ID
+                const isOwn = msg.sender_id === user?.id;
                 const isSystem = msg.message_type === "system";
 
                 return (
@@ -872,7 +894,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           </List>
         )}
         {/* Typing Indicator */}
-        {isTyping && (
+        {otherUserTyping && (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, p: 1 }}>
             <Avatar sx={{ width: 24, height: 24 }}>
               <Pets fontSize="small" />
@@ -1040,7 +1062,34 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             multiline
             maxRows={4}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setInput(value);
+              
+              // Handle typing indicators
+              if (value.trim() && !isTyping) {
+                setIsTyping(true);
+                onTypingChange?.(true);
+              } else if (!value.trim() && isTyping) {
+                setIsTyping(false);
+                onTypingChange?.(false);
+              }
+              
+              // Clear existing timeout
+              if (typingTimeout) {
+                clearTimeout(typingTimeout);
+              }
+              
+              // Set new timeout to stop typing indicator
+              const timeout = setTimeout(() => {
+                if (isTyping) {
+                  setIsTyping(false);
+                  onTypingChange?.(false);
+                }
+              }, 2000); // Stop typing indicator after 2 seconds of inactivity
+              
+              setTypingTimeout(timeout);
+            }}
             onKeyDown={handleKeyPress}
             placeholder={t("services.messagePlaceholder")}
             disabled={isSending}
