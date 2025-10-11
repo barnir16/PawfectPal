@@ -166,7 +166,24 @@ export const ChatListPage = () => {
     const lastMessage = conversation.messages[conversation.messages.length - 1];
     const messageText = lastMessage.message;
     
-    // Truncate long messages
+    // Handle different message types with localized text
+    if (lastMessage.message_type === "image") {
+      return t("chat.sharedImage"); // "Shared an image" or localized equivalent
+    }
+    
+    if (lastMessage.message_type === "file") {
+      return t("chat.sharedFile"); // "Shared a file" or localized equivalent
+    }
+    
+    if (lastMessage.message_type === "location") {
+      return t("chat.sharedLocation"); // "Shared location" or localized equivalent
+    }
+    
+    if (lastMessage.message_type === "system") {
+      return t("chat.systemMessage"); // "System message" or localized equivalent
+    }
+    
+    // For text messages, truncate if too long
     if (messageText.length > 50) {
       return messageText.substring(0, 50) + "...";
     }
@@ -184,39 +201,43 @@ export const ChatListPage = () => {
   };
 
   const getChatTitle = (conversation: ChatConversation): string => {
-    // If there are messages, try to create a meaningful title
+    // If there are messages, create a meaningful title
     if (conversation.messages.length > 0) {
       const firstMessage = conversation.messages[0];
-      const lastMessage = conversation.messages[conversation.messages.length - 1];
+      const messageText = firstMessage.message;
       
-      // Check if it's a service-related conversation
-      if (firstMessage.message.toLowerCase().includes('service') || 
-          firstMessage.message.toLowerCase().includes('pet') ||
-          firstMessage.message.toLowerCase().includes('care')) {
-        
-        // Extract service type or pet name from first message
-        const messageText = firstMessage.message.toLowerCase();
-        if (messageText.includes('walking')) return `🐕 Dog Walking - Service #${conversation.service_request_id}`;
-        if (messageText.includes('sitting')) return `🏠 Pet Sitting - Service #${conversation.service_request_id}`;
-        if (messageText.includes('boarding')) return `🏨 Pet Boarding - Service #${conversation.service_request_id}`;
-        if (messageText.includes('grooming')) return `✂️ Pet Grooming - Service #${conversation.service_request_id}`;
-        
-        // Try to extract pet name (look for common patterns)
-        const petNameMatch = firstMessage.message.match(/(?:my|our)\s+(\w+)/i);
-        if (petNameMatch) {
-          return `🐾 ${petNameMatch[1]}'s Care - Service #${conversation.service_request_id}`;
-        }
-        
-        // Default meaningful title
-        return `Pet Care Service #${conversation.service_request_id}`;
+      // Extract service type from message content
+      let serviceType = "";
+      const lowerMessage = messageText.toLowerCase();
+      
+      if (lowerMessage.includes('walking') || lowerMessage.includes('walk')) {
+        serviceType = t("walking"); // "Dog Walking" or localized equivalent
+      } else if (lowerMessage.includes('sitting') || lowerMessage.includes('sit')) {
+        serviceType = t("sitting"); // "Pet Sitting" or localized equivalent
+      } else if (lowerMessage.includes('boarding') || lowerMessage.includes('board')) {
+        serviceType = t("boarding"); // "Pet Boarding" or localized equivalent
+      } else if (lowerMessage.includes('grooming') || lowerMessage.includes('groom')) {
+        serviceType = t("grooming"); // "Pet Grooming" or localized equivalent
+      } else if (lowerMessage.includes('vet') || lowerMessage.includes('veterinary')) {
+        serviceType = t("veterinary"); // "Veterinary" or localized equivalent
+      } else {
+        serviceType = t("petCare"); // "Pet Care" or localized equivalent
       }
       
-      // For other conversations, use a generic title
-      return `Conversation #${conversation.service_request_id}`;
+      // Extract provider name (sender of first message)
+      const providerName = firstMessage.sender?.username || t("provider"); // "Provider" or localized equivalent
+      
+      // Get initial message preview (first 30 characters)
+      const messagePreview = messageText.length > 30 
+        ? messageText.substring(0, 30) + "..." 
+        : messageText;
+      
+      // Format: "Service Type: Initial Message - Provider Name"
+      return `${serviceType}: ${messagePreview} - ${providerName}`;
     }
     
-    // No messages yet - use service request ID
-    return `Service Request #${conversation.service_request_id}`;
+    // No messages yet - show generic title
+    return t("newServiceRequest"); // "New Service Request" or localized equivalent
   };
 
   const handleOpenConversation = (conversation: ChatConversation) => {
