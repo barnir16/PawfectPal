@@ -262,6 +262,14 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     },
   ];
 
+  // Debug logging for quick replies
+  console.log('🔍 Quick Replies Debug:', {
+    user: user,
+    isProvider: user?.is_provider,
+    quickRepliesCount: quickReplies.length,
+    quickReplies: quickReplies.map(r => ({ id: r.id, text: r.text.substring(0, 30) + '...' }))
+  });
+
   // File validation constants
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
   const MAX_FILES = 5;

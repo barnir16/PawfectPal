@@ -23,6 +23,7 @@ import {
   Refresh,
 } from "@mui/icons-material";
 import { useLocalization } from "../../../contexts/LocalizationContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import type { ChatConversation } from "../../../types/services/chat";
 import { useNavigate } from "react-router-dom";
 import { chatService } from "../../../services/chat/chatService";
@@ -30,6 +31,7 @@ import { formatChatListTime } from "../../../utils/timeUtils";
 
 export const ChatListPage = () => {
   const { t } = useLocalization();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
@@ -240,16 +242,25 @@ export const ChatListPage = () => {
         serviceType = t("petCare");
       }
       
-      // Extract provider name (sender of first message)
-      const providerName = firstMessage.sender?.username || t("provider");
+      // Find the OTHER participant in the conversation (not the current user)
+      let otherParticipantName = t("provider");
+      const currentUserId = user?.id;
+      
+      // Look through messages to find someone other than the current user
+      for (const message of conversation.messages) {
+        if (message.sender_id !== currentUserId && message.sender?.username) {
+          otherParticipantName = message.sender.username;
+          break;
+        }
+      }
       
       // Get initial message preview (first 30 characters)
       const messagePreview = messageText.length > 30 
         ? messageText.substring(0, 30) + "..." 
         : messageText;
       
-      // Format: "Service Type: Initial Message - Provider Name"
-      return `${serviceType}: ${messagePreview} - ${providerName}`;
+      // Format: "Service Type: Initial Message - Other Participant Name"
+      return `${serviceType}: ${messagePreview} - ${otherParticipantName}`;
     }
     
     // No messages yet - show generic title
@@ -453,7 +464,7 @@ export const ChatListPage = () => {
                       <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 1.5 }}>
                         <Message fontSize="small" color="action" />
                         <Typography variant="caption" color="text.secondary">
-                          {conv.messages.length} {conv.messages.length === 1 ? t("message") : t("messages")}
+                          {conv.messages.length} {conv.messages.length === 1 ? t("chat.message") : t("chat.messages")}
                         </Typography>
                       </Stack>
                     )}
@@ -503,7 +514,7 @@ export const ChatListPage = () => {
               color="text.secondary"
               sx={{ fontSize: "0.9rem" }}
             >
-              {conversations.length} {conversations.length === 1 ? t("conversation") : t("conversations")}
+              {conversations.length} {conversations.length === 1 ? t("chat.conversation") : t("chat.conversations")}
             </Typography>
           </Box>
           
