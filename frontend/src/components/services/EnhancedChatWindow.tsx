@@ -87,6 +87,7 @@ import { MessageReactions } from "./MessageReactions";
 import { MessageSearch } from "./MessageSearch";
 import { FilePreview } from "./FilePreview";
 import { FileUploadProgress } from "./FileUploadProgress";
+import { LocationMessage } from "./LocationMessage";
 
 interface EnhancedChatWindowProps {
   messages: ChatMessage[];
@@ -564,34 +565,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   const renderLocationMessage = (message: ChatMessage) => {
     const text = getDisplayMessage(message);
     if (message.message_type === "location" && text.includes("📍 Location shared")) {
-      const lines = text.split('\n');
-      const latLine = lines.find(line => line.startsWith('Lat:'));
-      const lngLine = lines.find(line => line.startsWith('Lng:'));
-      
-      if (latLine && lngLine) {
-        const lat = parseFloat(latLine.replace('Lat:', '').trim());
-        const lng = parseFloat(lngLine.replace('Lng:', '').trim());
-        
-        return (
-          <Box sx={{ mt: 1 }}>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              📍 Shared location
-            </Typography>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<LocationOn />}
-              onClick={() => {
-                const url = `https://www.google.com/maps?q=${lat},${lng}`;
-                window.open(url, '_blank');
-              }}
-              sx={{ fontSize: '0.75rem' }}
-            >
-              Open in Maps
-            </Button>
-          </Box>
-        );
-      }
+      return <LocationMessage message={text} compact={true} />;
     }
     return null;
   };
