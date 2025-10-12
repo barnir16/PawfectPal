@@ -269,7 +269,7 @@ export const ServiceRequestBrowser: React.FC = () => {
           <Button
             variant="contained"
             size="small"
-            onClick={() => navigate(`/service-requests/${request.id}/chat`)}
+            onClick={() => navigate(`/chat/${request.id}`)}
             startIcon={<Message />}
             sx={{ flex: 1 }}
           >
