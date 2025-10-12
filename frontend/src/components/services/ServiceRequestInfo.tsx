@@ -1,6 +1,42 @@
 import React from 'react';
-import { Box, Typography, Card, CardContent, Stack, Chip, Avatar, Divider } from '@mui/material';
-import { Pets, Person, Schedule, LocationOn, Description } from '@mui/icons-material';
+import { 
+  Box, 
+  Typography, 
+  Card, 
+  CardContent, 
+  Stack, 
+  Chip, 
+  Avatar, 
+  Divider,
+  Grid,
+  Paper,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Badge,
+  Tooltip
+} from '@mui/material';
+import { 
+  Pets, 
+  Person, 
+  Schedule, 
+  LocationOn, 
+  Description,
+  AttachMoney,
+  AccessTime,
+  Phone,
+  Email,
+  Cake,
+  Scale,
+  ColorLens,
+  MedicalServices,
+  Vaccines,
+  CalendarToday,
+  Star,
+  CheckCircle,
+  Warning
+} from '@mui/icons-material';
 import { useLocalization } from '../../contexts/LocalizationContext';
 import type { ServiceRequest, Pet, User } from '../../types/services/service';
 
@@ -50,122 +86,317 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
     return statusMap[status] || status;
   };
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  };
+
+  const calculateAge = (birthDate: string) => {
+    const birth = new Date(birthDate);
+    const today = new Date();
+    const ageInYears = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      return ageInYears - 1;
+    }
+    return ageInYears;
+  };
+
   return (
-    <Card 
-      variant="outlined" 
-      sx={{ 
-        mb: 2,
-        borderRadius: 2,
-        backgroundColor: (theme) => theme.palette.background.paper,
-        borderColor: (theme) => theme.palette.divider,
-      }}
-    >
-      <CardContent sx={{ p: compact ? 2 : 3 }}>
-        <Stack spacing={2}>
-          {/* Header */}
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Typography variant="h6" fontWeight={600} color="primary.main">
+    <Box sx={{ width: '100%' }}>
+      {/* Service Request Header */}
+      <Paper 
+        elevation={1}
+        sx={{ 
+          p: 2, 
+          mb: 2, 
+          borderRadius: 2,
+          background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+          color: 'white'
+        }}
+      >
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Box>
+            <Typography variant="h5" fontWeight={600} sx={{ mb: 0.5 }}>
               {serviceRequest.title}
             </Typography>
-            <Chip 
-              label={getStatusTranslation(serviceRequest.status)} 
-              color={getStatusColor(serviceRequest.status) as any}
-              size="small"
-            />
-          </Stack>
-
-          {/* Service Type */}
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Pets color="primary" sx={{ fontSize: 20 }} />
-            <Typography variant="body2" color="text.secondary">
-              {t('common.serviceType')}: 
-            </Typography>
-            <Typography variant="body2" fontWeight={500}>
+            <Typography variant="body2" sx={{ opacity: 0.9 }}>
               {getServiceTypeTranslation(serviceRequest.service_type)}
             </Typography>
-          </Stack>
-
-          {/* Description */}
-          {serviceRequest.description && (
-            <Stack direction="row" alignItems="flex-start" spacing={1}>
-              <Description color="text.secondary" sx={{ fontSize: 20, mt: 0.5 }} />
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                  {t('common.description')}:
-                </Typography>
-                <Typography variant="body2">
-                  {serviceRequest.description}
-                </Typography>
-              </Box>
-            </Stack>
-          )}
-
-          {/* Pets */}
-          {pets.length > 0 && (
-            <Box>
-              <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
-                <Pets color="primary" sx={{ fontSize: 20 }} />
-                <Typography variant="body2" color="text.secondary">
-                  {t('common.pets')} ({pets.length}):
-                </Typography>
-              </Stack>
-              <Stack direction="row" spacing={1} flexWrap="wrap">
-                {pets.map((pet) => (
-                  <Chip
-                    key={pet.id}
-                    label={pet.name}
-                    size="small"
-                    variant="outlined"
-                    sx={{ mb: 0.5 }}
-                  />
-                ))}
-              </Stack>
-            </Box>
-          )}
-
-          {/* Provider */}
-          {provider && (
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <Person color="primary" sx={{ fontSize: 20 }} />
-              <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
-                {provider.username?.charAt(0).toUpperCase()}
-              </Avatar>
-              <Typography variant="body2" color="text.secondary">
-                {t('common.provider')}: 
-              </Typography>
-              <Typography variant="body2" fontWeight={500}>
-                {provider.username}
-              </Typography>
-            </Stack>
-          )}
-
-          {/* Location */}
-          {serviceRequest.location && (
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <LocationOn color="primary" sx={{ fontSize: 20 }} />
-              <Typography variant="body2" color="text.secondary">
-                {t('common.location')}: 
-              </Typography>
-              <Typography variant="body2" fontWeight={500}>
-                {serviceRequest.location}
-              </Typography>
-            </Stack>
-          )}
-
-          {/* Schedule */}
-          {serviceRequest.scheduled_date && (
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <Schedule color="primary" sx={{ fontSize: 20 }} />
-              <Typography variant="body2" color="text.secondary">
-                {t('common.scheduledDate')}: 
-              </Typography>
-              <Typography variant="body2" fontWeight={500}>
-                {new Date(serviceRequest.scheduled_date).toLocaleDateString()}
-              </Typography>
-            </Stack>
-          )}
+          </Box>
+          <Chip 
+            label={getStatusTranslation(serviceRequest.status)} 
+            color={getStatusColor(serviceRequest.status) as any}
+            size="small"
+            sx={{ backgroundColor: 'rgba(255,255,255,0.2)', color: 'white' }}
+          />
         </Stack>
-      </CardContent>
-    </Card>
+      </Paper>
+
+      {/* Main Content Grid */}
+      <Grid container spacing={2}>
+        {/* Left Column - Service Details */}
+        <Grid item xs={12} md={6}>
+          <Paper elevation={1} sx={{ p: 2, borderRadius: 2, height: '100%' }}>
+            <Typography variant="h6" fontWeight={600} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Description color="primary" />
+              Service Details
+            </Typography>
+            
+            <List dense>
+              <ListItem>
+                <ListItemIcon>
+                  <Pets color="primary" />
+                </ListItemIcon>
+                <ListItemText 
+                  primary="Service Type"
+                  secondary={getServiceTypeTranslation(serviceRequest.service_type)}
+                />
+              </ListItem>
+              
+              {serviceRequest.description && (
+                <ListItem>
+                  <ListItemIcon>
+                    <Description color="primary" />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Description"
+                    secondary={serviceRequest.description}
+                  />
+                </ListItem>
+              )}
+              
+              {serviceRequest.location && (
+                <ListItem>
+                  <ListItemIcon>
+                    <LocationOn color="primary" />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Location"
+                    secondary={serviceRequest.location}
+                  />
+                </ListItem>
+              )}
+              
+              {serviceRequest.scheduled_date && (
+                <ListItem>
+                  <ListItemIcon>
+                    <CalendarToday color="primary" />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Scheduled Date"
+                    secondary={formatDate(serviceRequest.scheduled_date)}
+                  />
+                </ListItem>
+              )}
+              
+              {(serviceRequest.budget_min || serviceRequest.budget_max) && (
+                <ListItem>
+                  <ListItemIcon>
+                    <AttachMoney color="primary" />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Budget"
+                    secondary={
+                      serviceRequest.budget_min && serviceRequest.budget_max
+                        ? `${formatCurrency(serviceRequest.budget_min)} - ${formatCurrency(serviceRequest.budget_max)}`
+                        : serviceRequest.budget_min
+                        ? `From ${formatCurrency(serviceRequest.budget_min)}`
+                        : `Up to ${formatCurrency(serviceRequest.budget_max)}`
+                    }
+                  />
+                </ListItem>
+              )}
+              
+              {serviceRequest.is_urgent && (
+                <ListItem>
+                  <ListItemIcon>
+                    <Warning color="warning" />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Urgent Request"
+                    secondary="This is an urgent service request"
+                    primaryTypographyProps={{ color: 'warning.main' }}
+                  />
+                </ListItem>
+              )}
+            </List>
+          </Paper>
+        </Grid>
+
+        {/* Right Column - People & Pets */}
+        <Grid item xs={12} md={6}>
+          <Paper elevation={1} sx={{ p: 2, borderRadius: 2, height: '100%' }}>
+            <Typography variant="h6" fontWeight={600} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Person color="primary" />
+              People & Pets
+            </Typography>
+            
+            {/* Client Information */}
+            {serviceRequest.user && (
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Person color="primary" />
+                  Client
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1, backgroundColor: 'action.hover', borderRadius: 1 }}>
+                  <Avatar sx={{ width: 40, height: 40 }}>
+                    {serviceRequest.user.username?.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <Box>
+                    <Typography variant="body1" fontWeight={500}>
+                      {serviceRequest.user.full_name || serviceRequest.user.username}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      @{serviceRequest.user.username}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            )}
+
+            {/* Provider Information */}
+            {provider && (
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Star color="primary" />
+                  Provider
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1, backgroundColor: 'action.hover', borderRadius: 1 }}>
+                  <Avatar sx={{ width: 40, height: 40 }}>
+                    {provider.username?.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <Box>
+                    <Typography variant="body1" fontWeight={500}>
+                      {provider.full_name || provider.username}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      @{provider.username}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            )}
+
+            {/* Pets Information */}
+            {pets.length > 0 && (
+              <Box>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Pets color="primary" />
+                  Pets ({pets.length})
+                </Typography>
+                <Stack spacing={2}>
+                  {pets.map((pet) => (
+                    <Paper key={pet.id} elevation={0} sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 2 }}>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Avatar sx={{ width: 50, height: 50, backgroundColor: 'primary.light' }}>
+                          <Pets />
+                        </Avatar>
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="h6" fontWeight={600}>
+                            {pet.name}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {pet.type} {pet.breed && `• ${pet.breed}`}
+                          </Typography>
+                          
+                          <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
+                            {pet.birthDate && (
+                              <Chip
+                                icon={<Cake />}
+                                label={`${calculateAge(pet.birthDate)} years old`}
+                                size="small"
+                                variant="outlined"
+                              />
+                            )}
+                            {pet.weightKg && (
+                              <Chip
+                                icon={<Scale />}
+                                label={`${pet.weightKg} ${pet.weightUnit}`}
+                                size="small"
+                                variant="outlined"
+                              />
+                            )}
+                            {pet.color && (
+                              <Chip
+                                icon={<ColorLens />}
+                                label={pet.color}
+                                size="small"
+                                variant="outlined"
+                              />
+                            )}
+                            {pet.gender && (
+                              <Chip
+                                icon={<Pets />}
+                                label={pet.gender}
+                                size="small"
+                                variant="outlined"
+                              />
+                            )}
+                          </Stack>
+                          
+                          <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                            {pet.isVaccinated && (
+                              <Chip
+                                icon={<Vaccines />}
+                                label="Vaccinated"
+                                size="small"
+                                color="success"
+                                variant="outlined"
+                              />
+                            )}
+                            {pet.isNeutered && (
+                              <Chip
+                                icon={<MedicalServices />}
+                                label="Neutered"
+                                size="small"
+                                color="info"
+                                variant="outlined"
+                              />
+                            )}
+                            {pet.isMicrochipped && (
+                              <Chip
+                                icon={<CheckCircle />}
+                                label="Microchipped"
+                                size="small"
+                                color="primary"
+                                variant="outlined"
+                              />
+                            )}
+                          </Stack>
+                          
+                          {pet.medicalNotes && (
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic' }}>
+                              Medical Notes: {pet.medicalNotes}
+                            </Typography>
+                          )}
+                          
+                          {pet.notes && (
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                              Notes: {pet.notes}
+                            </Typography>
+                          )}
+                        </Box>
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Stack>
+              </Box>
+            )}
+          </Paper>
+        </Grid>
+      </Grid>
+    </Box>
   );
 };
