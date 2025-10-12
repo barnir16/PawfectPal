@@ -25,7 +25,7 @@ import { webSocketService, WebSocketMessage } from "../../../services/chat/webSo
 import { firebaseMessagingService, ChatNotificationData } from "../../../services/notifications/firebaseMessagingService";
 import { offlineMessageService, OfflineStatus } from "../../../services/chat/offlineMessageService";
 import { ServiceRequestService } from "../../../services/serviceRequests/serviceRequestService";
-import { PetService } from "../../../services/pets/petService";
+import { getPet } from "../../../services/pets/petService";
 import type { ServiceRequest } from "../../../types/services/serviceRequest";
 import type { Pet } from "../../../types/pets/pet";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -227,7 +227,7 @@ export const ChatPage = () => {
         if (serviceRequestData.pet_ids && serviceRequestData.pet_ids.length > 0) {
           try {
             const petsData = await Promise.all(
-              serviceRequestData.pet_ids.map(petId => PetService.getPet(petId))
+              serviceRequestData.pet_ids.map(petId => getPet(petId))
             );
             console.log('🔍 ChatPage: Pets fetched', petsData);
             setPets(petsData);
