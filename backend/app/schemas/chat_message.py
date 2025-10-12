@@ -16,9 +16,16 @@ class ChatMessageBase(BaseModel):
     message: str = Field(..., min_length=1, max_length=2000, description="Message content")
     message_type: str = Field("text", pattern="^(text|image|file|system|location)$", description="Type of message")
 
+class ReplyToMessage(BaseModel):
+    message_id: int = Field(..., description="ID of the message being replied to")
+    sender_name: str = Field(..., description="Username of the original message sender")
+    message_preview: str = Field(..., description="Preview of the original message")
+    message_type: str = Field(..., description="Type of the original message")
+
 class ChatMessageCreate(ChatMessageBase):
     service_request_id: int = Field(..., description="ID of the service request")
     attachments: Optional[List[MediaAttachment]] = Field(None, description="File attachments")
+    reply_to: Optional[ReplyToMessage] = Field(None, description="Reply context if this is a reply")
 
 class ChatMessageUpdate(BaseModel):
     message: Optional[str] = Field(None, min_length=1, max_length=2000)
