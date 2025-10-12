@@ -81,6 +81,14 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
   const isAudio = attachment.file_type.startsWith('audio/');
 
   const handlePreview = () => {
+    console.log('🖼️ FilePreview clicked:', {
+      fileName: attachment.file_name,
+      fileType: attachment.file_type,
+      fileUrl: attachment.file_url,
+      isImage,
+      isVideo
+    });
+    
     if (isImage || isVideo) {
       setPreviewOpen(true);
     } else {
