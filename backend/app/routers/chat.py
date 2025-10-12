@@ -232,19 +232,42 @@ async def send_message(
     if not (is_owner or is_assigned_provider or has_sent_messages):
         raise HTTPException(status_code=403, detail="Access denied")
 
+    # Prepare message metadata
+    message_metadata = {}
+    
+    # Handle attachments if present
+    if message.attachments:
+        print(f"💬 Processing {len(message.attachments)} attachments")
+        message_metadata['attachments'] = [
+            {
+                'id': str(uuid.uuid4()),
+                'file_name': att.file_name,
+                'file_url': att.file_url,
+                'file_type': att.file_type,
+                'file_size': att.file_size,
+                'created_at': att.created_at
+            }
+            for att in message.attachments
+        ]
+    
+    # Handle reply context if present
+    if message.reply_to:
+        print(f"💬 Processing reply to message {message.reply_to.message_id}")
+        message_metadata['reply_to'] = {
+            'message_id': message.reply_to.message_id,
+            'sender_name': message.reply_to.sender_name,
+            'message_preview': message.reply_to.message_preview,
+            'message_type': message.reply_to.message_type
+        }
+
     # Create the message
     db_message = ChatMessageORM(
         service_request_id=message.service_request_id,
         sender_id=current_user.id,
         message=message.message,
         message_type=message.message_type,
+        message_metadata=message_metadata if message_metadata else None,
     )
-
-    # Handle attachments if present
-    if message.attachments:
-        print(f"💬 Processing {len(message.attachments)} attachments")
-        # For now, we'll skip storing attachments since we don't have the column
-        print(f"💬 Attachments received but not stored (no metadata column)")
 
     db.add(db_message)
 
