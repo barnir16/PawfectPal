@@ -22,8 +22,8 @@ class ServiceORM(Base):
         Integer, ForeignKey("users.id"), nullable=False
     )
     pet_id: Mapped[int] = mapped_column(Integer, ForeignKey("pets.id"), nullable=False)
-    service_type_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("service_types.id"), nullable=False
+    service_type: Mapped[str] = mapped_column(
+        String, nullable=False
     )
     status: Mapped[str] = mapped_column(
         String, nullable=False, default=ServiceStatus.PENDING
@@ -84,7 +84,4 @@ class ServiceORM(Base):
     pet: Mapped["PetORM"] = relationship("PetORM", back_populates="services")
     provider: Mapped[Optional["UserORM"]] = relationship(
         "UserORM", foreign_keys=[provider_id]
-    )
-    service_type_obj: Mapped["ServiceTypeORM"] = relationship(
-        "ServiceTypeORM", back_populates="services"
     )

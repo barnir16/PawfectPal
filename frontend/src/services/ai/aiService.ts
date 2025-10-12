@@ -1,11 +1,11 @@
 /**
- * Simplified AI Service - Inspired by PawfectPlanner Python version
- * Direct API integration without complex state management
+ * Simplified AI Service - Direct approach inspired by PawfectPlanner
  */
 
 import { Pet } from '../../types/pets/pet';
 import { configService } from '../config/firebaseConfigService';
 import { getToken } from '../api';
+import { getTasks } from '../tasks/taskService';
 
 interface AIServiceResponse {
   message: string;
@@ -19,63 +19,61 @@ interface AIServiceResponse {
 
 class AIService {
   private apiUrl: string;
-  private conversationHistory: Array<{ content: string; isUser: boolean }> = [];
 
   constructor() {
     this.apiUrl = import.meta.env.VITE_API_URL || 'https://pawfectpal-production.up.railway.app';
   }
 
   /**
+   * Detect primary language of a message
+   */
+  private detectLanguage(message: string): string {
+    const hebrewPattern = /[\u0590-\u05FF]/;
+    const hebrewMatches = (message.match(/[\u0590-\u05FF]/g) || []).length;
+    const totalLetters = (message.match(/[a-zA-Z]/g) || []).length + hebrewMatches;
+    
+    if (totalLetters === 0) return 'en'; // Default to English
+    
+    const hebrewRatio = hebrewMatches / totalLetters;
+    return hebrewRatio > 0.3 ? 'he' : 'en';
+  }
+
+  /**
    * Send a message to the AI with pet context
-   * This mimics the Python version's direct approach
    */
   async sendMessage(
     userMessage: string, 
     pets: Pet[], 
-    selectedPet?: Pet
+    selectedPet?: Pet[]
   ): Promise<AIServiceResponse> {
     try {
       console.log('🤖 AI Service: Sending message with pets:', pets.length);
-      console.log('🤖 AI Service: Current conversation history length:', this.conversationHistory.length);
       
-      // Ensure Firebase config is initialized
-      if (!configService.isInitialized) {
-        await configService.initialize();
-      }
+      // Detect language
+      const language = this.detectLanguage(userMessage);
+      console.log('🤖 AI Service: Detected language:', language);
       
-      // Add user message to conversation history
-      this.conversationHistory.push({ content: userMessage, isUser: true });
-      
-      // Limit conversation history to prevent it from growing too large
-      if (this.conversationHistory.length > 20) {
-        this.conversationHistory = this.conversationHistory.slice(-20);
-      }
-      
-      // Prepare pet data for AI context (similar to Python version)
+      // Prepare pet context - simplified format
       const petContext = this.preparePetContext(pets, selectedPet);
       
       // Get authentication token
       const token = await getToken();
       console.log('🔑 AI Service Token:', token ? 'Present' : 'Missing');
       
-      // Prepare request data with proper format - let backend create the prompt
+      // Prepare request data
       const requestData = {
         message: userMessage,
         pet_context: petContext,
-        conversation_history: this.conversationHistory.map(msg => ({
-          content: msg.content,
-          isUser: msg.isUser ? "true" : "false"
-        }))
+        prompt_language: language
       };
-      
+
       console.log('🤖 AI Request Data:', JSON.stringify(requestData, null, 2));
       
-      // Call the backend AI endpoint
+      // Call the simplified backend AI endpoint
       const response = await fetch(`${this.apiUrl}/ai/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Note: AI endpoint might not require authentication
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify(requestData)
@@ -84,59 +82,89 @@ class AIService {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('🤖 AI Service Error Response:', errorText);
-        throw new Error(`AI service error: ${response.status} - ${errorText}`);
+        
+        // Handle specific error types
+        if (response.status === 408) {
+          throw new Error('timeout');
+        } else if (!navigator.onLine) {
+          throw new Error('connection_lost');
+        } else {
+          throw new Error('service_unavailable');
+        }
       }
 
       const data = await response.json();
       
-      // Add AI response to conversation history
-      const aiResponse = data.message || data.response || 'I apologize, but I had trouble processing your request.';
-      this.conversationHistory.push({ content: aiResponse, isUser: false });
-      
-      console.log('🤖 AI Response received:', aiResponse.substring(0, 100) + '...');
-      console.log('🤖 AI Service: Updated conversation history length:', this.conversationHistory.length);
+      console.log('🤖 AI Response received:', data.message?.substring(0, 100) + '...');
+      console.log('🤖 AI Suggested actions:', data.suggested_actions || []);
       
       return {
-        message: data.message || data.response || 'I apologize, but I had trouble processing your request.',
-        suggestedActions: data.suggested_actions || []
+        message: data.message || 'I apologize, but I had trouble processing your request.',
+        suggestedActions: this.processSuggestedActions(data.suggested_actions || [])
       };
 
     } catch (error) {
       console.error('🤖 AI Service Error:', error);
       
-      // Fallback to local AI logic if backend is unavailable
-      return this.handleLocalAI(userMessage, pets, selectedPet);
+      // Return appropriate error message based on error type
+      const errorMessage = this.getErrorMessage(error);
+      return {
+        message: errorMessage,
+        suggestedActions: [
+          {
+            id: 'retry',
+            type: 'retry',
+            label: 'Try Again',
+            description: 'Retry your request'
+          }
+        ]
+      };
     }
   }
 
   /**
-   * Prepare pet context data (similar to Python version's data injection)
+   * Prepare simplified pet context
    */
-  private preparePetContext(pets: Pet[], selectedPet?: Pet): any {
-    const petData = pets.map(pet => ({
-      name: pet.name || 'Unknown',
-      type: pet.type || 'pet',
-      breed: pet.breed || 'Unknown',
-      age: this.calculateAge(pet),
-      weight: pet.weightKg || pet.weight_kg || 0,
-      gender: pet.gender || 'Unknown',
-      health_issues: pet.healthIssues || pet.health_issues || [],
-      behavior_issues: pet.behaviorIssues || pet.behavior_issues || [],
-      is_vaccinated: Boolean(pet.isVaccinated || pet.is_vaccinated),
-      is_neutered: Boolean(pet.isNeutered || pet.is_neutered),
-      last_vet_visit: pet.lastVetVisit || pet.last_vet_visit || null,
-      next_vet_visit: pet.nextVetVisit || pet.next_vet_visit || null
-    }));
+  private preparePetContext(pets: Pet[], selectedPet?: Pet[]): any {
+    const petData = pets.map(pet => {
+      return {
+        name: pet.name || 'Unknown',
+        type: pet.type || 'pet',
+        breed: pet.breed || 'Unknown',
+        age: this.calculateAge(pet),
+        weight: pet.weightKg || pet.weight_kg || 0,
+        gender: pet.gender || 'Unknown',
+        health_issues: this.processHealthIssues(pet),
+        behavior_issues: pet.behaviorIssues || pet.behavior_issues || [],
+        is_vaccinated: Boolean(pet.isVaccinated || pet.is_vaccinated),
+        is_neutered: Boolean(pet.isNeutered || pet.is_neutered),
+        last_vet_visit: pet.lastVetVisit || pet.last_vet_visit || null,
+        next_vet_visit: pet.nextVetVisit || pet.next_vet_visit || null
+      };
+    });
 
     return {
       pets: petData,
-      selected_pet: selectedPet ? petData.find(p => p.name === selectedPet.name) : null,
+      selected_pet: selectedPet ? petData.find(p => p.name === selectedPet[0]?.name) : null,
       total_pets: pets.length
     };
   }
 
   /**
-   * Calculate pet age (using the same logic as our fixed calculation)
+   * Process health issues for AI context
+   */
+  private processHealthIssues(pet: Pet): string[] {
+    const issues = pet.healthIssues || pet.health_issues || [];
+    const parsedIssues = Array.isArray(issues) ? issues : [];
+    
+    return parsedIssues.map(issue => {
+      if (typeof issue === 'string') return issue.toLowerCase();
+      return issue.description || 'unknown issue';
+    });
+  }
+
+  /**
+   * Calculate pet age (existing logic)
    */
   private calculateAge(pet: Pet): number {
     const birthDate = pet.birthDate || pet.birth_date;
@@ -161,134 +189,64 @@ class AIService {
   }
 
   /**
-   * Create AI prompt with pet data injected (similar to Python version)
+   * Process suggested actions from backend response
    */
-  private createPrompt(userMessage: string, petContext: any): string {
-    const petInfo = petContext.pets.map((pet: any) => 
-      `- ${pet.name}: ${pet.type} (${pet.breed}), ${pet.age.toFixed(1)} years old, ${pet.weight}kg, ${pet.gender}`
-    ).join('\n');
-
-    return `You are a helpful pet care assistant. Here is the user's pet information:
-
-PETS:
-${petInfo}
-
-${petContext.selected_pet ? `\nCURRENT FOCUS: ${petContext.selected_pet.name} (${petContext.selected_pet.type})\n` : ''}
-
-USER QUESTION: ${userMessage}
-
-Please provide helpful, specific advice based on the pet information provided. Be conversational and practical.`;
+  private processSuggestedActions(actions: any[]): Array<{
+    id: string;
+    type: string;
+    label: string;
+    description: string;
+  }> {
+    if (!Array.isArray(actions)) return [];
+    
+    return actions.map(action => {
+      if (typeof action === 'string') {
+        return {
+          id: `action_${Date.now()}_${Math.random()}`,
+          type: 'general',
+          label: action,
+          description: `Quick action: ${action}`
+        };
+      }
+      
+      return {
+        id: action.id || `action_${Date.now()}_${Math.random()}`,
+        type: action.type || 'general',
+        label: action.label || action.action || 'Unknown Action',
+        description: action.description || `Action: ${action.label || action.action}`
+      };
+    });
   }
 
   /**
-   * Reset conversation history (useful for starting fresh)
+   * Get appropriate error message based on error type
+   */
+  private getErrorMessage(error: any): string {
+    const errorStr = String(error).toLowerCase();
+    
+    if (errorStr.includes('timeout')) {
+      return 'Request timed out. Please try again with a shorter message.';
+    } else if (errorStr.includes('connection_lost') || !navigator.onLine) {
+      return 'Connection lost. Please check your internet connection and try again.';
+    } else if (errorStr.includes('service_unavailable')) {
+      return 'AI service is temporarily unavailable. Please try again later.';
+    } else {
+      return 'AI service error. Please try again or contact support.';
+    }
+  }
+
+  /**
+   * Reset conversation history (no longer needed with simplified approach)
    */
   resetConversation(): void {
-    this.conversationHistory = [];
-    console.log('🤖 AI Service: Conversation history reset');
+    console.log('🤖 AI Service: Conversation reset (simplified approach - no localStorage needed)');
   }
 
   /**
-   * Get current conversation history length
+   * Get conversation length (no longer tracked with simplified approach)
    */
   getConversationLength(): number {
-    return this.conversationHistory.length;
-  }
-
-  /**
-   * Fallback local AI logic if backend is unavailable
-   */
-  private handleLocalAI(userMessage: string, pets: Pet[], selectedPet?: Pet): AIServiceResponse {
-    const lowerMessage = userMessage.toLowerCase();
-    
-    // Handle age comparison questions
-    if (lowerMessage.includes('oldest') || lowerMessage.includes('youngest')) {
-      const isOldest = lowerMessage.includes('oldest');
-      const petsWithAges = pets.map(pet => ({
-        ...pet,
-        calculatedAge: this.calculateAge(pet)
-      }));
-      
-      const sortedPets = petsWithAges.sort((a, b) => 
-        isOldest ? b.calculatedAge - a.calculatedAge : a.calculatedAge - b.calculatedAge
-      );
-      
-      const targetPet = sortedPets[0];
-      const ageText = targetPet.calculatedAge < 1 
-        ? `${Math.floor(targetPet.calculatedAge * 12)} months`
-        : `${Math.floor(targetPet.calculatedAge)} year${Math.floor(targetPet.calculatedAge) === 1 ? '' : 's'}`;
-      
-      return {
-        message: `${targetPet.name} is your ${isOldest ? 'oldest' : 'youngest'} pet at ${ageText} old.`,
-        suggestedActions: [
-          {
-            id: `tell_about_${targetPet.name.toLowerCase()}`,
-            type: 'view_tips',
-            label: `Tell me about ${targetPet.name}`,
-            description: `Get specific advice for ${targetPet.name}`
-          }
-        ]
-      };
-    }
-    
-    // Handle exercise questions
-    if (lowerMessage.includes('exercise')) {
-      const exerciseGuidelines = pets.map(pet => {
-        const age = this.calculateAge(pet);
-        const type = pet.type || 'pet';
-        const breed = pet.breed || 'unknown breed';
-        
-        if (type === 'dog') {
-          if (age < 1) {
-            return `${pet.name} (${breed}, puppy): Short walks 5-10 minutes, 3-4 times daily + playtime`;
-          } else if (age > 7) {
-            return `${pet.name} (${breed}, senior): Gentle walks 15-20 minutes, 2-3 times daily`;
-          } else {
-            return `${pet.name} (${breed}, adult): 30-60 minutes daily - walks, playtime, and mental stimulation`;
-          }
-        } else if (type === 'cat') {
-          if (age < 1) {
-            return `${pet.name} (${breed}, kitten): Interactive play 15-20 minutes, 3-4 times daily`;
-          } else if (age > 7) {
-            return `${pet.name} (${breed}, senior): Gentle play 10-15 minutes, 2-3 times daily`;
-          } else {
-            return `${pet.name} (${breed}, adult): 20-30 minutes daily - interactive toys, climbing, and play`;
-          }
-        }
-        return `${pet.name} (${breed}): Consult with a vet for species-specific exercise needs`;
-      }).join('\n\n');
-      
-      return {
-        message: `Here are exercise guidelines for each of your pets:\n\n${exerciseGuidelines}\n\nRemember: Always adjust based on your pet's individual energy level and health status!`,
-        suggestedActions: [
-          {
-            id: 'exercise_tracking',
-            type: 'create_task',
-            label: 'Create Exercise Reminders',
-            description: 'Set up daily exercise reminders for your pets'
-          }
-        ]
-      };
-    }
-    
-    // Default response
-    return {
-      message: `I'd be happy to help with your pet care questions! You have ${pets.length} pets: ${pets.map(p => p.name).join(', ')}. What specific aspect of their care would you like to know about?`,
-      suggestedActions: [
-        {
-          id: 'exercise_guide',
-          type: 'view_tips',
-          label: 'Exercise Guidelines',
-          description: 'Get exercise recommendations for all pets'
-        },
-        {
-          id: 'feeding_guide',
-          type: 'view_tips',
-          label: 'Feeding Guide',
-          description: 'Learn feeding schedules for all pets'
-        }
-      ]
-    };
+    return 0;
   }
 }
 

@@ -1,0 +1,10 @@
+{
+  "appId": "com.pawfectpal.app",
+  "appName": "PawfectPal",
+  "webDir": "public",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://pawfectpal-production-2f07.up.railway.app",
+    "cleartext": true
+  }
+}

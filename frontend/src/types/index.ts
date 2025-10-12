@@ -1,5 +1,4 @@
 // Re-export all types from feature modules
-export * from './analytics';
 export * from './auth';
 export * from './external';
 export * from './location';
@@ -45,5 +44,4 @@ export type {
 
 // Re-export specific types with explicit paths to resolve conflicts
 export type { NotificationPreferences } from './auth';
-export type { ServiceAnalytics } from './analytics';
 export type { AgeRestriction, Vaccine } from './pets';

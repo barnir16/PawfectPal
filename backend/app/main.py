@@ -21,30 +21,34 @@ from app.routers import (
 
 # Import AI router conditionally to avoid startup errors
 try:
-    from routers import ai_simple as ai
-
+    from app.routers import ai_simple as ai
     AI_AVAILABLE = True
+    print("AI router imported successfully")
 except Exception as e:
-    print(f"⚠️ AI router not available: {e}")
+    print(f"AI router import failed: {e}")
     AI_AVAILABLE = False
-
 
 app = FastAPI(
     title="PawfectPal API",
     description="Comprehensive pet care management API with GPS tracking, image upload, and service booking",
-    version="1.0.0",
+    version="1.1.1",
 )
-
 
 # Health check endpoint for Railway
 @app.get("/health")
 def health_check():
     return {
-        "status": "healthy",
-        "message": "PawfectPal API is running",
-        "version": "1.0.2",
+        "status": "healthy", 
+        "message": "PawfectPal API is running", 
+        "version": "1.1.1",
         "firebase_fixed": True,
-        "deployment_time": "2025-01-21T23:30:00Z",
+        "cors_fixed": True,
+        "deployment_time": "2025-01-21T23:58:00Z",
+        "chat_fixed": True,
+        "db_schema_fixed": True,
+        "sqlalchemy_reserved_word_fixed": True,
+        "db_column_mismatch_fixed": True,
+        "chat_serialization_fixed": True
     }
 
 
@@ -52,72 +56,35 @@ def health_check():
 def test_endpoint():
     return {
         "message": "This is the NEW version with Firebase fixes!",
-        "version": "1.0.3",
+        "version": "1.1.1",
         "firebase_status": "disabled_but_working",
-        "railway_detection": "FORCE_REDEPLOY_2025_01_21",
+        "cors_status": "simple_clean_fix",
+        "railway_detection": "FORCE_REDEPLOY_2025_01_21"
     }
-
 
 @app.get("/railway-test")
 def railway_test():
     return {
         "status": "Railway is using NEW code!",
-        "timestamp": "2025-01-21T23:45:00Z",
-        "version": "1.0.3",
+        "timestamp": "2025-01-21T23:58:00Z",
+        "version": "1.1.1",
+        "cors_fix": "simple_clean"
     }
 
-
-# CORS configuration - Simplified for Railway deployment
+# Enhanced CORS configuration for Railway
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for now
+    allow_origins=[
+        "https://pawfectpal-production-2f07.up.railway.app",
+        "https://pawfectpal-production.up.railway.app",
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "*"
+    ],
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all methods
-    allow_headers=["*"],  # Allow all headers
-    expose_headers=["*"],
-    max_age=3600,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["*"],
 )
-
-
-# Additional CORS handling for all routes
-@app.middleware("http")
-async def add_cors_headers(request, call_next):
-    # Handle preflight OPTIONS requests
-    if request.method == "OPTIONS":
-        response = Response()
-        origin = request.headers.get("origin")
-        if origin and (
-            origin.startswith("http://localhost")
-            or origin.startswith("https://pawfectpal-production")
-            or origin.startswith("https://pawfectpal-production-2f07")
-        ):
-            response.headers["Access-Control-Allow-Origin"] = origin
-            response.headers["Access-Control-Allow-Methods"] = (
-                "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-            )
-            response.headers["Access-Control-Allow-Headers"] = "*"
-            response.headers["Access-Control-Allow-Credentials"] = "true"
-            response.headers["Access-Control-Max-Age"] = "3600"
-        return response
-
-    response = await call_next(request)
-
-    # Add CORS headers manually for all responses
-    origin = request.headers.get("origin")
-    if origin and (
-        origin.startswith("http://localhost")
-        or origin.startswith("https://pawfectpal-production")
-        or origin.startswith("https://pawfectpal-production-2f07")
-    ):
-        response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Methods"] = (
-            "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-        )
-        response.headers["Access-Control-Allow-Headers"] = "*"
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-
-    return response
-
 
 # Serve static files (uploaded images)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
@@ -144,6 +111,14 @@ if AI_AVAILABLE:
     print("✅ AI router included")
 else:
     print("⚠️ AI router skipped due to configuration issues")
+
+# Import and include AI conversations router
+try:
+    from app.routers import ai_conversations
+    app.include_router(ai_conversations.router)
+    print("✅ AI conversations router included")
+except Exception as e:
+    print(f"⚠️ AI conversations router not available: {e}")
 app.include_router(provider.router)
 app.include_router(provider_reviews.router)
 app.include_router(service_requests.router)
@@ -185,7 +160,7 @@ def read_root():
     """API root endpoint"""
     return {
         "message": "Welcome to PawfectPal API",
-        "version": "1.0.0",
+        "version": "1.1.1",
         "features": [
             "Pet Management",
             "Task Scheduling",

@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Optional, TYPE_CHECKING
-from sqlalchemy import Integer, String, Text, DateTime, Boolean, ForeignKey
+from sqlalchemy import Integer, String, Text, DateTime, Boolean, ForeignKey, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base import Base
 from datetime import datetime, timezone
@@ -20,11 +20,17 @@ class ChatMessageORM(Base):
     # Message content
     message: Mapped[str] = mapped_column(Text, nullable=False)
     message_type: Mapped[str] = mapped_column(String, default="text")  # text, image, file, system
+    message_metadata: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)  # Store attachments and other metadata
     
     # Message metadata
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
     is_edited: Mapped[bool] = mapped_column(Boolean, default=False)
     edited_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    
+    # Delivery status tracking
+    delivery_status: Mapped[str] = mapped_column(String, default="sent")  # sent, delivered, read
+    delivered_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    read_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))

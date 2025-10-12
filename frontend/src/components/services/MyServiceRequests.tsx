@@ -187,7 +187,7 @@ export const MyServiceRequests: React.FC = () => {
                       </IconButton>
                       <IconButton
                         size="small"
-                        onClick={() => navigate(`/service-requests/${request.id}/chat`)}
+                        onClick={() => navigate(`/chat/${request.id}`)}
                       >
                         <Message />
                       </IconButton>

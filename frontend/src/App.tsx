@@ -19,7 +19,6 @@ import { BookService } from "./features/services/pages/BookService";
 import { ServiceRequestBrowser } from "./components/services/ServiceRequestBrowser";
 import { ServiceRequestDetails } from "./components/services/ServiceRequestDetails";
 import { MyServiceRequests } from "./components/services/MyServiceRequests";
-import { ServiceRequestChat } from "./components/services/ServiceRequestChat";
 import ServiceDetailsPage from "./features/services/pages/ServiceDetailsPage";
 import { PetForm } from "./features/pets/components/PetForm/PetForm";
 import { PetDetail } from "./features/pets/components/PetDetail/PetDetail";
@@ -37,6 +36,7 @@ import { ChatListPage } from "./features/chat/pages/ChatListPage";
 import { ChatPage } from "./features/chat/pages/ChatPage";
 import "./utils/testVaccines"; // Import test utility
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 
 const App = () => {
   return (
@@ -111,12 +111,19 @@ const AppContent = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
+          p: { xs: 1, sm: 2, md: 3 }, // Responsive padding
           width: {
+            xs: "100%", // Full width on mobile
             sm: desktopOpen ? `calc(100% - 240px)` : `calc(100% - 64px)`,
           },
-          ml: { sm: isRTL ? "0px" : desktopOpen ? "240px" : "64px" },
-          mr: { sm: isRTL ? (desktopOpen ? "240px" : "64px") : "0px" },
+          ml: { 
+            xs: "0px", // No margin on mobile
+            sm: isRTL ? "0px" : desktopOpen ? "240px" : "64px" 
+          },
+          mr: { 
+            xs: "0px", // No margin on mobile
+            sm: isRTL ? (desktopOpen ? "240px" : "64px") : "0px" 
+          },
           mt: "64px",
           overflow: "auto",
           height: "calc(100vh - 64px)",
@@ -150,10 +157,6 @@ const AppContent = () => {
             path="/service-requests/:id"
             element={<ServiceRequestDetails />}
           />
-          <Route
-            path="/service-requests/:id/chat"
-            element={<ServiceRequestChat />}
-          />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/test-vaccines" element={<RealVaccineTracker />} />
@@ -174,6 +177,9 @@ const AppContent = () => {
 
       {/* Notifications */}
       <NotificationContainer />
+      
+      {/* PWA Install Prompt */}
+      <PWAInstallPrompt />
     </Box>
   );
 };

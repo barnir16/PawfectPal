@@ -26,7 +26,7 @@ export const register = async (
   username: string, 
   password: string, 
   email?: string, 
-  fullName?: string
+  fullName?: string 
 ): Promise<User> => {
   return apiRequest<User>('/auth/register', {
     method: 'POST',

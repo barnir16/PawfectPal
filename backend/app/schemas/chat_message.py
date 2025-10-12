@@ -14,11 +14,18 @@ class MediaAttachment(BaseModel):
 
 class ChatMessageBase(BaseModel):
     message: str = Field(..., min_length=1, max_length=2000, description="Message content")
-    message_type: str = Field("text", pattern="^(text|image|file|system)$", description="Type of message")
+    message_type: str = Field("text", pattern="^(text|image|file|system|location)$", description="Type of message")
+
+class ReplyToMessage(BaseModel):
+    message_id: int = Field(..., description="ID of the message being replied to")
+    sender_name: str = Field(..., description="Username of the original message sender")
+    message_preview: str = Field(..., description="Preview of the original message")
+    message_type: str = Field(..., description="Type of the original message")
 
 class ChatMessageCreate(ChatMessageBase):
     service_request_id: int = Field(..., description="ID of the service request")
     attachments: Optional[List[MediaAttachment]] = Field(None, description="File attachments")
+    reply_to: Optional[ReplyToMessage] = Field(None, description="Reply context if this is a reply")
 
 class ChatMessageUpdate(BaseModel):
     message: Optional[str] = Field(None, min_length=1, max_length=2000)
@@ -32,7 +39,13 @@ class ChatMessageRead(ChatMessageBase):
     is_edited: bool
     edited_at: Optional[datetime]
     created_at: datetime
+    message_metadata: Optional[dict] = None
     attachments: Optional[List[MediaAttachment]] = None
+    
+    # Delivery status tracking
+    delivery_status: Optional[str] = "sent"
+    delivered_at: Optional[str] = None  # Changed to str to handle text columns
+    read_at: Optional[str] = None      # Changed to str to handle text columns
     
     # Relationships
     sender: Optional[UserRead] = None
@@ -45,6 +58,12 @@ class ChatConversation(BaseModel):
     service_request_id: int
     messages: list[ChatMessageRead]
     unread_count: int
+    
+    # Pagination info
+    total_messages: Optional[int] = None
+    has_more: Optional[bool] = None
+    current_offset: Optional[int] = None
+    limit: Optional[int] = None
     
     class Config:
         from_attributes = True
