@@ -110,21 +110,21 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
         // Add welcome message
         const welcomeMessage: ChatMessage = {
           id: 'welcome',
-          content: `Hi! I'm your AI pet care assistant. I can help you with: Health concerns, Behavior issues, Feeding questions, Exercise planning, Grooming advice, Care reminders. Ask me about your pet's care...`,
+          content: `${t('ai.welcome')} ${t('ai.helpWith')} ${t('ai.healthConcerns')}, ${t('ai.behaviorIssues')}, ${t('ai.feedingQuestions')}, ${t('ai.exercisePlanning')}, ${t('ai.groomingAdvice')}, ${t('ai.careReminders')}. ${t('ai.askAboutPetCare')}`,
           isUser: false,
           timestamp: new Date(),
           suggestedActions: [
             {
               id: 'exercise_guide',
               type: 'view_tips',
-              label: 'Exercise Guidelines',
-              description: 'Get exercise recommendations for all pets'
+              label: t('ai.exercisePlanning'),
+              description: t('ai.viewTips')
             },
             {
               id: 'health_check',
               type: 'view_tips',
-              label: 'Health Assessment',
-              description: 'Review your pet\'s health status'
+              label: t('ai.healthConcerns'),
+              description: t('ai.viewTips')
             }
           ]
         };
@@ -154,7 +154,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
     try {
       console.log('🤖 Chatbot: Sending message with selectedPet:', selectedPet);
       console.log('🤖 Chatbot: Current pets state:', pets);
-      const response = await aiService.sendMessage(userMessage, pets, selectedPet);
+      const response = await aiService.sendMessage(userMessage, pets, selectedPet ? [selectedPet] : []);
       console.log('🤖 Chatbot: AI response:', response);
       // Add user message
       const userMessageObj: ChatMessage = {
@@ -182,30 +182,95 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
   };
 
   const handleSuggestedAction = async (action: SuggestedAction) => {
-    switch (action.type) {
-      case 'create_task':
-        navigate('/tasks/new');
-        onClose();
-        break;
-      
-      case 'schedule_vet':
-        // Navigate to vet appointment scheduling
-        navigate('/tasks/new', { state: { taskType: 'vet_appointment' } });
-        onClose();
-        break;
-      
-      case 'emergency':
-        // Show emergency contacts
-        alert('Emergency veterinary contacts:\n\n24/7 Emergency Animal Hospital\n📞 (555) 123-PETS\n🏥 123 Emergency St, Your City\n\nAnimal Poison Control\n📞 (888) 426-4435');
-        break;
-      
-      case 'view_tips':
-        // Send the suggestion as a message
-        await handleQuickSuggestion(action.label);
-        break;
-      
-      default:
-        console.log('Unhandled action type:', action.type);
+    try {
+      switch (action.type) {
+        case 'create_task':
+          navigate('/tasks/new');
+          onClose();
+          break;
+        
+        case 'schedule_vet':
+        case 'schedule_checkup':
+          // Navigate to vet appointment scheduling
+          navigate('/tasks/new', { state: { taskType: 'vet_appointment' } });
+          onClose();
+          break;
+        
+        case 'emergency':
+        case 'emergency_vet':
+          // Show emergency contacts with better formatting
+          const emergencyInfo = `
+🚨 EMERGENCY VETERINARY CARE 🚨
+
+🏥 24/7 Emergency Animal Hospital
+📞 (555) 123-PETS
+📍 123 Animal Emergency St, Your City
+
+☠️ Animal Poison Control Center
+📞 (888) 426-4435
+🌐 aspca.org/pet-care/animal-poison-control
+
+💰 Cost: Emergency fees start at $150-$300
+⏰ Open: 24 hours, 7 days a week
+
+If your pet is bleeding, unconscious, or having breathing difficulties - GO IMMEDIATELY!
+          `.trim();
+          alert(emergencyInfo);
+          break;
+        
+        case 'health_check':
+        case 'health_monitoring':
+        case 'health_tracking':
+          await handleQuickSuggestion(`How can I monitor ${selectedPet ? selectedPet.name : 'my pet'}'s health?`);
+          break;
+        
+        case 'comfort_care':
+          await handleQuickSuggestion(`What comfort measures can I use for ${selectedPet ? selectedPet.name : 'my pet'}?`);
+          break;
+        
+        case 'vet_consultation':
+        case 'diet_consultation':
+          navigate('/tasks/new', { state: { taskType: 'vet_appointment', purpose: 'consultation' } });
+          onClose();
+          break;
+        
+        case 'retry':
+          // Retry the last message
+          if (messages.length > 0) {
+            const lastUserMessage = [...messages].reverse().find(msg => msg.isUser);
+            if (lastUserMessage) {
+              await handleQuickSuggestion(lastUserMessage.content);
+            }
+          }
+          break;
+        
+        case 'contact':
+        case 'contact_support':
+          await handleQuickSuggestion('I need help with Pet Care Support');
+          break;
+        
+        case 'view_tips':
+        case 'general_tips':
+        case 'care_tips':
+        case 'exercise_plan':
+        case 'nutrition_tips':
+          // Send the suggestion as a message
+          await handleQuickSuggestion(action.label.replace(/^[🎾💡🐾💪]/, '').trim());
+          break;
+        
+        case 'add_pet':
+          navigate('/pets/new');
+          onClose();
+          break;
+        
+        default:
+          console.log('🤖 Unhandled action type:', action.type, 'Action:', action);
+          // For unknown actions, try to extract a message from the label
+          await handleQuickSuggestion(action.label || action.description || 'Tell me more about this');
+      }
+    } catch (error) {
+      console.error('🚨 Error handling suggested action:', error);
+      await handleQuickSuggestion(`Tell me more about ${action.label}`);
     }
   };
 
@@ -218,13 +283,32 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
   const getActionIcon = (type: SuggestedAction['type']) => {
     switch (type) {
       case 'create_task':
+      case 'health_check':
+      case 'health_monitoring':
+      case 'health_tracking':
         return <ScheduleIcon />;
       case 'schedule_vet':
+      case 'schedule_checkup':
+      case 'vet_consultation':
+      case 'diet_consultation':
         return <VetIcon />;
       case 'emergency':
+      case 'emergency_vet':
         return <EmergencyIcon />;
       case 'view_tips':
+      case 'general_tips':
+      case 'care_tips':
+      case 'exercise_plan':
+      case 'nutrition_tips':
         return <TipsIcon />;
+      case 'comfort_care':
+        return <PetsIcon />;
+      case 'add_pet':
+        return <PetsIcon />;
+      case 'retry':
+      case 'contact':
+      case 'contact_support':
+        return <ChatIcon />;
       default:
         return <BotIcon />;
     }
@@ -233,11 +317,25 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
   const getActionColor = (type: SuggestedAction['type']) => {
     switch (type) {
       case 'emergency':
+      case 'emergency_vet':
         return 'error';
       case 'schedule_vet':
+      case 'schedule_checkup':
+      case 'vet_consultation':
+      case 'health_check':
+      case 'health_monitoring':
+      case 'health_tracking':
         return 'warning';
       case 'create_task':
+      case 'comfort_care':
         return 'primary';
+      case 'add_pet':
+        return 'secondary';
+      case 'retry':
+        return 'default';
+      case 'contact':
+      case 'contact_support':
+        return 'info';
       default:
         return 'default';
     }

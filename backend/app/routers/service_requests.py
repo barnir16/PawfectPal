@@ -33,7 +33,14 @@ def create_service_request(
         raise HTTPException(status_code=400, detail="Some pets don't belong to you")
 
     # Create the service request
+    print(f"🔍 Service Request Creation Debug:")
+    print(f"  Current User ID: {current_user.id}")
+    print(f"  Current User Username: {current_user.username}")
+    print(f"  Pet IDs: {request.pet_ids}")
+    
     db_request = ServiceRequestORM(user_id=current_user.id, **request.dict())
+    
+    print(f"  Created Service Request User ID: {db_request.user_id}")
 
     db.add(db_request)
     db.commit()
@@ -107,10 +114,75 @@ def get_service_request(
     if not request:
         raise HTTPException(status_code=404, detail="Service request not found")
 
+    # Debug logging for access control
+    print(f"🔍 Service Request Access Debug:")
+    print(f"  Service Request ID: {request_id}")
+    print(f"  Service Request User ID: {request.user_id}")
+    print(f"  Service Request Assigned Provider ID: {request.assigned_provider_id}")
+    print(f"  Current User ID: {current_user.id}")
+    print(f"  Current User Username: {current_user.username}")
+    print(f"  Current User Is Provider: {current_user.is_provider}")
+
+    # Industry standard access control: Owner OR Assigned Provider OR Public (if open)
+    is_owner = request.user_id == current_user.id
+    is_assigned_provider = request.assigned_provider_id == current_user.id
+    is_public_open = request.status == "open"  # Open requests can be viewed by providers
+    
+    print(f"  Is Owner: {is_owner}")
+    print(f"  Is Assigned Provider: {is_assigned_provider}")
+    print(f"  Is Public Open: {is_public_open}")
+    
+    # Allow access if: Owner OR Assigned Provider OR (Provider viewing open request)
+    if not (is_owner or is_assigned_provider or (is_public_open and current_user.is_provider)):
+        print(f"❌ Access denied for user {current_user.username} (ID: {current_user.id}) to service request {request_id}")
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    print(f"✅ Access granted for user {current_user.username} (ID: {current_user.id}) to service request {request_id}")
+
     # Increment view count
     request.views_count += 1
     db.commit()
 
+    return request
+
+
+@router.post("/{request_id}/assign-provider", response_model=ServiceRequestRead)
+def assign_provider(
+    request_id: int,
+    provider_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserORM = Depends(get_current_user),
+):
+    """Assign a provider to a service request (only request owner can do this)"""
+    # Get the service request
+    request = (
+        db.query(ServiceRequestORM).filter(ServiceRequestORM.id == request_id).first()
+    )
+    
+    if not request:
+        raise HTTPException(status_code=404, detail="Service request not found")
+    
+    # Only the request owner can assign providers
+    if request.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Only the request owner can assign providers")
+    
+    # Verify the provider exists and is actually a provider
+    provider = db.query(UserORM).filter(UserORM.id == provider_id).first()
+    if not provider:
+        raise HTTPException(status_code=404, detail="Provider not found")
+    
+    if not provider.is_provider:
+        raise HTTPException(status_code=400, detail="User is not a provider")
+    
+    # Assign the provider
+    request.assigned_provider_id = provider_id
+    request.status = "in_progress"
+    
+    db.commit()
+    db.refresh(request)
+    
+    print(f"✅ Provider {provider.username} (ID: {provider_id}) assigned to service request {request_id}")
+    
     return request
 
 

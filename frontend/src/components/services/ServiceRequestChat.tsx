@@ -12,7 +12,7 @@ import {
 } from '@mui/icons-material';
 import { useLocalization } from '../../contexts/LocalizationContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { ChatService } from '../../services/chat/chatService';
+import { chatService } from '../../services/chat/chatService';
 import { ServiceRequestService } from '../../services/serviceRequests/serviceRequestService';
 import { getPets } from '../../services/pets/petService';
 import { ServiceContextPanel } from './ServiceContextPanel';
@@ -60,11 +60,21 @@ export const ServiceRequestChat: React.FC = () => {
         }
       }
       
-      // Fetch conversation messages
-      const conversationData = await ChatService.getConversation(parseInt(id));
-      console.log('Fetched conversation:', conversationData);
+      // Fetch conversation messages with better error handling
+      try {
+        const conversationData = await chatService.getConversation(parseInt(id));
+        console.log('Fetched conversation:', conversationData);
+        
+        // Ensure messages is always an array
+        const messages = conversationData?.messages || [];
+        console.log('Processing messages:', messages);
+        setMessages(messages.map(processMessage));
+      } catch (chatError: any) {
+        console.warn('Could not fetch conversation, starting with empty chat:', chatError);
+        // Start with empty messages if conversation fetch fails
+        setMessages([]);
+      }
       
-      setMessages((conversationData?.messages || []).map(processMessage));
       setRequest(serviceRequest);
     } catch (err: any) {
       console.error('Error fetching chat data:', err);
@@ -81,7 +91,7 @@ export const ServiceRequestChat: React.FC = () => {
       setSending(true);
       
       // Send message via API
-      const sentMessage = await ChatService.sendMessage({
+      const sentMessage = await chatService.sendMessage(parseInt(id), {
         ...messageData,
         service_request_id: parseInt(id),
       });
@@ -138,9 +148,25 @@ export const ServiceRequestChat: React.FC = () => {
   };
 
   const processMessage = (message: ChatMessage): ChatMessage => {
+    // Ensure message is valid
+    if (!message) {
+      console.warn('Invalid message received:', message);
+      return {
+        id: 0,
+        service_request_id: 0,
+        sender_id: 0,
+        message: '',
+        message_type: 'text',
+        is_read: false,
+        is_edited: false,
+        created_at: new Date().toISOString(),
+        attachments: []
+      };
+    }
+    
     return {
       ...message,
-      attachments: message.metadata?.attachments || undefined
+      attachments: message.attachments || []
     };
   };
 
@@ -152,7 +178,7 @@ export const ServiceRequestChat: React.FC = () => {
       
       switch (action) {
         case 'share_location':
-          sentMessage = await ChatService.shareLocation(
+          sentMessage = await chatService.shareLocation(
             parseInt(id!),
             data?.latitude,
             data?.longitude,
@@ -163,7 +189,7 @@ export const ServiceRequestChat: React.FC = () => {
           break;
           
         case 'request_photos':
-          sentMessage = await ChatService.sendMessage({
+          sentMessage = await chatService.sendMessage(parseInt(id!), {
             service_request_id: parseInt(id!),
             message: t('services.requestPhotosMessage'),
             message_type: 'text',
@@ -172,7 +198,7 @@ export const ServiceRequestChat: React.FC = () => {
           break;
           
         case 'schedule_meeting':
-          sentMessage = await ChatService.sendMessage({
+          sentMessage = await chatService.sendMessage(parseInt(id!), {
             service_request_id: parseInt(id!),
             message: t('services.scheduleMeetingMessage'),
             message_type: 'text',
@@ -181,7 +207,7 @@ export const ServiceRequestChat: React.FC = () => {
           break;
           
         case 'share_instructions':
-          sentMessage = await ChatService.sendMessage({
+          sentMessage = await chatService.sendMessage(parseInt(id!), {
             service_request_id: parseInt(id!),
             message: t('services.shareInstructionsMessage'),
             message_type: 'text',
@@ -190,7 +216,7 @@ export const ServiceRequestChat: React.FC = () => {
           break;
           
         case 'update_service_status':
-          sentMessage = await ChatService.sendServiceUpdate(
+          sentMessage = await chatService.sendServiceUpdate(
             parseInt(id!),
             data?.status,
             data?.message
@@ -229,10 +255,23 @@ export const ServiceRequestChat: React.FC = () => {
   }
 
   return (
-    <Box height="100vh" display="flex" sx={{ backgroundColor: 'grey.50' }}>
-      {/* Service Context Panel */}
+    <Box 
+      height="100vh" 
+      display="flex" 
+      flexDirection={{ xs: 'column', md: 'row' }}
+      sx={{ 
+        backgroundColor: 'grey.50',
+        overflow: 'hidden'
+      }}
+    >
+      {/* Service Context Panel - Hidden on mobile */}
       {request && (
-        <Box sx={{ width: '350px', minWidth: '350px' }}>
+        <Box sx={{ 
+          width: { xs: 0, md: '350px' }, 
+          minWidth: { xs: 0, md: '350px' },
+          display: { xs: 'none', md: 'block' },
+          overflow: 'hidden'
+        }}>
           <ServiceContextPanel
             serviceRequest={request}
             onAction={handleQuickAction}
@@ -241,39 +280,82 @@ export const ServiceRequestChat: React.FC = () => {
       )}
 
       {/* Main Chat Area */}
-      <Box flex={1} display="flex" flexDirection="column" sx={{ 
-        backgroundColor: 'white',
-        borderRadius: 2,
-        m: 2,
-        overflow: 'hidden',
-        boxShadow: 3,
-      }}>
+      <Box 
+        flex={1} 
+        display="flex" 
+        flexDirection="column" 
+        sx={{ 
+          backgroundColor: 'white',
+          borderRadius: { xs: 0, md: 2 },
+          m: { xs: 0, md: 2 },
+          overflow: 'hidden',
+          boxShadow: { xs: 0, md: 3 },
+          height: { xs: '100vh', md: 'auto' },
+          minHeight: { xs: '100vh', md: 0 }
+        }}
+      >
         {/* Header */}
-        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-          <Box display="flex" alignItems="center" mb={1}>
+        <Box sx={{ 
+          p: { xs: 1, md: 2 }, 
+          borderBottom: 1, 
+          borderColor: 'divider',
+          minHeight: '64px',
+          display: 'flex',
+          alignItems: 'center'
+        }}>
+          <Box display="flex" alignItems="center" flex={1} sx={{ minWidth: 0 }}>
             <Button
               startIcon={<ArrowBack />}
               onClick={() => navigate(`/service-requests/${id}`)}
-              sx={{ mr: 2 }}
+              sx={{ 
+                mr: { xs: 1, md: 2 },
+                minWidth: 'auto',
+                px: { xs: 1, md: 2 }
+              }}
             >
               {t('common.back')}
             </Button>
-            <Typography variant="h6">
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontSize: { xs: '1rem', md: '1.25rem' },
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}
+            >
               {t('services.conversation')} - {request?.title}
             </Typography>
           </Box>
+        </Box>
+        
+        {/* Mobile-only user info */}
+        <Box sx={{ 
+          display: { xs: 'block', md: 'none' },
+          p: 1,
+          borderBottom: 1,
+          borderColor: 'divider',
+          backgroundColor: 'grey.50'
+        }}>
           <Typography variant="body2" color="text.secondary">
             {t('services.requestedBy')}: {request?.user?.username}
           </Typography>
         </Box>
 
         {/* Enhanced Chat Window */}
-        <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ 
+          flex: 1, 
+          minHeight: 0, 
+          display: 'flex', 
+          flexDirection: 'column',
+          height: { xs: 'calc(100vh - 120px)', md: 'auto' }
+        }}>
           <EnhancedChatWindow
             messages={messages}
             onSendMessage={handleSendMessage}
             onQuickAction={handleQuickAction}
             isSending={sending}
+            serviceRequestId={parseInt(id!)}
           />
         </Box>
       </Box>

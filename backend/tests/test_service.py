@@ -73,10 +73,10 @@ def pet(db_session, test_user):
     return p
 
 
-def make_service_payload(pet_id: int, service_type_id: int, start: datetime):
+def make_service_payload(pet_id: int, service_type: str, start: datetime):
     return {
         "pet_id": pet_id,
-        "service_type_id": service_type_id,
+        "service_type": service_type,
         "status": ServiceStatus.PENDING,
         "start_datetime": start.isoformat(),
         "end_datetime": (start + timedelta(hours=1)).isoformat(),
@@ -93,13 +93,13 @@ def make_service_payload(pet_id: int, service_type_id: int, start: datetime):
 
 @pytest.mark.asyncio
 async def test_create_service_success(client, pet, service_type):
-    payload = make_service_payload(pet.id, service_type.id, datetime.now(timezone.utc))
+    payload = make_service_payload(pet.id, service_type.name, datetime.now(timezone.utc))
     resp = await client.post("/service_booking/", json=payload)
     assert resp.status_code == status.HTTP_200_OK, resp.text
     data = resp.json()
     assert data["id"] > 0
     assert data["pet_id"] == pet.id
-    assert data["service_type_id"] == service_type.id
+    assert data["service_type"] == service_type.name
 
 
 @pytest.mark.asyncio
@@ -111,7 +111,7 @@ async def test_get_service_by_id_and_ownership(
     svc = ServiceORM(
         user_id=pet.user_id,
         pet_id=pet.id,
-        service_type_id=service_type.id,
+        service_type=service_type.name,
         status=ServiceStatus.PENDING,
         start_datetime=start,
         end_datetime=start + timedelta(hours=1),
@@ -141,14 +141,14 @@ async def test_list_services_filters(client, db_session, pet, service_type):
     active1 = ServiceORM(
         user_id=pet.user_id,
         pet_id=pet.id,
-        service_type_id=service_type.id,
+        service_type=service_type.name,
         status=ServiceStatus.CONFIRMED,
         start_datetime=now + timedelta(hours=1),
     )
     completed1 = ServiceORM(
         user_id=pet.user_id,
         pet_id=pet.id,
-        service_type_id=service_type.id,
+        service_type=service_type.name,
         status=ServiceStatus.COMPLETED,
         start_datetime=now - timedelta(days=2),
     )
@@ -183,7 +183,7 @@ async def test_update_service_success(client, db_session, pet, service_type):
     svc = ServiceORM(
         user_id=pet.user_id,
         pet_id=pet.id,
-        service_type_id=service_type.id,
+        service_type=service_type.name,
         status=ServiceStatus.PENDING,
         start_datetime=start,
     )
@@ -203,7 +203,7 @@ async def test_delete_service_success(client, db_session, pet, service_type):
     svc = ServiceORM(
         user_id=pet.user_id,
         pet_id=pet.id,
-        service_type_id=service_type.id,
+        service_type=service_type.name,
         status=ServiceStatus.PENDING,
         start_datetime=start,
     )

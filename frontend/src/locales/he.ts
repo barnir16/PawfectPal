@@ -1,4 +1,23 @@
 export const he = {
+  // Root level keys for direct access
+  Search: 'חיפוש',
+  filterByStatus: 'סנן לפי סטטוס',
+  All: 'הכל',
+  'In Progress': 'בתהליך',
+  Completed: 'הושלם',
+  Cancelled: 'בוטל',
+  walking: 'הליכה עם כלב',
+  sitting: 'שמירה על חיות מחמד',
+  boarding: 'פנסיון לחיות מחמד',
+  grooming: 'טיפוח חיות מחמד',
+  veterinary: 'טיפול וטרינרי',
+  petCare: 'טיפול בחיות מחמד',
+  provider: 'ספק',
+  newServiceRequest: 'בקשת שירות חדשה',
+  for: 'עבור',
+  in_progress: 'בתהליך',
+  Details: 'פרטים',
+
   // Common
   common: {
     save: 'שמור',
@@ -30,6 +49,12 @@ export const he = {
     refresh: 'רענן',
     quickActions: 'פעולות מהירות',
     creating: 'יוצר...',
+    serviceType: 'סוג שירות',
+    description: 'תיאור',
+    pets: 'חיות מחמד',
+    provider: 'ספק',
+    location: 'מיקום',
+    scheduledDate: 'תאריך מתוכנן',
     retry: 'נסה שוב',
     clear: 'נקה',
     select: 'בחר',
@@ -353,10 +378,6 @@ export const he = {
       overweight: 'החיה נראית שמנה מדי עבור גזע זה',
       healthy: 'משקל החיה בטווח הבריא עבור גזע זה'
     },
-    vaccineTracking: 'מעקב חיסונים',
-    manageYourVaccines: 'נהל את החיסונים שלך',
-    changePhoto: 'שנה תמונה',
-    addPhoto: 'הוסף תמונה',
   },
 
   // Vaccine Tracking
@@ -419,7 +440,6 @@ export const he = {
     syncWithGoogleCalendar: 'סנכרן עם Google Calendar',
     vaccinesExported: 'החיסונים יוצאו ללוח השנה!',
     vaccinesSynced: 'החיסונים סונכרנו עם Google Calendar!',
-    vaccineTracking: 'מעקב חיסונים',
     backToTasks: 'חזור למשימות',
     addVaccine: 'הוסף חיסון',
     filterByPet: 'סנן לפי חיית מחמד',
@@ -617,6 +637,20 @@ export const he = {
     transportSafely: 'העבר את חיית המחמד שלך בבטחה לווטרינר',
     keepRecords: 'שמור רשומות של מה שקרה',
     followUp: 'עקוב עם הווטרינר הרגיל שלך',
+    
+    // AI System Prompts
+    prompts: {
+      english_instructions: 'You are a pet care platform AI friendly bilingual assistant (English and Hebrew). Always reply entirely in the same language the user uses the most - do not mix English and Hebrew. If you need to mention a name or phrase originally in the other language, translate it fully into the user\'s language if possible.\n- if user only greets you - greet back politely and ask how you can help with their pets\n• When user asks a pet-related question (care, training, health, behavior), answer thoroughly in that same language.\n• For any other topic, politely say you can only answer pet-care relate questions.\n- queries are sent with a list of pets and their important data (medical and behavior data) which you will use to assist the users with their needs.',
+      hebrew_instructions: 'אתה עוזר AI ידידותי וחכם לטיפול בחיות מחמד (אנגלית ועברית). ענה תמיד באותה השפה שהמשתמש משתמש בה הכי הרבה - אל תערבב בין אנגלית לעברית. אם אתה צריך להזכיר שם או ביטוי במקור בשפה האחרת, תרגם אותו לגמרי לשפה של המשתמש אם אפשר.\n- אם המשתמש רק מברך אותך - ברך בחזרה באדיבות ושאל איך אתה יכול לעזור עם חיות המחמד שלו\n• כשהמשתמש שואל שאלה הקשורה לחיות מחמד (טיפול, אימון, בריאות, התנהגות), ענה בהרחבה באותה השפה.\n• לכל נושא אחר, אמור בנימוס שאתה יכול לענות רק על שאלות הקשורות לטיפול בחיות מחמד.\n- שאילתות נשלחות עם רשימת חיות מחמד והמידע החשוב שלהן (נתונים רפואיים והתנהגותיים) שאיתם תשתמש כדי לסייע למשתמשים בקבלת הצרכים שלהם.'
+    },
+    
+    // Error Messages
+    errors: {
+      connection_lost: 'החיבור אבד. אנא בדוק את חיבור האינטרנט שלך ונסה שוב.',
+      service_unavailable: 'שירות ה-AI אינו זמין זמנית. אנא נסה שוב מאוחר יותר.',
+      api_error: 'שגיאת שירות AI. אנא נסה שוב או צור קשר עם התמיכה.',
+      timeout: 'הבקשה התאחרה. אנא נסה שוב עם הודעה קצרה יותר.'
+    }
   },
 
   // Error Messages
@@ -956,6 +990,8 @@ export const he = {
     viewWeightTracking: 'צפה במעקב משקל',
     dog: 'כלב',
     cat: 'חתול',
+    tasksNeedAttention: 'משימות דורשות תשומת לב',
+    allUpToDate: 'הכל מעודכן',
   },
 
   // Messages
@@ -1164,6 +1200,17 @@ export const he = {
     inProgress: 'בתהליך',
     completed: 'הושלם',
     cancelled: 'בוטל',
+    // Additional status keys for compatibility
+    'In Progress': 'בתהליך',
+    'Completed': 'הושלם',
+    'Cancelled': 'בוטל',
+    // Common filter keys
+    'All': 'הכל',
+    'for': 'עבור',
+    'in_progress': 'בתהליך',
+    'Details': 'פרטים',
+    'Search': 'חיפוש',
+    'filterByStatus': 'סנן לפי סטטוס',
     // Booking form fields
     duration: 'משך',
     price: 'מחיר',
@@ -1233,11 +1280,84 @@ export const he = {
     chatProvider: 'ספק',
     justNow: 'עכשיו',
     typing: 'כותב',
-    shareLocation: 'שתף מיקום',
     requestPhotos: 'בקש תמונות של החיה',
     scheduleMeeting: 'קבע פגישה',
     shareInstructions: 'שתף הוראות',
-    quickReplies: 'תשובות מהירות',
+    locationShared: 'מיקום שותף',
+    currentLocation: 'מיקום נוכחי',
+    viewOnMaps: 'צפה במפות',
+  },
+
+  // Chat
+  chat: {
+      chatTitle: 'צ\'אט',
+      noConversations: 'אין שיחות עדיין',
+      noMessagesYet: 'אין הודעות עדיין',
+      loadingConversations: 'טוען שיחות...',
+      sharedImage: 'שיתף תמונה',
+      sharedFile: 'שיתף קובץ',
+      systemMessage: 'הודעת מערכת',
+      quickReplies: 'תשובות מהירות',
+      noConversationsDescription: 'התחל שיחה על ידי יצירת בקשת שירות',
+      conversation: 'שיחה',
+      conversations: 'שיחות',
+      messages: 'הודעות',
+      retry: 'נסה שוב',
+      searchMessages: 'חיפוש הודעות',
+      searchPlaceholder: 'חפש בהודעות...',
+      noSearchResults: 'לא נמצאו הודעות התואמות לחיפוש שלך.',
+      searchHint: 'הקלד כדי לחפש בהודעות שלך...',
+      download: 'הורד',
+      open: 'פתח',
+      uploading: 'מעלה...',
+      uploadComplete: 'העלאה הושלמה',
+      uploadError: 'העלאה נכשלה',
+      sharedLocation: 'מיקום משותף',
+      openInMaps: 'פתח במפות',
+      getDirections: 'קבל הוראות הגעה',
+      directions: 'קבל הוראות הגעה',
+      coordinates: 'קואורדינטות',
+      message: 'הודעה',
+      attachFile: 'צרף קובץ',
+      sharePhoto: 'שתף תמונה',
+      shareLocation: 'שתף מיקום',
+      shareMyLocation: 'שתף את המיקום שלי',
+      requestPetPhotos: 'בקש תמונות של חיית המחמד',
+      scheduleConsultation: 'קבע התייעצות',
+      scheduleMeeting: 'קבע פגישה',
+      shareInstructions: 'שתף הוראות',
+      requestCareInstructions: 'בקש הוראות טיפול',
+      shareExperience: 'שתף את הניסיון שלי',
+      startConversation: 'התחל שיחה',
+      // Pet data translations
+      petAge: 'גיל',
+      petWeight: 'משקל',
+      petGender: 'מין',
+      petColor: 'צבע',
+      petSpecies: 'מין',
+      petBreed: 'גזע',
+      petNotes: 'הערות',
+      petMedicalNotes: 'הערות רפואיות',
+      petHealthIssues: 'בעיות בריאות',
+      petBehaviorIssues: 'בעיות התנהגות',
+      petVaccinated: 'מחוסן',
+      petNeutered: 'מסורס',
+      petMicrochipped: 'מיקרו-צ\'יפ',
+      petLastVetVisit: 'ביקור וטרינר אחרון',
+      petNextVetVisit: 'ביקור וטרינר הבא',
+      petVetName: 'וטרינר',
+      petVetPhone: 'טלפון וטרינר',
+      petVetAddress: 'כתובת וטרינר',
+      petMicrochipNumber: 'מספר מיקרו-צ\'יפ',
+      petTrackingEnabled: 'מעקב מופעל',
+      petLost: 'אבוד',
+      petActive: 'פעיל',
+      yearsOld: 'שנים',
+      monthsOld: 'חודשים',
+      male: 'זכר',
+      female: 'נקבה',
+      unknown: 'לא ידוע',
+      other: 'אחר',
     serviceUpdate: 'עדכון שירות',
     requestPhotosMessage: 'האם תוכל לשתף כמה תמונות של החיה שלך? זה יעזור לי לספק טיפול טוב יותר.',
     scheduleMeetingMessage: 'בואו נקבע פגישה כדי לדון בפרטי השירות. מתי יהיה לך נוח?',
@@ -1245,7 +1365,6 @@ export const he = {
     you: 'אתה',
     client: 'לקוח',
     cancelRequest: 'בטל בקשה',
-    locationShared: 'מיקום שותף',
     photosRequested: 'תמונות התבקשו',
     meetingScheduled: 'פגישה נקבעה',
     acceptService: 'קבל שירות',
@@ -1254,10 +1373,7 @@ export const he = {
     completeService: 'השלם שירות',
     serviceActions: 'פעולות שירות',
     selectedFiles: 'קבצים נבחרים',
-    viewOnMaps: 'צפה במפות',
-    download: 'הורד',
     close: 'סגור',
-    currentLocation: 'מיקום נוכחי',
     requestStatus: {
       open: 'פתוח',
       in_progress: 'בתהליך',
@@ -1265,7 +1381,6 @@ export const he = {
       closed: 'סגור',
     },
   },
-
 };
 
 export default he;

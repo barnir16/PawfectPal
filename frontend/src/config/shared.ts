@@ -7,7 +7,7 @@
 export const SHARED_CONFIG = {
   // Firebase Configuration (Safe to expose - security handled by Firebase Rules)
   firebase: {
-    apiKey: "AIzaSyDoNsVE_ZmgBBuVJ3IKZpAAZRz9HS-67s8",
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDoNsVE_ZmgBBuVJ3IKZpAAZRz9HS-67s8",
     authDomain: "pawfectpal-ac5d7.firebaseapp.com",
     projectId: "pawfectpal-ac5d7",
     storageBucket: "pawfectpal-ac5d7.firebasestorage.app",

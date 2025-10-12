@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Box, Grid, Paper, Typography, CircularProgress, Alert, Chip } from "@mui/material";
-import { styled } from "@mui/material/styles";
 import { Add as AddIcon } from "@mui/icons-material";
 import { Button } from "./../../../components/ui/Button";
 import { TaskList } from "./../../../features/tasks/components/TaskList";
@@ -16,48 +15,15 @@ import { useLocalization } from "../../../contexts/LocalizationContext";
 import { useNotifications } from "../../../contexts/NotificationContext";
 import { createTaskNotificationService } from "../../../services/notifications/taskNotificationService";
 import { vaccineNameTranslations } from "../../../data/vaccines/israeliVaccines";
+import { ProviderDashboard } from "../../provider/pages/ProviderDashboard";
 
-const Item = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(2),
-  textAlign: "center",
-  color: theme.palette.text.secondary,
-  height: "100%",
-}));
 
-type StatCardProps = {
-  title: string;
-  value: string | number;
-  description?: string;
-};
-
-const StatCard = ({ title, value, description }: StatCardProps) => (
-  <Item elevation={2}>
-    <Typography variant="h6" color="text.secondary" gutterBottom>
-      {title}
-    </Typography>
-    <Typography variant="h4" component="div" sx={{ fontWeight: "bold", mb: 1 }}>
-      {value}
-    </Typography>
-    {description && (
-      <Typography variant="body2" color="text.secondary">
-        {description}
-      </Typography>
-    )}
-  </Item>
-);
 
 export const Dashboard = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { t, currentLanguage } = useLocalization();
   const { addNotification } = useNotifications();
-  const [stats, setStats] = useState({
-    totalPets: 0,
-    tasksDue: 0,
-    upcomingVetVisits: 0,
-    overdueVaccinations: 0,
-    upcomingVaccinations: 0,
-  });
   const [pets, setPets] = useState<any[]>([]);
   const [recentTasks, setRecentTasks] = useState<TaskListTask[]>([]);
   const [overdueVaccinations, setOverdueVaccinations] = useState<any[]>([]);
@@ -66,6 +32,11 @@ export const Dashboard = () => {
   const [weightHealthData, setWeightHealthData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Show provider dashboard for providers
+  if (user?.is_provider) {
+    return <ProviderDashboard />;
+  }
 
   // Get translated vaccine name
   const getTranslatedVaccineName = (name: string): string => {
@@ -114,8 +85,10 @@ export const Dashboard = () => {
               })
             ]);
             console.log('🔍 Dashboard: Vaccination data fetched successfully');
-            setOverdueVaccinations(overdueData || []);
-            setUpcomingVaccinations(upcomingData || []);
+            overdueVaccinations = overdueData || [];
+            upcomingVaccinations = upcomingData || [];
+            setOverdueVaccinations(overdueVaccinations);
+            setUpcomingVaccinations(upcomingVaccinations);
           } catch (error) {
             console.warn('Could not fetch vaccination data:', error);
             // Continue without vaccination data
@@ -221,24 +194,6 @@ export const Dashboard = () => {
           }
         }
 
-        // Calculate stats
-        const totalPets = petsData.length;
-        const tasksDue = tasksData.filter(task => !task.isCompleted && new Date(task.dateTime) <= new Date()).length;
-        const upcomingVetVisits = tasksData.filter(task => 
-          !task.isCompleted && 
-          task.title.toLowerCase().includes('vet') && 
-          new Date(task.dateTime) > new Date()
-        ).length;
-        const overdueVaccinationsCount = overdueVaccinations.length;
-        const upcomingVaccinationsCount = upcomingVaccinations.length;
-
-        setStats({
-          totalPets,
-          tasksDue,
-          upcomingVetVisits,
-          overdueVaccinations: overdueVaccinationsCount,
-          upcomingVaccinations: upcomingVaccinationsCount,
-        });
 
         // Get recent tasks (last 5 incomplete tasks) and convert to TaskList format
         const recentIncompleteTasks = tasksData
@@ -295,36 +250,6 @@ export const Dashboard = () => {
          {t('dashboard.title')}
        </Typography>
 
-                                                                                   {/* Stats Grid */}
-         <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid key="pets-stat" size={{ xs: 12, sm: 6, md: 3 }}>
-              <StatCard title={t('pets.title')} value={stats.totalPets} />
-            </Grid>
-            <Grid key="tasks-stat" size={{ xs: 12, sm: 6, md: 3 }}>
-              <StatCard title={t('tasks.title')} value={stats.tasksDue} />
-            </Grid>
-            <Grid key="vet-visits-stat" size={{ xs: 12, sm: 6, md: 3 }}>
-              <StatCard
-                title={t('dashboard.upcomingVetVisits')}
-                value={stats.upcomingVetVisits}
-                description={t('dashboard.thisMonth')}
-              />
-            </Grid>
-            <Grid key="overdue-vaccines-stat" size={{ xs: 12, sm: 6, md: 3 }}>
-              <StatCard
-                title={t('dashboard.overdueVaccinations')}
-                value={stats.overdueVaccinations}
-                description={t('dashboard.needAttention')}
-              />
-            </Grid>
-            <Grid key="upcoming-vaccines-stat" size={{ xs: 12, sm: 6, md: 3 }}>
-              <StatCard
-                title={t('dashboard.upcomingVaccinations')}
-                value={stats.upcomingVaccinations}
-                description={t('dashboard.next30Days')}
-              />
-            </Grid>
-         </Grid>
 
       {/* Recent Tasks */}
       <Paper sx={{ p: 3, mb: 4 }}>
@@ -607,41 +532,6 @@ export const Dashboard = () => {
        )}
 
 
-      {/* Upcoming Events Section */}
-      <Grid container spacing={3}>
-        <Grid key="upcoming-events" size={{ xs: 12, md: 6 }}>
-          <Paper sx={{ p: 3, height: "100%" }}>
-            <Typography variant="h6" component="h2" gutterBottom>
-              {t('dashboard.upcomingEvents')}
-            </Typography>
-            {stats.upcomingVetVisits > 0 ? (
-              <Typography color="primary">
-                {stats.upcomingVetVisits} {t('dashboard.vetAppointmentsScheduled')}
-              </Typography>
-            ) : (
-              <Typography color="text.secondary" sx={{ fontStyle: "italic" }}>
-                {t('dashboard.noUpcomingEvents')}
-              </Typography>
-            )}
-          </Paper>
-        </Grid>
-        <Grid key="health-reminders" size={{ xs: 12, md: 6 }}>
-          <Paper sx={{ p: 3, height: "100%" }}>
-            <Typography variant="h6" component="h2" gutterBottom>
-              {t('dashboard.healthReminders')}
-            </Typography>
-            {stats.overdueVaccinations > 0 ? (
-              <Typography color="error">
-                {stats.overdueVaccinations} {t('dashboard.vaccinationsOverdue')}
-              </Typography>
-            ) : (
-              <Typography color="text.secondary" sx={{ fontStyle: "italic" }}>
-                {t('dashboard.allVaccinationsUpToDate')}
-              </Typography>
-            )}
-          </Paper>
-        </Grid>
-      </Grid>
     </Box>
   );
 };

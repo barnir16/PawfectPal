@@ -1,246 +1,200 @@
 import { apiClient } from '../api';
-import { StorageHelper } from '../../utils/StorageHelper';
-import type { ChatMessage, ChatMessageCreate, ChatConversation } from '../../types/services/chat';
+import type {
+  ChatConversation,
+  ChatMessage,
+  ChatMessageCreate,
+} from '../../types/services/chat';
 
-export class ChatService {
-  /**
-   * Send a message in a service request conversation
-   */
-  static async sendMessage(message: ChatMessageCreate): Promise<ChatMessage> {
-    console.log('📤 sendMessage called with:', {
-      hasAttachments: !!(message.attachments && message.attachments.length > 0),
-      attachmentCount: message.attachments?.length || 0,
-      messageType: message.message_type,
-      messageText: message.message
-    });
-    
-    // Handle file uploads if present
-    if (message.attachments && message.attachments.length > 0) {
-      console.log('📤 Calling sendMessageWithAttachments');
-      return this.sendMessageWithAttachments(message);
-    }
-
-    const response = await apiClient.post('/chat/messages', message);
-    console.log('Chat service response:', response);
-    console.log('Response type:', typeof response);
-    console.log('Response keys:', Object.keys(response || {}));
-    
-    // Check if response is undefined or null
-    if (response === undefined || response === null) {
-      console.warn('Backend returned undefined/null response');
-    }
-    
-    return response;
-  }
-
-  /**
-   * Send a message with file attachments
-   */
-  static async sendMessageWithAttachments(message: ChatMessageCreate): Promise<ChatMessage> {
-    console.log('📤 sendMessageWithAttachments called with:', {
-      attachments: message.attachments,
-      attachmentCount: message.attachments?.length || 0,
-      messageType: message.message_type
-    });
-    
-    if (message.attachments && message.attachments.length > 0) {
-      // Upload attachments first
-      const uploadedAttachments = await Promise.all(
-        message.attachments.map(async (attachment) => {
-          console.log('📤 Uploading attachment:', {
-            fileName: attachment.file.name,
-            fileSize: attachment.file.size,
-            fileType: attachment.file.type
-          });
-          
-          const formData = new FormData();
-          formData.append('file', attachment.file, attachment.file.name);
-          
-          // Debug FormData contents
-          console.log('📤 FormData entries:');
-          for (const [key, value] of formData.entries()) {
-            console.log(`  ${key}:`, value);
-          }
-          
-          // Debug the file object itself
-          console.log('📤 File object details:', {
-            name: attachment.file.name,
-            size: attachment.file.size,
-            type: attachment.file.type,
-            lastModified: attachment.file.lastModified
-          });
-          
-          // Test with simple endpoint first using native fetch
-          console.log('🧪 Testing with test-upload endpoint first...');
-          try {
-            const token = await StorageHelper.getItem('authToken');
-            const testResponse = await fetch('https://pawfectpal-production.up.railway.app/image_upload/test-upload', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-              },
-              body: formData
-            });
-            
-            if (testResponse.ok) {
-              const testData = await testResponse.json();
-              console.log('🧪 Test upload successful:', testData);
-            } else {
-              const errorText = await testResponse.text();
-              console.error('🧪 Test upload failed:', testResponse.status, errorText);
-            }
-          } catch (testError) {
-            console.error('🧪 Test upload failed:', testError);
-          }
-          
-          // Use native fetch since API client has issues with FormData
-          const token = await StorageHelper.getItem('authToken');
-          const uploadResponse = await fetch('https://pawfectpal-production.up.railway.app/image_upload/chat-attachment', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-            body: formData
-          });
-          
-          if (!uploadResponse.ok) {
-            const errorText = await uploadResponse.text();
-            throw new Error(`Upload failed: ${uploadResponse.status} ${errorText}`);
-          }
-          
-          const uploadData = await uploadResponse.json();
-          console.log('📤 Upload response data:', uploadData);
-          console.log('📤 Upload response status:', uploadResponse.status);
-          console.log('📤 Upload response headers:', Object.fromEntries(uploadResponse.headers.entries()));
-          
-          return {
-            id: uploadData.id,
-            file_name: uploadData.file_name,
-            file_url: uploadData.file_url,
-            file_type: uploadData.file_type,
-            file_size: uploadData.file_size,
-            created_at: new Date().toISOString(),
-          };
-        })
-      );
-      
-      // Send message with uploaded attachments
-      const messagePayload = {
-        service_request_id: message.service_request_id,
-        message: message.message,
-        message_type: message.message_type || 'image',
-        metadata: message.metadata,
-        attachments: uploadedAttachments,
-      };
-      console.log('📤 Sending message with attachments:', messagePayload);
-      
-      const response = await apiClient.post('/chat/messages', messagePayload);
-      console.log('📤 Message sent response:', response);
-      return response;
-    } else {
-      // Send regular message
-      const response = await apiClient.post('/chat/messages', {
-        service_request_id: message.service_request_id,
-        message: message.message,
-        message_type: message.message_type || 'text',
-        metadata: message.metadata,
-      });
-      return response;
-    }
-  }
-
-  /**
-   * Share location in a conversation
-   */
-  static async shareLocation(
-    serviceRequestId: number,
-    latitude?: number,
-    longitude?: number,
-    address?: string,
-    fallback?: boolean
-  ): Promise<ChatMessage> {
-    let messageText: string;
-    let metadata: any = {};
-
-    if (fallback || (!latitude && !longitude)) {
-      // Web fallback - just share the address
-      messageText = `📍 Location shared: ${address || 'Service location'}`;
-      metadata = {
-        location: {
-          address: address || 'Service location',
-          fallback: true,
-        },
-      };
-    } else {
-      // Full location with coordinates
-      messageText = `📍 Location shared: ${address || 'Current location'}`;
-      metadata = {
-        location: {
-          latitude,
-          longitude,
-          address,
-        },
-      };
-    }
-
-    const message: ChatMessageCreate = {
-      service_request_id: serviceRequestId,
-      message: messageText,
-      message_type: 'location',
-      metadata,
-    };
-
-    return this.sendMessage(message);
-  }
-
-  /**
-   * Send service status update
-   */
-  static async sendServiceUpdate(
-    serviceRequestId: number,
-    status: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled',
-    message?: string
-  ): Promise<ChatMessage> {
-    const statusMessages = {
-      pending: 'Service request is pending confirmation',
-      confirmed: 'Service has been confirmed!',
-      in_progress: 'Service is now in progress',
-      completed: 'Service has been completed successfully',
-      cancelled: 'Service has been cancelled',
-    };
-
-    const updateMessage: ChatMessageCreate = {
-      service_request_id: serviceRequestId,
-      message: message || statusMessages[status],
-      message_type: 'service_update',
-      metadata: {
-        service_status: status,
-      },
-    };
-
-    return this.sendMessage(updateMessage);
-  }
-
-  /**
-   * Get conversation for a service request
-   */
-  static async getConversation(serviceRequestId: number): Promise<ChatConversation> {
-    const response = await apiClient.get(`/chat/conversations/${serviceRequestId}`);
-    return response;
-  }
-
+class ChatService {
   /**
    * Get all conversations for the current user
    */
-  static async getMyConversations(): Promise<ChatConversation[]> {
-    const response = await apiClient.get('/chat/my-conversations');
-    return response;
+  async getMyConversations(): Promise<ChatConversation[]> {
+    try {
+      console.log('🔍 ChatService: Fetching my conversations...');
+      const response = await apiClient.get('/chat/my-conversations');
+      console.log('🔍 ChatService: Raw response:', response);
+      console.log('🔍 ChatService: Response data:', response);
+      console.log('🔍 ChatService: Data type:', typeof response);
+      console.log('🔍 ChatService: Data length:', Array.isArray(response) ? response.length : 'not array');
+      return response || [];
+    } catch (error) {
+      console.error('❌ ChatService: Failed to fetch conversations:', error);
+      // Return empty array instead of throwing error
+      return [];
+    }
+  }
+
+  /**
+   * Get conversation for a specific service request
+   */
+  async getConversation(serviceRequestId: number, limit: number = 50, offset: number = 0): Promise<ChatConversation> {
+    try {
+      console.log(`🔍 ChatService: Fetching conversation for service request ${serviceRequestId} with limit=${limit}, offset=${offset}`);
+      const response = await apiClient.get(`/chat/conversations/${serviceRequestId}?limit=${limit}&offset=${offset}`);
+      console.log(`🔍 ChatService: Conversation fetched successfully`, response);
+      return response;
+    } catch (error: any) {
+      console.error('❌ ChatService: Failed to fetch conversation:', error);
+      console.error('❌ ChatService: Error status:', error?.status);
+      console.error('❌ ChatService: Error response:', error?.response?.data);
+      
+      // If it's a 404, return empty conversation (new chat)
+      if (error?.status === 404) {
+        console.log('🔍 ChatService: 404 - returning empty conversation');
+        return {
+          service_request_id: serviceRequestId,
+          messages: [],
+          unread_count: 0,
+          total_messages: 0,
+          has_more: false,
+          current_offset: offset,
+          limit: limit
+        };
+      }
+      
+      // If it's a 403, user doesn't have access
+      if (error?.status === 403) {
+        console.log('❌ ChatService: 403 - Access denied');
+        throw new Error('You do not have access to this conversation');
+      }
+      
+      console.log('❌ ChatService: Unknown error, throwing generic error');
+      throw new Error('Failed to fetch conversation');
+    }
+  }
+
+  /**
+   * Send a message in a service request conversation
+   */
+  async sendMessage(serviceRequestId: number, message: ChatMessageCreate): Promise<ChatMessage> {
+    try {
+      const response = await apiClient.post('/chat/messages', message);
+      return response;
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      throw new Error('Failed to send message');
+    }
   }
 
   /**
    * Mark a message as read
    */
-  static async markMessageRead(messageId: number): Promise<void> {
-    await apiClient.put(`/chat/messages/${messageId}/read`);
+  async markMessageRead(messageId: number): Promise<void> {
+    try {
+      await apiClient.put(`/chat/messages/${messageId}/read`);
+    } catch (error) {
+      console.error('Failed to mark message as read:', error);
+      throw new Error('Failed to mark message as read');
+    }
+  }
+
+  /**
+   * Mark a message as delivered
+   */
+  async markMessageDelivered(messageId: number): Promise<void> {
+    try {
+      await apiClient.put(`/chat/messages/${messageId}/delivered`);
+    } catch (error) {
+      console.error('Failed to mark message as delivered:', error);
+      throw new Error('Failed to mark message as delivered');
+    }
+  }
+
+  /**
+   * Share location in a service request conversation
+   */
+  async shareLocation(
+    serviceRequestId: number,
+    latitude?: number,
+    longitude?: number,
+    address?: string,
+    fallback?: string
+  ): Promise<ChatMessage> {
+    try {
+      // Format the location message to match what the render function expects
+      let locationMessage = '📍 Location shared';
+      if (latitude && longitude) {
+        locationMessage += `\nLat: ${latitude}\nLng: ${longitude}`;
+      }
+      if (address) {
+        locationMessage += `\nAddress: ${address}`;
+      }
+      
+      const messageData: ChatMessageCreate = {
+        service_request_id: serviceRequestId,
+        message: locationMessage,
+        message_type: 'location',
+      };
+      
+      return await this.sendMessage(serviceRequestId, messageData);
+    } catch (error) {
+      console.error('Failed to share location:', error);
+      throw new Error('Failed to share location');
+    }
+  }
+
+  /**
+   * Send a message with file attachments
+   */
+  async sendMessageWithFiles(
+    serviceRequestId: number,
+    message: string,
+    files: File[],
+    messageType: string = "text"
+  ): Promise<ChatMessage> {
+    try {
+      const formData = new FormData();
+      formData.append('service_request_id', serviceRequestId.toString());
+      formData.append('message', message);
+      formData.append('message_type', messageType);
+      
+      // Add files to FormData
+      files.forEach((file) => {
+        formData.append('files', file);
+      });
+
+      console.log('📤 Sending message with files:', {
+        serviceRequestId,
+        message,
+        messageType,
+        fileCount: files.length,
+        files: files.map(f => ({ name: f.name, size: f.size, type: f.type }))
+      });
+
+      const response = await apiClient.post('/chat/messages-with-files', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      console.log('📤 Message with files sent successfully:', response);
+      return response;
+    } catch (error: any) {
+      console.error('Failed to send message with files:', error);
+      console.error('Error details:', {
+        status: error?.response?.status,
+        statusText: error?.response?.statusText,
+        data: error?.response?.data
+      });
+      throw new Error('Failed to send message with files');
+    }
+  }
+
+  /**
+   * Load more messages for pagination
+   */
+  async loadMoreMessages(serviceRequestId: number, currentOffset: number, limit: number = 50): Promise<ChatConversation> {
+    try {
+      console.log(`🔍 ChatService: Loading more messages for service request ${serviceRequestId}, offset=${currentOffset}`);
+      const response = await apiClient.get(`/chat/conversations/${serviceRequestId}?limit=${limit}&offset=${currentOffset}`);
+      console.log(`🔍 ChatService: More messages loaded successfully`, response);
+      return response;
+    } catch (error: any) {
+      console.error('❌ ChatService: Failed to load more messages:', error);
+      throw new Error('Failed to load more messages');
+    }
   }
 }
+
+export const chatService = new ChatService();

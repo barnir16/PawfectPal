@@ -6,6 +6,7 @@ export type ServiceRequestStatus = 'open' | 'in_progress' | 'completed' | 'close
 export interface ServiceRequest {
   id: number;
   user_id: number;
+  assigned_provider_id?: number;
   service_type: string;
   title: string;
   description: string;
@@ -27,6 +28,7 @@ export interface ServiceRequest {
   
   // Relationships
   user?: User;
+  assigned_provider?: User;
   pets?: Pet[];
 }
 

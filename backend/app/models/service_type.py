@@ -18,10 +18,7 @@ class ServiceTypeORM(Base):
     name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
-    # Reverse relationship: all services of this type
-    services: Mapped[List["ServiceORM"]] = relationship(
-        "ServiceORM", back_populates="service_type_obj"
-    )
+    # Note: No direct relationship with ServiceORM since we use string service_type instead of foreign key
 
     # Many-to-many relationship with providers
     providers: Mapped[List["ProviderORM"]] = relationship(
