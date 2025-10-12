@@ -246,10 +246,25 @@ export const ChatListPage = () => {
       let otherParticipantName = t("provider");
       const currentUserId = user?.id;
       
+      console.log('🔍 Participant Detection Debug:', {
+        conversationId: conversation.service_request_id,
+        currentUserId,
+        totalMessages: conversation.messages.length,
+        messageSenders: conversation.messages.map(m => ({ 
+          id: m.sender_id, 
+          username: m.sender?.username,
+          isCurrentUser: m.sender_id === currentUserId 
+        }))
+      });
+      
       // Look through messages to find someone other than the current user
       for (const message of conversation.messages) {
         if (message.sender_id !== currentUserId && message.sender?.username) {
           otherParticipantName = message.sender.username;
+          console.log('🔍 Found other participant:', {
+            senderId: message.sender_id,
+            username: message.sender.username
+          });
           break;
         }
       }

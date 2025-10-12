@@ -871,6 +871,11 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   };
 
   const handleFileOpen = (attachment: MediaAttachment) => {
+    console.log('📁 Opening file:', {
+      fileName: attachment.file_name,
+      fileUrl: attachment.file_url,
+      fileType: attachment.file_type
+    });
     window.open(attachment.file_url, '_blank');
   };
 
