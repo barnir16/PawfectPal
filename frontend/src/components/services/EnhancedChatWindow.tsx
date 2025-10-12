@@ -874,7 +874,9 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     console.log('📁 Opening file:', {
       fileName: attachment.file_name,
       fileUrl: attachment.file_url,
-      fileType: attachment.file_type
+      fileType: attachment.file_type,
+      isRelative: attachment.file_url.startsWith('/'),
+      nodeEnv: process.env.NODE_ENV
     });
     
     // Ensure we have a full URL for opening
@@ -882,13 +884,34 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     if (fullUrl.startsWith('/')) {
       // If it's a relative path, prepend the base URL
       const baseUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://pawfectpal-production.up.railway.app' 
+        ? 'https://pawfectpal-production-2f07.up.railway.app' 
         : 'http://localhost:8000';
       fullUrl = baseUrl + fullUrl;
+      console.log('📁 Constructed URL:', { baseUrl, originalUrl: attachment.file_url, fullUrl });
     }
     
     console.log('📁 Opening full URL:', fullUrl);
-    window.open(fullUrl, '_blank');
+    
+    // Try to open the file
+    try {
+      const newWindow = window.open(fullUrl, '_blank');
+      if (!newWindow) {
+        console.error('❌ Failed to open window - popup blocked?');
+        // Fallback: try to download the file
+        const link = document.createElement('a');
+        link.href = fullUrl;
+        link.download = attachment.file_name;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        console.log('📁 Fallback: triggered download');
+      } else {
+        console.log('✅ Successfully opened file in new window');
+      }
+    } catch (error) {
+      console.error('❌ Error opening file:', error);
+    }
   };
 
   const handleFileUploadProgress = (fileName: string, progress: number, status: 'uploading' | 'completed' | 'error', error?: string) => {

@@ -85,7 +85,7 @@ export const LocationMessage: React.FC<LocationMessageProps> = ({ message, compa
           </Box>
 
           {/* Map Preview (if not compact) */}
-          {!compact && !mapError && (
+          {!compact && (
             <Box sx={{ 
               height: 120,
               borderRadius: 1,
@@ -94,26 +94,80 @@ export const LocationMessage: React.FC<LocationMessageProps> = ({ message, compa
               backgroundColor: (theme) => theme.palette.action.hover,
               position: 'relative',
               cursor: 'pointer',
+              background: `linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)`,
             }}
             onClick={handleOpenInMaps}
             >
-              {/* Simple map placeholder - click to open in maps */}
+              {/* Enhanced map preview */}
               <Box sx={{
                 width: '100%',
                 height: '100%',
-                backgroundColor: (theme) => theme.palette.action.hover,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
                 borderRadius: '4px',
+                position: 'relative',
+                '&:hover': {
+                  backgroundColor: 'rgba(0,0,0,0.05)',
+                }
               }}>
-                <LocationOn sx={{ fontSize: 40, color: 'error.main', mb: 1 }} />
-                <Typography variant="caption" color="text.secondary" textAlign="center">
+                {/* Map-like grid pattern */}
+                <Box sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundImage: `
+                    linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)
+                  `,
+                  backgroundSize: '20px 20px',
+                  opacity: 0.3,
+                }} />
+                
+                {/* Location pin */}
+                <LocationOn sx={{ 
+                  fontSize: 48, 
+                  color: 'error.main', 
+                  mb: 1,
+                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
+                  zIndex: 1,
+                }} />
+                
+                {/* Coordinates */}
+                <Typography 
+                  variant="body2" 
+                  color="text.primary" 
+                  textAlign="center"
+                  sx={{ 
+                    fontWeight: 600,
+                    backgroundColor: 'rgba(255,255,255,0.9)',
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 1,
+                    zIndex: 1,
+                  }}
+                >
                   {latitude.toFixed(4)}, {longitude.toFixed(4)}
                 </Typography>
-                <Typography variant="caption" color="text.secondary" textAlign="center" sx={{ mt: 0.5 }}>
-                  Click to open in maps
+                
+                {/* Click hint */}
+                <Typography 
+                  variant="caption" 
+                  color="text.secondary" 
+                  textAlign="center" 
+                  sx={{ 
+                    mt: 0.5,
+                    backgroundColor: 'rgba(255,255,255,0.8)',
+                    px: 1,
+                    py: 0.25,
+                    borderRadius: 0.5,
+                    zIndex: 1,
+                  }}
+                >
+                  {t('chat.openInMaps') || 'Click to open in maps'}
                 </Typography>
               </Box>
             </Box>
