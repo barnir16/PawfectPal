@@ -260,7 +260,19 @@ export const ChatListPage = () => {
         : messageText;
       
       // Format: "Service Type: Initial Message - Other Participant Name"
-      return `${serviceType}: ${messagePreview} - ${otherParticipantName}`;
+      const title = `${serviceType}: ${messagePreview} - ${otherParticipantName}`;
+      
+      // Debug logging
+      console.log('🔍 Chat Title Debug:', {
+        conversationId: conversation.service_request_id,
+        currentUserId,
+        firstMessage: firstMessage.message,
+        otherParticipantName,
+        serviceType,
+        finalTitle: title
+      });
+      
+      return title;
     }
     
     // No messages yet - show generic title
