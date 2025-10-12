@@ -25,7 +25,9 @@ import { webSocketService, WebSocketMessage } from "../../../services/chat/webSo
 import { firebaseMessagingService, ChatNotificationData } from "../../../services/notifications/firebaseMessagingService";
 import { offlineMessageService, OfflineStatus } from "../../../services/chat/offlineMessageService";
 import { ServiceRequestService } from "../../../services/serviceRequests/serviceRequestService";
+import { PetService } from "../../../services/pets/petService";
 import type { ServiceRequest } from "../../../types/services/serviceRequest";
+import type { Pet } from "../../../types/pets/pet";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useMessageStatusTracker } from "../../../hooks/useMessageStatusTracker";
 
@@ -35,6 +37,7 @@ export const ChatPage = () => {
   const { user, token } = useAuth();
   const [conversation, setConversation] = useState<ChatConversation | null>(null);
   const [serviceRequest, setServiceRequest] = useState<ServiceRequest | null>(null);
+  const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -219,6 +222,26 @@ export const ChatPage = () => {
         const serviceRequestData = await ServiceRequestService.getServiceRequest(Number(id));
         console.log('🔍 ChatPage: Service request fetched', serviceRequestData);
         setServiceRequest(serviceRequestData);
+        
+        // Fetch pets if they're not included in the service request
+        if (serviceRequestData.pet_ids && serviceRequestData.pet_ids.length > 0) {
+          try {
+            const petsData = await Promise.all(
+              serviceRequestData.pet_ids.map(petId => PetService.getPet(petId))
+            );
+            console.log('🔍 ChatPage: Pets fetched', petsData);
+            setPets(petsData);
+          } catch (petError) {
+            console.warn('⚠️ ChatPage: Failed to fetch pets', petError);
+            // If service request has pets data, use that as fallback
+            if (serviceRequestData.pets) {
+              setPets(serviceRequestData.pets);
+            }
+          }
+        } else if (serviceRequestData.pets) {
+          // Use pets from service request if available
+          setPets(serviceRequestData.pets);
+        }
         
         // Then fetch the conversation
         try {
@@ -492,7 +515,7 @@ export const ChatPage = () => {
           <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
             <ServiceRequestInfo
               serviceRequest={serviceRequest}
-              pets={serviceRequest.pets || []}
+              pets={pets}
               provider={serviceRequest.assigned_provider}
               compact={true}
             />
