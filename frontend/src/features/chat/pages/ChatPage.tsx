@@ -476,8 +476,8 @@ export const ChatPage = () => {
                 )}
                 <Chip
                   icon={isWebSocketConnected ? <Wifi /> : <WifiOff />}
-                  label={isWebSocketConnected ? "Live" : "Offline"}
-                  color={isWebSocketConnected ? "success" : "default"}
+                  label={isWebSocketConnected ? "Connected" : "Disconnected"}
+                  color={isWebSocketConnected ? "success" : "error"}
                   size="small"
                   variant="outlined"
                 />

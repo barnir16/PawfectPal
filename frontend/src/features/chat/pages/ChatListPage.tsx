@@ -27,7 +27,9 @@ import { useAuth } from "../../../contexts/AuthContext";
 import type { ChatConversation } from "../../../types/services/chat";
 import { useNavigate } from "react-router-dom";
 import { chatService } from "../../../services/chat/chatService";
+import { ServiceRequestService } from "../../../services/serviceRequests/serviceRequestService";
 import { formatChatListTime } from "../../../utils/timeUtils";
+import type { ServiceRequest } from "../../../types/services/serviceRequest";
 
 export const ChatListPage = () => {
   const { t } = useLocalization();
@@ -38,6 +40,7 @@ export const ChatListPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [serviceRequests, setServiceRequests] = useState<Map<number, ServiceRequest>>(new Map());
 
   // Skeleton loading component for chat list
   const ChatListSkeleton = () => (
@@ -152,6 +155,22 @@ export const ChatListPage = () => {
       console.log('🔍 ChatListPage: Conversations count:', data.length);
       console.log('🔍 ChatListPage: First conversation:', data[0]);
       setConversations(data);
+
+      // Fetch service request data for each conversation to create better titles
+      const serviceRequestMap = new Map<number, ServiceRequest>();
+      const fetchPromises = data.map(async (conversation) => {
+        try {
+          const serviceRequest = await ServiceRequestService.getServiceRequest(conversation.service_request_id);
+          serviceRequestMap.set(conversation.service_request_id, serviceRequest);
+          console.log('🔍 ChatListPage: Fetched service request for conversation', conversation.service_request_id, serviceRequest.title);
+        } catch (error) {
+          console.warn('⚠️ ChatListPage: Failed to fetch service request for conversation', conversation.service_request_id, error);
+        }
+      });
+
+      await Promise.all(fetchPromises);
+      setServiceRequests(serviceRequestMap);
+      console.log('🔍 ChatListPage: Service requests fetched:', serviceRequestMap.size);
     } catch (err: any) {
       console.error('❌ ChatListPage: Error fetching conversations:', err);
       setError(err.message || t("chat.somethingWentWrong"));
@@ -220,16 +239,48 @@ export const ChatListPage = () => {
   }), [t]);
 
   const getChatTitle = (conversation: ChatConversation): string => {
-    // If there are messages, create a meaningful title
+    const serviceRequest = serviceRequests.get(conversation.service_request_id);
+    
+    // If we have service request data, use it for a better title
+    if (serviceRequest) {
+      const serviceType = serviceTypeMap[serviceRequest.service_type] || t("petCare");
+      const title = serviceRequest.title;
+      
+      // Find the OTHER participant (provider or client)
+      let otherParticipantName = t("provider");
+      const currentUserId = user?.id;
+      
+      // If current user is the service request owner, show provider name
+      if (serviceRequest.user?.id === currentUserId && serviceRequest.assigned_provider) {
+        otherParticipantName = serviceRequest.assigned_provider.username || t("provider");
+      }
+      // If current user is the provider, show client name
+      else if (serviceRequest.assigned_provider?.id === currentUserId && serviceRequest.user) {
+        otherParticipantName = serviceRequest.user.username || t("client");
+      }
+      
+      const finalTitle = `${serviceType}: ${title} - ${otherParticipantName}`;
+      
+      console.log('🔍 Service Request Title Debug:', {
+        conversationId: conversation.service_request_id,
+        serviceRequestTitle: serviceRequest.title,
+        serviceType: serviceRequest.service_type,
+        otherParticipantName,
+        finalTitle
+      });
+      
+      return finalTitle;
+    }
+    
+    // Fallback to message-based title if no service request data
     if (conversation.messages.length > 0) {
       const firstMessage = conversation.messages[0];
       const messageText = firstMessage.message;
       
-      // Extract service type from message content (more efficient approach)
+      // Extract service type from message content
       let serviceType = "";
       const lowerMessage = messageText.toLowerCase();
       
-      // Find the first matching service type
       for (const [keyword, translation] of Object.entries(serviceTypeMap)) {
         if (lowerMessage.includes(keyword)) {
           serviceType = translation;
@@ -237,50 +288,29 @@ export const ChatListPage = () => {
         }
       }
       
-      // Fallback if no service type found
       if (!serviceType) {
         serviceType = t("petCare");
       }
       
-      // Find the OTHER participant in the conversation (not the current user)
+      // Find the OTHER participant in the conversation
       let otherParticipantName = t("provider");
       const currentUserId = user?.id;
       
-      console.log('🔍 Participant Detection Debug:', {
-        conversationId: conversation.service_request_id,
-        currentUserId,
-        totalMessages: conversation.messages.length,
-        messageSenders: conversation.messages.map(m => ({ 
-          id: m.sender_id, 
-          username: m.sender?.username,
-          isCurrentUser: m.sender_id === currentUserId 
-        }))
-      });
-      
-      // Look through messages to find someone other than the current user
       for (const message of conversation.messages) {
         if (message.sender_id !== currentUserId && message.sender?.username) {
           otherParticipantName = message.sender.username;
-          console.log('🔍 Found other participant:', {
-            senderId: message.sender_id,
-            username: message.sender.username
-          });
           break;
         }
       }
       
-      // Get initial message preview (first 30 characters)
       const messagePreview = messageText.length > 30 
         ? messageText.substring(0, 30) + "..." 
         : messageText;
       
-      // Format: "Service Type: Initial Message - Other Participant Name"
       const title = `${serviceType}: ${messagePreview} - ${otherParticipantName}`;
       
-      // Debug logging
-      console.log('🔍 Chat Title Debug:', {
+      console.log('🔍 Message-based Title Debug:', {
         conversationId: conversation.service_request_id,
-        currentUserId,
         firstMessage: firstMessage.message,
         otherParticipantName,
         serviceType,
@@ -290,7 +320,7 @@ export const ChatListPage = () => {
       return title;
     }
     
-    // No messages yet - show generic title
+    // No messages and no service request data - show generic title
     return t("newServiceRequest");
   };
 
