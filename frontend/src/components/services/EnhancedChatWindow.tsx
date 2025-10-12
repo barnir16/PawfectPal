@@ -2454,23 +2454,19 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           <>
             <MenuItem onClick={handleShareLocation}>
               <LocationOn sx={{ mr: 1 }} />
-              Share My Location
+              {t('chat.shareMyLocation')}
             </MenuItem>
             <MenuItem onClick={() => handleAction("request_photos")}>
               <Image sx={{ mr: 1 }} />
-              Request Pet Photos
+              {t('chat.requestPetPhotos')}
             </MenuItem>
             <MenuItem onClick={() => handleAction("schedule_meeting")}>
               <Schedule sx={{ mr: 1 }} />
-              Schedule Consultation
-            </MenuItem>
-            <MenuItem onClick={() => handleAction("share_instructions")}>
-              <Pets sx={{ mr: 1 }} />
-              Request Care Instructions
+              {t('chat.scheduleConsultation')}
             </MenuItem>
             <MenuItem onClick={() => handleAction("share_experience")}>
               <Star sx={{ mr: 1 }} />
-              Share My Experience
+              {t('chat.shareExperience')}
             </MenuItem>
           </>
         ) : (
@@ -2478,19 +2474,15 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           <>
             <MenuItem onClick={handleShareLocation}>
               <LocationOn sx={{ mr: 1 }} />
-              Share Location
+              {t('chat.shareLocation')}
             </MenuItem>
             <MenuItem onClick={() => handleAction("request_photos")}>
               <Image sx={{ mr: 1 }} />
-              Request Pet Photos
+              {t('chat.requestPetPhotos')}
             </MenuItem>
             <MenuItem onClick={() => handleAction("schedule_meeting")}>
               <Schedule sx={{ mr: 1 }} />
-              Schedule Meeting
-            </MenuItem>
-            <MenuItem onClick={() => handleAction("share_instructions")}>
-              <Pets sx={{ mr: 1 }} />
-              Share Instructions
+              {t('chat.scheduleMeeting')}
             </MenuItem>
           </>
         )}
