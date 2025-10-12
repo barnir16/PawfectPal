@@ -104,13 +104,48 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
   const calculateAge = (birthDate: string) => {
     const birth = new Date(birthDate);
     const today = new Date();
-    const ageInYears = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
     
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      return ageInYears - 1;
+    // Calculate age in months first for more accuracy
+    const yearDiff = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    const dayDiff = today.getDate() - birth.getDate();
+    
+    let totalMonths = yearDiff * 12 + monthDiff;
+    
+    // Adjust for day difference
+    if (dayDiff < 0) {
+      totalMonths -= 1;
     }
-    return ageInYears;
+    
+    // If less than 12 months, return months
+    if (totalMonths < 12) {
+      return totalMonths === 0 ? t('chat.monthsOld') : `${totalMonths} ${t('chat.monthsOld')}`;
+    }
+    
+    // If 12+ months, return years
+    const years = Math.floor(totalMonths / 12);
+    return `${years} ${t('chat.yearsOld')}`;
+  };
+
+  const getGenderTranslation = (gender: string) => {
+    switch (gender?.toLowerCase()) {
+      case 'male': return t('chat.male');
+      case 'female': return t('chat.female');
+      case 'other': return t('chat.other');
+      default: return t('chat.unknown');
+    }
+  };
+
+  const getSpeciesTranslation = (species: string) => {
+    switch (species?.toLowerCase()) {
+      case 'dog': return t('dog');
+      case 'cat': return t('cat');
+      case 'bird': return t('bird');
+      case 'fish': return t('fish');
+      case 'reptile': return t('reptile');
+      case 'small_animal': return t('smallAnimal');
+      default: return species || t('chat.other');
+    }
   };
 
   return (
@@ -292,65 +327,90 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
             {/* Pets Information */}
             {pets.length > 0 && (
               <Box>
-                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Pets color="primary" />
-                  Pets ({pets.length})
+                  {t('common.pets')} ({pets.length})
                 </Typography>
                 <Stack spacing={2}>
                   {pets.map((pet) => (
-                    <Paper key={pet.id} elevation={0} sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 2 }}>
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Avatar sx={{ width: 50, height: 50, backgroundColor: 'primary.light' }}>
-                          <Pets />
+                    <Paper key={pet.id} elevation={2} sx={{ p: 2, borderRadius: 2, backgroundColor: 'background.paper' }}>
+                      <Stack direction="row" spacing={2}>
+                        {/* Pet Avatar */}
+                        <Avatar 
+                          sx={{ 
+                            width: 60, 
+                            height: 60, 
+                            backgroundColor: 'primary.light',
+                            fontSize: '1.5rem'
+                          }}
+                          src={pet.imageUrl}
+                        >
+                          {pet.imageUrl ? null : <Pets />}
                         </Avatar>
+                        
+                        {/* Pet Details */}
                         <Box sx={{ flex: 1 }}>
-                          <Typography variant="h6" fontWeight={600}>
+                          <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
                             {pet.name}
                           </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {pet.type} {pet.breed && `• ${pet.breed}`}
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                            {getSpeciesTranslation(pet.type)} {pet.breed && `• ${pet.breed}`}
                           </Typography>
                           
-                          <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
+                          {/* Pet Details Grid */}
+                          <Grid container spacing={1} sx={{ mb: 1 }}>
                             {pet.birthDate && (
-                              <Chip
-                                icon={<Cake />}
-                                label={`${calculateAge(pet.birthDate)} years old`}
-                                size="small"
-                                variant="outlined"
-                              />
+                              <Grid item xs={6}>
+                                <Chip
+                                  icon={<Cake />}
+                                  label={`${t('chat.petAge')}: ${calculateAge(pet.birthDate)}`}
+                                  size="small"
+                                  variant="outlined"
+                                  color="primary"
+                                />
+                              </Grid>
                             )}
                             {pet.weightKg && (
-                              <Chip
-                                icon={<Scale />}
-                                label={`${pet.weightKg} ${pet.weightUnit}`}
-                                size="small"
-                                variant="outlined"
-                              />
-                            )}
-                            {pet.color && (
-                              <Chip
-                                icon={<ColorLens />}
-                                label={pet.color}
-                                size="small"
-                                variant="outlined"
-                              />
+                              <Grid item xs={6}>
+                                <Chip
+                                  icon={<Scale />}
+                                  label={`${t('chat.petWeight')}: ${pet.weightKg} ${pet.weightUnit}`}
+                                  size="small"
+                                  variant="outlined"
+                                  color="secondary"
+                                />
+                              </Grid>
                             )}
                             {pet.gender && (
-                              <Chip
-                                icon={<Pets />}
-                                label={pet.gender}
-                                size="small"
-                                variant="outlined"
-                              />
+                              <Grid item xs={6}>
+                                <Chip
+                                  icon={<Pets />}
+                                  label={`${t('chat.petGender')}: ${getGenderTranslation(pet.gender)}`}
+                                  size="small"
+                                  variant="outlined"
+                                  color="info"
+                                />
+                              </Grid>
                             )}
-                          </Stack>
+                            {pet.color && (
+                              <Grid item xs={6}>
+                                <Chip
+                                  icon={<ColorLens />}
+                                  label={`${t('chat.petColor')}: ${pet.color}`}
+                                  size="small"
+                                  variant="outlined"
+                                  color="warning"
+                                />
+                              </Grid>
+                            )}
+                          </Grid>
                           
-                          <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                          {/* Health Status */}
+                          <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
                             {pet.isVaccinated && (
                               <Chip
                                 icon={<Vaccines />}
-                                label="Vaccinated"
+                                label={t('chat.petVaccinated')}
                                 size="small"
                                 color="success"
                                 variant="outlined"
@@ -359,7 +419,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
                             {pet.isNeutered && (
                               <Chip
                                 icon={<MedicalServices />}
-                                label="Neutered"
+                                label={t('chat.petNeutered')}
                                 size="small"
                                 color="info"
                                 variant="outlined"
@@ -368,7 +428,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
                             {pet.isMicrochipped && (
                               <Chip
                                 icon={<CheckCircle />}
-                                label="Microchipped"
+                                label={t('chat.petMicrochipped')}
                                 size="small"
                                 color="primary"
                                 variant="outlined"
@@ -376,16 +436,70 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
                             )}
                           </Stack>
                           
-                          {pet.medicalNotes && (
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic' }}>
-                              Medical Notes: {pet.medicalNotes}
-                            </Typography>
+                          {/* Health Issues */}
+                          {pet.healthIssues && pet.healthIssues.length > 0 && (
+                            <Box sx={{ mb: 1 }}>
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                {t('chat.petHealthIssues')}:
+                              </Typography>
+                              <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                                {pet.healthIssues.map((issue, index) => (
+                                  <Chip
+                                    key={index}
+                                    label={issue}
+                                    size="small"
+                                    color="error"
+                                    variant="outlined"
+                                    sx={{ mb: 0.5 }}
+                                  />
+                                ))}
+                              </Stack>
+                            </Box>
                           )}
                           
+                          {/* Behavior Issues */}
+                          {pet.behaviorIssues && pet.behaviorIssues.length > 0 && (
+                            <Box sx={{ mb: 1 }}>
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                {t('chat.petBehaviorIssues')}:
+                              </Typography>
+                              <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                                {pet.behaviorIssues.map((issue, index) => (
+                                  <Chip
+                                    key={index}
+                                    label={issue}
+                                    size="small"
+                                    color="warning"
+                                    variant="outlined"
+                                    sx={{ mb: 0.5 }}
+                                  />
+                                ))}
+                              </Stack>
+                            </Box>
+                          )}
+                          
+                          {/* Medical Notes */}
+                          {pet.medicalNotes && (
+                            <Box sx={{ mb: 1 }}>
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                {t('chat.petMedicalNotes')}:
+                              </Typography>
+                              <Typography variant="body2" color="text.primary" sx={{ fontStyle: 'italic', backgroundColor: 'action.hover', p: 1, borderRadius: 1 }}>
+                                {pet.medicalNotes}
+                              </Typography>
+                            </Box>
+                          )}
+                          
+                          {/* General Notes */}
                           {pet.notes && (
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                              Notes: {pet.notes}
-                            </Typography>
+                            <Box>
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                {t('chat.petNotes')}:
+                              </Typography>
+                              <Typography variant="body2" color="text.primary" sx={{ backgroundColor: 'action.hover', p: 1, borderRadius: 1 }}>
+                                {pet.notes}
+                              </Typography>
+                            </Box>
                           )}
                         </Box>
                       </Stack>
