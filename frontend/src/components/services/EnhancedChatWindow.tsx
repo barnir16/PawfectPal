@@ -876,7 +876,19 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       fileUrl: attachment.file_url,
       fileType: attachment.file_type
     });
-    window.open(attachment.file_url, '_blank');
+    
+    // Ensure we have a full URL for opening
+    let fullUrl = attachment.file_url;
+    if (fullUrl.startsWith('/')) {
+      // If it's a relative path, prepend the base URL
+      const baseUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://pawfectpal-production.up.railway.app' 
+        : 'http://localhost:8000';
+      fullUrl = baseUrl + fullUrl;
+    }
+    
+    console.log('📁 Opening full URL:', fullUrl);
+    window.open(fullUrl, '_blank');
   };
 
   const handleFileUploadProgress = (fileName: string, progress: number, status: 'uploading' | 'completed' | 'error', error?: string) => {

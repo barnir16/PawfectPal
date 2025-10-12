@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import { ArrowBack, Home, Message, Wifi, WifiOff } from "@mui/icons-material";
 import { EnhancedChatWindow } from "../../../components/services/EnhancedChatWindow";
+import { ServiceRequestInfo } from "../../../components/services/ServiceRequestInfo";
 import type {
   ChatConversation,
   ChatMessage,
@@ -485,7 +486,21 @@ export const ChatPage = () => {
           </Paper>
 
       {/* Chat Window */}
-      <Box sx={{ flex: 1, overflow: "hidden" }}>
+      <Box sx={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        {/* Service Request Information */}
+        {serviceRequest && (
+          <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
+            <ServiceRequestInfo
+              serviceRequest={serviceRequest}
+              pets={serviceRequest.pets || []}
+              provider={serviceRequest.assigned_provider}
+              compact={true}
+            />
+          </Box>
+        )}
+        
+        {/* Chat Messages */}
+        <Box sx={{ flex: 1, overflow: "hidden" }}>
             <EnhancedChatWindow
               messages={conversation.messages}
               onSendMessage={handleSendMessage}
@@ -527,6 +542,7 @@ export const ChatPage = () => {
                 })),
               } : undefined}
             />
+        </Box>
       </Box>
     </Box>
   );

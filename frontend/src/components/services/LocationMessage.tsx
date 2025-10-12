@@ -92,15 +92,30 @@ export const LocationMessage: React.FC<LocationMessageProps> = ({ message, compa
               overflow: 'hidden',
               border: (theme) => `1px solid ${theme.palette.divider}`,
               backgroundColor: (theme) => theme.palette.action.hover,
-            }}>
-              <iframe
-                src={`https://www.google.com/maps/embed/v1/view?key=AIzaSyDoNsVE_ZmgBBuVJ3IKZpAAZRz9HS-67s8&center=${latitude},${longitude}&zoom=15`}
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                onError={() => setMapError(true)}
-                title="Location Map"
-              />
+              position: 'relative',
+              cursor: 'pointer',
+            }}
+            onClick={handleOpenInMaps}
+            >
+              {/* Simple map placeholder - click to open in maps */}
+              <Box sx={{
+                width: '100%',
+                height: '100%',
+                backgroundColor: (theme) => theme.palette.action.hover,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '4px',
+              }}>
+                <LocationOn sx={{ fontSize: 40, color: 'error.main', mb: 1 }} />
+                <Typography variant="caption" color="text.secondary" textAlign="center">
+                  {latitude.toFixed(4)}, {longitude.toFixed(4)}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" textAlign="center" sx={{ mt: 0.5 }}>
+                  Click to open in maps
+                </Typography>
+              </Box>
             </Box>
           )}
 
