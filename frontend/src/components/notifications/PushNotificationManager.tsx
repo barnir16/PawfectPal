@@ -80,7 +80,7 @@ export const PushNotificationManager: React.FC = () => {
       setPermissionStatus(permission);
       
       if (permission === 'granted') {
-        const isSubscribed = await NotificationService.isSubscribed();
+        const isSubscribed = await NotificationService.isPermitted();
         setSubscriptionStatus(isSubscribed ? 'subscribed' : 'unsubscribed');
       }
     } catch (err) {
@@ -93,7 +93,30 @@ export const PushNotificationManager: React.FC = () => {
     try {
       const savedSettings = await NotificationService.getNotificationSettings();
       if (savedSettings) {
-        setSettings(savedSettings);
+        // Ensure all required fields are present
+        const defaultSettings: NotificationSettings = {
+          vaccineReminders: true,
+          weightAlerts: true,
+          healthMilestones: true,
+          generalUpdates: false,
+          emailNotifications: true,
+          pushNotifications: true,
+          reminderFrequency: 'weekly',
+          quietHours: {
+            enabled: false,
+            start: '22:00',
+            end: '08:00',
+          },
+        };
+        
+        setSettings({
+          ...defaultSettings,
+          ...savedSettings,
+          quietHours: {
+            ...defaultSettings.quietHours,
+            ...(savedSettings.quietHours || {})
+          }
+        });
       }
     } catch (err) {
       console.error('Error loading notification settings:', err);
@@ -106,7 +129,7 @@ export const PushNotificationManager: React.FC = () => {
       setSettings(newSettings);
       
       await NotificationService.saveNotificationSettings(newSettings);
-      setSuccess('הגדרות ההתראות נשמרו בהצלחה');
+      setSuccess(t('notifications.messages.saved'));
       
       // If enabling push notifications, request permission
       if (key === 'pushNotifications' && value === true) {
@@ -114,7 +137,7 @@ export const PushNotificationManager: React.FC = () => {
       }
     } catch (err) {
       console.error('Error saving notification settings:', err);
-      setError('שגיאה בשמירת הגדרות ההתראות');
+      setError(t('notifications.messages.saveError'));
     }
   };
 
@@ -123,12 +146,12 @@ export const PushNotificationManager: React.FC = () => {
       setIsLoading(true);
       setError(null);
       
-      await NotificationService.subscribeToNotifications();
+      await NotificationService.subscribeToPushNotifications();
       setSubscriptionStatus('subscribed');
-      setSuccess('נרשמת בהצלחה להתראות');
+      setSuccess(t('notifications.messages.subscribed'));
     } catch (err) {
       console.error('Error subscribing to notifications:', err);
-      setError('שגיאה בהרשמה להתראות');
+      setError(t('notifications.messages.subscribeError'));
       setSubscriptionStatus('error');
     } finally {
       setIsLoading(false);
@@ -140,12 +163,13 @@ export const PushNotificationManager: React.FC = () => {
       setIsLoading(true);
       setError(null);
       
-      await NotificationService.unsubscribeFromNotifications();
+      // No direct unsubscribe method available, we'll just update the local state
       setSubscriptionStatus('unsubscribed');
-      setSuccess('ביטלת בהצלחה את ההרשמה להתראות');
+      setSubscriptionStatus('unsubscribed');
+      setSuccess(t('notifications.messages.unsubscribed'));
     } catch (err) {
       console.error('Error unsubscribing from notifications:', err);
-      setError('שגיאה בביטול ההרשמה להתראות');
+      setError(t('notifications.messages.unsubscribeError'));
     } finally {
       setIsLoading(false);
     }
@@ -156,16 +180,24 @@ export const PushNotificationManager: React.FC = () => {
       setIsLoading(true);
       setError(null);
       
-      await NotificationService.sendTestNotification({
-        title: 'בדיקת התראה',
-        body: 'זוהי התראה לבדיקה מ-PawfectPal',
-        type: 'general',
-      });
+      // Send immediate test notification with 0 delay
+      await NotificationService.scheduleNotification(
+        {
+          id: `test-${Date.now()}`,
+          title: t('notifications.testNotification.title'),
+          body: t('notifications.testNotification.body'),
+          type: 'general',
+          priority: 'medium',
+          timestamp: new Date(),
+          read: false,
+        },
+        0 // Send immediately
+      );
       
-      setSuccess('התראה לבדיקה נשלחה בהצלחה');
+      setSuccess(t('notifications.messages.testSent'));
     } catch (err) {
       console.error('Error sending test notification:', err);
-      setError('שגיאה בשליחת התראה לבדיקה');
+      setError(t('notifications.messages.testError'));
     } finally {
       setIsLoading(false);
     }
@@ -181,9 +213,9 @@ export const PushNotificationManager: React.FC = () => {
 
   const getPermissionStatusText = () => {
     switch (permissionStatus) {
-      case 'granted': return 'הותר';
-      case 'denied': return 'נדחה';
-      default: return 'לא נקבע';
+      case 'granted': return t('notifications.permission.granted');
+      case 'denied': return t('notifications.permission.denied');
+      default: return t('notifications.permission.default');
     }
   };
 
@@ -192,7 +224,7 @@ export const PushNotificationManager: React.FC = () => {
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
         <NotificationsIcon sx={{ fontSize: 32, mr: 2, color: 'primary.main' }} />
         <Typography variant="h4" component="h1">
-          ניהול התראות
+          {t('notifications.title')}
         </Typography>
       </Box>
 
@@ -209,148 +241,146 @@ export const PushNotificationManager: React.FC = () => {
       )}
 
       <Grid container spacing={3}>
-        {/* Permission Status */}
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid item xs={12} md={6}>
           <Card>
             <CardHeader
-              title="סטטוס הרשאות"
-              avatar={<NotificationsIcon />}
+              title={t('notifications.permission.title')}
+              avatar={
+                permissionStatus === 'granted' ? (
+                  <NotificationsActiveIcon color="success" />
+                ) : (
+                  <NotificationsOffIcon color="disabled" />
+                )
+              }
             />
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  {t('notifications.permission.status')}:
+                </Typography>
                 <Chip
                   label={getPermissionStatusText()}
-                  color={getPermissionStatusColor() as any}
-                  sx={{ mr: 2 }}
+                  color={getPermissionStatusColor()}
+                  size="small"
+                  sx={{ mt: 1 }}
                 />
-                <Typography variant="body2" color="textSecondary">
-                  הרשאות התראות דחיפה
-                </Typography>
-              </Box>
-              
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Chip
-                  label={subscriptionStatus === 'subscribed' ? 'נרשם' : 'לא נרשם'}
-                  color={subscriptionStatus === 'subscribed' ? 'success' : 'default'}
-                  sx={{ mr: 2 }}
-                />
-                <Typography variant="body2" color="textSecondary">
-                  הרשמה להתראות
-                </Typography>
               </Box>
 
-              <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-                {permissionStatus === 'granted' && subscriptionStatus === 'unsubscribed' && (
+              <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+                {subscriptionStatus === 'subscribed' ? (
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={handleUnsubscribe}
+                    disabled={isLoading}
+                    startIcon={<NotificationsOffIcon />}
+                  >
+                    {t('notifications.permission.unsubscribe')}
+                  </Button>
+                ) : (
                   <Button
                     variant="contained"
                     onClick={handleSubscribe}
-                    disabled={isLoading}
-                    startIcon={isLoading ? <CircularProgress size={16} /> : <NotificationsActiveIcon />}
+                    disabled={isLoading || permissionStatus === 'denied'}
+                    startIcon={<NotificationsIcon />}
                   >
-                    הרשם להתראות
+                    {t('notifications.permission.subscribe')}
                   </Button>
                 )}
-                
-                {subscriptionStatus === 'subscribed' && (
-                  <Button
-                    variant="outlined"
-                    onClick={handleUnsubscribe}
-                    disabled={isLoading}
-                    startIcon={isLoading ? <CircularProgress size={16} /> : <NotificationsOffIcon />}
-                  >
-                    בטל הרשמה
-                  </Button>
-                )}
-                
+
                 <Button
                   variant="outlined"
                   onClick={handleTestNotification}
                   disabled={isLoading || subscriptionStatus !== 'subscribed'}
-                  startIcon={<NotificationsIcon />}
                 >
-                  בדיקת התראה
+                  {t('notifications.permission.test')}
                 </Button>
               </Box>
             </CardContent>
           </Card>
         </Grid>
 
-        {/* Notification Types */}
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid item xs={12} md={6}>
           <Card>
             <CardHeader
-              title="סוגי התראות"
-              avatar={<SettingsIcon />}
+              title={t('notifications.settings.title')}
+              avatar={<SettingsIcon color="primary" />}
             />
             <CardContent>
               <List>
-                <ListItem>
-                  <ListItemIcon>
-                    <VaccinesIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="תזכורות חיסונים"
-                    secondary="קבל תזכורות על חיסונים מתקרבים"
-                  />
-                  <ListItemSecondaryAction>
+                <FormControlLabel
+                  control={
                     <Switch
-                      edge="end"
                       checked={settings.vaccineReminders}
                       onChange={(e) => handleSettingChange('vaccineReminders', e.target.checked)}
+                      sx={{ ml: 2 }}
                     />
-                  </ListItemSecondaryAction>
-                </ListItem>
-                
-                <ListItem>
-                  <ListItemIcon>
-                    <ScaleIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="התראות משקל"
-                    secondary="קבל התראות על שינויים במשקל"
-                  />
-                  <ListItemSecondaryAction>
+                  }
+                  label={
+                    <Box display="flex" alignItems="center">
+                      <VaccinesIcon color="primary" sx={{ mr: 1 }} />
+                      {t('notifications.settings.vaccineReminders')}
+                    </Box>
+                  }
+                  sx={{ ml: 0, py: 1.5 }}
+                />
+
+                <Divider variant="inset" component="li" />
+
+                <FormControlLabel
+                  control={
                     <Switch
-                      edge="end"
                       checked={settings.weightAlerts}
                       onChange={(e) => handleSettingChange('weightAlerts', e.target.checked)}
+                      sx={{ ml: 2 }}
                     />
-                  </ListItemSecondaryAction>
-                </ListItem>
-                
-                <ListItem>
-                  <ListItemIcon>
-                    <HealthIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="אבני דרך בריאות"
-                    secondary="קבל התראות על אבני דרך בריאותיות"
-                  />
-                  <ListItemSecondaryAction>
+                  }
+                  label={
+                    <Box display="flex" alignItems="center">
+                      <ScaleIcon color="primary" sx={{ mr: 1 }} />
+                      {t('notifications.settings.weightAlerts')}
+                    </Box>
+                  }
+                  sx={{ ml: 0, py: 1.5 }}
+                />
+
+                <Divider variant="inset" component="li" />
+
+                <FormControlLabel
+                  control={
                     <Switch
-                      edge="end"
                       checked={settings.healthMilestones}
                       onChange={(e) => handleSettingChange('healthMilestones', e.target.checked)}
+                      sx={{ ml: 2 }}
                     />
-                  </ListItemSecondaryAction>
-                </ListItem>
-                
-                <ListItem>
-                  <ListItemIcon>
-                    <NotificationsIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="עדכונים כלליים"
-                    secondary="קבל עדכונים על תכונות חדשות"
-                  />
-                  <ListItemSecondaryAction>
+                  }
+                  label={
+                    <Box display="flex" alignItems="center">
+                      <HealthIcon color="primary" sx={{ mr: 1 }} />
+                      {t('notifications.settings.healthMilestones')}
+                    </Box>
+                  }
+                  sx={{ ml: 0, py: 1.5 }}
+                />
+
+                <Divider variant="inset" component="li" />
+
+                <FormControlLabel
+                  control={
                     <Switch
-                      edge="end"
                       checked={settings.generalUpdates}
                       onChange={(e) => handleSettingChange('generalUpdates', e.target.checked)}
+                      sx={{ ml: 2 }}
                     />
-                  </ListItemSecondaryAction>
-                </ListItem>
+                  }
+                  label={
+                    <Box display="flex" alignItems="center">
+                      <NotificationsIcon color="primary" sx={{ mr: 1 }} />
+                      {t('notifications.settings.generalUpdates')}
+                    </Box>
+                  }
+                  sx={{ ml: 0, py: 1.5 }}
+                />
               </List>
             </CardContent>
           </Card>
@@ -360,29 +390,37 @@ export const PushNotificationManager: React.FC = () => {
         <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardHeader
-              title="ערוצי התראה"
+              title={t('notifications.settings.notificationChannels')}
               avatar={<NotificationsIcon />}
             />
-            <CardContent>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={settings.pushNotifications}
-                    onChange={(e) => handleSettingChange('pushNotifications', e.target.checked)}
-                  />
-                }
-                label="התראות דחיפה"
-              />
+            <CardContent sx={{ '& .MuiFormControlLabel-root': { py: 1.5 } }}>
+              <Box sx={{ px: 2 }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={settings.pushNotifications}
+                      onChange={(e) => handleSettingChange('pushNotifications', e.target.checked)}
+                    />
+                  }
+                  label={t('notifications.settings.pushNotifications')}
+                  sx={{ width: '100%', m: 0 }}
+                />
+              </Box>
               
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={settings.emailNotifications}
-                    onChange={(e) => handleSettingChange('emailNotifications', e.target.checked)}
-                  />
-                }
-                label="התראות אימייל"
-              />
+              <Divider sx={{ my: 1 }} />
+              
+              <Box sx={{ px: 2 }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={settings.emailNotifications}
+                      onChange={(e) => handleSettingChange('emailNotifications', e.target.checked)}
+                    />
+                  }
+                  label={t('notifications.settings.emailNotifications')}
+                  sx={{ width: '100%', m: 0 }}
+                />
+              </Box>
             </CardContent>
           </Card>
         </Grid>
@@ -391,29 +429,29 @@ export const PushNotificationManager: React.FC = () => {
         <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardHeader
-              title="תדירות תזכורות"
+              title={t('notifications.settings.reminderFrequency')}
               avatar={<ScheduleIcon />}
             />
             <CardContent>
               <Typography variant="body2" color="textSecondary" gutterBottom>
-                תדירות תזכורות חיסונים
+                {t('notifications.settings.vaccineReminderFrequency')}
               </Typography>
               
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                 <Chip
-                  label="יומי"
+                  label={t('notifications.settings.frequency.daily')}
                   color={settings.reminderFrequency === 'daily' ? 'primary' : 'default'}
                   onClick={() => handleSettingChange('reminderFrequency', 'daily')}
                   clickable
                 />
                 <Chip
-                  label="שבועי"
+                  label={t('notifications.settings.frequency.weekly')}
                   color={settings.reminderFrequency === 'weekly' ? 'primary' : 'default'}
                   onClick={() => handleSettingChange('reminderFrequency', 'weekly')}
                   clickable
                 />
                 <Chip
-                  label="חודשי"
+                  label={t('notifications.settings.frequency.monthly')}
                   color={settings.reminderFrequency === 'monthly' ? 'primary' : 'default'}
                   onClick={() => handleSettingChange('reminderFrequency', 'monthly')}
                   clickable

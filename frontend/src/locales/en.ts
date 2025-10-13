@@ -1180,7 +1180,6 @@ export const en = {
     serviceType: 'Service Type',
     selectServiceType: 'Select Service Type',
     allServices: 'All Services',
-    writeReview: 'Write review',
     yourRating: 'Your rating',
     yourComment: 'Your comment',
     sendEmail: 'Send Email',
@@ -1383,4 +1382,56 @@ export const en = {
     posted: 'Posted',
     deleteConfirm: 'Are you sure you want to delete this marketplace post? This action cannot be undone.',
   },
+  notifications: {
+    title: 'Notifications Management',
+    permission: {
+      title: 'Notification Permissions',
+      status: 'Status',
+      granted: 'Granted',
+      denied: 'Denied',
+      default: 'Not set',
+      subscribe: 'Subscribe to Notifications',
+      unsubscribe: 'Unsubscribe from Notifications',
+      test: 'Send Test Notification'
+    },
+    settings: {
+      title: 'Notification Settings',
+      vaccineReminders: 'Vaccine Reminders',
+      weightAlerts: 'Weight Alerts',
+      healthMilestones: 'Health Milestones',
+      generalUpdates: 'General Updates',
+      emailNotifications: 'Email Notifications',
+      pushNotifications: 'Push Notifications',
+      reminderFrequency: 'Reminder Frequency',
+      vaccineReminderFrequency: 'Vaccine Reminder Frequency',
+      notificationChannels: 'Notification Channels',
+      frequency: {
+        daily: 'Daily',
+        weekly: 'Weekly',
+        monthly: 'Monthly'
+      },
+      quietHours: {
+        title: 'Quiet Hours',
+        enabled: 'Enable Quiet Hours',
+        start: 'Start Time',
+        end: 'End Time'
+      },
+      save: 'Save Settings'
+    },
+    messages: {
+      saved: 'Notification settings saved successfully',
+      subscribed: 'Successfully subscribed to notifications',
+      unsubscribed: 'Successfully unsubscribed from notifications',
+      testSent: 'Test notification sent successfully',
+      error: 'An error occurred',
+      saveError: 'Error saving notification settings',
+      subscribeError: 'Error subscribing to notifications',
+      unsubscribeError: 'Error unsubscribing from notifications',
+      testError: 'Error sending test notification'
+    },
+    testNotification: {
+      title: 'Test Notification',
+      body: 'This is a test notification from PawfectPal'
+    }
+  }
 };
