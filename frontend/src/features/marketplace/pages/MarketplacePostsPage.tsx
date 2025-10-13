@@ -28,11 +28,11 @@ import {
   ViewModule,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useLocalization } from '../../contexts/LocalizationContext';
-import { marketplaceService } from '../../services/marketplace/marketplaceService';
-import { MarketplacePostCard } from './MarketplacePostCard';
-import { MarketplacePostForm } from './MarketplacePostForm';
-import type { MarketplacePostSummary } from '../../types/services/marketplacePost';
+import { useLocalization } from '../../../contexts/LocalizationContext';
+import { marketplaceService } from '../../../services/marketplace/marketplaceService';
+import { MarketplacePostCard } from '../../../components/marketplace/MarketplacePostCard';
+import { MarketplacePostForm } from '../../../components/marketplace/MarketplacePostForm';
+import type { MarketplacePostSummary } from '../../../types/services/marketplacePost';
 
 interface TabPanelProps {
   children?: React.ReactNode;
