@@ -27,7 +27,7 @@ def add_trainer_service():
         ).first()
         
         if existing_trainer:
-            print("✅ Trainer service type already exists")
+            print("Trainer service type already exists")
             return
         
         # Add trainer service type
@@ -39,7 +39,7 @@ def add_trainer_service():
         db.add(trainer_service)
         db.commit()
         
-        print("✅ Successfully added 'Training' service type")
+        print("Successfully added 'Training' service type")
         
         # Also add Hebrew version
         hebrew_trainer = ServiceTypeORM(
@@ -59,7 +59,7 @@ def add_trainer_service():
             print(f"  - {service.name}: {service.description}")
             
     except Exception as e:
-        print(f"❌ Error adding trainer service: {e}")
+        print(f"Error adding trainer service: {e}")
         db.rollback()
     finally:
         db.close()
