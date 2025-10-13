@@ -10,7 +10,8 @@ export type ServiceType =
   | 'sitting'
   | 'boarding'
   | 'grooming'
-  | 'veterinary';
+  | 'veterinary'
+  | 'training';
 
 /**
  * Possible statuses for a service

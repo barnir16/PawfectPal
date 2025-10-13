@@ -162,7 +162,7 @@ async def send_message_with_files(
                 attachments_info.append({
                     "id": str(uuid.uuid4()),
                     "file_name": safe_filename,
-                    "file_url": f"/uploads/chat/{unique_filename}",
+                    "file_url": f"https://pawfectpal-production-2f07.up.railway.app/uploads/chat/{unique_filename}",
                     "file_type": file.content_type or "application/octet-stream",
                     "file_size": len(content),
                     "created_at": datetime.now().isoformat()
@@ -468,6 +468,10 @@ def get_my_conversations(
             raise e
 
     print(f"🔍 Returning {len(conversations)} conversations")
+    
+    # Sort conversations by last message time (most recent first)
+    conversations.sort(key=lambda conv: conv.messages[-1].created_at if conv.messages else conv.service_request_id, reverse=True)
+    
     return conversations
 
 

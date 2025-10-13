@@ -87,6 +87,12 @@ export const Header = ({ onMenuClick, desktopOpen = true }: HeaderProps) => {
       console.log("✅ Updated user:", updatedUser);
       setUser(updatedUser);
       console.log("🎉 Successfully became a provider!");
+
+      // If user just became a provider, redirect to profile setup
+      if (!user?.is_provider && updatedUser.is_provider) {
+        // Navigate to provider profile setup page
+        window.location.href = '/provider-profile-setup';
+      }
     } catch (err: unknown) {
       console.error("❌ Error becoming provider:", err);
 

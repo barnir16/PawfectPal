@@ -124,7 +124,13 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
     
     // If 12+ months, return years
     const years = Math.floor(totalMonths / 12);
-    return `${years} ${t('chat.yearsOld')}`;
+    const remainingMonths = totalMonths % 12;
+    
+    if (remainingMonths === 0) {
+      return `${years} ${t('chat.yearsOld')}`;
+    } else {
+      return `${years} ${t('chat.yearsOld')} ${remainingMonths} ${t('chat.monthsOld')}`;
+    }
   };
 
   const getGenderTranslation = (gender: string) => {
