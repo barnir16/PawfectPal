@@ -38,6 +38,7 @@ import {
 } from '@mui/icons-material';
 import { useLocalization } from '../../contexts/LocalizationContext';
 import { ServiceRequestService } from '../../services/serviceRequests/serviceRequestService';
+import { marketplaceService } from '../../services/marketplace/marketplaceService';
 import type { ServiceRequestSummary, ServiceRequestFilters } from '../../types/services/serviceRequest';
 
 export const ServiceRequestBrowser: React.FC = () => {
@@ -45,6 +46,7 @@ export const ServiceRequestBrowser: React.FC = () => {
   const { t } = useLocalization();
   const [requests, setRequests] = useState<ServiceRequestSummary[]>([]);
   const [filteredRequests, setFilteredRequests] = useState<ServiceRequestSummary[]>([]);
+  const [serviceTypes, setServiceTypes] = useState<Array<{ id: number; name: string; description?: string }>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<ServiceRequestFilters>({
@@ -57,6 +59,19 @@ export const ServiceRequestBrowser: React.FC = () => {
     offset: 0
   });
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Load service types
+  useEffect(() => {
+    const loadServiceTypes = async () => {
+      try {
+        const types = await marketplaceService.getServiceTypes();
+        setServiceTypes(types);
+      } catch (error) {
+        console.error('Failed to load service types:', error);
+      }
+    };
+    loadServiceTypes();
+  }, []);
 
   // Load service requests
   useEffect(() => {
@@ -289,7 +304,7 @@ export const ServiceRequestBrowser: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<Add />}
-          onClick={() => navigate('/bookservice')}
+          onClick={() => navigate('/marketplace')}
         >
           {t('services.createRequest')}
         </Button>
@@ -334,11 +349,11 @@ export const ServiceRequestBrowser: React.FC = () => {
                 label={t('services.serviceType')}
               >
                 <MenuItem value="">{t('services.allServices')}</MenuItem>
-                <MenuItem value="walking">{t('services.walking')}</MenuItem>
-                <MenuItem value="sitting">{t('services.sitting')}</MenuItem>
-                <MenuItem value="boarding">{t('services.boarding')}</MenuItem>
-                <MenuItem value="grooming">{t('services.grooming')}</MenuItem>
-                <MenuItem value="veterinary">{t('services.veterinary')}</MenuItem>
+                {serviceTypes.map((type) => (
+                  <MenuItem key={type.id} value={type.name}>
+                    {type.name}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Grid>
@@ -416,7 +431,7 @@ export const ServiceRequestBrowser: React.FC = () => {
         color="primary"
         aria-label="add"
         sx={{ position: 'fixed', bottom: 16, right: 16 }}
-        onClick={() => navigate('/bookservice')}
+        onClick={() => navigate('/marketplace')}
       >
         <Add />
       </Fab>

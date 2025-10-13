@@ -28,6 +28,7 @@ import {
   ListAlt as ServiceRequestsIcon,
   Chat as ChatIcon,
   Menu as MenuIcon,
+  Store as MarketplaceIcon,
 } from "@mui/icons-material";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -66,6 +67,11 @@ export const Sidebar = ({
       text: t("services.bookService"),
       icon: <BookIcon />,
       path: "/bookservice",
+    },
+    {
+      text: t("marketplace.title") || "Marketplace",
+      icon: <MarketplaceIcon />,
+      path: "/marketplace",
     },
     // Provider-only
     ...(isProvider
