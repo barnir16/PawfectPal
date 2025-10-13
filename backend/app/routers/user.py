@@ -2,6 +2,7 @@ from fastapi import HTTPException, Depends, status, APIRouter
 from sqlalchemy.orm import Session
 from app.models import UserORM, ServiceTypeORM
 from app.models.provider import ProviderORM
+from app.models.provider_profile import ProviderProfileORM
 from app.schemas import UserRead, UserCreate, UserUpdate
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
@@ -242,6 +243,29 @@ def toggle_provider_status(
             .first()
         ):
             db.add(ProviderORM(user_id=current_user.id))
+        
+        # Also create enhanced provider profile if not exists
+        if (
+            not db.query(ProviderProfileORM)
+            .filter(ProviderProfileORM.user_id == current_user.id)
+            .first()
+        ):
+            # Create a basic enhanced provider profile
+            enhanced_profile = ProviderProfileORM(
+                user_id=current_user.id,
+                bio="",
+                hourly_rate=None,
+                service_radius=None,
+                is_available=True,
+                experience_years=None,
+                languages=[],
+                certifications=[],
+                verified=False,
+                average_rating=None,
+                review_count=0,
+                completed_bookings=0
+            )
+            db.add(enhanced_profile)
     else:
         # Unbecoming a provider: remove provider record
         existing_provider = (
@@ -254,6 +278,13 @@ def toggle_provider_status(
             current_user.provider_hourly_rate = None
             current_user.provider_rating = None
             current_user.provider_services = None
+        
+        # Also remove enhanced provider profile
+        existing_enhanced_profile = (
+            db.query(ProviderProfileORM).filter(ProviderProfileORM.user_id == current_user.id).first()
+        )
+        if existing_enhanced_profile:
+            db.delete(existing_enhanced_profile)
 
     db.commit()
     db.refresh(current_user)

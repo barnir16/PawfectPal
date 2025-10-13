@@ -1,6 +1,11 @@
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Response, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy.orm import Session
+from app.dependencies.db import get_db
+from app.models.user import UserORM
+from app.models.provider_profile import ProviderProfileORM
+from app.models.service_type import ServiceTypeORM
 from app.routers import (
     pet,
     references,
@@ -157,6 +162,96 @@ def test_image(filename: str):
         "size": image_path.stat().st_size if image_path.exists() else 0,
         "url": f"https://pawfectpal-production.up.railway.app/uploads/images/{filename}",
     }
+
+
+@app.get("/providers")
+def get_providers(db: Session = Depends(get_db)):
+    """Get all service providers"""
+    providers = db.query(UserORM).filter(UserORM.is_provider == True).all()
+    
+    result = []
+    for user in providers:
+        # Get provider profile if exists
+        profile = db.query(ProviderProfileORM).filter(
+            ProviderProfileORM.user_id == user.id
+        ).first()
+        
+        # Get service types
+        service_types = []
+        if profile:
+            service_types = [st.name for st in profile.services]
+        
+        provider_data = {
+            "id": user.id,
+            "username": user.username,
+            "full_name": user.full_name,
+            "email": user.email,
+            "profile_image": user.profile_image,
+            "location": profile.location if profile else None,
+            "provider_bio": profile.bio if profile else None,
+            "provider_hourly_rate": profile.hourly_rate if profile else None,
+            "provider_services": service_types,
+            "is_available": profile.is_available if profile else True,
+            "rating": profile.average_rating if profile else None,
+            "review_count": profile.review_count if profile else 0,
+            "completed_bookings": profile.completed_bookings if profile else 0,
+            "experience_years": profile.experience_years if profile else None,
+            "languages": profile.languages if profile else [],
+            "certifications": profile.certifications if profile else [],
+            "service_radius": profile.service_radius if profile else None,
+            "verified": profile.verified if profile else False,
+            "created_at": user.created_at.isoformat(),
+            "updated_at": user.updated_at.isoformat(),
+        }
+        result.append(provider_data)
+    
+    return result
+
+@app.get("/providers/{provider_id}")
+def get_provider(provider_id: int, db: Session = Depends(get_db)):
+    """Get a specific service provider by ID"""
+    user = db.query(UserORM).filter(
+        UserORM.id == provider_id,
+        UserORM.is_provider == True
+    ).first()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="Provider not found")
+    
+    # Get provider profile if exists
+    profile = db.query(ProviderProfileORM).filter(
+        ProviderProfileORM.user_id == user.id
+    ).first()
+    
+    # Get service types
+    service_types = []
+    if profile:
+        service_types = [st.name for st in profile.services]
+    
+    provider_data = {
+        "id": user.id,
+        "username": user.username,
+        "full_name": user.full_name,
+        "email": user.email,
+        "profile_image": user.profile_image,
+        "location": profile.location if profile else None,
+        "provider_bio": profile.bio if profile else None,
+        "provider_hourly_rate": profile.hourly_rate if profile else None,
+        "provider_services": service_types,
+        "is_available": profile.is_available if profile else True,
+        "rating": profile.average_rating if profile else None,
+        "review_count": profile.review_count if profile else 0,
+        "completed_bookings": profile.completed_bookings if profile else 0,
+        "experience_years": profile.experience_years if profile else None,
+        "languages": profile.languages if profile else [],
+        "certifications": profile.certifications if profile else [],
+        "service_radius": profile.service_radius if profile else None,
+        "verified": profile.verified if profile else False,
+        "created_at": user.created_at.isoformat(),
+        "updated_at": user.updated_at.isoformat(),
+    }
+    
+    return provider_data
 
 
 @app.get("/")
