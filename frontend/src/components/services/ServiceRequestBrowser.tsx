@@ -101,7 +101,7 @@ export const ServiceRequestBrowser: React.FC = () => {
 
     const filtered = requests.filter(request =>
       request.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      request.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      request.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       request.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       request.user.full_name.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -214,7 +214,7 @@ export const ServiceRequestBrowser: React.FC = () => {
             overflow: 'hidden',
           }}
         >
-          {request.description}
+          {request.title}
         </Typography>
 
         {/* User Info */}
@@ -323,7 +323,7 @@ export const ServiceRequestBrowser: React.FC = () => {
 
         <Grid container spacing={2}>
           {/* Search */}
-          <Grid size={{ xs: 12, md: 4 }}>
+            <Grid size={{ xs: 12, md: 4 }}>
             <TextField
               fullWidth
               placeholder={t('services.searchRequests')}

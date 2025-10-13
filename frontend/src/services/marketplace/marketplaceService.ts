@@ -12,7 +12,7 @@ class MarketplaceService {
    */
   async createPost(post: MarketplacePostCreate): Promise<MarketplacePost> {
     try {
-      const response = await apiClient.post('/marketplace-posts/', post);
+      const response = await apiClient.post<MarketplacePost>('/marketplace-posts/', post);
       return response;
     } catch (error: any) {
       console.error('Failed to create marketplace post:', error);
@@ -31,7 +31,19 @@ class MarketplaceService {
     is_urgent?: boolean;
   }): Promise<MarketplacePostSummary[]> {
     try {
-      const response = await apiClient.get('/marketplace-posts/', { params });
+      let endpoint = '/marketplace-posts/';
+      if (params) {
+        const queryParams = new URLSearchParams();
+        if (params.skip !== undefined) queryParams.append('skip', params.skip.toString());
+        if (params.limit !== undefined) queryParams.append('limit', params.limit.toString());
+        if (params.service_type) queryParams.append('service_type', params.service_type);
+        if (params.location) queryParams.append('location', params.location);
+        if (params.is_urgent !== undefined) queryParams.append('is_urgent', params.is_urgent.toString());
+        if (queryParams.toString()) {
+          endpoint += `?${queryParams.toString()}`;
+        }
+      }
+      const response = await apiClient.get<MarketplacePostSummary[]>(endpoint);
       return response;
     } catch (error: any) {
       console.error('Failed to get marketplace posts:', error);
@@ -44,7 +56,7 @@ class MarketplaceService {
    */
   async getPost(postId: number): Promise<MarketplacePost> {
     try {
-      const response = await apiClient.get(`/marketplace-posts/${postId}`);
+      const response = await apiClient.get<MarketplacePost>(`/marketplace-posts/${postId}`);
       return response;
     } catch (error: any) {
       console.error('Failed to get marketplace post:', error);
@@ -57,7 +69,7 @@ class MarketplaceService {
    */
   async updatePost(postId: number, updates: MarketplacePostUpdate): Promise<MarketplacePost> {
     try {
-      const response = await apiClient.put(`/marketplace-posts/${postId}`, updates);
+      const response = await apiClient.put<MarketplacePost>(`/marketplace-posts/${postId}`, updates);
       return response;
     } catch (error: any) {
       console.error('Failed to update marketplace post:', error);
@@ -94,7 +106,7 @@ class MarketplaceService {
    */
   async getMyPosts(): Promise<MarketplacePost[]> {
     try {
-      const response = await apiClient.get('/marketplace-posts/my-posts');
+      const response = await apiClient.get<MarketplacePost[]>('/marketplace-posts/my-posts');
       return response;
     } catch (error: any) {
       console.error('Failed to get my marketplace posts:', error);
@@ -107,7 +119,7 @@ class MarketplaceService {
    */
   async getServiceTypes(): Promise<Array<{ id: number; name: string; description?: string }>> {
     try {
-      const response = await apiClient.get('/enhanced-provider-profiles/service-types');
+      const response = await apiClient.get<Array<{ id: number; name: string; description?: string }>>('/enhanced-provider-profiles/service-types');
       return response;
     } catch (error: any) {
       console.error('Failed to get service types:', error);

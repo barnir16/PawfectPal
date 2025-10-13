@@ -163,7 +163,7 @@ export const ServiceBookingModal: React.FC<ServiceBookingModalProps> = ({
             )}
 
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                 <ServiceTypeDropdown
                   value={formData.service_type}
                   onChange={handleServiceTypeChange}
@@ -171,7 +171,7 @@ export const ServiceBookingModal: React.FC<ServiceBookingModalProps> = ({
                 />
               </Grid>
               
-              <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   label={t('services.duration')}
@@ -184,7 +184,7 @@ export const ServiceBookingModal: React.FC<ServiceBookingModalProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   label={t('services.startDate')}
@@ -196,7 +196,7 @@ export const ServiceBookingModal: React.FC<ServiceBookingModalProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   label={t('services.startTime')}
@@ -208,7 +208,7 @@ export const ServiceBookingModal: React.FC<ServiceBookingModalProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   label={t('services.endTime')}
@@ -219,7 +219,7 @@ export const ServiceBookingModal: React.FC<ServiceBookingModalProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   label={t('services.price')}
@@ -232,7 +232,7 @@ export const ServiceBookingModal: React.FC<ServiceBookingModalProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label={t('services.pickupLocation')}
@@ -243,7 +243,7 @@ export const ServiceBookingModal: React.FC<ServiceBookingModalProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label={t('services.dropoffLocation')}
@@ -254,7 +254,7 @@ export const ServiceBookingModal: React.FC<ServiceBookingModalProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label={t('services.notes')}

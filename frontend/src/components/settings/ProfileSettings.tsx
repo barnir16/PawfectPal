@@ -87,7 +87,7 @@ export const ProfileSettings = ({ profile, onSave }: ProfileSettingsProps) => {
     >
       <Box component="form" onSubmit={handleSubmit}>
         <Grid container spacing={3}>
-          <Grid size={{ xs: 12 }} display="flex" justifyContent="center">
+          <Grid size={{ xs: 12 }} sx={{ display: "flex", justifyContent: "center" }}>
             <Box position="relative">
               <Avatar
                 src={formData.avatar}

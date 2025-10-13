@@ -38,8 +38,7 @@ import {
 } from '@mui/icons-material';
 import { useLocalization } from '../../../contexts/LocalizationContext';
 import { ProviderRating } from '../../../components/services/ProviderRating';
-import { ServiceProviderService } from '../../../services/serviceProviders/serviceProviderService';
-import { ServiceProvider } from '../../../types/services/service';
+import { ServiceProviderService, ServiceProvider } from '../../../services/serviceProviders/serviceProviderService';
 
 export const ProviderProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -75,10 +74,10 @@ export const ProviderProfilePage: React.FC = () => {
       boarding: 'success',
       grooming: 'warning',
       veterinary: 'error',
-      training: 'info',
-      'אילוף': 'info',
+      training: 'primary',
+      'אילוף': 'primary',
     };
-    return colors[serviceType] || 'default';
+    return colors[serviceType] || 'primary';
   };
 
   const getAvailabilityColor = (isAvailable: boolean) => {
@@ -148,7 +147,7 @@ export const ProviderProfilePage: React.FC = () => {
 
       <Grid container spacing={3}>
         {/* Left Column - Main Profile */}
-        <Grid item xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <Card sx={{ mb: 3 }}>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 3 }}>
@@ -275,7 +274,7 @@ export const ProviderProfilePage: React.FC = () => {
         </Grid>
 
         {/* Right Column - Details */}
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           {/* Contact Information */}
           <Card sx={{ mb: 3 }}>
             <CardContent>

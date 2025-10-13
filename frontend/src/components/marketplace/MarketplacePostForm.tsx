@@ -24,7 +24,7 @@ import { Add, Remove, Save, Cancel } from '@mui/icons-material';
 import { useLocalization } from '../../contexts/LocalizationContext';
 import { marketplaceService } from '../../services/marketplace/marketplaceService';
 import type { MarketplacePostCreate } from '../../types/services/marketplacePost';
-import type { Pet } from '../../types/pet';
+import type { Pet } from '../../types/pets/pet';
 
 interface MarketplacePostFormProps {
   pets: Pet[];
@@ -152,13 +152,13 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
 
           <Grid container spacing={3}>
             {/* Basic Information */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="h6" gutterBottom>
                 {t('marketplace.basicInfo') || 'Basic Information'}
               </Typography>
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label={t('marketplace.title') || 'Post Title'}
@@ -169,7 +169,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 multiline
@@ -182,7 +182,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth required>
                 <InputLabel>{t('marketplace.serviceType') || 'Service Type'}</InputLabel>
                 <Select
@@ -198,7 +198,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
                 label={t('marketplace.location') || 'Location'}
@@ -209,7 +209,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
             </Grid>
 
             {/* Pet Selection */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
                 {t('marketplace.pets') || 'Pets'}
               </Typography>
@@ -232,7 +232,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
                 >
                   {pets.map((pet) => (
                     <MenuItem key={pet.id} value={pet.id}>
-                      {pet.name} ({pet.species})
+                      {pet.name} ({pet.type})
                     </MenuItem>
                   ))}
                 </Select>
@@ -240,13 +240,13 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
             </Grid>
 
             {/* Budget */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
                 {t('marketplace.budget') || 'Budget'}
               </Typography>
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
                 type="number"
@@ -260,7 +260,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
                 type="number"
@@ -275,7 +275,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
             </Grid>
 
             {/* Preferred Dates */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
                 {t('marketplace.preferredDates') || 'Preferred Dates'}
               </Typography>
@@ -303,13 +303,13 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
             </Grid>
 
             {/* Requirements */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
                 {t('marketplace.requirements') || 'Requirements'}
               </Typography>
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
                 type="number"
@@ -323,7 +323,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormControlLabel
                 control={
                   <Switch
@@ -335,7 +335,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 multiline
@@ -348,7 +348,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
             </Grid>
 
             {/* Languages */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
                 {t('marketplace.languages') || 'Required Languages'}
               </Typography>

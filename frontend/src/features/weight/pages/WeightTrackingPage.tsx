@@ -73,7 +73,12 @@ export const WeightTrackingPage = () => {
         let realWeightData: WeightRecord[] = [];
         
         try {
-          realWeightData = await WeightService.getAllWeightRecords();
+          const serviceWeightData = await WeightService.getAllWeightRecords();
+          // Transform service data to match local WeightRecord interface
+          realWeightData = serviceWeightData.map(record => ({
+            ...record,
+            petName: petsData.find(pet => pet.id === record.petId)?.name || 'Unknown Pet'
+          }));
           console.log('📊 Loaded weight records:', realWeightData.length);
         } catch (error) {
           console.log('No real weight data available, will show empty chart');
@@ -515,7 +520,7 @@ export const WeightTrackingPage = () => {
                  </Select>
                </FormControl>
              </Grid>
-             <Grid size={{ xs: 12 }} sm={6}>
+             <Grid size={{ xs: 12, sm: 6 }}>
                <TextField
                  fullWidth
                  label={t('weight.weight')}
@@ -525,7 +530,7 @@ export const WeightTrackingPage = () => {
                  inputProps={{ step: 0.1, min: 0 }}
                />
              </Grid>
-             <Grid size={{ xs: 12 }} sm={6}>
+             <Grid size={{ xs: 12, sm: 6 }}>
                <FormControl fullWidth>
                  <InputLabel>{t('weight.weightUnit')}</InputLabel>
                  <Select
@@ -592,7 +597,7 @@ export const WeightTrackingPage = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid size={{ xs: 12 }} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
                 label={t('weight.targetWeight')}
@@ -602,7 +607,7 @@ export const WeightTrackingPage = () => {
                 inputProps={{ step: 0.1, min: 0 }}
               />
             </Grid>
-            <Grid size={{ xs: 12 }} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth>
                 <InputLabel>{t('weight.weightUnit')}</InputLabel>
                 <Select

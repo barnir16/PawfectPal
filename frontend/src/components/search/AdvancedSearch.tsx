@@ -74,9 +74,9 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     // Update active filters
     const newActiveFilters = Object.entries(newFilters)
       .filter(([k, v]) => {
-        if (k === 'query') return v && v.length > 0;
-        if (k === 'dateRange') return v && (v.start || v.end);
-        if (k === 'tags') return v && v.length > 0;
+        if (k === 'query') return v && typeof v === 'string' && v.length > 0;
+        if (k === 'dateRange') return v && typeof v === 'object' && v !== null && !Array.isArray(v) && ('start' in v || 'end' in v);
+        if (k === 'tags') return v && Array.isArray(v) && v.length > 0;
         if (k === 'ageRange') return v && (v[0] > 0 || v[1] < 100);
         if (k === 'weightRange') return v && (v[0] > 0 || v[1] < 1000);
         return v !== undefined && v !== '';
@@ -119,17 +119,17 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
 
   const getFilterLabel = (key: string): string => {
     const labels: Record<string, string> = {
-      query: t('search.query', 'Search'),
-      type: t('search.type', 'Type'),
-      status: t('search.status', 'Status'),
-      priority: t('search.priority', 'Priority'),
-      dateRange: t('search.dateRange', 'Date Range'),
-      tags: t('search.tags', 'Tags'),
-      ageRange: t('search.ageRange', 'Age Range'),
-      weightRange: t('search.weightRange', 'Weight Range'),
-      isCompleted: t('search.completed', 'Completed'),
-      hasImage: t('search.hasImage', 'Has Image'),
-      sortBy: t('search.sortBy', 'Sort By'),
+      query: t('search.query'),
+      type: t('search.type'),
+      status: t('search.status'),
+      priority: t('search.priority'),
+      dateRange: t('search.dateRange'),
+      tags: t('search.tags'),
+      ageRange: t('search.ageRange'),
+      weightRange: t('search.weightRange'),
+      isCompleted: t('search.completed'),
+      hasImage: t('search.hasImage'),
+      sortBy: t('search.sortBy'),
     };
     return labels[key] || key;
   };
@@ -157,7 +157,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   return (
     <Card sx={{ mb: 3 }}>
       <CardHeader
-        title={t('search.advancedSearch', 'Advanced Search')}
+        title={t('search.advancedSearch')}
         action={
           <Box sx={{ display: 'flex', gap: 1 }}>
             <IconButton
@@ -171,7 +171,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
               startIcon={<FilterIcon />}
               onClick={() => setIsExpanded(!isExpanded)}
             >
-              {t('search.filters', 'Filters')} ({activeFilters.length})
+              {t('search.filters')} ({activeFilters.length})
             </Button>
           </Box>
         }
@@ -181,7 +181,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
         <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
           <TextField
             fullWidth
-            placeholder={t('search.searchPlaceholder', 'Search...')}
+            placeholder={t('search.searchPlaceholder')}
             value={filters.query}
             onChange={(e) => handleFilterChange('query', e.target.value)}
             InputProps={{
@@ -193,14 +193,14 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
             onClick={handleSearch}
             startIcon={<SearchIcon />}
           >
-            {t('search.search', 'Search')}
+            {t('search.search')}
           </Button>
           <Button
             variant="outlined"
             onClick={handleClear}
             startIcon={<ClearIcon />}
           >
-            {t('search.clear', 'Clear')}
+            {t('search.clear')}
           </Button>
         </Box>
 
@@ -208,7 +208,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
         {activeFilters.length > 0 && (
           <Box sx={{ mb: 2 }}>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              {t('search.activeFilters', 'Active Filters')}:
+              {t('search.activeFilters')}:
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
               {activeFilters.map((filterKey) => (
@@ -229,28 +229,28 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
             {/* Type Filter */}
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <FormControl fullWidth>
-                <InputLabel>{t('search.type', 'Type')}</InputLabel>
+                <InputLabel>{t('search.type')}</InputLabel>
                 <Select
                   value={filters.type || ''}
                   onChange={(e) => handleFilterChange('type', e.target.value)}
-                  label={t('search.type', 'Type')}
+                  label={t('search.type')}
                 >
-                  <MenuItem value="">{t('search.all', 'All')}</MenuItem>
+                  <MenuItem value="">{t('search.all')}</MenuItem>
                   {searchType === 'pets' ? (
                     <>
-                      <MenuItem value="dog">{t('pets.dog', 'Dog')}</MenuItem>
-                      <MenuItem value="cat">{t('pets.cat', 'Cat')}</MenuItem>
-                      <MenuItem value="bird">{t('pets.bird', 'Bird')}</MenuItem>
-                      <MenuItem value="rabbit">{t('pets.rabbit', 'Rabbit')}</MenuItem>
-                      <MenuItem value="other">{t('pets.other', 'Other')}</MenuItem>
+                      <MenuItem value="dog">{t('pets.dog')}</MenuItem>
+                      <MenuItem value="cat">{t('pets.cat')}</MenuItem>
+                      <MenuItem value="bird">{t('pets.bird')}</MenuItem>
+                      <MenuItem value="rabbit">{t('pets.rabbit')}</MenuItem>
+                      <MenuItem value="other">{t('pets.other')}</MenuItem>
                     </>
                   ) : (
                     <>
-                      <MenuItem value="feeding">{t('tasks.feeding', 'Feeding')}</MenuItem>
-                      <MenuItem value="walking">{t('tasks.walking', 'Walking')}</MenuItem>
-                      <MenuItem value="grooming">{t('tasks.grooming', 'Grooming')}</MenuItem>
-                      <MenuItem value="medical">{t('tasks.medical', 'Medical')}</MenuItem>
-                      <MenuItem value="vaccination">{t('tasks.vaccination', 'Vaccination')}</MenuItem>
+                      <MenuItem value="feeding">{t('tasks.feeding')}</MenuItem>
+                      <MenuItem value="walking">{t('tasks.walking')}</MenuItem>
+                      <MenuItem value="grooming">{t('tasks.grooming')}</MenuItem>
+                      <MenuItem value="medical">{t('tasks.medical')}</MenuItem>
+                      <MenuItem value="vaccination">{t('tasks.vaccination')}</MenuItem>
                     </>
                   )}
                 </Select>
@@ -260,23 +260,23 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
             {/* Status Filter */}
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <FormControl fullWidth>
-                <InputLabel>{t('search.status', 'Status')}</InputLabel>
+                <InputLabel>{t('search.status')}</InputLabel>
                 <Select
                   value={filters.status || ''}
                   onChange={(e) => handleFilterChange('status', e.target.value)}
-                  label={t('search.status', 'Status')}
+                  label={t('search.status')}
                 >
-                  <MenuItem value="">{t('search.all', 'All')}</MenuItem>
+                  <MenuItem value="">{t('search.all')}</MenuItem>
                   {searchType === 'tasks' ? (
                     <>
-                      <MenuItem value="pending">{t('tasks.pending', 'Pending')}</MenuItem>
-                      <MenuItem value="completed">{t('tasks.completed', 'Completed')}</MenuItem>
-                      <MenuItem value="overdue">{t('tasks.overdue', 'Overdue')}</MenuItem>
+                      <MenuItem value="pending">{t('tasks.pending')}</MenuItem>
+                      <MenuItem value="completed">{t('tasks.completed')}</MenuItem>
+                      <MenuItem value="overdue">{t('tasks.overdue')}</MenuItem>
                     </>
                   ) : (
                     <>
-                      <MenuItem value="active">{t('pets.active', 'Active')}</MenuItem>
-                      <MenuItem value="inactive">{t('pets.inactive', 'Inactive')}</MenuItem>
+                      <MenuItem value="active">{t('pets.active')}</MenuItem>
+                      <MenuItem value="inactive">{t('pets.inactive')}</MenuItem>
                     </>
                   )}
                 </Select>
@@ -287,17 +287,17 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
             {searchType === 'tasks' && (
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <FormControl fullWidth>
-                  <InputLabel>{t('search.priority', 'Priority')}</InputLabel>
+                  <InputLabel>{t('search.priority')}</InputLabel>
                   <Select
                     value={filters.priority || ''}
                     onChange={(e) => handleFilterChange('priority', e.target.value)}
-                    label={t('search.priority', 'Priority')}
+                    label={t('search.priority')}
                   >
-                    <MenuItem value="">{t('search.all', 'All')}</MenuItem>
-                    <MenuItem value="low">{t('tasks.low', 'Low')}</MenuItem>
-                    <MenuItem value="medium">{t('tasks.medium', 'Medium')}</MenuItem>
-                    <MenuItem value="high">{t('tasks.high', 'High')}</MenuItem>
-                    <MenuItem value="urgent">{t('tasks.urgent', 'Urgent')}</MenuItem>
+                    <MenuItem value="">{t('search.all')}</MenuItem>
+                    <MenuItem value="low">{t('tasks.low')}</MenuItem>
+                    <MenuItem value="medium">{t('tasks.medium')}</MenuItem>
+                    <MenuItem value="high">{t('tasks.high')}</MenuItem>
+                    <MenuItem value="urgent">{t('tasks.urgent')}</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -307,7 +307,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <TextField
-                  label={t('search.from', 'From')}
+                  label={t('search.from')}
                   type="date"
                   value={filters.dateRange?.start || ''}
                   onChange={(e) => handleFilterChange('dateRange', {
@@ -317,7 +317,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                   InputLabelProps={{ shrink: true }}
                 />
                 <TextField
-                  label={t('search.to', 'To')}
+                  label={t('search.to')}
                   type="date"
                   value={filters.dateRange?.end || ''}
                   onChange={(e) => handleFilterChange('dateRange', {
@@ -333,7 +333,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
             {searchType === 'pets' && (
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <Typography gutterBottom>
-                  {t('search.ageRange', 'Age Range')}: {filters.ageRange?.[0] || 0} - {filters.ageRange?.[1] || 20} {t('pets.years', 'years')}
+                  {t('search.ageRange')}: {filters.ageRange?.[0] || 0} - {filters.ageRange?.[1] || 20} {t('pets.years')}
                 </Typography>
                 <Slider
                   value={filters.ageRange || [0, 20]}
@@ -350,7 +350,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
             {searchType === 'pets' && (
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <Typography gutterBottom>
-                  {t('search.weightRange', 'Weight Range')}: {filters.weightRange?.[0] || 0} - {filters.weightRange?.[1] || 100} kg
+                  {t('search.weightRange')}: {filters.weightRange?.[0] || 0} - {filters.weightRange?.[1] || 100} kg
                 </Typography>
                 <Slider
                   value={filters.weightRange || [0, 100]}
@@ -374,7 +374,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                         onChange={(e) => handleFilterChange('isCompleted', e.target.checked)}
                       />
                     }
-                    label={t('search.completed', 'Completed')}
+                    label={t('search.completed')}
                   />
                 )}
                 {searchType === 'pets' && (
@@ -385,7 +385,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                         onChange={(e) => handleFilterChange('hasImage', e.target.checked)}
                       />
                     }
-                    label={t('search.hasImage', 'Has Image')}
+                    label={t('search.hasImage')}
                   />
                 )}
               </Box>
@@ -395,32 +395,32 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <FormControl fullWidth>
-                  <InputLabel>{t('search.sortBy', 'Sort By')}</InputLabel>
+                  <InputLabel>{t('search.sortBy')}</InputLabel>
                   <Select
                     value={filters.sortBy || ''}
                     onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                    label={t('search.sortBy', 'Sort By')}
+                    label={t('search.sortBy')}
                   >
-                    <MenuItem value="name">{t('search.name', 'Name')}</MenuItem>
-                    <MenuItem value="date">{t('search.date', 'Date')}</MenuItem>
-                    <MenuItem value="priority">{t('search.priority', 'Priority')}</MenuItem>
+                    <MenuItem value="name">{t('search.name')}</MenuItem>
+                    <MenuItem value="date">{t('search.date')}</MenuItem>
+                    <MenuItem value="priority">{t('search.priority')}</MenuItem>
                     {searchType === 'pets' && (
                       <>
-                        <MenuItem value="age">{t('search.age', 'Age')}</MenuItem>
-                        <MenuItem value="weight">{t('search.weight', 'Weight')}</MenuItem>
+                        <MenuItem value="age">{t('search.age')}</MenuItem>
+                        <MenuItem value="weight">{t('search.weight')}</MenuItem>
                       </>
                     )}
                   </Select>
                 </FormControl>
                 <FormControl>
-                  <InputLabel>{t('search.order', 'Order')}</InputLabel>
+                  <InputLabel>{t('search.order')}</InputLabel>
                   <Select
                     value={filters.sortOrder || 'asc'}
                     onChange={(e) => handleFilterChange('sortOrder', e.target.value)}
-                    label={t('search.order', 'Order')}
+                    label={t('search.order')}
                   >
-                    <MenuItem value="asc">{t('search.ascending', 'Ascending')}</MenuItem>
-                    <MenuItem value="desc">{t('search.descending', 'Descending')}</MenuItem>
+                    <MenuItem value="asc">{t('search.ascending')}</MenuItem>
+                    <MenuItem value="desc">{t('search.descending')}</MenuItem>
                   </Select>
                 </FormControl>
               </Box>

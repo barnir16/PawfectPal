@@ -171,7 +171,7 @@ export const Pets = () => {
       (pet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         pet.breed.toLowerCase().includes(searchTerm.toLowerCase())) &&
       (selectedType === t("pets.all") ||
-        (pet.type || pet.breedType) === selectedType)
+        (pet.type || pet.breed) === selectedType)
   );
 
   let content;
@@ -199,7 +199,7 @@ export const Pets = () => {
     content = (
       <Grid container spacing={3}>
         {filteredPets.map((pet) => (
-          <Grid key={pet.id} size={{ xs: 12, sm: 6, md: 6, lg: 4, xl: 3 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4, xl: 3 }} key={pet.id}>
             <PetCard
               pet={pet}
               onEdit={handleEditPet}

@@ -208,7 +208,7 @@ export const MarketplacePostCard: React.FC<MarketplacePostCardProps> = ({
           {/* Details Grid */}
           <Grid container spacing={2} sx={{ mb: 2 }}>
             {post.location && (
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <LocationOn color="action" />
                   <Typography variant="body2">
@@ -218,7 +218,7 @@ export const MarketplacePostCard: React.FC<MarketplacePostCardProps> = ({
               </Grid>
             )}
 
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <AttachMoney color="action" />
                 <Typography variant="body2">
@@ -227,7 +227,7 @@ export const MarketplacePostCard: React.FC<MarketplacePostCardProps> = ({
               </Box>
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <AccessTime color="action" />
                 <Typography variant="body2">
@@ -236,7 +236,7 @@ export const MarketplacePostCard: React.FC<MarketplacePostCardProps> = ({
               </Box>
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Visibility color="action" />
                 <Typography variant="body2">

@@ -124,7 +124,7 @@ export const ServiceRequestDetailsModal: React.FC<ServiceRequestDetailsModalProp
       <DialogContent dividers>
         <Grid container spacing={3}>
           {/* Service Type and Status */}
-          <Grid size={{ xs: 12 }}>
+            <Grid size={{ xs: 12 }}>
             <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
               <Chip
                 label={t(`services.${request.service_type}`)}
@@ -144,17 +144,17 @@ export const ServiceRequestDetailsModal: React.FC<ServiceRequestDetailsModalProp
           </Grid>
 
           {/* Description */}
-          <Grid size={{ xs: 12 }}>
+            <Grid size={{ xs: 12 }}>
             <Typography variant="h6" gutterBottom>
               {t('services.description')}
             </Typography>
             <Typography variant="body1" paragraph>
-              {request.description}
+              {request.title}
             </Typography>
           </Grid>
 
           {/* User Information */}
-          <Grid size={{ xs: 12, md: 6 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6" gutterBottom>
               {t('services.requestedBy')}
             </Typography>
@@ -195,7 +195,7 @@ export const ServiceRequestDetailsModal: React.FC<ServiceRequestDetailsModalProp
           </Grid>
 
           {/* Pet Information */}
-          <Grid size={{ xs: 12, md: 6 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6" gutterBottom>
               {t('services.pets')} ({request.pets.length})
             </Typography>
@@ -224,7 +224,7 @@ export const ServiceRequestDetailsModal: React.FC<ServiceRequestDetailsModalProp
           </Grid>
 
           {/* Request Details */}
-          <Grid size={{ xs: 12 }}>
+            <Grid size={{ xs: 12 }}>
             <Typography variant="h6" gutterBottom>
               {t('services.requestDetails')}
             </Typography>
@@ -278,7 +278,7 @@ export const ServiceRequestDetailsModal: React.FC<ServiceRequestDetailsModalProp
           </Grid>
 
           {/* Stats */}
-          <Grid size={{ xs: 12 }}>
+            <Grid size={{ xs: 12 }}>
             <Divider sx={{ my: 2 }} />
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="body2" color="text.secondary">

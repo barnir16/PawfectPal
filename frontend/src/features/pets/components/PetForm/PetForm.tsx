@@ -317,7 +317,7 @@ export const PetForm = () => {
         return;
       }
       
-      alert(t('pets.errorSavingPet', { error: error.message || "Unknown error occurred" }));
+      alert(t('pets.errorSavingPet'));
     }
   };
 

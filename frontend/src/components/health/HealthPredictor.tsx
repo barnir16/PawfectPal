@@ -102,10 +102,10 @@ export const HealthPredictor: React.FC = () => {
   const generateHealthPrediction = async (pet: Pet): Promise<HealthPrediction> => {
     try {
       // Get weight records
-      const weightRecords = await WeightService.getWeightRecordsByPetId(pet.id || 0);
+      const weightRecords = await WeightService.getWeightRecords(pet.id || 0);
       
       // Get vaccination tasks
-      const vaccineTasks = await VaccineTaskService.getVaccineTasksByPetId(pet.id || 0);
+      const vaccineTasks = await VaccineTaskService.getVaccineTasks(pet.id || 0);
       
       // Calculate health score (0-100)
       let healthScore = 100;
@@ -130,11 +130,11 @@ export const HealthPredictor: React.FC = () => {
       
       // Vaccination analysis
       const overdueVaccines = vaccineTasks.filter(task => 
-        !task.completed && new Date(task.dueDate) < new Date()
+        !task.isCompleted && new Date(task.dateTime) < new Date()
       );
       const dueSoonVaccines = vaccineTasks.filter(task => 
-        !task.completed && new Date(task.dueDate) > new Date() && 
-        new Date(task.dueDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        !task.isCompleted && new Date(task.dateTime) > new Date() && 
+        new Date(task.dateTime) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       );
       
       if (overdueVaccines.length > 0) {
@@ -325,7 +325,7 @@ export const HealthPredictor: React.FC = () => {
           </Typography>
           <Grid container spacing={2}>
             {insights.map((insight, index) => (
-              <Grid key={index} size={{ xs: 12, md: 6, lg: 4 }}>
+              <Grid size={{ xs: 12, md: 6, lg: 4 }} key={index}>
                 <Alert 
                   severity={insight.severity === 'high' ? 'error' : 
                            insight.severity === 'medium' ? 'warning' : 'info'}
@@ -352,7 +352,7 @@ export const HealthPredictor: React.FC = () => {
       {/* Pet Health Predictions */}
       <Grid container spacing={3}>
         {predictions.map((prediction) => (
-          <Grid key={prediction.petId} size={{ xs: 12, md: 6, lg: 4 }}>
+          <Grid size={{ xs: 12, md: 6, lg: 4 }} key={prediction.petId}>
             <Card>
               <CardHeader
                 avatar={getHealthIcon(prediction.overallHealth)}

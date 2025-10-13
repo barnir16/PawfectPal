@@ -38,7 +38,9 @@ import {
   Warning
 } from '@mui/icons-material';
 import { useLocalization } from '../../contexts/LocalizationContext';
-import type { ServiceRequest, Pet, User } from '../../types/services/service';
+import type { ServiceRequest } from '../../types/services/serviceRequest';
+import type { Pet } from '../../types/pets/pet';
+import type { User } from '../../types/auth/auth';
 
 interface ServiceRequestInfoProps {
   serviceRequest: ServiceRequest;
@@ -188,7 +190,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
       {/* Main Content Grid */}
       <Grid container spacing={2}>
         {/* Left Column - Service Details */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Paper elevation={1} sx={{ p: 2, borderRadius: 2, height: '100%' }}>
             <Typography variant="h6" fontWeight={600} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
               <Description color="primary" />
@@ -230,14 +232,14 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
                 </ListItem>
               )}
               
-              {serviceRequest.scheduled_date && (
+              {serviceRequest.preferred_dates && serviceRequest.preferred_dates.length > 0 && (
                 <ListItem>
                   <ListItemIcon>
                     <CalendarToday color="primary" />
                   </ListItemIcon>
                   <ListItemText 
-                    primary="Scheduled Date"
-                    secondary={formatDate(serviceRequest.scheduled_date)}
+                    primary="Preferred Dates"
+                    secondary={serviceRequest.preferred_dates.join(', ')}
                   />
                 </ListItem>
               )}
@@ -277,7 +279,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
         </Grid>
 
         {/* Right Column - People & Pets */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Paper elevation={1} sx={{ p: 2, borderRadius: 2, height: '100%' }}>
             <Typography variant="h6" fontWeight={600} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
               <Person color="primary" />
@@ -366,7 +368,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
                           {/* Pet Details Grid */}
                           <Grid container spacing={1} sx={{ mb: 1 }}>
                             {pet.birthDate && (
-                              <Grid item xs={6}>
+                              <Grid size={{ xs: 6 }}>
                                 <Chip
                                   icon={<Cake />}
                                   label={`${t('chat.petAge')}: ${calculateAge(pet.birthDate)}`}
@@ -377,7 +379,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
                               </Grid>
                             )}
                             {pet.weightKg && (
-                              <Grid item xs={6}>
+                              <Grid size={{ xs: 6 }}>
                                 <Chip
                                   icon={<Scale />}
                                   label={`${t('chat.petWeight')}: ${pet.weightKg} ${pet.weightUnit}`}
@@ -388,7 +390,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
                               </Grid>
                             )}
                             {pet.gender && (
-                              <Grid item xs={6}>
+                              <Grid size={{ xs: 6 }}>
                                 <Chip
                                   icon={<Pets />}
                                   label={`${t('chat.petGender')}: ${getGenderTranslation(pet.gender)}`}
@@ -399,7 +401,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
                               </Grid>
                             )}
                             {pet.color && (
-                              <Grid item xs={6}>
+                              <Grid size={{ xs: 6 }}>
                                 <Chip
                                   icon={<ColorLens />}
                                   label={`${t('chat.petColor')}: ${pet.color}`}

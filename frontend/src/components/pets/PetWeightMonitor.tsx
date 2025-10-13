@@ -80,7 +80,7 @@ export const PetWeightMonitor: React.FC<PetWeightMonitorProps> = ({ pet }) => {
   // Weight thresholds for alerts (in kg)
   const getWeightThresholds = () => {
     const petType = pet.type?.toLowerCase();
-    const currentWeight = pet.weightKg || pet.weight_kg || 0;
+    const currentWeight = pet.weightKg || pet.weightKg || 0;
     
     if (petType === 'dog') {
       if (currentWeight < 5) return { min: 2, max: 8, healthyRange: '2-8 kg' };
@@ -96,8 +96,8 @@ export const PetWeightMonitor: React.FC<PetWeightMonitorProps> = ({ pet }) => {
 
   // Initialize with current pet weight
   useEffect(() => {
-    if (pet.weightKg || pet.weight_kg) {
-      const currentWeight = pet.weightKg || pet.weight_kg || 0;
+    if (pet.weightKg || pet.weightKg) {
+      const currentWeight = pet.weightKg || pet.weightKg || 0;
       const currentUnit = pet.weightUnit || 'kg';
       
       setWeightRecords([{
@@ -294,7 +294,7 @@ export const PetWeightMonitor: React.FC<PetWeightMonitorProps> = ({ pet }) => {
           </Typography>
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Alert severity={currentStatus.color} icon={<WeightIcon />}>
+              <Alert severity={currentStatus.color === 'default' ? 'info' : currentStatus.color} icon={<WeightIcon />}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
                   {t('common.status')}
                 </Typography>

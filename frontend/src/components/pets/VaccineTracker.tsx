@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocalization } from '../../contexts/LocalizationContext';
 import {
   Card,
   CardContent,
@@ -50,7 +51,7 @@ import {
   createVaccination, 
   updateVaccination, 
   deleteVaccination,
-  getVaccinationSummary
+  getPetVaccinationSummary
 } from '../../services/medical/vaccinationService';
 import type { Pet } from '../../types/pets/pet';
 
@@ -72,6 +73,7 @@ interface VaccineTrackerProps {
 }
 
 const VaccineTracker: React.FC<VaccineTrackerProps> = ({ pet }) => {
+  const { t } = useLocalization();
   
   // Debug logging
   console.log('VaccineTracker received pet:', pet);
@@ -160,7 +162,7 @@ const VaccineTracker: React.FC<VaccineTrackerProps> = ({ pet }) => {
         try {
           const [vaccinationsData, summaryData] = await Promise.all([
             getPetVaccinations(pet.id),
-            getVaccinationSummary(pet.id)
+            getPetVaccinationSummary(pet.id)
           ]);
           
           console.log('Backend data received:', { vaccinationsData, summaryData });
@@ -891,7 +893,7 @@ const VaccineTracker: React.FC<VaccineTrackerProps> = ({ pet }) => {
                   )}
                 </FormControl>
               </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   type="date"
@@ -903,7 +905,7 @@ const VaccineTracker: React.FC<VaccineTrackerProps> = ({ pet }) => {
                   helperText={formErrors.administeredDate}
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   label="Veterinarian *"
@@ -971,7 +973,7 @@ const VaccineTracker: React.FC<VaccineTrackerProps> = ({ pet }) => {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   type="date"
@@ -981,7 +983,7 @@ const VaccineTracker: React.FC<VaccineTrackerProps> = ({ pet }) => {
                   InputLabelProps={{ shrink: true }}
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   type="date"
@@ -991,7 +993,7 @@ const VaccineTracker: React.FC<VaccineTrackerProps> = ({ pet }) => {
                   InputLabelProps={{ shrink: true }}
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   label="Veterinarian"
@@ -999,7 +1001,7 @@ const VaccineTracker: React.FC<VaccineTrackerProps> = ({ pet }) => {
                   onChange={(e) => setFormData({ ...formData, veterinarian: e.target.value })}
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   label="Clinic"

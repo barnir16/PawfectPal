@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -105,7 +106,7 @@ export const BookService = () => {
     return (
       <Grid container spacing={3}>
         {filteredProviders.map((provider) => (
-          <Grid key={provider.id} size={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={provider.id}>
             <ServiceProviderCard
               provider={provider}
               onRequestService={(provider) => {

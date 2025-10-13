@@ -2,7 +2,7 @@
  * WebSocket Service for Real-time Chat
  * Handles WebSocket connections and real-time messaging
  */
-import { ChatMessage, ChatMessageCreate } from '../types/services/chat';
+import { ChatMessage, ChatMessageCreate } from '../../types/services/chat';
 
 export interface WebSocketMessage {
   type: 'new_message' | 'message_sent' | 'typing' | 'message_status' | 'connection_established' | 'error';

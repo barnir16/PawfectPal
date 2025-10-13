@@ -189,7 +189,7 @@ export const MarketplacePostsPage: React.FC = () => {
       {/* Filters */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <TextField
               fullWidth
               size="small"
@@ -202,7 +202,7 @@ export const MarketplacePostsPage: React.FC = () => {
             />
           </Grid>
           
-          <Grid item xs={12} sm={6} md={2}>
+          <Grid size={{ xs: 12, sm: 6, md: 2 }}>
             <FormControl fullWidth size="small">
               <InputLabel>{t('marketplace.serviceType') || 'Service Type'}</InputLabel>
               <Select
@@ -219,7 +219,7 @@ export const MarketplacePostsPage: React.FC = () => {
             </FormControl>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={2}>
+          <Grid size={{ xs: 12, sm: 6, md: 2 }}>
             <TextField
               fullWidth
               size="small"
@@ -229,7 +229,7 @@ export const MarketplacePostsPage: React.FC = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={2}>
+          <Grid size={{ xs: 12, sm: 6, md: 2 }}>
             <Button
               fullWidth
               variant={urgentOnly ? 'contained' : 'outlined'}
@@ -240,7 +240,7 @@ export const MarketplacePostsPage: React.FC = () => {
             </Button>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Button
                 variant={viewMode === 'grid' ? 'contained' : 'outlined'}
@@ -282,7 +282,7 @@ export const MarketplacePostsPage: React.FC = () => {
         ) : (
           <Grid container spacing={3}>
             {filteredPosts.map((post) => (
-              <Grid item xs={12} sm={6} md={viewMode === 'grid' ? 4 : 12} key={post.id}>
+              <Grid size={{ xs: 12, sm: 6, md: viewMode === 'grid' ? 4 : 12 }} key={post.id}>
                 <MarketplacePostCard
                   post={post}
                   onViewDetails={handleViewDetails}
@@ -315,7 +315,7 @@ export const MarketplacePostsPage: React.FC = () => {
         ) : (
           <Grid container spacing={3}>
             {myPosts.map((post) => (
-              <Grid item xs={12} sm={6} md={viewMode === 'grid' ? 4 : 12} key={post.id}>
+              <Grid size={{ xs: 12, sm: 6, md: viewMode === 'grid' ? 4 : 12 }} key={post.id}>
                 <MarketplacePostCard
                   post={post}
                   onViewDetails={handleViewDetails}

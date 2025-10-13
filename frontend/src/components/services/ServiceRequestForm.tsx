@@ -105,7 +105,7 @@ export const ServiceRequestForm: React.FC<ServiceRequestFormProps> = ({
       setIsLoading(true);
       setError(null);
 
-      const request = await ServiceRequestService.createServiceRequest(data);
+      const request = await ServiceRequestService.createServiceRequest(data as ServiceRequestCreate);
       
       if (onSuccess) {
         onSuccess(request.id);

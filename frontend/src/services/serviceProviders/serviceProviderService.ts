@@ -1,4 +1,4 @@
-import { api } from '../../api';
+import { getBaseUrl, getToken } from '../api';
 
 export interface ServiceProvider {
   id: number;
@@ -25,27 +25,61 @@ export interface ServiceProvider {
 
 export class ServiceProviderService {
   static async getProvider(providerId: number): Promise<ServiceProvider> {
-    const response = await api.get(`/providers/${providerId}`);
-    return response.data;
+    const response = await fetch(`${getBaseUrl()}/providers/${providerId}`, {
+      headers: {
+        'Authorization': `Bearer ${getToken()}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) throw new Error('Failed to fetch provider');
+    return response.json();
   }
 
   static async getProviders(): Promise<ServiceProvider[]> {
-    const response = await api.get('/providers');
-    return response.data;
+    const response = await fetch(`${getBaseUrl()}/providers`, {
+      headers: {
+        'Authorization': `Bearer ${getToken()}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) throw new Error('Failed to fetch providers');
+    return response.json();
   }
 
   static async getProvidersByService(serviceType: string): Promise<ServiceProvider[]> {
-    const response = await api.get(`/providers?service_type=${serviceType}`);
-    return response.data;
+    const response = await fetch(`${getBaseUrl()}/providers?service_type=${serviceType}`, {
+      headers: {
+        'Authorization': `Bearer ${getToken()}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) throw new Error('Failed to fetch providers by service');
+    return response.json();
   }
 
   static async updateProvider(providerId: number, data: Partial<ServiceProvider>): Promise<ServiceProvider> {
-    const response = await api.put(`/providers/${providerId}`, data);
-    return response.data;
+    const response = await fetch(`${getBaseUrl()}/providers/${providerId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${getToken()}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to update provider');
+    return response.json();
   }
 
   static async createProviderProfile(data: Partial<ServiceProvider>): Promise<ServiceProvider> {
-    const response = await api.post('/providers', data);
-    return response.data;
+    const response = await fetch(`${getBaseUrl()}/providers`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${getToken()}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to create provider profile');
+    return response.json();
   }
 }

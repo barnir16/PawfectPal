@@ -17,9 +17,9 @@ import {
   Divider,
 } from '@mui/material';
 import { Star, RateReview } from '@mui/icons-material';
-import { useLocalization } from '../../../contexts/LocalizationContext';
-import { useAuth } from '../../../contexts/AuthContext';
-import { getBaseUrl, getToken } from '../../../services/api';
+import { useLocalization } from '../../contexts/LocalizationContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { getBaseUrl, getToken } from '../../services/api';
 
 interface ProviderRatingProps {
   providerId: number;
@@ -160,9 +160,9 @@ export const ProviderRating: React.FC<ProviderRatingProps> = ({
       veterinary: 'error',
       training: 'info',
       'אילוף': 'info',
-      general: 'default',
+      general: 'info',
     };
-    return colors[serviceType] || 'default';
+    return colors[serviceType] || 'info';
   };
 
   return (

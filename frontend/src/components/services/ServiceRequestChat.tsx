@@ -115,6 +115,7 @@ export const ServiceRequestChat: React.FC = () => {
           is_read: false,
           is_edited: false,
           created_at: new Date().toISOString(),
+          delivery_status: 'sent',
           sender: {
             id: user?.id || 0,
             username: user?.username || 'You',
@@ -160,6 +161,7 @@ export const ServiceRequestChat: React.FC = () => {
         is_read: false,
         is_edited: false,
         created_at: new Date().toISOString(),
+        delivery_status: 'sent',
         attachments: []
       };
     }
@@ -216,11 +218,11 @@ export const ServiceRequestChat: React.FC = () => {
           break;
           
         case 'update_service_status':
-          sentMessage = await chatService.sendServiceUpdate(
-            parseInt(id!),
-            data?.status,
-            data?.message
-          );
+          sentMessage = await chatService.sendMessage(parseInt(id!), {
+            service_request_id: parseInt(id!),
+            message: data?.message || `Service status updated to: ${data?.status}`,
+            message_type: 'service_update',
+          });
           setMessages(prev => [...prev, processMessage(sentMessage)]);
           break;
           

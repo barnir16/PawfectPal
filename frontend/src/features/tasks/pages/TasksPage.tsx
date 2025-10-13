@@ -408,7 +408,7 @@ export const Tasks = () => {
         ) : (
           <Grid container spacing={2} sx={{ mt: 2 }}>
             {formattedTasks.map((task, index) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={`${task.id}-${index}`}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={`${task.id}-${index}`}>
                               <TaskGridItem
                 task={task}
                 onEdit={handleEditTask}

@@ -154,7 +154,7 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
               {provider.provider_rating.toFixed(1)}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              ({provider.provider_rating_count || 0} {t('services.reviews') || 'reviews'})
+              ({provider.reviews_count || 0} {t('services.reviews') || 'reviews'})
             </Typography>
           </Box>
         )}

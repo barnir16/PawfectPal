@@ -149,7 +149,9 @@ const ProfilePage: React.FC = () => {
       const updatedPayload: Partial<ProfileFormData> = {};
       const initial = getInitialFormData(user);
       (Object.keys(formData) as (keyof ProfileFormData)[]).forEach((key) => {
-        if (formData[key] !== initial[key]) updatedPayload[key] = formData[key];
+        if (formData[key] !== initial[key]) {
+          (updatedPayload as any)[key] = formData[key];
+        }
       });
       if (newImageUrl !== user.profile_image)
         updatedPayload.profile_image = newImageUrl;
@@ -211,7 +213,7 @@ const ProfilePage: React.FC = () => {
 
       <Grid container spacing={3}>
         {/* Avatar */}
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card>
             <CardHeader
               title="Profile Picture"

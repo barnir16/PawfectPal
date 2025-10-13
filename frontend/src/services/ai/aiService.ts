@@ -132,14 +132,14 @@ class AIService {
         type: pet.type || 'pet',
         breed: pet.breed || 'Unknown',
         age: this.calculateAge(pet),
-        weight: pet.weightKg || pet.weight_kg || 0,
+        weight: pet.weightKg || 0,
         gender: pet.gender || 'Unknown',
         health_issues: this.processHealthIssues(pet),
-        behavior_issues: pet.behaviorIssues || pet.behavior_issues || [],
-        is_vaccinated: Boolean(pet.isVaccinated || pet.is_vaccinated),
-        is_neutered: Boolean(pet.isNeutered || pet.is_neutered),
-        last_vet_visit: pet.lastVetVisit || pet.last_vet_visit || null,
-        next_vet_visit: pet.nextVetVisit || pet.next_vet_visit || null
+        behavior_issues: pet.behaviorIssues || [],
+        is_vaccinated: Boolean(pet.isVaccinated),
+        is_neutered: Boolean(pet.isNeutered),
+        last_vet_visit: pet.lastVetVisit || null,
+        next_vet_visit: pet.nextVetVisit || null
       };
     });
 
@@ -154,12 +154,15 @@ class AIService {
    * Process health issues for AI context
    */
   private processHealthIssues(pet: Pet): string[] {
-    const issues = pet.healthIssues || pet.health_issues || [];
+    const issues = pet.healthIssues || [];
     const parsedIssues = Array.isArray(issues) ? issues : [];
     
     return parsedIssues.map(issue => {
       if (typeof issue === 'string') return issue.toLowerCase();
-      return issue.description || 'unknown issue';
+      if (typeof issue === 'object' && issue !== null && 'description' in issue) {
+        return (issue as any).description || 'unknown issue';
+      }
+      return 'unknown issue';
     });
   }
 
@@ -167,8 +170,8 @@ class AIService {
    * Calculate pet age (existing logic)
    */
   private calculateAge(pet: Pet): number {
-    const birthDate = pet.birthDate || pet.birth_date;
-    if (birthDate && (pet.isBirthdayGiven || pet.is_birthday_given)) {
+    const birthDate = pet.birthDate;
+    if (birthDate && pet.isBirthdayGiven) {
       try {
         let birth;
         if (typeof birthDate === 'string' && birthDate.match(/^\d{4}-\d{2}-\d{2}$/)) {

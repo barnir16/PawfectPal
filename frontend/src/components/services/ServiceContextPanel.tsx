@@ -460,7 +460,7 @@ export const ServiceContextPanel: React.FC<ServiceContextPanelProps> = ({
             </Box>
           )}
 
-          {serviceRequest.status === 'confirmed' && (
+          {serviceRequest.status === 'in_progress' && (
             <Box sx={{ mt: 2 }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
                 Service Actions

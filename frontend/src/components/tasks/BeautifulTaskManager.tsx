@@ -48,21 +48,34 @@ import {
 import { useTheme } from '@mui/material/styles';
 import { getPets } from '../../services/pets/petService';
 import { getTasks, createTask, updateTask, deleteTask, completeTask, downloadTasksAsICal, syncTasksWithGoogleCalendar } from '../../services/tasks/taskService';
-import { useLocalization } from '../../contexts/LocalizationContext';
+import type { Task, TaskCreateData } from '../../types/tasks/task';
 
-interface Task {
-  id: string;
+// Extended Task interface for this component's specific needs
+interface ExtendedTask {
+  id: number;
   title: string;
-  description?: string;
-  dueDate?: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'pending' | 'completed' | 'overdue';
-  petId?: number;
-  petName?: string;
+  description: string;
+  dateTime: string; // ISO datetime string
+  repeatInterval?: number;
+  repeatUnit?: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  repeatEndDate?: string;
+  petIds: number[];
+  attachments: string[];
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'pending' | 'completed' | 'overdue'; // Custom status
+  isCompleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  ownerId?: number;
+  // Additional properties for this component
+  dueDate?: string; // Alias for dateTime for backward compatibility
+  petId?: number; // Single pet ID for forms
+  petName?: string; // Pet name for display
   category?: string;
   reminder?: boolean;
   notes?: string;
 }
+import { useLocalization } from '../../contexts/LocalizationContext';
 
 interface Pet {
   id: number;
@@ -71,7 +84,7 @@ interface Pet {
   age?: number;
 }
 
-interface TaskDisplayRecord extends Task {
+interface TaskDisplayRecord extends ExtendedTask {
   petInfo?: Pet;
   daysUntilDue?: number;
   isOverdue?: boolean;
@@ -82,7 +95,7 @@ const BeautifulTaskManager: React.FC = () => {
   const { t } = useLocalization();
   
   // State management
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<ExtendedTask[]>([]);
   const [pets, setPets] = useState<Pet[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<TaskDisplayRecord[]>([]);
   const [selectedPet, setSelectedPet] = useState<string>('all');
@@ -93,7 +106,7 @@ const BeautifulTaskManager: React.FC = () => {
   // Dialog states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedTask, setSelectedTask] = useState<ExtendedTask | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -124,9 +137,20 @@ const BeautifulTaskManager: React.FC = () => {
         getTasks()
       ]);
       
+      // Transform tasks to ExtendedTask format
+      const extendedTasks: ExtendedTask[] = tasksData.map(task => ({
+        ...task,
+        dueDate: task.dateTime, // Map dateTime to dueDate
+        petId: task.petIds.length > 0 ? task.petIds[0] : undefined, // Use first pet ID
+        petName: petsData.find(pet => task.petIds.includes(pet.id))?.name,
+        category: undefined, // Not available in base Task
+        reminder: true, // Default value
+        notes: undefined, // Not available in base Task
+        status: task.isCompleted ? 'completed' : 'pending' // Map isCompleted to status
+      }));
       
       setPets(petsData);
-      setTasks(tasksData);
+      setTasks(extendedTasks);
       
     } catch (err) {
       console.error('❌ Error loading task data:', err);
@@ -259,9 +283,16 @@ const BeautifulTaskManager: React.FC = () => {
   const handleAddTask = async () => {
     try {
       setIsSubmitting(true);
-      const taskData = {
-        ...formData,
-        petId: formData.petId ? parseInt(formData.petId) : undefined
+      const taskData: TaskCreateData = {
+        title: formData.title,
+        description: formData.description,
+        dateTime: formData.dueDate,
+        petIds: formData.petId ? [parseInt(formData.petId)] : [],
+        attachments: [],
+        priority: formData.priority,
+        repeatInterval: undefined,
+        repeatUnit: undefined,
+        repeatEndDate: undefined,
       };
       await createTask(taskData);
       setSuccessMessage(t('tasks.taskCreated') || 'Task created successfully!');
@@ -281,9 +312,13 @@ const BeautifulTaskManager: React.FC = () => {
     
     try {
       setIsSubmitting(true);
-      const taskData = {
-        ...formData,
-        petId: formData.petId ? parseInt(formData.petId) : undefined
+      const taskData: Partial<TaskCreateData> = {
+        title: formData.title,
+        description: formData.description,
+        dateTime: formData.dueDate,
+        petIds: formData.petId ? [parseInt(formData.petId)] : [],
+        attachments: [],
+        priority: formData.priority,
       };
       await updateTask(selectedTask.id, taskData);
       setSuccessMessage(t('tasks.taskUpdated') || 'Task updated successfully!');
@@ -300,7 +335,7 @@ const BeautifulTaskManager: React.FC = () => {
 
   const handleCompleteTask = async (taskId: string) => {
     try {
-      await completeTask(taskId);
+      await completeTask(parseInt(taskId));
       setSuccessMessage(t('tasks.taskCompleted') || 'Task completed!');
       loadData();
     } catch (err) {
@@ -315,7 +350,7 @@ const BeautifulTaskManager: React.FC = () => {
     }
     
     try {
-      await deleteTask(taskId);
+      await deleteTask(parseInt(taskId));
       setSuccessMessage(t('tasks.taskDeleted') || 'Task deleted!');
       loadData();
     } catch (err) {
@@ -326,19 +361,23 @@ const BeautifulTaskManager: React.FC = () => {
 
   const handleExportTasks = async () => {
     try {
-      // Convert our task format to the expected format
-      const formattedTasks = tasks.map(task => ({
-        ...task,
-        dateTime: task.dueDate || new Date().toISOString(),
-        petIds: task.petId ? [task.petId] : [],
+      // Convert ExtendedTask back to Task format for export
+      const formattedTasks: Task[] = tasks.map(task => ({
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        dateTime: task.dueDate || task.dateTime,
+        petIds: task.petId ? [task.petId] : task.petIds,
+        attachments: task.attachments,
+        priority: task.priority,
+        status: task.status === 'completed' ? 'completed' : 'pending',
         isCompleted: task.status === 'completed',
-        repeatInterval: null,
-        repeatUnit: null,
-        repeatEndDate: null,
-        attachments: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        ownerId: 1
+        repeatInterval: task.repeatInterval,
+        repeatUnit: task.repeatUnit,
+        repeatEndDate: task.repeatEndDate,
+        createdAt: task.createdAt,
+        updatedAt: task.updatedAt,
+        ownerId: task.ownerId,
       }));
       
       downloadTasksAsICal(formattedTasks);
@@ -351,19 +390,23 @@ const BeautifulTaskManager: React.FC = () => {
 
   const handleSyncWithGoogle = async () => {
     try {
-      // Convert our task format to the expected format
-      const formattedTasks = tasks.map(task => ({
-        ...task,
-        dateTime: task.dueDate || new Date().toISOString(),
-        petIds: task.petId ? [task.petId] : [],
+      // Convert ExtendedTask back to Task format for sync
+      const formattedTasks: Task[] = tasks.map(task => ({
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        dateTime: task.dueDate || task.dateTime,
+        petIds: task.petId ? [task.petId] : task.petIds,
+        attachments: task.attachments,
+        priority: task.priority,
+        status: task.status === 'completed' ? 'completed' : 'pending',
         isCompleted: task.status === 'completed',
-        repeatInterval: null,
-        repeatUnit: null,
-        repeatEndDate: null,
-        attachments: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        ownerId: 1
+        repeatInterval: task.repeatInterval,
+        repeatUnit: task.repeatUnit,
+        repeatEndDate: task.repeatEndDate,
+        createdAt: task.createdAt,
+        updatedAt: task.updatedAt,
+        ownerId: task.ownerId,
       }));
       
       await syncTasksWithGoogleCalendar(formattedTasks);
@@ -388,7 +431,7 @@ const BeautifulTaskManager: React.FC = () => {
     setSelectedTask(null);
   };
 
-  const openEditDialog = (task: Task) => {
+  const openEditDialog = (task: ExtendedTask) => {
     setSelectedTask(task);
     setFormData({
       title: task.title,
@@ -573,7 +616,7 @@ const BeautifulTaskManager: React.FC = () => {
                 const statusInfo = getStatusInfo(task.status);
                 
                 return (
-                  <Grid key={task.id} size={{ xs: 12 }}>
+                  <Grid size={{ xs: 12 }} key={task.id}>
                     <Card 
                       sx={{ 
                         border: `2px solid ${statusInfo.color}`,
@@ -654,7 +697,7 @@ const BeautifulTaskManager: React.FC = () => {
                               <Tooltip title={t('tasks.markComplete') || 'Mark Complete'}>
                                 <IconButton 
                                   size="small" 
-                                  onClick={() => handleCompleteTask(task.id)}
+                                  onClick={() => handleCompleteTask(task.id.toString())}
                                   sx={{ color: theme.palette.success.main }}
                                 >
                                   <CompleteIcon />
@@ -673,7 +716,7 @@ const BeautifulTaskManager: React.FC = () => {
                             <Tooltip title={t('tasks.delete') || 'Delete'}>
                               <IconButton 
                                 size="small" 
-                                onClick={() => handleDeleteTask(task.id)}
+                                onClick={() => handleDeleteTask(task.id.toString())}
                                 sx={{ color: theme.palette.error.main }}
                               >
                                 <DeleteIcon />
