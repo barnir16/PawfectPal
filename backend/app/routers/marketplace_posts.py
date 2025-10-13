@@ -6,12 +6,14 @@ from app.dependencies.auth import get_current_user
 from app.models.user import UserORM
 from app.models.marketplace_post import MarketplacePostORM
 from app.models.pet import PetORM
+from app.models.service_type import ServiceTypeORM
 from app.schemas.marketplace_post import (
     MarketplacePostCreate, 
     MarketplacePostUpdate, 
     MarketplacePostRead,
     MarketplacePostSummary
 )
+from app.services.service_matching import ServiceMatchingService
 from datetime import datetime, timedelta
 
 router = APIRouter(prefix="/marketplace-posts", tags=["marketplace-posts"])
@@ -34,6 +36,28 @@ def create_marketplace_post(
         raise HTTPException(
             status_code=400, 
             detail="Some pet IDs do not belong to you"
+        )
+    
+    # Validate service type exists
+    service_type_obj = db.query(ServiceTypeORM).filter(
+        ServiceTypeORM.name == post.service_type
+    ).first()
+    
+    if not service_type_obj:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Service type '{post.service_type}' does not exist. Available services: {', '.join([st.name for st in db.query(ServiceTypeORM).all()])}"
+        )
+    
+    # Check if there are any providers offering this service
+    available_providers = ServiceMatchingService.get_providers_for_service(
+        db, post.service_type, is_available=True
+    )
+    
+    if not available_providers:
+        raise HTTPException(
+            status_code=400,
+            detail=f"No providers are currently offering '{post.service_type}' service. Please try a different service type."
         )
     
     # Create the marketplace post
