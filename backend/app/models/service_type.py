@@ -24,3 +24,6 @@ class ServiceTypeORM(Base):
     providers: Mapped[List["ProviderORM"]] = relationship(
         "ProviderORM", secondary="provider_services_link", back_populates="services"
     )
+    enhanced_providers: Mapped[List["ProviderProfileORM"]] = relationship(
+        "ProviderProfileORM", secondary="provider_profile_services", back_populates="services"
+    )

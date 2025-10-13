@@ -16,6 +16,9 @@ from app.routers import (
     provider,
     service_requests,
     chat,
+    marketplace_posts,
+    enhanced_provider_profiles,
+    enhanced_provider_reviews,
 )
 
 # Import AI router conditionally to avoid startup errors
@@ -107,20 +110,25 @@ app.include_router(weight_record.router)
 app.include_router(weight_goal.router)
 if AI_AVAILABLE:
     app.include_router(ai.router)
-    print("✅ AI router included")
+    print("AI router included")
 else:
-    print("⚠️ AI router skipped due to configuration issues")
+    print("AI router skipped due to configuration issues")
 
 # Import and include AI conversations router
 try:
     from app.routers import ai_conversations
     app.include_router(ai_conversations.router)
-    print("✅ AI conversations router included")
+    print("AI conversations router included")
 except Exception as e:
-    print(f"⚠️ AI conversations router not available: {e}")
+    print(f"AI conversations router not available: {e}")
 app.include_router(provider.router)
 app.include_router(service_requests.router)
 app.include_router(chat.router)
+
+# Include new marketplace routers
+app.include_router(marketplace_posts.router)
+app.include_router(enhanced_provider_profiles.router)
+app.include_router(enhanced_provider_reviews.router)
 
 
 # Mount static files for image serving
@@ -129,11 +137,9 @@ import os
 
 # Get the absolute path to uploads directory
 uploads_path = Path("uploads").absolute()
-print(f"📁 Static files path: {uploads_path}")
-print(f"📁 Directory exists: {uploads_path.exists()}")
-print(
-    f"📁 Directory contents: {list(uploads_path.iterdir()) if uploads_path.exists() else 'Directory not found'}"
-)
+print(f"Static files path: {uploads_path}")
+print(f"Directory exists: {uploads_path.exists()}")
+print(f"Directory contents: {list(uploads_path.iterdir()) if uploads_path.exists() else 'Directory not found'}")
 
 app.mount("/uploads", StaticFiles(directory=str(uploads_path)), name="uploads")
 
@@ -168,5 +174,9 @@ def read_root():
             "Vaccine Tracking",
             "Weight Tracking",
             "AI Assistant",
+            "Marketplace Posts",
+            "Enhanced Provider Profiles",
+            "Provider Reviews",
+            "Service Matching",
         ],
     }

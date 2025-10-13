@@ -46,6 +46,9 @@ class UserORM(Base):
     provider_profile: Mapped[Optional["ProviderORM"]] = relationship(
         "ProviderORM", back_populates="user", uselist=False
     )
+    enhanced_provider_profile: Mapped[Optional["ProviderProfileORM"]] = relationship(
+        "ProviderProfileORM", back_populates="user", uselist=False
+    )
 
     # Address information
     address: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -64,6 +67,9 @@ class UserORM(Base):
     )
     service_requests: Mapped[List["ServiceRequestORM"]] = relationship(
         "ServiceRequestORM", foreign_keys="ServiceRequestORM.user_id", back_populates="user"
+    )
+    marketplace_posts: Mapped[List["MarketplacePostORM"]] = relationship(
+        "MarketplacePostORM", foreign_keys="MarketplacePostORM.user_id", back_populates="user"
     )
     chat_messages: Mapped[List["ChatMessageORM"]] = relationship(
         "ChatMessageORM", back_populates="sender"
