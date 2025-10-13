@@ -233,7 +233,8 @@ export const MarketplacePostCard: React.FC<MarketplacePostCardProps> = ({
                 <Typography variant="body2">
                   {t('marketplace.posted') || 'Posted'} {formatDate(post.created_at)}
                 </Typography>
-              </Grid>
+              </Box>
+            </Grid>
 
             <Grid item xs={12} sm={6}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
