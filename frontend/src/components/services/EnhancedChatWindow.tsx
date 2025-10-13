@@ -179,7 +179,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   const [offlineMessages, setOfflineMessages] = useState<ChatMessageCreate[]>([]);
   
   // Service request context panel
-  const [showServiceContext, setShowServiceContext] = useState(false);
+  const [showServiceContext, setShowServiceContext] = useState(true);
   
   // Reply functionality
   const [replyingTo, setReplyingTo] = useState<ReplyToMessage | null>(null);
@@ -201,49 +201,49 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     // Provider-specific quick replies
     {
       id: "greeting",
-      text: "Hi! I'm interested in providing this service for you.",
+      text: t('chat.quickReplies.provider.greeting') || "Hi! I'm interested in providing this service for you.",
       icon: <Pets />,
     },
     {
       id: "availability",
-      text: "I'm available for this service. When would be a good time to discuss the details?",
+      text: t('chat.quickReplies.provider.availability') || "I'm available for this service. When would be a good time to discuss the details?",
       icon: <Schedule />,
     },
     {
       id: "experience",
-      text: "I have extensive experience with this type of service. Would you like to schedule a consultation?",
+      text: t('chat.quickReplies.provider.experience') || "I have extensive experience with this type of service. Would you like to schedule a consultation?",
       icon: <Star />,
     },
     {
       id: "location",
-      text: "I'm located nearby. Would you like to meet in person to discuss the service?",
+      text: t('chat.quickReplies.provider.location') || "I'm located nearby. Would you like to meet in person to discuss the service?",
       icon: <LocationOn />,
     },
     {
       id: "photos",
-      text: "Could you share some photos of your pet? This will help me provide the best care.",
+      text: t('chat.quickReplies.provider.photos') || "Could you share some photos of your pet? This will help me provide the best care.",
       icon: <Image />,
     },
     {
       id: "instructions",
-      text: "Please share any special instructions or requirements for your pet's care.",
+      text: t('chat.quickReplies.provider.instructions') || "Please share any special instructions or requirements for your pet's care.",
       icon: <Pets />,
     },
   ] : [
     // Client-specific quick replies
     {
       id: "greeting",
-      text: "Hi! I'm interested in your service request.",
+      text: t('chat.quickReplies.client.greeting') || "Hi! I'm interested in your service request.",
       icon: <Pets />,
     },
     {
       id: "availability",
-      text: "I'm available for this service. When would you like to meet?",
+      text: t('chat.quickReplies.client.availability') || "I'm available for this service. When would you like to meet?",
       icon: <Schedule />,
     },
     {
       id: "location",
-      text: "Could you share the exact location?",
+      text: t('chat.quickReplies.client.location') || "Could you share the exact location?",
       icon: <LocationOn />,
     },
     {
@@ -564,7 +564,14 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   // Helper function to render location messages
   const renderLocationMessage = (message: ChatMessage) => {
     const text = getDisplayMessage(message);
-    if (message.message_type === "location" && text.includes("📍 Location shared")) {
+    
+    // Check if this is a location message by type or content
+    if (message.message_type === "location" || 
+        text.includes("Lat:") || 
+        text.includes("Lng:") ||
+        text.includes("📍 Location shared") ||
+        text.includes("Location:") ||
+        text.includes("Coordinates:")) {
       return <LocationMessage message={text} compact={true} />;
     }
     return null;

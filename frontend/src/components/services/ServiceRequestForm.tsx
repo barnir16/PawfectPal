@@ -170,6 +170,7 @@ export const ServiceRequestForm: React.FC<ServiceRequestFormProps> = ({
                   <MenuItem value="boarding">{t('services.boarding')}</MenuItem>
                   <MenuItem value="grooming">{t('services.grooming')}</MenuItem>
                   <MenuItem value="veterinary">{t('services.veterinary')}</MenuItem>
+                  <MenuItem value="training">{t('services.training')}</MenuItem>
                 </Select>
               </FormControl>
             )}
