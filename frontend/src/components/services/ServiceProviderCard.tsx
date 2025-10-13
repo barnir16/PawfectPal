@@ -146,6 +146,19 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
           </Typography>
         )}
 
+        {/* Rating */}
+        {provider.provider_rating && (
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <Star sx={{ fontSize: 16, color: 'warning.main', mr: 0.5 }} />
+            <Typography variant="body2" sx={{ mr: 1 }}>
+              {provider.provider_rating.toFixed(1)}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              ({provider.provider_rating_count || 0} {t('services.reviews') || 'reviews'})
+            </Typography>
+          </Box>
+        )}
+
         <Divider sx={{ my: 2 }} />
 
         {/* Provider Stats */}

@@ -12,12 +12,12 @@ export const LocationMessage: React.FC<LocationMessageProps> = ({ message, compa
   const { t } = useLocalization();
   const [mapError, setMapError] = useState(false);
 
-  // Extract coordinates from message
-  const latMatch = message.match(/Lat:\s*([0-9.-]+)/);
-  const lngMatch = message.match(/Lng:\s*([0-9.-]+)/);
+  // Extract coordinates from message - handle multiple formats
+  const latMatch = message.match(/Lat:\s*([0-9.-]+)|latitude[:\s]*([0-9.-]+)|lat[:\s]*([0-9.-]+)/i);
+  const lngMatch = message.match(/Lng:\s*([0-9.-]+)|longitude[:\s]*([0-9.-]+)|lng[:\s]*([0-9.-]+)|lon[:\s]*([0-9.-]+)/i);
   
-  const latitude = latMatch ? parseFloat(latMatch[1]) : null;
-  const longitude = lngMatch ? parseFloat(lngMatch[1]) : null;
+  const latitude = latMatch ? parseFloat(latMatch[1] || latMatch[2] || latMatch[3]) : null;
+  const longitude = lngMatch ? parseFloat(lngMatch[1] || lngMatch[2] || lngMatch[3] || lngMatch[4]) : null;
 
   const handleOpenInMaps = () => {
     if (latitude && longitude) {
@@ -90,86 +90,35 @@ export const LocationMessage: React.FC<LocationMessageProps> = ({ message, compa
               height: 120,
               borderRadius: 1,
               overflow: 'hidden',
-              border: (theme) => `1px solid ${theme.palette.divider}`,
-              backgroundColor: (theme) => theme.palette.action.hover,
+              backgroundColor: '#f5f5f5',
               position: 'relative',
-              cursor: 'pointer',
-              background: `linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)`,
-            }}
-            onClick={handleOpenInMaps}
-            >
-              {/* Enhanced map preview */}
-              <Box sx={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '4px',
-                position: 'relative',
-                '&:hover': {
-                  backgroundColor: 'rgba(0,0,0,0.05)',
-                }
-              }}>
-                {/* Map-like grid pattern */}
+              backgroundImage: `url(https://maps.googleapis.com/maps/api/staticmap?center=${latitude},${longitude}&zoom=15&size=300x120&markers=color:red%7C${latitude},${longitude}&key=AIzaSyBFw0Qbyq9zTFTd-tUY6dOWWgU6xVqjJkY)`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              border: (theme) => `1px solid ${theme.palette.divider}`,
+            }}>
+              {/* Fallback if map fails to load */}
+              {mapError && (
                 <Box sx={{
                   position: 'absolute',
                   top: 0,
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  backgroundImage: `
-                    linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)
-                  `,
-                  backgroundSize: '20px 20px',
-                  opacity: 0.3,
-                }} />
-                
-                {/* Location pin */}
-                <LocationOn sx={{ 
-                  fontSize: 48, 
-                  color: 'error.main', 
-                  mb: 1,
-                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
-                  zIndex: 1,
-                }} />
-                
-                {/* Coordinates */}
-                <Typography 
-                  variant="body2" 
-                  color="text.primary" 
-                  textAlign="center"
-                  sx={{ 
-                    fontWeight: 600,
-                    backgroundColor: 'rgba(255,255,255,0.9)',
-                    px: 1,
-                    py: 0.5,
-                    borderRadius: 1,
-                    zIndex: 1,
-                  }}
-                >
-                  {latitude.toFixed(4)}, {longitude.toFixed(4)}
-                </Typography>
-                
-                {/* Click hint */}
-                <Typography 
-                  variant="caption" 
-                  color="text.secondary" 
-                  textAlign="center" 
-                  sx={{ 
-                    mt: 0.5,
-                    backgroundColor: 'rgba(255,255,255,0.8)',
-                    px: 1,
-                    py: 0.25,
-                    borderRadius: 0.5,
-                    zIndex: 1,
-                  }}
-                >
-                  {t('chat.openInMaps') || 'Click to open in maps'}
-                </Typography>
-              </Box>
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: '#f5f5f5',
+                  color: 'text.secondary',
+                }}>
+                  <Stack alignItems="center" spacing={1}>
+                    <LocationOn sx={{ fontSize: 32 }} />
+                    <Typography variant="caption">
+                      {t('chat.mapPreview') || 'Map Preview'}
+                    </Typography>
+                  </Stack>
+                </Box>
+              )}
             </Box>
           )}
 
