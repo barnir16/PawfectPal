@@ -219,3 +219,4 @@ def update_provider_rating_stats(db: Session, provider_id: int):
         provider.updated_at = datetime.utcnow()
         
         db.commit()
+

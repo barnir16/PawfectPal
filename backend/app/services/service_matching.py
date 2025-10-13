@@ -159,3 +159,4 @@ class ServiceMatchingService:
         ).limit(10).all()
         
         return [service.name for service in service_types]
+

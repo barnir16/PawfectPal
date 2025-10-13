@@ -227,3 +227,4 @@ def get_service_types(db: Session = Depends(get_db)):
         }
         for st in service_types
     ]
+

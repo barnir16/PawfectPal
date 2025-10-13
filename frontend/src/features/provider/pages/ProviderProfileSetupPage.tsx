@@ -73,7 +73,7 @@ export const ProviderProfileSetupPage: React.FC = () => {
 
   const loadServiceTypes = async () => {
     try {
-      const response = await fetch(`${getBaseUrl()}/enhanced-provider-profiles/service-types`, {
+      const response = await fetch(`${getBaseUrl()}/provider-profiles/service-types`, {
         headers: {
           'Authorization': `Bearer ${getToken()}`,
           'Content-Type': 'application/json',
@@ -126,7 +126,7 @@ export const ProviderProfileSetupPage: React.FC = () => {
         services: formData.services,
       };
 
-      const response = await fetch(`${getBaseUrl()}/enhanced-provider-profiles/my-profile`, {
+      const response = await fetch(`${getBaseUrl()}/provider-profiles/my-profile`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${getToken()}`,

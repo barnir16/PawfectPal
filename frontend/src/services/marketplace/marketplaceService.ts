@@ -119,7 +119,7 @@ class MarketplaceService {
    */
   async getServiceTypes(): Promise<Array<{ id: number; name: string; description?: string }>> {
     try {
-      const response = await apiClient.get<Array<{ id: number; name: string; description?: string }>>('/enhanced-provider-profiles/service-types');
+      const response = await apiClient.get<Array<{ id: number; name: string; description?: string }>>('/provider-profiles/service-types');
       return response;
     } catch (error: any) {
       console.error('Failed to get service types:', error);

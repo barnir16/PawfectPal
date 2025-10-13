@@ -18,3 +18,4 @@ class ServiceTypeRead(ServiceTypeBase):
     
     class Config:
         from_attributes = True
+
