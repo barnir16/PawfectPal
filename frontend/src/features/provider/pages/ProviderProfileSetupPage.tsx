@@ -32,7 +32,7 @@ import {
 } from '@mui/icons-material';
 import { useLocalization } from '../../../contexts/LocalizationContext';
 import { useAuth } from '../../../contexts/AuthContext';
-import { api } from '../../../api';
+import { getBaseUrl, getToken } from '../../../services/api';
 
 interface ServiceType {
   id: number;
@@ -73,8 +73,15 @@ export const ProviderProfileSetupPage: React.FC = () => {
 
   const loadServiceTypes = async () => {
     try {
-      const response = await api.get('/enhanced-provider-profiles/service-types');
-      setServiceTypes(response.data);
+      const response = await fetch(`${getBaseUrl()}/enhanced-provider-profiles/service-types`, {
+        headers: {
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch service types');
+      const data = await response.json();
+      setServiceTypes(data);
     } catch (error) {
       console.error('Failed to load service types:', error);
     }
@@ -119,7 +126,15 @@ export const ProviderProfileSetupPage: React.FC = () => {
         services: formData.services,
       };
 
-      await api.put('/enhanced-provider-profiles/my-profile', profileData);
+      const response = await fetch(`${getBaseUrl()}/enhanced-provider-profiles/my-profile`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(profileData),
+      });
+      if (!response.ok) throw new Error('Failed to update profile');
       
       // Redirect to provider profile page
       navigate('/profile');

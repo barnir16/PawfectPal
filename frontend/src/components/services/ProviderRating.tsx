@@ -19,7 +19,7 @@ import {
 import { Star, RateReview } from '@mui/icons-material';
 import { useLocalization } from '../../../contexts/LocalizationContext';
 import { useAuth } from '../../../contexts/AuthContext';
-import { api } from '../../../api';
+import { getBaseUrl, getToken } from '../../../services/api';
 
 interface ProviderRatingProps {
   providerId: number;
@@ -64,8 +64,15 @@ export const ProviderRating: React.FC<ProviderRatingProps> = ({
   const loadReviews = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/provider-reviews/provider/${providerId}`);
-      setReviews(response.data);
+      const response = await fetch(`${getBaseUrl()}/provider-reviews/provider/${providerId}`, {
+        headers: {
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to load reviews');
+      const data = await response.json();
+      setReviews(data);
     } catch (err: any) {
       console.error('Failed to load reviews:', err);
     } finally {
@@ -96,7 +103,15 @@ export const ProviderRating: React.FC<ProviderRatingProps> = ({
         service_type: serviceType || 'general',
       };
 
-      await api.post('/provider-reviews', reviewData);
+      const response = await fetch(`${getBaseUrl()}/provider-reviews`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reviewData),
+      });
+      if (!response.ok) throw new Error('Failed to submit review');
       
       // Reload reviews and update rating
       await loadReviews();
