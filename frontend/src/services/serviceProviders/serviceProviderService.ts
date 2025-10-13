@@ -1,4 +1,4 @@
-import { api } from '../../api';
+import { apiClient } from '../api';
 
 export interface ServiceProvider {
   id: number;
@@ -25,27 +25,22 @@ export interface ServiceProvider {
 
 export class ServiceProviderService {
   static async getProvider(providerId: number): Promise<ServiceProvider> {
-    const response = await api.get(`/providers/${providerId}`);
-    return response.data;
+    return await apiClient.get<ServiceProvider>(`/providers/${providerId}`);
   }
 
   static async getProviders(): Promise<ServiceProvider[]> {
-    const response = await api.get('/providers');
-    return response.data;
+    return await apiClient.get<ServiceProvider[]>('/providers');
   }
 
   static async getProvidersByService(serviceType: string): Promise<ServiceProvider[]> {
-    const response = await api.get(`/providers?service_type=${serviceType}`);
-    return response.data;
+    return await apiClient.get<ServiceProvider[]>(`/providers?service_type=${serviceType}`);
   }
 
   static async updateProvider(providerId: number, data: Partial<ServiceProvider>): Promise<ServiceProvider> {
-    const response = await api.put(`/providers/${providerId}`, data);
-    return response.data;
+    return await apiClient.put<ServiceProvider>(`/providers/${providerId}`, data);
   }
 
   static async createProviderProfile(data: Partial<ServiceProvider>): Promise<ServiceProvider> {
-    const response = await api.post('/providers', data);
-    return response.data;
+    return await apiClient.post<ServiceProvider>('/providers', data);
   }
 }

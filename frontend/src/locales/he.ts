@@ -79,6 +79,8 @@ export const he = {
     markIncomplete: 'סמן כלא הושלם',
     repeatEvery: 'חזור על כל',
     repeatUntil: 'חזור עד (אופציונלי)',
+    vaccineReminderFrequency: 'תדירות תזכורת חיסון',
+    notificationChannels: ' ערוצי התראות',
   },
 
   // Navigation
@@ -1227,7 +1229,6 @@ export const he = {
     serviceType: 'סוג שירות',
     selectServiceType: 'בחר סוג שירות',
     allServices: 'כל השירותים',
-    writeReview: 'כתוב ביקורת',
     yourRating: 'דירוגך',
     yourComment: 'הערה שלך',
     status: {
@@ -1429,6 +1430,56 @@ export const he = {
     posted: 'פורסם',
     deleteConfirm: 'האם אתה בטוח שברצונך למחוק את הפוסט הזה בשוק השירותים? פעולה זו לא ניתנת לביטול.',
   },
+  notifications: {
+    title: 'ניהול התראות',
+    permission: {
+      title: 'הרשאות התראות',
+      status: 'סטטוס',
+      granted: 'הותר',
+      denied: 'נדחה',
+      default: 'לא נקבע',
+      subscribe: 'הרשמה להתראות',
+      unsubscribe: 'ביטול הרשמה להתראות',
+      test: 'שלח התראה לבדיקה'
+    },
+    settings: {
+      title: 'הגדרות התראות',
+      vaccineReminders: 'תזכורות חיסונים',
+      weightAlerts: 'התראות משקל',
+      healthMilestones: 'אבני דרך בבריאות',
+      generalUpdates: 'עדכונים כלליים',
+      emailNotifications: 'התראות במייל',
+      pushNotifications: 'התראות דחופות',
+      reminderFrequency: 'תדירות תזכורות',
+      frequency: {
+        daily: 'יומי',
+        weekly: 'שבועי',
+        monthly: 'חודשי'
+      },
+      quietHours: {
+        title: 'שעות שקטות',
+        enabled: 'הפעל שעות שקטות',
+        start: 'שעת התחלה',
+        end: 'שעת סיום'
+      },
+      save: 'שמור הגדרות'
+    },
+    messages: {
+      saved: 'הגדרות ההתראות נשמרו בהצלחה',
+      subscribed: 'נרשמת בהצלחה להתראות',
+      unsubscribed: 'ביטלת בהצלחה את ההרשמה להתראות',
+      testSent: 'התראה לבדיקה נשלחה בהצלחה',
+      error: 'אירעה שגיאה',
+      saveError: 'שגיאה בשמירת הגדרות ההתראות',
+      subscribeError: 'שגיאה בהרשמה להתראות',
+      unsubscribeError: 'שגיאה בביטול ההרשמה להתראות',
+      testError: 'שגיאה בשליחת התראה לבדיקה'
+    },
+    testNotification: {
+      title: 'בדיקת התראה',
+      body: 'זוהי התראה לבדיקה מ-PawfectPal'
+    }
+  }
 };
 
 export default he;
