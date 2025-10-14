@@ -197,6 +197,9 @@ def update_user(
         if value is not None and not field.startswith("provider_"):
             setattr(current_user, field, value)
 
+    print(f"DEBUG: Update object received: {update}")
+    print(f"DEBUG: Update dict: {update.model_dump()}")
+
     # Update provider-related fields
     provider_map = {
         "provider_services": "services",
@@ -205,26 +208,72 @@ def update_user(
         "provider_rating": "rating",
     }
 
+    print(f"DEBUG: User is_provider: {current_user.is_provider}")
+    print(f"DEBUG: Current user provider_profile before update: {current_user.provider_profile}")
+
     if current_user.is_provider:
         profile = current_user.provider_profile
+        print(f"DEBUG: Profile object: {profile}")
         if profile:
             for schema_field, orm_field in provider_map.items():
                 value = getattr(update, schema_field, None)
+                print(f"DEBUG: {schema_field} = {value}")
                 if value is None:
                     continue
                 if schema_field == "provider_services":
+                    print(f"DEBUG: Looking for service names: {value}")
                     service_objs = (
                         db.query(ServiceTypeORM)
                         .filter(ServiceTypeORM.name.in_(value))
                         .all()
                     )
+                    print(f"DEBUG: Found {len(service_objs)} service objects for names {value}")
+                    print(f"DEBUG: Service objects: {[s.name for s in service_objs]}")
                     setattr(profile, orm_field, service_objs)  # can be empty list
                 else:
                     setattr(profile, orm_field, value)
 
+        # Also handle enhanced provider profile if it exists
+        enhanced_profile = current_user.enhanced_provider_profile
+        print(f"DEBUG: Enhanced profile object: {enhanced_profile}")
+        if enhanced_profile:
+            for schema_field, orm_field in provider_map.items():
+                value = getattr(update, schema_field, None)
+                print(f"DEBUG: Enhanced {schema_field} = {value}")
+                if value is None:
+                    continue
+                if schema_field == "provider_services":
+                    print(f"DEBUG: Enhanced looking for service names: {value}")
+                    service_objs = (
+                        db.query(ServiceTypeORM)
+                        .filter(ServiceTypeORM.name.in_(value))
+                        .all()
+                    )
+                    print(f"DEBUG: Enhanced found {len(service_objs)} service objects for names {value}")
+                    print(f"DEBUG: Enhanced service objects: {[s.name for s in service_objs]}")
+                    setattr(enhanced_profile, orm_field, service_objs)  # can be empty list
+                else:
+                    setattr(enhanced_profile, orm_field, value)
+
     db.commit()
     db.refresh(current_user)
-    return current_user
+    print(f"DEBUG: Current user provider_profile after refresh: {current_user.provider_profile}")
+    print(f"DEBUG: Provider profile services after refresh: {current_user.provider_profile.services if current_user.provider_profile else 'No profile'}")
+
+    # Explicitly load the provider_profile relationship with joined loading
+    if current_user.is_provider:
+        from sqlalchemy.orm import joinedload
+        current_user = db.query(UserORM).options(
+            joinedload(UserORM.provider_profile).joinedload(ProviderORM.services),
+            joinedload(UserORM.enhanced_provider_profile).joinedload(ProviderProfileORM.services)
+        ).filter(UserORM.id == current_user.id).first()
+        print(f"DEBUG: After joinedload - provider_profile: {current_user.provider_profile}")
+        print(f"DEBUG: After joinedload - enhanced_provider_profile: {current_user.enhanced_provider_profile}")
+        print(f"DEBUG: After joinedload - services: {current_user.provider_profile.services if current_user.provider_profile else 'No profile'}")
+        print(f"DEBUG: After joinedload - enhanced services: {current_user.enhanced_provider_profile.services if current_user.enhanced_provider_profile else 'No enhanced profile'}")
+
+    # Now return the user data which will trigger UserRead.model_validate
+    return UserRead.model_validate(current_user)
 
 
 @router.patch("/me/provider", response_model=UserRead)
@@ -255,15 +304,14 @@ def toggle_provider_status(
                 user_id=current_user.id,
                 bio="",
                 hourly_rate=None,
-                service_radius=None,
+                service_radius_km=None,
                 is_available=True,
                 experience_years=None,
                 languages=[],
                 certifications=[],
-                verified=False,
+                is_verified=False,
                 average_rating=None,
-                review_count=0,
-                completed_bookings=0
+                total_reviews=0
             )
             db.add(enhanced_profile)
     else:

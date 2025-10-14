@@ -3,10 +3,28 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.models import PetORM, ServiceORM, UserORM, ServiceStatus, ServiceTypeORM
 from app.schemas import ServiceCreate, ServiceRead, ServiceUpdate
+from app.schemas.service_type import ServiceTypeRead as ServiceTypeSchema
 from app.dependencies.db import get_db
 from app.dependencies.auth import get_current_user
 
 router = APIRouter(prefix="/service_booking", tags=["service_booking"])
+
+
+@router.get("/types/", response_model=List[ServiceTypeSchema])
+def get_service_types(
+    db: Session = Depends(get_db),
+):
+    """Get all available service types (public endpoint)"""
+    service_types = db.query(ServiceTypeORM).all()
+    return [
+        ServiceTypeSchema(
+            id=st.id,
+            name=st.name,
+            description=st.description
+        )
+        for st in service_types
+    ]
+
 
 
 @router.get("/{service_id}", response_model=ServiceRead)
