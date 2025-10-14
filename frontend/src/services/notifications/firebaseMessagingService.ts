@@ -55,17 +55,9 @@ class FirebaseMessagingService {
         return false;
       }
 
-      // Check if service worker is supported
-      if (!('serviceWorker' in navigator)) {
-        console.warn('⚠️ Service Worker not supported');
-        return false;
-      }
-
-      // Check if notifications are supported
-      if (!('Notification' in window)) {
-        console.warn('⚠️ Notifications not supported');
-        return false;
-      }
+      // TEMPORARILY DISABLE FCM TO FIX OTHER ISSUES
+      console.log('🔕 FCM temporarily disabled to fix other issues');
+      return false;
 
       // Get Firebase config
       const firebaseConfig = configService.getAll();
