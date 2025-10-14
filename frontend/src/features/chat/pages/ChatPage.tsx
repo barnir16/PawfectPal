@@ -29,12 +29,13 @@ import { getPet } from "../../../services/pets/petService";
 import type { ServiceRequest } from "../../../types/services/serviceRequest";
 import type { Pet } from "../../../types/pets/pet";
 import { useAuth } from "../../../contexts/AuthContext";
+import { getToken } from '../../../services/api';
 import { useMessageStatusTracker } from "../../../hooks/useMessageStatusTracker";
 
 export const ChatPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [conversation, setConversation] = useState<ChatConversation | null>(null);
   const [serviceRequest, setServiceRequest] = useState<ServiceRequest | null>(null);
   const [pets, setPets] = useState<Pet[]>([]);
@@ -63,7 +64,12 @@ export const ChatPage = () => {
         wsInitialized.current = true;
         console.log('🔌 Initializing WebSocket connection for chat', id);
         
-        // Connect to WebSocket
+        // Get token and connect to WebSocket
+        const token = await getToken();
+        if (!token) {
+          console.error('❌ No authentication token available');
+          return;
+        }
         const connected = await webSocketService.connect(Number(id), token);
         if (connected) {
           console.log('✅ WebSocket connected successfully');
@@ -286,7 +292,8 @@ export const ChatPage = () => {
         is_edited: false,
         created_at: new Date().toISOString(),
         message_type: msg.message_type || "text",
-        delivery_status: "sent" // Will be updated when actually sent
+        delivery_status: "sent", // Will be updated when actually sent
+        attachments: [] // Initialize as empty array, will be populated when message is actually sent
       };
       
       setConversation(prev => {
@@ -317,7 +324,8 @@ export const ChatPage = () => {
           is_read: false,
           is_edited: false,
           created_at: new Date().toISOString(),
-          message_type: msg.message_type || "text"
+          message_type: msg.message_type || "text",
+          delivery_status: "sent"
         };
         
         setConversation(prev => {

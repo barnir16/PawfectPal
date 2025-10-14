@@ -36,7 +36,7 @@ export const PetsTable = ({ pets, onEdit, onDelete }: PetsTableProps) => {
       renderCell: (params: GridRenderCellParams<Pet>) => (
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Avatar
-            src={params.row.imageUrl || params.row.photo_uri}
+            src={params.row.imageUrl}
             alt={params.row.name}
             sx={{ width: 40, height: 40, mr: 2 }}
           >
@@ -51,7 +51,7 @@ export const PetsTable = ({ pets, onEdit, onDelete }: PetsTableProps) => {
       headerName: t('pets.type'), 
       flex: 0.8,
       minWidth: 100,
-      valueGetter: (_, row) => row.type || row.breedType || t('pets.unknown')
+      valueGetter: (_, row) => row.type || t('pets.unknown')
     },
     { 
       field: "breed", 
@@ -81,15 +81,13 @@ export const PetsTable = ({ pets, onEdit, onDelete }: PetsTableProps) => {
             name: row.name,
             age: row.age,
             birthDate: row.birthDate,
-            birth_date: row.birth_date,
             isBirthdayGiven: row.isBirthdayGiven,
-            is_birthday_given: row.is_birthday_given,
             ageType: row.age !== undefined ? 'age field' : 'birthdate'
           });
         }
         
         // Always try birthdate first if available - it's more accurate
-        const birthDate = row.birthDate || row.birth_date;
+        const birthDate = row.birthDate;
         if (birthDate) {
           try {
             // Handle different date formats
