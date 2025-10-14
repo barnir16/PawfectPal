@@ -125,7 +125,7 @@ interface EnhancedChatWindowProps {
     pets?: Array<{
       id: number;
       name: string;
-      species: string;
+      type: string;
       breed?: string;
     }>;
   };
@@ -1427,7 +1427,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                               </Typography>
                               {serviceRequest.pets.map((pet, index) => (
                                 <Typography key={pet.id} variant="caption" sx={{ display: "block", ml: 1 }}>
-                                  {pet.name} ({pet.species}{pet.breed ? ` - ${pet.breed}` : ''})
+                                  {pet.name} ({pet.type}{pet.breed ? ` - ${pet.breed}` : ''})
                                 </Typography>
                               ))}
                             </Box>

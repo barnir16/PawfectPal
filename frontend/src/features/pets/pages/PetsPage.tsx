@@ -171,7 +171,7 @@ export const Pets = () => {
       (pet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         pet.breed.toLowerCase().includes(searchTerm.toLowerCase())) &&
       (selectedType === t("pets.all") ||
-        (pet.type || pet.breedType) === selectedType)
+        (pet.type) === selectedType)
   );
 
   let content;

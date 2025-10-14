@@ -63,9 +63,7 @@ export default function PetListScreen() {
         name: pet.name,
         age: pet.age,
         birthDate: pet.birthDate,
-        birth_date: pet.birth_date,
         isBirthdayGiven: pet.isBirthdayGiven,
-        is_birthday_given: pet.is_birthday_given,
         ageType: pet.age !== undefined ? 'age field' : 'birthdate',
         fullPetObject: pet,
         timestamp: new Date().toISOString()
@@ -73,7 +71,7 @@ export default function PetListScreen() {
     }
     
     // Always try birthdate first if available - it's more accurate
-    const birthDate = pet.birthDate || pet.birth_date;
+    const birthDate = pet.birthDate;
     if (birthDate) {
       try {
         // Handle different date formats
@@ -178,7 +176,7 @@ export default function PetListScreen() {
   };
 
   const formatWeight = (pet: Pet) => {
-    const weight = pet.weightKg || pet.weight_kg;
+    const weight = pet.weightKg;
           if (!weight) return t('pets.notSpecified');
           return `${weight} ${pet.weightUnit || t('pets.kg')}`;
   };
@@ -268,7 +266,7 @@ export default function PetListScreen() {
                           fontWeight: 'medium'
                         }}
                       >
-                        {pet.breedType || pet.type || t('pets.unknownType')}
+                        {pet.type || t('pets.unknownType')}
                       </Typography>
                     </Box>
                     <Box sx={{ display: "flex", gap: 0.5, ml: 1 }}>
