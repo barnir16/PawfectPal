@@ -38,7 +38,9 @@ import {
   Warning
 } from '@mui/icons-material';
 import { useLocalization } from '../../contexts/LocalizationContext';
-import type { ServiceRequest, Pet, User } from '../../types/services/service';
+import type { ServiceRequest } from '../../types/services/serviceRequest';
+import type { Pet } from '../../types/pets';
+import type { User } from '../../types/auth';
 
 interface ServiceRequestInfoProps {
   serviceRequest: ServiceRequest;
@@ -71,7 +73,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
       case 'open': return 'success';
       case 'in_progress': return 'warning';
       case 'completed': return 'info';
-      case 'closed': return 'default';
+      case 'closed': return 'error';
       default: return 'default';
     }
   };
@@ -84,6 +86,30 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
       'closed': t('chat.requestStatus.closed'),
     };
     return statusMap[status] || status;
+  };
+
+  const getSpeciesTranslation = (species: string) => {
+    const speciesMap: Record<string, string> = {
+      'dog': t('chat.petSpecies.dog'),
+      'cat': t('chat.petSpecies.cat'),
+      'bird': t('chat.petSpecies.bird'),
+      'rabbit': t('chat.petSpecies.rabbit'),
+      'hamster': t('chat.petSpecies.hamster'),
+      'guinea_pig': t('chat.petSpecies.guineaPig'),
+      'fish': t('chat.petSpecies.fish'),
+      'reptile': t('chat.petSpecies.reptile'),
+      'other': t('chat.petSpecies.other'),
+    };
+    return speciesMap[species] || species;
+  };
+
+  const getGenderTranslation = (gender: string) => {
+    const genderMap: Record<string, string> = {
+      'male': t('chat.petGenderMale'),
+      'female': t('chat.petGenderFemale'),
+      'unknown': t('chat.petGenderUnknown'),
+    };
+    return genderMap[gender] || gender;
   };
 
   const formatDate = (dateString: string) => {
@@ -155,10 +181,10 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
         </Stack>
       </Paper>
 
-      {/* Main Content Grid */}
-      <Grid container spacing={2}>
+      {/* Main Content */}
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
         {/* Left Column - Service Details */}
-        <Grid item xs={12} md={6}>
+        <Box sx={{ flex: 1 }}>
           <Paper elevation={1} sx={{ p: 2, borderRadius: 2, height: '100%' }}>
             <Typography variant="h6" fontWeight={600} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
               <Description color="primary" />
@@ -200,14 +226,14 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
                 </ListItem>
               )}
               
-              {serviceRequest.scheduled_date && (
+              {serviceRequest.preferred_dates && serviceRequest.preferred_dates.length > 0 && (
                 <ListItem>
                   <ListItemIcon>
                     <CalendarToday color="primary" />
                   </ListItemIcon>
                   <ListItemText 
-                    primary="Scheduled Date"
-                    secondary={formatDate(serviceRequest.scheduled_date)}
+                    primary="Preferred Dates"
+                    secondary={serviceRequest.preferred_dates.join(', ')}
                   />
                 </ListItem>
               )}
@@ -244,10 +270,10 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
               )}
             </List>
           </Paper>
-        </Grid>
+        </Box>
 
         {/* Right Column - People & Pets */}
-        <Grid item xs={12} md={6}>
+        <Box sx={{ flex: 1 }}>
           <Paper elevation={1} sx={{ p: 2, borderRadius: 2, height: '100%' }}>
             <Typography variant="h6" fontWeight={600} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
               <Person color="primary" />
@@ -337,40 +363,34 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
                               />
                             )}
                             {pet.weightKg && (
-                              <Grid item xs={6}>
-                                <Chip
-                                  icon={<Scale />}
-                                  label={`${t('chat.petWeight')}: ${pet.weightKg} ${pet.weightUnit}`}
-                                  size="small"
-                                  variant="outlined"
-                                  color="secondary"
-                                />
-                              </Grid>
+                              <Chip
+                                icon={<Scale />}
+                                label={`${t('chat.petWeight')}: ${pet.weightKg} ${pet.weightUnit}`}
+                                size="small"
+                                variant="outlined"
+                                color="secondary"
+                              />
                             )}
                             {pet.gender && (
-                              <Grid item xs={6}>
-                                <Chip
-                                  icon={<Pets />}
-                                  label={`${t('chat.petGender')}: ${getGenderTranslation(pet.gender)}`}
-                                  size="small"
-                                  variant="outlined"
-                                  color="info"
-                                />
-                              </Grid>
+                              <Chip
+                                icon={<Pets />}
+                                label={`${t('chat.petGender')}: ${getGenderTranslation(pet.gender)}`}
+                                size="small"
+                                variant="outlined"
+                                color="info"
+                              />
                             )}
                             {pet.color && (
-                              <Grid item xs={6}>
-                                <Chip
-                                  icon={<ColorLens />}
-                                  label={`${t('chat.petColor')}: ${pet.color}`}
-                                  size="small"
-                                  variant="outlined"
-                                  color="warning"
-                                />
-                              </Grid>
+                              <Chip
+                                icon={<ColorLens />}
+                                label={`${t('chat.petColor')}: ${pet.color}`}
+                                size="small"
+                                variant="outlined"
+                                color="warning"
+                              />
                             )}
-                          </Grid>
-                          
+                          </Stack>
+
                           {/* Health Status */}
                           <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
                             {pet.isVaccinated && (
@@ -401,7 +421,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
                               />
                             )}
                           </Stack>
-                          
+
                           {/* Health Issues */}
                           {pet.healthIssues && pet.healthIssues.length > 0 && (
                             <Box sx={{ mt: 1 }}>
@@ -410,7 +430,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
                               </Typography>
                             </Box>
                           )}
-                          
+
                           {/* Behavior Issues */}
                           {pet.behaviorIssues && pet.behaviorIssues.length > 0 && (
                             <Box sx={{ mt: 1 }}>
@@ -419,7 +439,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
                               </Typography>
                             </Box>
                           )}
-                          
+
                           {pet.medicalNotes && (
                             <Box sx={{ mb: 1 }}>
                               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
@@ -430,7 +450,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
                               </Typography>
                             </Box>
                           )}
-                          
+
                           {/* General Notes */}
                           {pet.notes && (
                             <Box>
@@ -450,8 +470,8 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
               </Box>
             )}
           </Paper>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
     </Box>
   );
 };
