@@ -1148,23 +1148,15 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                 <Pets />
               </Avatar>
               <Box>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Typography variant="h6" fontWeight={600}>
-                    {t("services.conversation")}
-                  </Typography>
-                  {user?.is_provider && (
-                    <Chip
-                      label="Provider"
-                      size="small"
-                      color="primary"
-                      icon={<Business />}
-                      sx={{ fontSize: "0.7rem", height: 20 }}
-                    />
-                  )}
-                </Box>
-                <Typography variant="caption" color="text.secondary">
-                  {messages.length} {messages.length === 1 ? t("message") : t("messages")}
-                </Typography>
+                {user?.is_provider && (
+                  <Chip
+                    label="Provider"
+                    size="small"
+                    color="primary"
+                    icon={<Business />}
+                    sx={{ fontSize: "0.7rem", height: 20 }}
+                  />
+                )}
               </Box>
             </Box>
             
@@ -1204,19 +1196,6 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                   </IconButton>
                 </Tooltip>
               )}
-              
-              {/* Connection Status Indicator */}
-              <Tooltip title={
-                connectionStatus === 'connected' ? 'Connected' :
-                connectionStatus === 'disconnected' ? 'Disconnected' :
-                'Reconnecting...'
-              }>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                  {connectionStatus === 'connected' && <Wifi color="success" fontSize="small" />}
-                  {connectionStatus === 'disconnected' && <WifiOff color="error" fontSize="small" />}
-                  {connectionStatus === 'reconnecting' && <CircularProgress size={16} />}
-                </Box>
-              </Tooltip>
               
               <Tooltip title="Quick Actions">
                 <IconButton 
