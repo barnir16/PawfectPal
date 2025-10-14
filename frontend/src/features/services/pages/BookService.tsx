@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Card,
@@ -26,6 +26,7 @@ import { CardMedia, CardActions, Button } from "@mui/material";
 
 export const BookService = () => {
   const { t } = useLocalization();
+  const navigate = useNavigate();
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
   const [filteredProviders, setFilteredProviders] = useState<ServiceProvider[]>(
     []
@@ -112,8 +113,7 @@ export const BookService = () => {
                 // TODO: Navigate to chat or show success message
               }}
               onViewProfile={(provider) => {
-                console.log("Viewing profile for provider:", provider);
-                // TODO: Navigate to provider profile page
+                navigate(`/provider/${provider.id}`);
               }}
             />
           </Grid>

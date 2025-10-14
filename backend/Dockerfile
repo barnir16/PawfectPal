@@ -15,4 +15,4 @@ COPY . .
 EXPOSE 8080
 
 # Start the application with Railway-compatible port handling
-CMD ["sh", "-c", "PORT=${PORT:-8080} && echo \"Starting on port $PORT\" && python -m uvicorn main:app --host 0.0.0.0 --port $PORT"]
+CMD ["sh", "-c", "PORT=${PORT:-8080} && echo \"Starting on port $PORT\" && python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT"]

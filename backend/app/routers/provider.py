@@ -23,15 +23,18 @@ def get_provider_by_id(provider_id: int, db: Session = Depends(get_db)):
             # Safely get services
             services = []
             if provider.provider_profile.services:
-                services = [service.name for service in provider.provider_profile.services]
-            
+                services = [
+                    service.name for service in provider.provider_profile.services
+                ]
+
             user_data.update(
                 {
                     "provider_services": services,
                     "provider_bio": provider.provider_profile.bio,
                     "provider_hourly_rate": provider.provider_profile.hourly_rate,
                     "provider_rating": provider.provider_profile.rating,
-                    "provider_rating_count": provider.provider_profile.rating_count or 0,
+                    "provider_rating_count": provider.provider_profile.rating_count
+                    or 0,
                 }
             )
         except Exception as e:
@@ -56,7 +59,7 @@ def get_providers(
 ):
     print("🔍 DEBUG: Starting get_providers endpoint")
     print(f"🔍 DEBUG: Filter parameter: {filter}")
-    
+
     try:
         print("🔍 DEBUG: Creating query...")
         query = db.query(UserORM).filter(UserORM.is_provider)
@@ -65,7 +68,7 @@ def get_providers(
         print("🔍 DEBUG: Executing query...")
         providers = query.all()
         print(f"🔍 DEBUG: Found {len(providers)} providers")
-        
+
         if not providers:
             print("🔍 DEBUG: No providers found, returning empty list")
             return []
@@ -73,42 +76,62 @@ def get_providers(
         print("🔍 DEBUG: Processing providers...")
         results = []
         for i, p in enumerate(providers):
-            print(f"🔍 DEBUG: Processing provider {i+1}/{len(providers)}: ID={p.id}, Username={p.username}, IsProvider={p.is_provider}")
-            
+            print(
+                f"🔍 DEBUG: Processing provider {i + 1}/{len(providers)}: ID={p.id}, Username={p.username}, IsProvider={p.is_provider}"
+            )
+
             try:
                 print(f"🔍 DEBUG: Validating provider {p.id} with UserRead...")
                 user_data = UserRead.model_validate(p).model_dump()
                 print(f"🔍 DEBUG: Provider {p.id} validated successfully")
-                
+
                 # Check if provider has profile
-                if hasattr(p, 'provider_profile') and p.provider_profile:
+                if hasattr(p, "provider_profile") and p.provider_profile:
                     print(f"🔍 DEBUG: Provider {p.id} has provider_profile")
-                    print(f"🔍 DEBUG: Provider {p.id} profile bio: {p.provider_profile.bio}")
-                    print(f"🔍 DEBUG: Provider {p.id} profile rating: {p.provider_profile.rating}")
-                    print(f"🔍 DEBUG: Provider {p.id} profile rating_count: {p.provider_profile.rating_count}")
-                    
+                    print(
+                        f"🔍 DEBUG: Provider {p.id} profile bio: {p.provider_profile.bio}"
+                    )
+                    print(
+                        f"🔍 DEBUG: Provider {p.id} profile rating: {p.provider_profile.rating}"
+                    )
+                    print(
+                        f"🔍 DEBUG: Provider {p.id} profile rating_count: {p.provider_profile.rating_count}"
+                    )
+
                     try:
                         # Safely get services
                         services = []
-                        if hasattr(p.provider_profile, 'services') and p.provider_profile.services:
-                            print(f"🔍 DEBUG: Provider {p.id} has services relationship")
-                            services = [service.name for service in p.provider_profile.services]
+                        if (
+                            hasattr(p.provider_profile, "services")
+                            and p.provider_profile.services
+                        ):
+                            print(
+                                f"🔍 DEBUG: Provider {p.id} has services relationship"
+                            )
+                            services = [
+                                service.name for service in p.provider_profile.services
+                            ]
                             print(f"🔍 DEBUG: Provider {p.id} services: {services}")
                         else:
                             print(f"🔍 DEBUG: Provider {p.id} has no services")
-                        
+
                         user_data.update(
                             {
                                 "provider_services": services,
                                 "provider_bio": p.provider_profile.bio,
                                 "provider_hourly_rate": p.provider_profile.hourly_rate,
                                 "provider_rating": p.provider_profile.rating,
-                                "provider_rating_count": p.provider_profile.rating_count or 0,
+                                "provider_rating_count": p.provider_profile.rating_count
+                                or 0,
                             }
                         )
-                        print(f"🔍 DEBUG: Provider {p.id} profile data added successfully")
+                        print(
+                            f"🔍 DEBUG: Provider {p.id} profile data added successfully"
+                        )
                     except Exception as profile_error:
-                        print(f"❌ DEBUG: Error processing provider {p.id} profile: {profile_error}")
+                        print(
+                            f"❌ DEBUG: Error processing provider {p.id} profile: {profile_error}"
+                        )
                         print(f"❌ DEBUG: Profile error type: {type(profile_error)}")
                         # Add default values if there's an error
                         user_data.update(
@@ -122,20 +145,20 @@ def get_providers(
                         )
                 else:
                     print(f"🔍 DEBUG: Provider {p.id} has no provider_profile")
-                
+
                 results.append(user_data)
                 print(f"🔍 DEBUG: Provider {p.id} added to results successfully")
-                
+
             except Exception as e:
                 print(f"❌ DEBUG: Error processing provider {p.id}: {e}")
                 print(f"❌ DEBUG: Error type: {type(e)}")
                 print(f"❌ DEBUG: Error details: {str(e)}")
                 continue
-        
+
         print(f"🔍 DEBUG: Returning {len(results)} providers")
         print(f"🔍 DEBUG: Results: {results}")
         return results
-        
+
     except Exception as e:
         print(f"❌ DEBUG: Critical error in get_providers: {e}")
         print(f"❌ DEBUG: Error type: {type(e)}")

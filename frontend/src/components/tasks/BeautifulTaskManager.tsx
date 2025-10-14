@@ -46,18 +46,13 @@ import {
   Sync as SyncIcon
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
+import type { Task as BackendTask } from '../../types/tasks/task';
+import { useLocalization } from '../../contexts/LocalizationContext';
 import { getPets } from '../../services/pets/petService';
 import { getTasks, createTask, updateTask, deleteTask, completeTask, downloadTasksAsICal, syncTasksWithGoogleCalendar } from '../../services/tasks/taskService';
-import { useLocalization } from '../../contexts/LocalizationContext';
 
-interface Task {
-  id: string;
-  title: string;
-  description?: string;
-  dueDate?: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'pending' | 'completed' | 'overdue';
-  petId?: number;
+interface Task extends BackendTask {
+  // Additional display fields
   petName?: string;
   category?: string;
   reminder?: boolean;
@@ -82,7 +77,7 @@ const BeautifulTaskManager: React.FC = () => {
   const { t } = useLocalization();
   
   // State management
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<BackendTask[]>([]);
   const [pets, setPets] = useState<Pet[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<TaskDisplayRecord[]>([]);
   const [selectedPet, setSelectedPet] = useState<string>('all');
@@ -139,18 +134,22 @@ const BeautifulTaskManager: React.FC = () => {
   // Process and filter tasks
   useEffect(() => {
     const processedTasks = tasks.map((task): TaskDisplayRecord => {
-      const petInfo = pets.find(pet => pet.id === task.petId);
-      const dueDate = task.dueDate ? new Date(task.dueDate) : null;
+      const backendTask = task as BackendTask;
+      const petInfo = pets.find(pet => pet.id === backendTask.petIds?.[0]);
+      const dueDate = backendTask.dateTime ? new Date(backendTask.dateTime) : null;
       const today = new Date();
       const daysUntilDue = dueDate ? Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : null;
-      const isOverdue = dueDate ? dueDate < today && task.status !== 'completed' : false;
+      const isOverdue = dueDate ? dueDate < today && backendTask.status !== 'completed' : false;
 
       return {
-        ...task,
+        ...backendTask,
+        dueDate: backendTask.dateTime,
+        petId: backendTask.petIds?.[0],
+        petName: petInfo?.name,
         petInfo,
         daysUntilDue,
         isOverdue,
-        status: isOverdue ? 'overdue' : task.status
+        status: isOverdue ? 'pending' as const : (backendTask.status || 'pending') as 'pending' | 'in_progress' | 'completed' | 'cancelled'
       };
     });
 
@@ -260,8 +259,17 @@ const BeautifulTaskManager: React.FC = () => {
     try {
       setIsSubmitting(true);
       const taskData = {
-        ...formData,
-        petId: formData.petId ? parseInt(formData.petId) : undefined
+        title: formData.title,
+        description: formData.description || "",
+        dateTime: formData.dueDate || new Date().toISOString(),
+        petIds: formData.petId ? [parseInt(formData.petId)] : [],
+        priority: formData.priority,
+        repeatInterval: undefined,
+        repeatUnit: undefined,
+        repeatEndDate: undefined,
+        attachments: [],
+        status: 'pending' as const,
+        isCompleted: false,
       };
       await createTask(taskData);
       setSuccessMessage(t('tasks.taskCreated') || 'Task created successfully!');
@@ -282,8 +290,17 @@ const BeautifulTaskManager: React.FC = () => {
     try {
       setIsSubmitting(true);
       const taskData = {
-        ...formData,
-        petId: formData.petId ? parseInt(formData.petId) : undefined
+        title: formData.title,
+        description: formData.description || "",
+        dateTime: formData.dueDate || new Date().toISOString(),
+        petIds: formData.petId ? [parseInt(formData.petId)] : [],
+        priority: formData.priority,
+        repeatInterval: undefined,
+        repeatUnit: undefined,
+        repeatEndDate: undefined,
+        attachments: [],
+        status: 'pending',
+        isCompleted: false,
       };
       await updateTask(selectedTask.id, taskData);
       setSuccessMessage(t('tasks.taskUpdated') || 'Task updated successfully!');
@@ -393,12 +410,12 @@ const BeautifulTaskManager: React.FC = () => {
     setFormData({
       title: task.title,
       description: task.description || '',
-      dueDate: task.dueDate || '',
-      priority: task.priority,
-      petId: task.petId?.toString() || '',
-      category: task.category || '',
-      reminder: task.reminder || false,
-      notes: task.notes || ''
+      dueDate: (task as BackendTask).dateTime || '', // Cast to BackendTask to access dateTime
+      priority: task.priority || 'medium',
+      petId: (task as BackendTask).petIds?.[0]?.toString() || '', // Cast to BackendTask to access petIds
+      category: '', // Backend doesn't have category field yet
+      reminder: true,
+      notes: '' // Backend doesn't have notes field yet
     });
     setIsEditDialogOpen(true);
   };

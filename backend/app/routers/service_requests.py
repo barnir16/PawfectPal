@@ -2,7 +2,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
-from app.models import ServiceRequestORM, UserORM, PetORM
+from app.models import ServiceRequestORM, UserORM, PetORM, ServiceTypeORM
 from app.schemas import (
     ServiceRequestCreate,
     ServiceRequestRead,
@@ -11,6 +11,7 @@ from app.schemas import (
 )
 from app.dependencies.db import get_db
 from app.dependencies.auth import get_current_user, require_provider
+from app.services.service_matching import ServiceMatchingService
 
 router = APIRouter(prefix="/service-requests", tags=["service-requests"])
 
@@ -32,11 +33,35 @@ def create_service_request(
     if len(user_pets) != len(request.pet_ids):
         raise HTTPException(status_code=400, detail="Some pets don't belong to you")
 
+    # Validate service type exists
+    service_type_obj = db.query(ServiceTypeORM).filter(
+        ServiceTypeORM.name == request.service_type
+    ).first()
+    
+    if not service_type_obj:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Service type '{request.service_type}' does not exist. Available services: {', '.join([st.name for st in db.query(ServiceTypeORM).all()])}"
+        )
+    
+    # Check if there are any providers offering this service
+    available_providers = ServiceMatchingService.get_providers_for_service(
+        db, request.service_type, is_available=True
+    )
+    
+    if not available_providers:
+        raise HTTPException(
+            status_code=400,
+            detail=f"No providers are currently offering '{request.service_type}' service. Please try a different service type."
+        )
+
     # Create the service request
     print(f"🔍 Service Request Creation Debug:")
     print(f"  Current User ID: {current_user.id}")
     print(f"  Current User Username: {current_user.username}")
     print(f"  Pet IDs: {request.pet_ids}")
+    print(f"  Service Type: {request.service_type}")
+    print(f"  Available Providers: {len(available_providers)}")
     
     db_request = ServiceRequestORM(user_id=current_user.id, **request.dict())
     
