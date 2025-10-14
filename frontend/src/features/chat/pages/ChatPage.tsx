@@ -58,7 +58,7 @@ export const ChatPage = () => {
   // Initialize WebSocket connection
   useEffect(() => {
     const initializeWebSocket = async () => {
-      if (!id || !token || wsInitialized.current) return;
+      if (!id || wsInitialized.current) return;
       
       try {
         wsInitialized.current = true;
@@ -143,7 +143,7 @@ export const ChatPage = () => {
       webSocketService.disconnect();
       wsInitialized.current = false;
     };
-  }, [id, token]);
+  }, [id]);
 
   // Initialize Firebase Cloud Messaging
   useEffect(() => {
@@ -325,7 +325,8 @@ export const ChatPage = () => {
           is_edited: false,
           created_at: new Date().toISOString(),
           message_type: msg.message_type || "text",
-          delivery_status: "sent"
+          delivery_status: "sent",
+          attachments: [] // Initialize as empty array, will be populated when message is actually sent
         };
         
         setConversation(prev => {
@@ -568,7 +569,7 @@ export const ChatPage = () => {
                 pets: serviceRequest.pets?.map(pet => ({
                   id: pet.id,
                   name: pet.name,
-                  species: pet.species,
+                  type: pet.type,
                   breed: pet.breed,
                 })),
               } : undefined}
