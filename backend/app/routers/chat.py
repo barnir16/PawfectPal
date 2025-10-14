@@ -470,7 +470,9 @@ def get_my_conversations(
     # Sort conversations by last message time (most recent first)
     def get_last_message_time(conversation):
         if not conversation.messages:
-            return "1970-01-01T00:00:00Z"  # Very old date for conversations with no messages
+            # Return a very old datetime for conversations with no messages
+            from datetime import datetime
+            return datetime(1970, 1, 1)
         # Get the most recent message (last in the list since messages are sorted by created_at desc)
         return conversation.messages[-1].created_at
         
