@@ -153,6 +153,14 @@ app.include_router(provider_reviews.router)
 app.include_router(service_requests.router)
 app.include_router(chat.router)
 
+# Include WebSocket router
+try:
+    from app.websocket.chat_router import router as websocket_chat_router
+    app.include_router(websocket_chat_router)
+    print("WebSocket chat router included")
+except Exception as e:
+    print(f"WebSocket chat router not available: {e}")
+
 # Include new marketplace routers
 app.include_router(marketplace_posts.router)
 app.include_router(enhanced_provider_profiles.router)
