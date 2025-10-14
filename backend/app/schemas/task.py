@@ -7,7 +7,7 @@ import json
 class TaskBase(BaseModel):
     title: str
     description: str
-    date_time: Optional[datetime]  # ISO datetime string
+    date_time: datetime  # Make it required
     repeat_interval: Optional[int] = None
     repeat_unit: Optional[str] = None
     repeat_end_date: Optional[datetime] = None
@@ -17,9 +17,17 @@ class TaskBase(BaseModel):
     status: Optional[str] = "pending"  # pending, in_progress, completed, cancelled
     is_completed: Optional[bool] = False
 
+    @field_validator("date_time", mode="before")
+    @classmethod
+    def validate_date_time(cls, v):
+        if isinstance(v, str):
+            # Parse ISO datetime string to datetime object
+            return datetime.fromisoformat(v.replace('Z', '+00:00'))
+        return v
+
 
 class TaskCreate(TaskBase):
-    pass
+    date_time: datetime  # Make it required for creation
 
 
 class TaskUpdate(BaseModel):
