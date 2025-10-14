@@ -891,7 +891,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     if (fullUrl.startsWith('/')) {
       // If it's a relative path, prepend the base URL
       const baseUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://pawfectpal-production-2f07.up.railway.app' 
+        ? 'https://pawfectpal-production.up.railway.app' 
         : 'http://localhost:8000';
       fullUrl = baseUrl + fullUrl;
       console.log('📁 Constructed URL:', { baseUrl, originalUrl: attachment.file_url, fullUrl });
