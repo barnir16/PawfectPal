@@ -61,32 +61,41 @@ const ProfilePage: React.FC = () => {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const getInitialFormData = (user: any): ProfileFormData => ({
-    username: user?.username || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
-    full_name: user?.full_name || "",
-    profile_image: user?.profile_image || "",
-    google_id: user?.google_id || "",
-    profile_picture_url: user?.profile_picture_url || "",
-    address: user?.address || "",
-    city: user?.city || "",
-    state: user?.state || "",
-    country: user?.country || "",
-    postal_code: user?.postal_code || "",
-    latitude: user?.latitude?.toString() || "",
-    longitude: user?.longitude?.toString() || "",
-    provider_services: user?.is_provider
-      ? user.provider_services?.map((s: any) => s.id) || []
-      : [],
-    provider_bio: user?.is_provider ? user.provider_bio || "" : "",
-    provider_hourly_rate: user?.is_provider
-      ? user.provider_hourly_rate?.toString() || ""
-      : "",
-    provider_rating: user?.is_provider
-      ? user.provider_rating?.toString() || ""
-      : "",
-  });
+  const getInitialFormData = (user: any): ProfileFormData => {
+    // Log the user object to debug
+    console.log("User data in getInitialFormData:", user);
+
+    return {
+      username: user?.username || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+      full_name: user?.full_name || "",
+      profile_image: user?.profile_image || "",
+      google_id: user?.google_id || "",
+      profile_picture_url: user?.profile_picture_url || "",
+      address: user?.address || "",
+      city: user?.city || "",
+      state: user?.state || "",
+      country: user?.country || "",
+      postal_code: user?.postal_code || "",
+      latitude: user?.latitude?.toString() || "",
+      longitude: user?.longitude?.toString() || "",
+      // Check both user.provider and user.provider_info for provider data
+      provider_services:
+        user?.provider?.services?.map((s: any) => s.id) ||
+        (user?.provider_services ? user.provider_services : []) ||
+        [],
+      provider_bio: user?.provider?.bio || user?.provider_bio || "",
+      provider_hourly_rate:
+        user?.provider?.hourly_rate?.toString() ||
+        user?.provider_hourly_rate?.toString() ||
+        "",
+      provider_rating:
+        user?.provider?.rating?.toString() ||
+        user?.provider_rating?.toString() ||
+        "",
+    };
+  };
 
   const [formData, setFormData] = useState<ProfileFormData>(
     getInitialFormData(user)
@@ -101,14 +110,85 @@ const ProfilePage: React.FC = () => {
 
   const [serviceOptions, setServiceOptions] = useState<
     { id: number; name: string }[]
-  >([
-    { id: 1, name: "Dog Walking" },
-    { id: 2, name: "Pet Sitting" },
-    { id: 3, name: "Grooming" },
-  ]);
+  >([]);
+  const [initialFormData, setInitialFormData] = useState<ProfileFormData>(
+    getInitialFormData(user)
+  );
 
-  if (!user)
+  // Load services and initial form data
+  useEffect(() => {
+    const loadServices = async () => {
+      try {
+        const token = getToken();
+        if (!token) {
+          console.warn('No authentication token found');
+          useFallbackServices();
+          return;
+        }
+
+        const response = await fetch(`${getBaseUrl()}/service_booking/types/`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (response.status === 401) {
+          console.warn('Authentication failed - using fallback services');
+          useFallbackServices();
+          return;
+        }
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        // Map the response to match the expected format
+        const formattedServices = data.map((service: any) => ({
+          id: service.id,
+          name: service.name,
+        }));
+        setServiceOptions(formattedServices);
+      } catch (error) {
+        console.error("Failed to load services:", error);
+        useFallbackServices();
+      }
+    };
+
+    const useFallbackServices = () => {
+      setServiceOptions([
+        { id: 1, name: "Dog Walking" },
+        { id: 2, name: "Pet Sitting" },
+        { id: 3, name: "Grooming" },
+        { id: 4, name: "Training" },
+        { id: 5, name: "Veterinary" },
+        { id: 6, name: "Boarding" },
+        { id: 7, name: "Pet Taxi" },
+        { id: 8, name: "Daycare" },
+      ]);
+    };
+
+    loadServices();
+
+    // Initialize form data when user changes
+    if (user) {
+      const data = getInitialFormData(user);
+      setInitialFormData(data);
+      setFormData(data);
+      setPreviewImage(user.profile_image || user.profile_picture_url || null);
+    }
+  }, [user]);
+
+  const handleCancel = () => {
+    setFormData(initialFormData);
+    setIsEditing(false);
+    setPreviewImage(user?.profile_image || user?.profile_picture_url || null);
+  };
+
+  if (!user) {
     return <Typography>Please log in to view your profile.</Typography>;
+  }
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -146,36 +226,92 @@ const ProfilePage: React.FC = () => {
         updatedUserData.profile_image = newImageUrl;
       }
 
-      const updatedPayload: Partial<ProfileFormData> = {};
+      // Prepare the update payload
+      const updatedPayload: any = {};
       const initial = getInitialFormData(user);
-      (Object.keys(formData) as (keyof ProfileFormData)[]).forEach((key) => {
-        if (formData[key] !== initial[key]) updatedPayload[key] = formData[key];
-      });
-      if (newImageUrl !== user.profile_image)
-        updatedPayload.profile_image = newImageUrl;
 
-      if (Object.keys(updatedPayload).length > 0) {
-        const profileUpdateResponse = await fetch(`${getBaseUrl()}/auth/me`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(updatedPayload),
+      // Handle regular user fields
+      (Object.keys(formData) as (keyof ProfileFormData)[]).forEach((key) => {
+        if (
+          formData[key] !== initial[key] &&
+          !key.startsWith("provider_") &&
+          key !== "provider_services"
+        ) {
+          updatedPayload[key] = formData[key];
+        }
+      });
+
+      // Handle provider fields
+      if (user.is_provider) {
+        // Convert service IDs to service names for backend compatibility
+        const serviceNames =
+          (formData.provider_services || [])
+            .map(
+              (id) => serviceOptions.find((service) => service.id === id)?.name
+            )
+            .filter((name) => name) || [];
+
+        console.log("Form data provider fields:", {
+          provider_services: formData.provider_services,
+          provider_bio: formData.provider_bio,
+          provider_hourly_rate: formData.provider_hourly_rate,
+          serviceNames: serviceNames,
+          serviceOptions: serviceOptions,
         });
-        if (!profileUpdateResponse.ok)
-          throw new Error("Failed to update profile.");
-        const profileData = await profileUpdateResponse.json();
-        updatedUserData = { ...updatedUserData, ...profileData };
+
+        // Send provider fields at top level instead of nested under provider_info
+        updatedPayload.provider_services = serviceNames;
+        updatedPayload.provider_bio = formData.provider_bio;
+        updatedPayload.provider_hourly_rate = parseFloat(
+          formData.provider_hourly_rate || "0"
+        );
       }
 
-      setUser(updatedUserData);
+      console.log("Sending update payload:", updatedPayload);
+
+      const profileUpdateResponse = await fetch(`${getBaseUrl()}/auth/me`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updatedPayload),
+      });
+
+      if (!profileUpdateResponse.ok) {
+        const errorData = await profileUpdateResponse.json();
+        console.error("Update error:", errorData);
+        throw new Error(errorData.detail || "Failed to update profile.");
+      }
+
+      const profileData = await profileUpdateResponse.json();
+      console.log("Update successful, response:", profileData);
+
+      // Update the user data in context
+      setUser((prev) => ({
+        ...prev,
+        ...profileData,
+        // Ensure provider data is properly merged
+        provider: {
+          ...prev.provider,
+          ...(profileData.provider || {}),
+        },
+      }));
+
+      // Re-initialize form data after successful save (same logic as when user changes)
+      if (user) {
+        const data = getInitialFormData(user);
+        setInitialFormData(data);
+        setFormData(data);
+        setPreviewImage(user.profile_image || user.profile_picture_url || null);
+      }
+
       setIsEditing(false);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
-      console.error(err);
-      alert("Failed to save changes.");
+      console.error("Error in handleSave:", err);
+      alert(`Failed to save changes: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -191,7 +327,11 @@ const ProfilePage: React.FC = () => {
     );
   };
 
-  const renderTextField = (label: string, key: keyof ProfileFormData) => (
+  const renderTextField = (
+    label: string,
+    key: keyof ProfileFormData,
+    disabled = false
+  ) => (
     <TextField
       fullWidth
       label={label}
@@ -200,26 +340,68 @@ const ProfilePage: React.FC = () => {
       onChange={handleChange}
       variant="outlined"
       sx={{ mb: 2 }}
+      disabled={!isEditing || disabled}
     />
   );
 
   return (
     <Box sx={{ p: 4, maxWidth: "lg", mx: "auto" }}>
-      <Typography variant="h4" sx={{ mb: 4 }}>
-        My Profile
-      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 4,
+        }}
+      >
+        <Typography variant="h4">My Profile</Typography>
+        {!isEditing && (
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<EditIcon />}
+            onClick={() => setIsEditing(true)}
+          >
+            Edit Profile
+          </Button>
+        )}
+      </Box>
 
-      <Grid container spacing={3}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         {/* Avatar */}
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardHeader
-              title="Profile Picture"
-              avatar={
-                <Avatar src={getAvatarSrc()} sx={{ width: 56, height: 56 }} />
-              }
-            />
-            <CardContent sx={{ textAlign: "center" }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          <Card
+            sx={{
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              minWidth: 250, // Set a minimum width
+              width: "100%", // Take full width of the grid item
+              maxWidth: 300, // Set a maximum width
+            }}
+          >
+            <CardContent
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                flexGrow: 1,
+                gap: 2,
+                p: 3,
+                width: "100%", // Ensure content takes full width
+                boxSizing: "border-box", // Include padding in width calculation
+              }}
+            >
+              <Avatar
+                src={getAvatarSrc()}
+                sx={{
+                  width: 150, // Slightly larger avatar
+                  height: 150, // Slightly larger avatar
+                  mb: 2,
+                  fontSize: "3rem", // Larger font for initials
+                }}
+              />
               {isEditing && (
                 <>
                   <input
@@ -233,6 +415,8 @@ const ProfilePage: React.FC = () => {
                     variant="outlined"
                     onClick={() => fileInputRef.current?.click()}
                     startIcon={<EditIcon />}
+                    disabled={!isEditing}
+                    fullWidth
                   >
                     Change Photo
                   </Button>
@@ -240,121 +424,122 @@ const ProfilePage: React.FC = () => {
               )}
             </CardContent>
           </Card>
-        </Grid>
+        </Box>
 
         {/* Basic Info */}
-        <Grid size={{ xs: 12 }}>
-          <Card>
-            <CardHeader
-              title={
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <PetsIcon color="primary" /> Basic Info
-                </Box>
-              }
-            />
-            <CardContent>
-              {renderTextField("Username", "username")}
-              {renderTextField("Full Name", "full_name")}
-              {renderTextField("Email", "email")}
-              {renderTextField("Phone", "phone")}
-            </CardContent>
-          </Card>
-        </Grid>
+        <Card>
+          <CardHeader
+            title={
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <PetsIcon color="primary" /> Basic Info
+              </Box>
+            }
+          />
+          <CardContent>
+            {renderTextField("Username", "username")}
+            {renderTextField("Full Name", "full_name")}
+            {renderTextField("Email", "email")}
+            {renderTextField("Phone", "phone")}
+          </CardContent>
+        </Card>
 
         {/* Address */}
-        <Grid size={{ xs: 12 }}>
-          <Card>
-            <CardHeader
-              title={
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <LocationIcon color="primary" /> Address
-                </Box>
-              }
-            />
-            <CardContent>
-              {renderTextField("Address", "address")}
-              {renderTextField("City", "city")}
-              {renderTextField("State", "state")}
-              {renderTextField("Country", "country")}
-              {renderTextField("Postal Code", "postal_code")}
-            </CardContent>
-          </Card>
-        </Grid>
+        <Card>
+          <CardHeader
+            title={
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <LocationIcon color="primary" /> Address
+              </Box>
+            }
+          />
+          <CardContent>
+            {renderTextField("Address", "address")}
+            {renderTextField("City", "city")}
+            {renderTextField("State", "state")}
+            {renderTextField("Country", "country")}
+            {renderTextField("Postal Code", "postal_code")}
+          </CardContent>
+        </Card>
 
         {/* Provider Info (if applicable) */}
         {user.is_provider && (
-          <Grid size={{ xs: 12 }}>
-            <Card>
-              <CardHeader
-                title={
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <PetsIcon color="primary" /> Provider Info
-                  </Box>
-                }
-              />
-              <CardContent>
-                {/* Services */}
-                <FormControl fullWidth sx={{ mb: 2 }}>
-                  <InputLabel>Services</InputLabel>
-                  <Select
-                    multiple
-                    name="provider_services"
-                    value={formData.provider_services ?? []}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        provider_services: e.target.value as number[],
-                      })
-                    }
-                    renderValue={(selected) =>
-                      serviceOptions
-                        .filter((opt) => selected.includes(opt.id))
-                        .map((opt) => opt.name)
-                        .join(", ")
-                    }
-                  >
-                    {serviceOptions.map((service) => (
-                      <MenuItem key={service.id} value={service.id}>
-                        <Checkbox
-                          checked={(formData.provider_services ?? []).includes(
-                            service.id
-                          )}
-                        />
-                        <ListItemText primary={service.name} />
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+          <Card>
+            <CardHeader
+              title={
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <PetsIcon color="primary" /> Provider Info
+                </Box>
+              }
+            />
+            <CardContent>
+              {/* Services */}
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>Services</InputLabel>
+                <Select
+                  multiple
+                  name="provider_services"
+                  value={formData.provider_services ?? []}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      provider_services: e.target.value as number[],
+                    })
+                  }
+                  disabled={!isEditing}
+                  renderValue={(selected) =>
+                    serviceOptions
+                      .filter((opt) => selected.includes(opt.id))
+                      .map((opt) => opt.name)
+                      .join(", ")
+                  }
+                >
+                  {serviceOptions.map((service) => (
+                    <MenuItem key={service.id} value={service.id}>
+                      <Checkbox
+                        checked={(formData.provider_services ?? []).includes(
+                          service.id
+                        )}
+                      />
+                      <ListItemText primary={service.name} />
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-                {renderTextField("Bio", "provider_bio")}
-                {renderTextField("Hourly Rate", "provider_hourly_rate")}
-                {renderTextField("Rating", "provider_rating")}
-              </CardContent>
-            </Card>
-          </Grid>
+              {renderTextField("Bio", "provider_bio")}
+              {renderTextField("Hourly Rate", "provider_hourly_rate")}
+              <TextField
+                fullWidth
+                label="Rating"
+                value={formData.provider_rating || ""}
+                variant="outlined"
+                sx={{ mb: 2 }}
+                disabled={true}
+                helperText="Rating is calculated based on user reviews"
+              />
+            </CardContent>
+          </Card>
         )}
 
         {/* Save / Cancel */}
         {isEditing && (
-          <Grid size={{ xs: 12 }}>
-            <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
-              <Button
-                variant="contained"
-                onClick={handleSave}
-                startIcon={
-                  loading ? <CircularProgress size={20} /> : <SaveIcon />
-                }
-                disabled={loading}
-              >
-                Save
-              </Button>
-              <Button variant="outlined" onClick={() => setIsEditing(false)}>
-                Cancel
-              </Button>
-            </Box>
-          </Grid>
+          <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
+            <Button
+              variant="contained"
+              onClick={handleSave}
+              startIcon={
+                loading ? <CircularProgress size={20} /> : <SaveIcon />
+              }
+              disabled={loading}
+            >
+              Save
+            </Button>
+            <Button variant="outlined" onClick={handleCancel}>
+              Cancel
+            </Button>
+          </Box>
         )}
-      </Grid>
+      </Box>
 
       {/* Success Snackbar */}
       <Snackbar

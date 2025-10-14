@@ -73,18 +73,49 @@ export const ProviderProfileSetupPage: React.FC = () => {
 
   const loadServiceTypes = async () => {
     try {
-      const response = await fetch(`${getBaseUrl()}/enhanced-provider-profiles/service-types`, {
+      const token = getToken();
+      if (!token) {
+        console.warn('No authentication token found');
+        useFallbackServices();
+        return;
+      }
+
+      const response = await fetch(`${getBaseUrl()}/service_booking/types/`, {
         headers: {
-          'Authorization': `Bearer ${getToken()}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
-      if (!response.ok) throw new Error('Failed to fetch service types');
+
+      if (response.status === 401) {
+        console.warn('Authentication failed - using fallback services');
+        useFallbackServices();
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
       setServiceTypes(data);
     } catch (error) {
       console.error('Failed to load service types:', error);
+      useFallbackServices();
     }
+  };
+
+  const useFallbackServices = () => {
+    setServiceTypes([
+      { id: 1, name: "Dog Walking", description: "Professional dog walking services" },
+      { id: 2, name: "Pet Sitting", description: "In-home pet sitting and care" },
+      { id: 3, name: "Grooming", description: "Pet grooming and styling" },
+      { id: 4, name: "Training", description: "Pet training and behavior" },
+      { id: 5, name: "Veterinary", description: "Veterinary care services" },
+      { id: 6, name: "Boarding", description: "Pet boarding and daycare" },
+      { id: 7, name: "Pet Taxi", description: "Transportation services" },
+      { id: 8, name: "Daycare", description: "Daytime pet care" },
+    ]);
   };
 
   const handleNext = () => {
@@ -113,33 +144,118 @@ export const ProviderProfileSetupPage: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    let hasProfile = false;
     try {
       setLoading(true);
       setError(null);
 
+      // Debug: Check authentication state
+      const token = await getToken();
+      console.log('🔑 Debug - Token in handleSubmit:', {
+        token: token ? `${token.substring(0, 20)}...` : 'null',
+        tokenLength: token ? token.length : 0,
+        hasToken: !!token,
+        user: user?.username,
+        isProvider: user?.is_provider
+      });
+
+      if (!token) {
+        setError('Authentication token not found. Please log in again.');
+        return;
+      }
+
+      // First, check if user already has a provider profile
+      const checkResponse = await fetch(`${getBaseUrl()}/provider-profiles/my-profile`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      console.log('🔍 Debug - Profile check response:', {
+        status: checkResponse.status,
+        ok: checkResponse.ok,
+        statusText: checkResponse.statusText
+      });
+
+      hasProfile = checkResponse.ok;
+
+      // Convert service names to IDs
+      const serviceTypeIds = formData.services.map(serviceName => {
+        const serviceType = serviceTypes.find(st => st.name === serviceName);
+        return serviceType ? serviceType.id : null;
+      }).filter(id => id !== null);
+
+      console.log('🔄 Debug - Profile data being sent:', {
+        hasProfile,
+        serviceTypeIds,
+        profileData: {
+          bio: formData.bio,
+          hourly_rate: formData.hourly_rate ? parseFloat(formData.hourly_rate) : null,
+          service_radius_km: formData.service_radius ? parseFloat(formData.service_radius) : null,
+          experience_years: formData.experience_years ? parseInt(formData.experience_years) : null,
+          languages: formData.languages,
+          is_available: true,
+          ...(hasProfile ? {} : { service_type_ids: serviceTypeIds }),
+        }
+      });
+
       const profileData = {
         bio: formData.bio,
         hourly_rate: formData.hourly_rate ? parseFloat(formData.hourly_rate) : null,
-        service_radius: formData.service_radius ? parseFloat(formData.service_radius) : null,
+        service_radius_km: formData.service_radius ? parseFloat(formData.service_radius) : null,
         experience_years: formData.experience_years ? parseInt(formData.experience_years) : null,
         languages: formData.languages,
-        services: formData.services,
+        is_available: true,
+        ...(hasProfile ? {} : { service_type_ids: serviceTypeIds }),
       };
 
-      const response = await fetch(`${getBaseUrl()}/enhanced-provider-profiles/my-profile`, {
-        method: 'PUT',
+      const method = hasProfile ? 'PUT' : 'POST';
+      const endpoint = hasProfile ? '/provider-profiles/my-profile' : '/provider-profiles/';
+
+      console.log('🚀 Debug - Making request:', {
+        method,
+        endpoint,
+        fullUrl: `${getBaseUrl()}${endpoint}`,
+        hasAuth: true
+      });
+
+      const response = await fetch(`${getBaseUrl()}${endpoint}`, {
+        method,
         headers: {
-          'Authorization': `Bearer ${getToken()}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(profileData),
       });
-      if (!response.ok) throw new Error('Failed to update profile');
-      
+
+      console.log('📡 Debug - Response received:', {
+        status: response.status,
+        ok: response.ok,
+        statusText: response.statusText,
+        url: response.url
+      });
+
+      if (!response.ok) {
+        let errorMessage = 'Failed to save provider profile';
+        try {
+          const errorData = await response.json();
+          console.error('❌ Debug - Error response data:', errorData);
+          errorMessage = errorData.detail || errorMessage;
+        } catch (parseError) {
+          console.error('❌ Debug - Could not parse error response');
+        }
+        throw new Error(errorMessage);
+      }
+
+      // Refresh user data after successful profile creation/update
+      const { checkAuth } = useAuth();
+      await checkAuth();
+
       // Redirect to provider profile page
       navigate('/profile');
     } catch (err: any) {
-      setError(err.message || 'Failed to update provider profile');
+      console.error('💥 Debug - Error in handleSubmit:', err);
+      setError(err.message || `Failed to ${hasProfile ? 'update' : 'create'} provider profile`);
     } finally {
       setLoading(false);
     }
