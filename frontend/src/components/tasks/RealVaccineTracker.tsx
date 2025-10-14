@@ -509,19 +509,19 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
 
                <CardContent>
                  {tabValue === 0 && (
-                   <VaccineList vaccines={overdueVaccines} title={t('vaccines.overdueVaccines')} />
+                   <VaccineList vaccines={overdueVaccines} title={t('vaccineTracking.overdueVaccines')} />
                  )}
                  {tabValue === 1 && (
-                   <VaccineList vaccines={dueSoonVaccines} title={t('vaccines.dueSoonVaccines')} />
+                   <VaccineList vaccines={dueSoonVaccines} title={t('vaccineTracking.dueSoonVaccines')} />
                  )}
                  {tabValue === 2 && (
-                   <VaccineList vaccines={upToDateVaccines} title={t('vaccines.upToDateVaccines')} />
+                   <VaccineList vaccines={upToDateVaccines} title={t('vaccineTracking.upToDateVaccines')} />
                  )}
                  {tabValue === 3 && (
-                   <VaccineList vaccines={filteredVaccines} title={t('vaccines.allVaccineRecords')} />
+                   <VaccineList vaccines={filteredVaccines} title={t('vaccineTracking.allVaccineRecords')} />
                  )}
                  {tabValue === 4 && (
-                   <VaccineSuggestionsList suggestions={filteredSuggestions} title={t('vaccines.regionalVaccineSuggestions')} />
+                   <VaccineSuggestionsList suggestions={filteredSuggestions} title={t('vaccineTracking.regionalVaccineSuggestions')} />
                  )}
                </CardContent>
         </Card>
@@ -597,7 +597,11 @@ const VaccineList: React.FC<VaccineListProps> = ({ vaccines, title }) => {
           {t('vaccines.noVaccinesFound')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          {title === 'All Vaccines' ? t('vaccines.noVaccineRecordsFound') : `${t('vaccines.noVaccinesAre')} ${title.toLowerCase()}.`}
+          {title.toLowerCase().includes('overdue') ? t('vaccines.noOverdueVaccines') :
+           title.toLowerCase().includes('due soon') ? t('vaccines.noDueSoonVaccines') :
+           title.toLowerCase().includes('up to date') ? t('vaccines.noUpToDateVaccines') :
+           title.toLowerCase().includes('all') ? t('vaccines.noAllVaccines') :
+           t('vaccines.noVaccineRecordsFound')}
         </Typography>
       </Box>
     );
@@ -716,10 +720,10 @@ const VaccineSuggestionsList: React.FC<VaccineSuggestionsListProps> = ({ suggest
       <Box textAlign="center" py={4}>
         <ScienceIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
         <Typography variant="h6" color="text.secondary" gutterBottom>
-          {t('vaccines.noVaccineSuggestions')}
+          {t('vaccineTracking.noVaccineSuggestions')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          {t('vaccines.noRegionalSuggestions')}
+          {t('vaccineTracking.noRegionalSuggestions')}
         </Typography>
       </Box>
     );

@@ -187,7 +187,7 @@ export const MyServiceRequests: React.FC = () => {
                       </IconButton>
                       <IconButton
                         size="small"
-                        onClick={() => navigate(`/service-requests/${request.id}/chat`)}
+                        onClick={() => navigate(`/chat/${request.id}`)}
                       >
                         <Message />
                       </IconButton>
@@ -211,7 +211,7 @@ export const MyServiceRequests: React.FC = () => {
         color="primary"
         aria-label="add"
         sx={{ position: 'fixed', bottom: 16, right: 16 }}
-        onClick={() => navigate('/bookservice')}
+        onClick={() => navigate('/marketplace')}
       >
         <Add />
       </Fab>

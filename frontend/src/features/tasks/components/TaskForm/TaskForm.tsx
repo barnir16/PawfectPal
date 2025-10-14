@@ -145,7 +145,7 @@ export const TaskForm = () => {
         priority: data.priority,
         repeatInterval: data.repeatInterval,
         repeatUnit: data.repeatUnit === "" ? undefined : data.repeatUnit,
-        repeatEndDate: data.repeatEndDate,
+        repeatEndDate: data.repeatEndDate && data.repeatEndDate !== "" ? data.repeatEndDate : undefined,
         attachments: [],
         status: 'pending',
         isCompleted: false,

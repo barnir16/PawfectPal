@@ -9,3 +9,4 @@ from .references import Vaccine, AgeRestriction
 from .provider import UserUpdateProvider
 from .service_request import ServiceRequestCreate, ServiceRequestRead, ServiceRequestUpdate, ServiceRequestSummary
 from .chat_message import ChatMessageCreate, ChatMessageRead, ChatMessageUpdate, ChatConversation
+from .provider_review import ProviderReviewCreate, ProviderReviewRead

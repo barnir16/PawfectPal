@@ -1,6 +1,11 @@
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Response, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy.orm import Session
+from app.dependencies.db import get_db
+from app.models.user import UserORM
+from app.models.provider_profile import ProviderProfileORM
+from app.models.service_type import ServiceTypeORM
 from app.routers import (
     pet,
     references,
@@ -14,8 +19,12 @@ from app.routers import (
     weight_record,
     weight_goal,
     provider,
+    provider_reviews,
     service_requests,
     chat,
+    marketplace_posts,
+    enhanced_provider_profiles,
+    enhanced_provider_reviews,
 )
 
 # Import AI router conditionally to avoid startup errors
@@ -107,20 +116,26 @@ app.include_router(weight_record.router)
 app.include_router(weight_goal.router)
 if AI_AVAILABLE:
     app.include_router(ai.router)
-    print("✅ AI router included")
+    print("AI router included")
 else:
-    print("⚠️ AI router skipped due to configuration issues")
+    print("AI router skipped due to configuration issues")
 
 # Import and include AI conversations router
 try:
     from app.routers import ai_conversations
     app.include_router(ai_conversations.router)
-    print("✅ AI conversations router included")
+    print("AI conversations router included")
 except Exception as e:
-    print(f"⚠️ AI conversations router not available: {e}")
+    print(f"AI conversations router not available: {e}")
 app.include_router(provider.router)
+app.include_router(provider_reviews.router)
 app.include_router(service_requests.router)
 app.include_router(chat.router)
+
+# Include new marketplace routers
+app.include_router(marketplace_posts.router)
+app.include_router(enhanced_provider_profiles.router)
+app.include_router(enhanced_provider_reviews.router)
 
 
 # Mount static files for image serving
@@ -129,11 +144,9 @@ import os
 
 # Get the absolute path to uploads directory
 uploads_path = Path("uploads").absolute()
-print(f"📁 Static files path: {uploads_path}")
-print(f"📁 Directory exists: {uploads_path.exists()}")
-print(
-    f"📁 Directory contents: {list(uploads_path.iterdir()) if uploads_path.exists() else 'Directory not found'}"
-)
+print(f"Static files path: {uploads_path}")
+print(f"Directory exists: {uploads_path.exists()}")
+print(f"Directory contents: {list(uploads_path.iterdir()) if uploads_path.exists() else 'Directory not found'}")
 
 app.mount("/uploads", StaticFiles(directory=str(uploads_path)), name="uploads")
 
@@ -153,6 +166,96 @@ def test_image(filename: str):
     }
 
 
+@app.get("/providers")
+def get_providers(db: Session = Depends(get_db)):
+    """Get all service providers"""
+    providers = db.query(UserORM).filter(UserORM.is_provider == True).all()
+    
+    result = []
+    for user in providers:
+        # Get provider profile if exists
+        profile = db.query(ProviderProfileORM).filter(
+            ProviderProfileORM.user_id == user.id
+        ).first()
+        
+        # Get service types
+        service_types = []
+        if profile:
+            service_types = [st.name for st in profile.services]
+        
+        provider_data = {
+            "id": user.id,
+            "username": user.username,
+            "full_name": user.full_name,
+            "email": user.email,
+            "profile_image": user.profile_image,
+            "location": profile.location if profile else None,
+            "provider_bio": profile.bio if profile else None,
+            "provider_hourly_rate": profile.hourly_rate if profile else None,
+            "provider_services": service_types,
+            "is_available": profile.is_available if profile else True,
+            "rating": profile.average_rating if profile else None,
+            "review_count": profile.review_count if profile else 0,
+            "completed_bookings": profile.completed_bookings if profile else 0,
+            "experience_years": profile.experience_years if profile else None,
+            "languages": profile.languages if profile else [],
+            "certifications": profile.certifications if profile else [],
+            "service_radius": profile.service_radius if profile else None,
+            "verified": profile.verified if profile else False,
+            "created_at": user.created_at.isoformat(),
+            "updated_at": user.updated_at.isoformat(),
+        }
+        result.append(provider_data)
+    
+    return result
+
+@app.get("/providers/{provider_id}")
+def get_provider(provider_id: int, db: Session = Depends(get_db)):
+    """Get a specific service provider by ID"""
+    user = db.query(UserORM).filter(
+        UserORM.id == provider_id,
+        UserORM.is_provider == True
+    ).first()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="Provider not found")
+    
+    # Get provider profile if exists
+    profile = db.query(ProviderProfileORM).filter(
+        ProviderProfileORM.user_id == user.id
+    ).first()
+    
+    # Get service types
+    service_types = []
+    if profile:
+        service_types = [st.name for st in profile.services]
+    
+    provider_data = {
+        "id": user.id,
+        "username": user.username,
+        "full_name": user.full_name,
+        "email": user.email,
+        "profile_image": user.profile_image,
+        "location": profile.location if profile else None,
+        "provider_bio": profile.bio if profile else None,
+        "provider_hourly_rate": profile.hourly_rate if profile else None,
+        "provider_services": service_types,
+        "is_available": profile.is_available if profile else True,
+        "rating": profile.average_rating if profile else None,
+        "review_count": profile.review_count if profile else 0,
+        "completed_bookings": profile.completed_bookings if profile else 0,
+        "experience_years": profile.experience_years if profile else None,
+        "languages": profile.languages if profile else [],
+        "certifications": profile.certifications if profile else [],
+        "service_radius": profile.service_radius if profile else None,
+        "verified": profile.verified if profile else False,
+        "created_at": user.created_at.isoformat(),
+        "updated_at": user.updated_at.isoformat(),
+    }
+    
+    return provider_data
+
+
 @app.get("/")
 def read_root():
     """API root endpoint"""
@@ -168,5 +271,9 @@ def read_root():
             "Vaccine Tracking",
             "Weight Tracking",
             "AI Assistant",
+            "Marketplace Posts",
+            "Enhanced Provider Profiles",
+            "Provider Reviews",
+            "Service Matching",
         ],
     }

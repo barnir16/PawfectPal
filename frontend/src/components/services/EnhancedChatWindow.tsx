@@ -179,7 +179,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   const [offlineMessages, setOfflineMessages] = useState<ChatMessageCreate[]>([]);
   
   // Service request context panel
-  const [showServiceContext, setShowServiceContext] = useState(false);
+  const [showServiceContext, setShowServiceContext] = useState(true);
   
   // Reply functionality
   const [replyingTo, setReplyingTo] = useState<ReplyToMessage | null>(null);
@@ -201,49 +201,49 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     // Provider-specific quick replies
     {
       id: "greeting",
-      text: "Hi! I'm interested in providing this service for you.",
+      text: t('chat.quickReplies.provider.greeting') || "Hi! I'm interested in providing this service for you.",
       icon: <Pets />,
     },
     {
       id: "availability",
-      text: "I'm available for this service. When would be a good time to discuss the details?",
+      text: t('chat.quickReplies.provider.availability') || "I'm available for this service. When would be a good time to discuss the details?",
       icon: <Schedule />,
     },
     {
       id: "experience",
-      text: "I have extensive experience with this type of service. Would you like to schedule a consultation?",
+      text: t('chat.quickReplies.provider.experience') || "I have extensive experience with this type of service. Would you like to schedule a consultation?",
       icon: <Star />,
     },
     {
       id: "location",
-      text: "I'm located nearby. Would you like to meet in person to discuss the service?",
+      text: t('chat.quickReplies.provider.location') || "I'm located nearby. Would you like to meet in person to discuss the service?",
       icon: <LocationOn />,
     },
     {
       id: "photos",
-      text: "Could you share some photos of your pet? This will help me provide the best care.",
+      text: t('chat.quickReplies.provider.photos') || "Could you share some photos of your pet? This will help me provide the best care.",
       icon: <Image />,
     },
     {
       id: "instructions",
-      text: "Please share any special instructions or requirements for your pet's care.",
+      text: t('chat.quickReplies.provider.instructions') || "Please share any special instructions or requirements for your pet's care.",
       icon: <Pets />,
     },
   ] : [
     // Client-specific quick replies
     {
       id: "greeting",
-      text: "Hi! I'm interested in your service request.",
+      text: t('chat.quickReplies.client.greeting') || "Hi! I'm interested in your service request.",
       icon: <Pets />,
     },
     {
       id: "availability",
-      text: "I'm available for this service. When would you like to meet?",
+      text: t('chat.quickReplies.client.availability') || "I'm available for this service. When would you like to meet?",
       icon: <Schedule />,
     },
     {
       id: "location",
-      text: "Could you share the exact location?",
+      text: t('chat.quickReplies.client.location') || "Could you share the exact location?",
       icon: <LocationOn />,
     },
     {
@@ -564,7 +564,14 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   // Helper function to render location messages
   const renderLocationMessage = (message: ChatMessage) => {
     const text = getDisplayMessage(message);
-    if (message.message_type === "location" && text.includes("📍 Location shared")) {
+    
+    // Check if this is a location message by type or content
+    if (message.message_type === "location" || 
+        text.includes("Lat:") || 
+        text.includes("Lng:") ||
+        text.includes("📍 Location shared") ||
+        text.includes("Location:") ||
+        text.includes("Coordinates:")) {
       return <LocationMessage message={text} compact={true} />;
     }
     return null;
@@ -874,7 +881,9 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     console.log('📁 Opening file:', {
       fileName: attachment.file_name,
       fileUrl: attachment.file_url,
-      fileType: attachment.file_type
+      fileType: attachment.file_type,
+      isRelative: attachment.file_url.startsWith('/'),
+      nodeEnv: process.env.NODE_ENV
     });
     
     // Ensure we have a full URL for opening
@@ -882,13 +891,34 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     if (fullUrl.startsWith('/')) {
       // If it's a relative path, prepend the base URL
       const baseUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://pawfectpal-production.up.railway.app' 
+        ? 'https://pawfectpal-production-2f07.up.railway.app' 
         : 'http://localhost:8000';
       fullUrl = baseUrl + fullUrl;
+      console.log('📁 Constructed URL:', { baseUrl, originalUrl: attachment.file_url, fullUrl });
     }
     
     console.log('📁 Opening full URL:', fullUrl);
-    window.open(fullUrl, '_blank');
+    
+    // Try to open the file
+    try {
+      const newWindow = window.open(fullUrl, '_blank');
+      if (!newWindow) {
+        console.error('❌ Failed to open window - popup blocked?');
+        // Fallback: try to download the file
+        const link = document.createElement('a');
+        link.href = fullUrl;
+        link.download = attachment.file_name;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        console.log('📁 Fallback: triggered download');
+      } else {
+        console.log('✅ Successfully opened file in new window');
+      }
+    } catch (error) {
+      console.error('❌ Error opening file:', error);
+    }
   };
 
   const handleFileUploadProgress = (fileName: string, progress: number, status: 'uploading' | 'completed' | 'error', error?: string) => {
