@@ -393,9 +393,125 @@ export const ChatPage = () => {
     }
   };
 
-  const handleQuickAction = (action: string, data?: any) => {
+  const handleQuickAction = async (action: string, data?: any) => {
     console.log("Quick action triggered:", action, data);
-    // implement your action handling here
+    
+    try {
+      switch (action) {
+        case "schedule_meeting":
+          await handleScheduleMeeting();
+          break;
+        case "request_photos":
+          await handleRequestPhotos();
+          break;
+        case "share_experience":
+          await handleShareExperience();
+          break;
+        case "confirm_service":
+          await handleConfirmService();
+          break;
+        case "request_location":
+          await handleRequestLocation();
+          break;
+        default:
+          console.log("Unknown action:", action);
+      }
+    } catch (error) {
+      console.error("Error handling quick action:", error);
+    }
+  };
+
+  const handleScheduleMeeting = async () => {
+    if (!serviceRequest || !user) return;
+    
+    try {
+      // Create a task for the meeting/appointment
+      const taskData = {
+        title: `Meeting: ${serviceRequest.title}`,
+        description: `Scheduled meeting for ${serviceRequest.service_type} service. Service Request ID: ${serviceRequest.id}`,
+        dateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
+        petIds: serviceRequest.pet_ids || [],
+        attachments: [], // Empty array for attachments
+        priority: 'high' as const,
+        status: 'pending' as const,
+        isCompleted: false,
+      };
+
+      // Import task service dynamically to avoid circular dependencies
+      const { createTask } = await import('../../../services/tasks/taskService');
+      const newTask = await createTask(taskData);
+      
+      console.log('✅ Task created for meeting:', newTask);
+      
+      // Send a message about the scheduled meeting
+      const messageData: ChatMessageCreate = {
+        service_request_id: serviceRequest.id,
+        message: `📅 I've scheduled a meeting for tomorrow to discuss the ${serviceRequest.service_type} service. The task has been added to your task list.`,
+        message_type: 'text',
+      };
+      
+      await handleSendMessage(messageData);
+      
+    } catch (error) {
+      console.error('❌ Failed to create meeting task:', error);
+      
+      // Send error message
+      const errorMessage: ChatMessageCreate = {
+        service_request_id: serviceRequest!.id,
+        message: "❌ Sorry, I couldn't schedule the meeting right now. Please try again later.",
+        message_type: 'text',
+      };
+      
+      await handleSendMessage(errorMessage);
+    }
+  };
+
+  const handleRequestPhotos = async () => {
+    if (!serviceRequest) return;
+    
+    const messageData: ChatMessageCreate = {
+      service_request_id: serviceRequest.id,
+      message: "📸 Could you please share some photos of your pet? This will help me provide better service.",
+      message_type: 'text',
+    };
+    
+    await handleSendMessage(messageData);
+  };
+
+  const handleShareExperience = async () => {
+    if (!serviceRequest) return;
+    
+    const messageData: ChatMessageCreate = {
+      service_request_id: serviceRequest.id,
+      message: "⭐ I have extensive experience with this type of service. I'd be happy to share my background and discuss how I can help with your pet's needs.",
+      message_type: 'text',
+    };
+    
+    await handleSendMessage(messageData);
+  };
+
+  const handleConfirmService = async () => {
+    if (!serviceRequest) return;
+    
+    const messageData: ChatMessageCreate = {
+      service_request_id: serviceRequest.id,
+      message: "✅ Perfect! I'll be there at the scheduled time. Looking forward to providing excellent service for your pet.",
+      message_type: 'text',
+    };
+    
+    await handleSendMessage(messageData);
+  };
+
+  const handleRequestLocation = async () => {
+    if (!serviceRequest) return;
+    
+    const messageData: ChatMessageCreate = {
+      service_request_id: serviceRequest.id,
+      message: "📍 Could you please share your location? This will help me plan the best route and timing for the service.",
+      message_type: 'text',
+    };
+    
+    await handleSendMessage(messageData);
   };
 
   const handleTypingChange = (isTyping: boolean) => {
