@@ -557,6 +557,10 @@ export const en = {
     frequency: 'Frequency',
     noVaccinesFound: 'No vaccines found',
     noVaccineRecordsFound: 'No vaccine records found for the selected pet(s).',
+    noOverdueVaccines: 'No overdue vaccines found for the selected pet(s).',
+    noDueSoonVaccines: 'No due soon vaccines found for the selected pet(s).',
+    noUpToDateVaccines: 'No up to date vaccines found for the selected pet(s).',
+    noAllVaccines: 'No vaccines found for the selected pet(s).',
     noVaccinesAre: 'No vaccines',
     other: 'Other',
     nextDueDate: 'Next Due Date',
@@ -1093,6 +1097,7 @@ export const en = {
     acknowledge: 'Acknowledge',
     alertDescription: 'This alert was created based on your pet\'s weight monitoring data. Please review the information and take action accordingly.',
     weightHistory: 'Weight History',
+    noDataAvailable: 'No weight data available',
   },
 
   // Chat

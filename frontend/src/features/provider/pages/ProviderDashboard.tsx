@@ -262,17 +262,21 @@ export const ProviderDashboard: React.FC = () => {
         {/* Recent Conversations */}
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-              <Typography variant="h6" component="h2">
-                Recent Conversations
-              </Typography>
-              <Button 
-                variant="outlined" 
-                size="small"
-                onClick={() => navigate('/chat-list')}
-              >
-                View All
-              </Button>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, gap: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography variant="h6" component="h2">
+                  Recent Conversations
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Button 
+                  variant="outlined" 
+                  size="small"
+                  onClick={() => navigate('/chat-list')}
+                >
+                  View All
+                </Button>
+              </Box>
             </Box>
             
             {conversations.length === 0 ? (
@@ -385,7 +389,7 @@ export const ProviderDashboard: React.FC = () => {
         <Typography variant="h6" component="h2" gutterBottom>
           Quick Actions
         </Typography>
-        <Stack direction="row" spacing={2} flexWrap="wrap">
+        <Stack direction="row" spacing={3} flexWrap="wrap" useFlexGap>
           <Button 
             variant="contained" 
             startIcon={<Message />}

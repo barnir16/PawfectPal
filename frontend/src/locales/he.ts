@@ -505,6 +505,10 @@ export const he = {
     noPetDataAvailable: 'אין נתוני חיות מחמד זמינים. אנא הוסף חיית מחמד תחילה.',
     noVaccinesFound: 'לא נמצאו חיסונים',
     noVaccineRecordsFound: 'לא נמצאו רשומות חיסון עבור החיה(ות) שנבחרו.',
+    noOverdueVaccines: 'לא נמצאו חיסונים באיחור עבור החיה(ות) שנבחרו.',
+    noDueSoonVaccines: 'לא נמצאו חיסונים בקרוב עבור החיה(ות) שנבחרו.',
+    noUpToDateVaccines: 'לא נמצאו חיסונים מעודכנים עבור החיה(ות) שנבחרו.',
+    noAllVaccines: 'לא נמצאו חיסונים עבור החיה(ות) שנבחרו.',
     noVaccinesAre: 'אין חיסונים',
     other: 'אחר',
     preventativeTreatments: 'טיפולים מונעים',
@@ -828,6 +832,7 @@ export const he = {
     thisWeek: 'השבוע',
     nextWeek: 'השבוע הבא',
     vaccination: 'חיסון',
+    noDataAvailable: 'No weight data available',
   },
 
   // Config
