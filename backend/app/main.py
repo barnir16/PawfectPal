@@ -95,6 +95,26 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
+# Add manual CORS headers for all responses
+@app.middleware("http")
+async def add_cors_headers(request, call_next):
+    response = await call_next(request)
+    origin = request.headers.get("origin")
+    if origin in [
+        "https://pawfectpal-production-2f07.up.railway.app",
+        "https://pawfectpal-production.up.railway.app",
+        "http://localhost:3000",
+        "http://localhost:5173"
+    ]:
+        response.headers["Access-Control-Allow-Origin"] = origin
+    else:
+        response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Expose-Headers"] = "*"
+    return response
+
 # Serve static files (uploaded images)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
