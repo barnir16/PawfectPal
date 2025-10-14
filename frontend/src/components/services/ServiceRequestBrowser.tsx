@@ -289,7 +289,7 @@ export const ServiceRequestBrowser: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<Add />}
-          onClick={() => navigate('/bookservice')}
+          onClick={() => navigate('/service-request-form')}
         >
           {t('services.createRequest')}
         </Button>
