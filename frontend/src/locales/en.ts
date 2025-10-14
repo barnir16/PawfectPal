@@ -1316,8 +1316,10 @@ export const en = {
     // Service request management
     browseRequests: 'Browse Requests',
     myRequests: 'My Requests',
+    publicPosts: 'Public Posts',
     requestDetails: 'Request Details',
     noRequestsFound: 'No requests found',
+    noPublicPosts: 'No public posts available',
     createFirstRequest: 'Create your first service request to get started',
     locationNotSpecified: 'Location not specified',
     noPetsSelected: 'No pets selected',
