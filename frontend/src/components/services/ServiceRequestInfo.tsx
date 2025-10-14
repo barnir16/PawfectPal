@@ -101,16 +101,27 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
     }).format(amount);
   };
 
-  const calculateAge = (birthDate: string) => {
-    const birth = new Date(birthDate);
-    const today = new Date();
-    const ageInYears = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      return ageInYears - 1;
+  const calculateAge = (pet: Pet) => {
+    // If we have a direct age value and birthday is not given, use the age
+    if (pet.age && !pet.isBirthdayGiven) {
+      return pet.age;
     }
-    return ageInYears;
+    
+    // If we have a birth date and birthday is given, calculate from birth date
+    if (pet.birthDate && pet.isBirthdayGiven) {
+      const birth = new Date(pet.birthDate);
+      const today = new Date();
+      const ageInYears = today.getFullYear() - birth.getFullYear();
+      const monthDiff = today.getMonth() - birth.getMonth();
+      
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        return ageInYears - 1;
+      }
+      return ageInYears;
+    }
+    
+    // Fallback to direct age if available
+    return pet.age || 0;
   };
 
   return (
@@ -300,7 +311,10 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
                   {pets.map((pet) => (
                     <Paper key={pet.id} elevation={0} sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 2 }}>
                       <Stack direction="row" alignItems="center" spacing={2}>
-                        <Avatar sx={{ width: 50, height: 50, backgroundColor: 'primary.light' }}>
+                        <Avatar 
+                          sx={{ width: 50, height: 50, backgroundColor: 'primary.light' }}
+                          src={pet.imageUrl}
+                        >
                           <Pets />
                         </Avatar>
                         <Box sx={{ flex: 1 }}>
@@ -312,10 +326,10 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
                           </Typography>
                           
                           <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
-                            {pet.birthDate && (
+                            {(pet.birthDate || pet.age) && (
                               <Chip
                                 icon={<Cake />}
-                                label={`${calculateAge(pet.birthDate)} years old`}
+                                label={`${calculateAge(pet)} years old`}
                                 size="small"
                                 variant="outlined"
                               />
@@ -375,6 +389,24 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
                               />
                             )}
                           </Stack>
+                          
+                          {/* Health Issues */}
+                          {pet.healthIssues && pet.healthIssues.length > 0 && (
+                            <Box sx={{ mt: 1 }}>
+                              <Typography variant="caption" color="warning.main" sx={{ fontWeight: 600 }}>
+                                Health Issues: {pet.healthIssues.join(', ')}
+                              </Typography>
+                            </Box>
+                          )}
+                          
+                          {/* Behavior Issues */}
+                          {pet.behaviorIssues && pet.behaviorIssues.length > 0 && (
+                            <Box sx={{ mt: 1 }}>
+                              <Typography variant="caption" color="warning.main" sx={{ fontWeight: 600 }}>
+                                Behavior Issues: {pet.behaviorIssues.join(', ')}
+                              </Typography>
+                            </Box>
+                          )}
                           
                           {pet.medicalNotes && (
                             <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic' }}>

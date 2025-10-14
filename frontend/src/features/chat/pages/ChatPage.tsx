@@ -11,8 +11,10 @@ import {
   Alert,
   Button,
   Chip,
+  Stack,
+  Collapse,
 } from "@mui/material";
-import { ArrowBack, Home, Message, Wifi, WifiOff } from "@mui/icons-material";
+import { ArrowBack, Home, Message, Wifi, WifiOff, Info, ExpandLess, ExpandMore } from "@mui/icons-material";
 import { EnhancedChatWindow } from "../../../components/services/EnhancedChatWindow";
 import { ServiceRequestInfo } from "../../../components/services/ServiceRequestInfo";
 import type {
@@ -47,6 +49,7 @@ export const ChatPage = () => {
   const [otherUserTyping, setOtherUserTyping] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [offlineStatus, setOfflineStatus] = useState<OfflineStatus>(offlineMessageService.getOfflineStatus());
+  const [isServiceInfoExpanded, setIsServiceInfoExpanded] = useState(false);
   const wsInitialized = useRef(false);
 
   // Initialize message status tracker
@@ -490,7 +493,7 @@ export const ChatPage = () => {
                   <Message fontSize="small" />
                   Chats
                 </Link>
-                <Typography variant="body2" color="text.primary">
+                <Typography variant="h6" fontWeight={600} color="primary.main">
                   {serviceRequest.title || `Service #${id}`}
                 </Typography>
               </Breadcrumbs>
@@ -519,18 +522,6 @@ export const ChatPage = () => {
 
       {/* Chat Window */}
       <Box sx={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        {/* Service Request Information */}
-        {serviceRequest && (
-          <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
-            <ServiceRequestInfo
-              serviceRequest={serviceRequest}
-              pets={pets}
-              provider={serviceRequest.assigned_provider}
-              compact={true}
-            />
-          </Box>
-        )}
-        
         {/* Chat Messages */}
         <Box sx={{ flex: 1, overflow: "hidden" }}>
             <EnhancedChatWindow
@@ -575,6 +566,47 @@ export const ChatPage = () => {
               } : undefined}
             />
         </Box>
+        
+        {/* Collapsible Service Information Panes */}
+        {serviceRequest && (
+          <Box sx={{ borderTop: 1, borderColor: "divider" }}>
+            {/* Service Details Collapsible */}
+            <Paper elevation={1} sx={{ borderBottom: 1, borderColor: "divider" }}>
+              <Box 
+                sx={{ 
+                  p: 2, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  cursor: 'pointer',
+                  '&:hover': { backgroundColor: 'action.hover' }
+                }}
+                onClick={() => setIsServiceInfoExpanded(!isServiceInfoExpanded)}
+              >
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Info color="primary" />
+                  <Typography variant="h6" fontWeight={600}>
+                    Service Details
+                  </Typography>
+                </Stack>
+                <IconButton size="small">
+                  {isServiceInfoExpanded ? <ExpandLess /> : <ExpandMore />}
+                </IconButton>
+              </Box>
+              
+              <Collapse in={isServiceInfoExpanded}>
+                <Box sx={{ px: 2, pb: 2 }}>
+                  <ServiceRequestInfo
+                    serviceRequest={serviceRequest}
+                    pets={pets}
+                    provider={serviceRequest.assigned_provider}
+                    compact={true}
+                  />
+                </Box>
+              </Collapse>
+            </Paper>
+          </Box>
+        )}
       </Box>
     </Box>
   );
