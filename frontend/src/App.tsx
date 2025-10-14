@@ -35,7 +35,6 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import RealVaccineTracker from "./components/tasks/RealVaccineTracker";
 import { ChatListPage } from "./features/chat/pages/ChatListPage";
 import { ChatPage } from "./features/chat/pages/ChatPage";
-import { MarketplacePostsPage } from "./features/marketplace/pages/MarketplacePostsPage";
 import { ProviderProfilePage } from "./features/services/pages/ProviderProfilePage";
 import { ProviderProfileSetupPage } from "./features/provider/pages/ProviderProfileSetupPage";
 import "./utils/testVaccines"; // Import test utility
@@ -167,7 +166,6 @@ const AppContent = () => {
           <Route path="/test-vaccines" element={<RealVaccineTracker />} />
           <Route path="/chat-list" element={<ChatListPage />} />
           <Route path="/chat/:id" element={<ChatPage />} />
-          <Route path="/marketplace" element={<MarketplacePostsPage />} />
           <Route path="/provider/:id" element={<ProviderProfilePage />} />
           <Route path="/provider-profile-setup" element={<ProviderProfileSetupPage />} />
           <Route path="/auth" element={<Navigate to="/dashboard" replace />} />

@@ -1364,8 +1364,10 @@ export const he = {
     // Service request management
     browseRequests: 'עיין בבקשות',
     myRequests: 'הבקשות שלי',
+    publicPosts: 'פוסטים ציבוריים',
     requestDetails: 'פרטי בקשה',
     noRequestsFound: 'לא נמצאו בקשות',
+    noPublicPosts: 'אין פוסטים ציבוריים זמינים',
     createFirstRequest: 'צור את בקשת השירות הראשונה שלך כדי להתחיל',
     locationNotSpecified: 'מיקום לא צוין',
     noPetsSelected: 'לא נבחרו חיות מחמד',
