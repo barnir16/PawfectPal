@@ -467,7 +467,16 @@ def get_my_conversations(
                 continue
             raise e
 
-    print(f"🔍 Returning {len(conversations)} conversations")
+    # Sort conversations by last message time (most recent first)
+    def get_last_message_time(conversation):
+        if not conversation.messages:
+            return "1970-01-01T00:00:00Z"  # Very old date for conversations with no messages
+        # Get the most recent message (last in the list since messages are sorted by created_at desc)
+        return conversation.messages[-1].created_at
+        
+    conversations.sort(key=get_last_message_time, reverse=True)
+    
+    print(f"🔍 Returning {len(conversations)} conversations (sorted by last message time)")
     return conversations
 
 
