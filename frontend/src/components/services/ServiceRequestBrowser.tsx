@@ -172,7 +172,22 @@ export const ServiceRequestBrowser: React.FC = () => {
       }
     };
 
+    const loadPublicRequests = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await ServiceRequestService.getPublicServicePosts(filters);
+        setPublicRequests(data);
+      } catch (err: any) {
+        setError(err.message || "Failed to load public service requests");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Load both tabs
     loadRequests();
+    loadPublicRequests();
   };
 
   const getServiceTypeColor = (serviceType: string) => {
@@ -353,11 +368,6 @@ export const ServiceRequestBrowser: React.FC = () => {
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
-  };
-
-  const handleRefresh = () => {
-    // Refresh both tabs
-    window.location.reload();
   };
 
   return (
