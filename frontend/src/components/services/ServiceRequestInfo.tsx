@@ -56,6 +56,29 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
   compact = false,
 }) => {
   const { t } = useLocalization();
+  
+  // Debug logging
+  console.log('🔍 ServiceRequestInfo Debug:', {
+    serviceRequest: serviceRequest?.title,
+    petsCount: pets?.length,
+    pets: pets,
+    provider: provider?.username,
+    compact,
+    petsData: pets?.map(pet => ({
+      id: pet.id,
+      name: pet.name,
+      type: pet.type,
+      age: pet.age,
+      birthDate: pet.birthDate,
+      isBirthdayGiven: pet.isBirthdayGiven,
+      weightKg: pet.weightKg,
+      imageUrl: pet.imageUrl,
+      healthIssues: pet.healthIssues,
+      behaviorIssues: pet.behaviorIssues
+    })),
+    petsCondition: pets && pets.length > 0,
+    petsTruthy: !!pets
+  });
 
   const getServiceTypeTranslation = (serviceType: string) => {
     const serviceTypeMap: Record<string, string> = {
@@ -156,8 +179,8 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
       <Paper 
         elevation={1}
         sx={{ 
-          p: 2, 
-          mb: 2, 
+          p: compact ? 1.5 : 2, 
+          mb: compact ? 1 : 2, 
           borderRadius: 2,
           background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
           color: 'white'
@@ -165,7 +188,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
       >
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <Box>
-            <Typography variant="h5" fontWeight={600} sx={{ mb: 0.5 }}>
+            <Typography variant={compact ? "h6" : "h5"} fontWeight={600} sx={{ mb: 0.5 }}>
               {serviceRequest.title}
             </Typography>
             <Typography variant="body2" sx={{ opacity: 0.9 }}>
@@ -182,11 +205,11 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
       </Paper>
 
       {/* Main Content */}
-      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: compact ? 'column' : 'row' }, gap: compact ? 1 : 2 }}>
         {/* Left Column - Service Details */}
         <Box sx={{ flex: 1 }}>
-          <Paper elevation={1} sx={{ p: 2, borderRadius: 2, height: '100%' }}>
-            <Typography variant="h6" fontWeight={600} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Paper elevation={1} sx={{ p: compact ? 1.5 : 2, borderRadius: 2, height: compact ? 'auto' : '100%' }}>
+            <Typography variant={compact ? "subtitle1" : "h6"} fontWeight={600} sx={{ mb: compact ? 1 : 2, display: 'flex', alignItems: 'center', gap: 1 }}>
               <Description color="primary" />
               Service Details
             </Typography>
@@ -327,18 +350,18 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
             )}
 
             {/* Pets Information */}
-            {pets.length > 0 && (
+            {pets && pets.length > 0 && (
               <Box>
-                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: compact ? 1 : 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Pets color="primary" />
                   {t('common.pets')} ({pets.length})
                 </Typography>
-                <Stack spacing={2}>
+                <Stack spacing={compact ? 1.5 : 2}>
                   {pets.map((pet) => (
-                    <Paper key={pet.id} elevation={0} sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 2 }}>
+                    <Paper key={pet.id} elevation={0} sx={{ p: compact ? 1.5 : 2, border: 1, borderColor: 'divider', borderRadius: 2 }}>
                       <Stack direction="row" alignItems="center" spacing={2}>
                         <Avatar 
-                          sx={{ width: 50, height: 50, backgroundColor: 'primary.light' }}
+                          sx={{ width: compact ? 40 : 50, height: compact ? 40 : 50, backgroundColor: 'primary.light' }}
                           src={pet.imageUrl}
                         >
                           <Pets />
@@ -346,14 +369,14 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
                         
                         {/* Pet Details */}
                         <Box sx={{ flex: 1 }}>
-                          <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
+                          <Typography variant={compact ? "subtitle1" : "h6"} fontWeight={600} sx={{ mb: 1 }}>
                             {pet.name}
                           </Typography>
                           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                             {getSpeciesTranslation(pet.type)} {pet.breed && `• ${pet.breed}`}
                           </Typography>
                           
-                          <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
+                          <Stack direction="row" spacing={compact ? 1 : 2} sx={{ mt: 1 }} flexWrap="wrap">
                             {(pet.birthDate || pet.age) && (
                               <Chip
                                 icon={<Cake />}

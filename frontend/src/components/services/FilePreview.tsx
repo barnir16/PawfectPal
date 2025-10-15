@@ -86,14 +86,37 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
       fileType: attachment.file_type,
       fileUrl: attachment.file_url,
       isImage,
-      isVideo
+      isVideo,
+      fullUrl: getFullImageUrl(attachment.file_url),
+      onOpen: !!onOpen,
+      previewOpen: previewOpen
     });
     
     if (isImage || isVideo) {
+      console.log('🖼️ Opening image/video preview');
       setPreviewOpen(true);
     } else {
+      console.log('🖼️ Calling onOpen handler');
       onOpen?.(attachment);
     }
+  };
+
+  // Helper function to get full URL for images
+  const getFullImageUrl = (url: string) => {
+    if (!url) return '';
+    
+    if (url.startsWith('http')) {
+      return url;
+    }
+    
+    // If it's a relative path, prepend the base URL
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://pawfectpal-production.up.railway.app' 
+      : 'http://localhost:8000';
+    
+    const fullUrl = baseUrl + (url.startsWith('/') ? url : '/' + url);
+    console.log('🖼️ Image URL constructed:', { original: url, full: fullUrl });
+    return fullUrl;
   };
 
   const handleDownload = (e: React.MouseEvent) => {
@@ -119,7 +142,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
           <CardMedia
             component="img"
             height="120"
-            image={attachment.file_url}
+            image={getFullImageUrl(attachment.file_url)}
             alt={attachment.file_name}
             onError={() => setImageError(true)}
             sx={{ objectFit: 'cover' }}
@@ -186,7 +209,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
           <CardMedia
             component="img"
             height="200"
-            image={attachment.file_url}
+            image={getFullImageUrl(attachment.file_url)}
             alt={attachment.file_name}
             onError={() => setImageError(true)}
             sx={{ objectFit: 'cover' }}
@@ -299,7 +322,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
           {isImage && (
             <Box
               component="img"
-              src={attachment.file_url}
+              src={getFullImageUrl(attachment.file_url)}
               alt={attachment.file_name}
               sx={{
                 width: '100%',
