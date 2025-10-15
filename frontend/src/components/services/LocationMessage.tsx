@@ -47,10 +47,15 @@ export const LocationMessage: React.FC<LocationMessageProps> = ({ message, compa
   const getGoogleMapsApiKey = () => {
     // Try to get from environment variable first
     const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-    if (apiKey) return apiKey;
+    if (apiKey) {
+      console.log('📍 Using Google Maps API key from environment:', apiKey.substring(0, 10) + '...');
+      return apiKey;
+    }
     
     // Fallback to a public key (may have usage limits)
-    return 'AIzaSyBFw0Qbyq9zTFTd-tUY6dOWWgU6xVqjJkY';
+    const fallbackKey = 'AIzaSyBFw0Qbyq9zTFTd-tUY6dOWWgU6xVqjJkY';
+    console.log('📍 Using fallback Google Maps API key:', fallbackKey.substring(0, 10) + '...');
+    return fallbackKey;
   };
 
   const handleOpenInMaps = () => {
@@ -127,8 +132,12 @@ export const LocationMessage: React.FC<LocationMessageProps> = ({ message, compa
                     height: '100%',
                     objectFit: 'cover',
                   }}
-                  onError={() => {
+                  onLoad={() => {
+                    console.log('📍 Map preview loaded successfully');
+                  }}
+                  onError={(e) => {
                     console.log('📍 Map preview failed to load');
+                    console.log('📍 Map URL:', `https://maps.googleapis.com/maps/api/staticmap?center=${latitude},${longitude}&zoom=15&size=300x120&markers=color:red%7C${latitude},${longitude}&key=${getGoogleMapsApiKey()}`);
                     setMapError(true);
                   }}
                 />
