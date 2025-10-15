@@ -114,6 +114,8 @@ export const BookService = () => {
                 // TODO: Navigate to chat or show success message
               }}
               onViewProfile={(provider) => {
+                console.log('🔍 Provider profile click:', provider);
+                console.log('🔍 Provider ID:', provider.id, 'Type:', typeof provider.id);
                 navigate(`/provider/${provider.id}`);
               }}
             />

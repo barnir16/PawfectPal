@@ -63,7 +63,15 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
     petsCount: pets?.length,
     pets: pets,
     provider: provider?.username,
-    compact
+    compact,
+    petsData: pets?.map(pet => ({
+      id: pet.id,
+      name: pet.name,
+      type: pet.type,
+      age: pet.age,
+      birthDate: pet.birthDate,
+      isBirthdayGiven: pet.isBirthdayGiven
+    }))
   });
 
   const getServiceTypeTranslation = (serviceType: string) => {
