@@ -1211,6 +1211,7 @@ export const he = {
     searchMessages: 'חיפוש הודעות',
     searchPlaceholder: 'חפש בהודעות...',
     noSearchResults: 'לא נמצאו הודעות התואמות לחיפוש שלך.',
+    selectedFiles: 'קבצים נבחרים',
     searchHint: 'הקלד כדי לחפש בהודעות שלך...',
     download: 'הורד',
     open: 'פתח',
