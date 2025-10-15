@@ -189,7 +189,7 @@ async def upload_chat_attachment(
 
         # Return file info for chat message with full URL
         file_url = (
-            f"https://pawfectpal-production-2f07.up.railway.app/uploads/images/{filename}"
+            f"https://pawfectpal-production.up.railway.app/uploads/images/{filename}"
         )
 
         return {

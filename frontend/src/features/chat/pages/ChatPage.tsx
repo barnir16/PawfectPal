@@ -14,7 +14,21 @@ import {
   Stack,
   Collapse,
 } from "@mui/material";
-import { ArrowBack, Home, Message, Wifi, WifiOff, Info, ExpandLess, ExpandMore } from "@mui/icons-material";
+import { 
+  ArrowBack, 
+  Home, 
+  Message, 
+  Wifi, 
+  WifiOff, 
+  Info, 
+  ExpandLess, 
+  ExpandMore,
+  Pets,
+  LocationOn,
+  AttachMoney,
+  Person,
+  Business
+} from "@mui/icons-material";
 import { EnhancedChatWindow } from "../../../components/services/EnhancedChatWindow";
 import { ServiceRequestInfo } from "../../../components/services/ServiceRequestInfo";
 import { createTask } from "../../../services/tasks/taskService";
@@ -695,43 +709,124 @@ export const ChatPage = () => {
             />
         </Box>
         
-        {/* Collapsible Service Information Panes */}
+        {/* Service Details Section */}
         {serviceRequest && (
           <Box sx={{ borderTop: 1, borderColor: "divider" }}>
-            {/* Service Details Collapsible */}
-            <Paper elevation={1} sx={{ borderBottom: 1, borderColor: "divider" }}>
-              <Box 
-                sx={{ 
-                  p: 2, 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'space-between',
-                  cursor: 'pointer',
-                  '&:hover': { backgroundColor: 'action.hover' }
-                }}
-                onClick={() => setIsServiceInfoExpanded(!isServiceInfoExpanded)}
-              >
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <Info color="primary" />
-                  <Typography variant="h6" fontWeight={600}>
+            <Paper elevation={1} sx={{ p: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+                <Typography variant="h6" fontWeight={600}>
+                  {serviceRequest.title}
+                </Typography>
+                <Chip
+                  label={serviceRequest.status.replace('_', ' ').toUpperCase()}
+                  size="small"
+                  color={
+                    serviceRequest.status === 'completed' ? 'success' :
+                    serviceRequest.status === 'in_progress' ? 'primary' :
+                    serviceRequest.status === 'closed' ? 'default' :
+                    'warning'
+                  }
+                />
+              </Box>
+
+              {/* Service Details Grid */}
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 }}>
+                {/* Left Column - Service Info */}
+                <Box>
+                  <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
                     Service Details
                   </Typography>
-                </Stack>
-                <IconButton size="small">
-                  {isServiceInfoExpanded ? <ExpandLess /> : <ExpandMore />}
-                </IconButton>
-              </Box>
-              
-              <Collapse in={isServiceInfoExpanded}>
-                <Box sx={{ px: 2, pb: 2 }}>
-                  <ServiceRequestInfo
-                    serviceRequest={serviceRequest}
-                    pets={pets}
-                    provider={serviceRequest.assigned_provider}
-                    compact={true}
-                  />
+                  <Stack spacing={1}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Pets fontSize="small" color="action" />
+                      <Typography variant="body2">
+                        <strong>Type:</strong> {serviceRequest.service_type}
+                      </Typography>
+                    </Box>
+                    
+                    {serviceRequest.location && (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <LocationOn fontSize="small" color="action" />
+                        <Typography variant="body2">
+                          <strong>Location:</strong> {serviceRequest.location}
+                        </Typography>
+                      </Box>
+                    )}
+                    
+                    {(serviceRequest.budget_min || serviceRequest.budget_max) && (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <AttachMoney fontSize="small" color="action" />
+                        <Typography variant="body2">
+                          <strong>Budget:</strong> 
+                          {serviceRequest.budget_min && serviceRequest.budget_max 
+                            ? ` $${serviceRequest.budget_min} - $${serviceRequest.budget_max}`
+                            : serviceRequest.budget_min 
+                              ? ` From $${serviceRequest.budget_min}`
+                              : ` Up to $${serviceRequest.budget_max}`
+                          }
+                        </Typography>
+                      </Box>
+                    )}
+                  </Stack>
                 </Box>
-              </Collapse>
+
+                {/* Right Column - People & Pets */}
+                <Box>
+                  <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+                    People & Pets
+                  </Typography>
+                  <Stack spacing={1}>
+                    {/* Client Info */}
+                    {serviceRequest.user && (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <Person fontSize="small" color="action" />
+                        <Typography variant="body2">
+                          <strong>Client:</strong> {serviceRequest.user.full_name || serviceRequest.user.username}
+                        </Typography>
+                      </Box>
+                    )}
+                    
+                    {/* Assigned Provider */}
+                    {serviceRequest.assigned_provider && (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <Business fontSize="small" color="primary" />
+                        <Typography variant="body2">
+                          <strong>Provider:</strong> {serviceRequest.assigned_provider.full_name || serviceRequest.assigned_provider.username}
+                        </Typography>
+                      </Box>
+                    )}
+                    
+                    {/* Pets */}
+                    {serviceRequest.pets && serviceRequest.pets.length > 0 && (
+                      <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
+                        <Pets fontSize="small" color="action" />
+                        <Box>
+                          <Typography variant="body2">
+                            <strong>Pet{serviceRequest.pets.length > 1 ? 's' : ''}:</strong>
+                          </Typography>
+                          {serviceRequest.pets.map((pet, index) => (
+                            <Typography key={pet.id} variant="caption" sx={{ display: "block", ml: 1 }}>
+                              {pet.name} ({pet.type}{pet.breed ? ` - ${pet.breed}` : ''})
+                            </Typography>
+                          ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Stack>
+                </Box>
+              </Box>
+
+              {/* Description */}
+              {serviceRequest.description && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+                    Description
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {serviceRequest.description}
+                  </Typography>
+                </Box>
+              )}
             </Paper>
           </Box>
         )}
