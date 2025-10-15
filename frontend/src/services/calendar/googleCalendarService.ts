@@ -1,4 +1,5 @@
 import { Task } from '../../types/tasks/task';
+import { configService } from '../config/firebaseConfigService';
 
 export interface GoogleCalendarEvent {
   summary: string;
@@ -38,7 +39,6 @@ class GoogleCalendarService {
   private async loadConfig() {
     try {
       // Load configuration from Firebase Remote Config
-      const { configService } = await import('../config/firebaseConfigService');
       const apiConfig = configService.getApiConfig();
       
       this.config = {
