@@ -70,8 +70,14 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
       type: pet.type,
       age: pet.age,
       birthDate: pet.birthDate,
-      isBirthdayGiven: pet.isBirthdayGiven
-    }))
+      isBirthdayGiven: pet.isBirthdayGiven,
+      weightKg: pet.weightKg,
+      imageUrl: pet.imageUrl,
+      healthIssues: pet.healthIssues,
+      behaviorIssues: pet.behaviorIssues
+    })),
+    petsCondition: pets && pets.length > 0,
+    petsTruthy: !!pets
   });
 
   const getServiceTypeTranslation = (serviceType: string) => {
