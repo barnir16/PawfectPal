@@ -514,9 +514,17 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
   // Helper function to parse attachment data from message
   const parseMessageAttachments = (message: ChatMessage): MediaAttachment[] => {
+    console.log('🔍 parseMessageAttachments Debug:', {
+      messageId: message.id,
+      messageType: message.message_type,
+      messageMetadata: message.message_metadata,
+      hasAttachments: !!message.message_metadata?.attachments,
+      attachments: message.message_metadata?.attachments
+    });
+    
     // First try to get attachments from message_metadata
     if (message.message_metadata?.attachments && Array.isArray(message.message_metadata.attachments)) {
-      return message.message_metadata.attachments.map((att: any) => ({
+      const parsed = message.message_metadata.attachments.map((att: any) => ({
         id: att.id,
         file_name: att.file_name,
         file_url: att.file_url,
@@ -524,6 +532,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         file_size: att.file_size,
         created_at: att.created_at,
       }));
+      console.log('🔍 Parsed attachments from metadata:', parsed);
+      return parsed;
     }
     
     // Fallback: try to parse JSON data from message (backward compatibility)
@@ -564,6 +574,18 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   // Helper function to render location messages
   const renderLocationMessage = (message: ChatMessage) => {
     const text = getDisplayMessage(message);
+    
+    console.log('📍 Location message check:', {
+      messageId: message.id,
+      messageType: message.message_type,
+      text: text,
+      isLocation: message.message_type === "location" || 
+        text.includes("Lat:") || 
+        text.includes("Lng:") ||
+        text.includes("📍 Location shared") ||
+        text.includes("Location:") ||
+        text.includes("Coordinates:")
+    });
     
     // Check if this is a location message by type or content
     if (message.message_type === "location" || 
@@ -891,7 +913,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     if (fullUrl.startsWith('/')) {
       // If it's a relative path, prepend the base URL
       const baseUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://pawfectpal-production-2f07.up.railway.app' 
+        ? 'https://pawfectpal-production.up.railway.app' 
         : 'http://localhost:8000';
       fullUrl = baseUrl + fullUrl;
       console.log('📁 Constructed URL:', { baseUrl, originalUrl: attachment.file_url, fullUrl });
@@ -1118,6 +1140,11 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
   const renderMessageAttachments = (attachments: MediaAttachment[]) => {
     console.log("🖼️ Rendering attachments:", attachments);
+    
+    if (attachments.length === 0) {
+      console.log("🖼️ No attachments to render");
+      return null;
+    }
 
     return (
       <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>

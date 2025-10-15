@@ -249,7 +249,7 @@ export class WebSocketService {
 
   private getWebSocketUrl(serviceRequestId: number, token: string): string {
     const baseUrl = process.env.NODE_ENV === 'production' 
-      ? 'wss://pawfectpal-production-2f07.up.railway.app'
+      ? 'wss://pawfectpal-production.up.railway.app'
       : 'ws://localhost:8000';
     
     return `${baseUrl}/ws/chat/${serviceRequestId}?token=${encodeURIComponent(token)}`;
@@ -268,6 +268,15 @@ export class WebSocketService {
 
   private scheduleReconnect(serviceRequestId: number, token: string): void {
     this.reconnectAttempts++;
+    
+    // Disable WebSocket after 5 failed attempts
+    if (this.reconnectAttempts > 5) {
+      console.warn('⚠️ WebSocket disabled after multiple failed attempts. Real-time chat unavailable.');
+      this.isEnabled = false;
+      this.notifyConnectionHandlers(false);
+      return;
+    }
+    
     const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
     
     console.log(`🔄 Scheduling reconnect attempt ${this.reconnectAttempts} in ${delay}ms`);
