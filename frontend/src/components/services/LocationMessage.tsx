@@ -115,13 +115,24 @@ export const LocationMessage: React.FC<LocationMessageProps> = ({ message, compa
               overflow: 'hidden',
               backgroundColor: '#f5f5f5',
               position: 'relative',
-              backgroundImage: `url(https://maps.googleapis.com/maps/api/staticmap?center=${latitude},${longitude}&zoom=15&size=300x120&markers=color:red%7C${latitude},${longitude}&key=${getGoogleMapsApiKey()})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
               border: (theme) => `1px solid ${theme.palette.divider}`,
             }}>
-              {/* Fallback if map fails to load */}
-              {mapError && (
+              {!mapError ? (
+                <Box
+                  component="img"
+                  src={`https://maps.googleapis.com/maps/api/staticmap?center=${latitude},${longitude}&zoom=15&size=300x120&markers=color:red%7C${latitude},${longitude}&key=${getGoogleMapsApiKey()}`}
+                  alt="Map preview"
+                  sx={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                  onError={() => {
+                    console.log('📍 Map preview failed to load');
+                    setMapError(true);
+                  }}
+                />
+              ) : (
                 <Box sx={{
                   position: 'absolute',
                   top: 0,
