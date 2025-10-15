@@ -37,6 +37,8 @@ export class WebSocketService {
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
   private isConnecting = false;
+  private isEnabled = true; // Add missing isEnabled property
+  private pingInterval: NodeJS.Timeout | null = null;
   private messageHandlers: Map<string, ((data: any) => void)[]> = new Map();
   private connectionHandlers: ((connected: boolean) => void)[] = [];
 
@@ -76,6 +78,10 @@ export class WebSocketService {
           this.isConnecting = false;
           this.reconnectAttempts = 0;
           this.notifyConnectionHandlers(true);
+          
+          // Start ping interval to keep connection alive
+          this.startPingInterval();
+          
           resolve(true);
         };
 
@@ -92,6 +98,7 @@ export class WebSocketService {
         this.ws.onclose = (event) => {
           console.log('🔌 WebSocket closed:', event.code, event.reason);
           this.isConnecting = false;
+          this.stopPingInterval(); // Stop ping interval on close
           this.notifyConnectionHandlers(false);
           
           // Attempt to reconnect if not a normal closure
@@ -127,6 +134,10 @@ export class WebSocketService {
   disconnect(): void {
     if (this.ws) {
       console.log('🔌 Disconnecting WebSocket');
+      
+      // Stop ping interval
+      this.stopPingInterval();
+      
       this.ws.close(1000, 'User disconnected');
       this.ws = null;
       this.notifyConnectionHandlers(false);
@@ -286,6 +297,35 @@ export class WebSocketService {
         console.error('❌ Reconnect failed:', error);
       });
     }, delay);
+  }
+
+  /**
+   * Start ping interval to keep connection alive
+   */
+  private startPingInterval(): void {
+    this.stopPingInterval(); // Clear any existing interval
+    
+    this.pingInterval = setInterval(() => {
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        try {
+          this.ws.send(JSON.stringify({ type: 'ping' }));
+          console.log('🏓 Sent ping to keep connection alive');
+        } catch (error) {
+          console.error('❌ Failed to send ping:', error);
+          this.stopPingInterval();
+        }
+      }
+    }, 30000); // Send ping every 30 seconds
+  }
+
+  /**
+   * Stop ping interval
+   */
+  private stopPingInterval(): void {
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+      this.pingInterval = null;
+    }
   }
 }
 

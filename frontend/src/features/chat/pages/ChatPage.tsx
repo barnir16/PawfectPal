@@ -42,7 +42,6 @@ import {
   CheckCircle,
 } from "@mui/icons-material";
 import { EnhancedChatWindow } from "../../../components/services/EnhancedChatWindow";
-import { ServiceRequestInfo } from "../../../components/services/ServiceRequestInfo";
 import { createTask } from "../../../services/tasks/taskService";
 import type {
   ChatConversation,
@@ -674,17 +673,6 @@ export const ChatPage = () => {
             </Box>
           </Paper>
 
-      {/* Service Details Section */}
-      {serviceRequest && (
-        <Box sx={{ borderTop: 1, borderColor: "divider" }}>
-          <ServiceRequestInfo
-            serviceRequest={serviceRequest}
-            pets={pets}
-            provider={serviceRequest.assigned_provider}
-            compact={true}
-          />
-        </Box>
-      )}
 
       {/* Chat Window */}
       <Box sx={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
@@ -723,12 +711,7 @@ export const ChatPage = () => {
                   full_name: serviceRequest.assigned_provider.full_name,
                   is_provider: serviceRequest.assigned_provider.is_provider,
                 } : undefined,
-                pets: serviceRequest.pets?.map(pet => ({
-                  id: pet.id,
-                  name: pet.name,
-                  type: pet.type,
-                  breed: pet.breed,
-                })),
+                pets: serviceRequest.pets,
               } : undefined}
             />
         </Box>

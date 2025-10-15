@@ -70,6 +70,11 @@ import {
   ExpandMore,
   ExpandLess,
   Search,
+  Cake,
+  Scale,
+  ColorLens,
+  MedicalServices,
+  Vaccines,
 } from "@mui/icons-material";
 import { useLocalization } from "../../contexts/LocalizationContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -79,6 +84,7 @@ import type {
   MediaAttachment,
   ReplyToMessage,
 } from "../../types/services/chat";
+import type { Pet } from "../../types/pets/pet";
 import { chatService } from "../../services/chat/chatService";
 import { formatMessageTime } from "../../utils/timeUtils";
 import { ReplyMessage } from "./ReplyMessage";
@@ -122,12 +128,7 @@ interface EnhancedChatWindowProps {
       full_name?: string;
       is_provider: boolean;
     };
-    pets?: Array<{
-      id: number;
-      name: string;
-      type: string;
-      breed?: string;
-    }>;
+    pets?: Pet[];
   };
 }
 
@@ -1458,6 +1459,150 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                       </Stack>
                     </Box>
                   </Box>
+
+                  {/* Detailed Pet Information */}
+                  {serviceRequest.pets && serviceRequest.pets.length > 0 && (
+                    <Box sx={{ mt: 3 }}>
+                      <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
+                        Detailed Pet Information
+                      </Typography>
+                      <Stack spacing={2}>
+                        {serviceRequest.pets.map((pet) => (
+                          <Paper key={pet.id} elevation={1} sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 2 }}>
+                            <Stack direction="row" alignItems="center" spacing={2}>
+                              <Avatar 
+                                sx={{ width: 50, height: 50, backgroundColor: 'primary.light' }}
+                                src={pet.imageUrl}
+                              >
+                                <Pets />
+                              </Avatar>
+                              
+                              {/* Pet Details */}
+                              <Box sx={{ flex: 1 }}>
+                                <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
+                                  {pet.name}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                  {pet.type} {pet.breed && `• ${pet.breed}`}
+                                </Typography>
+                                
+                                <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap">
+                                  {pet.age && (
+                                    <Chip
+                                      icon={<Cake />}
+                                      label={`${pet.age} years old`}
+                                      size="small"
+                                      variant="outlined"
+                                    />
+                                  )}
+                                  {pet.weightKg && (
+                                    <Chip
+                                      icon={<Scale />}
+                                      label={`Weight: ${pet.weightKg} ${pet.weightUnit}`}
+                                      size="small"
+                                      variant="outlined"
+                                      color="secondary"
+                                    />
+                                  )}
+                                  {pet.gender && (
+                                    <Chip
+                                      icon={<Pets />}
+                                      label={`Gender: ${pet.gender}`}
+                                      size="small"
+                                      variant="outlined"
+                                      color="info"
+                                    />
+                                  )}
+                                  {pet.color && (
+                                    <Chip
+                                      icon={<ColorLens />}
+                                      label={`Color: ${pet.color}`}
+                                      size="small"
+                                      variant="outlined"
+                                      color="warning"
+                                    />
+                                  )}
+                                </Stack>
+
+                                {/* Health Status */}
+                                <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+                                  {pet.isVaccinated && (
+                                    <Chip
+                                      icon={<Vaccines />}
+                                      label="Vaccinated"
+                                      size="small"
+                                      color="success"
+                                      variant="outlined"
+                                    />
+                                  )}
+                                  {pet.isNeutered && (
+                                    <Chip
+                                      icon={<MedicalServices />}
+                                      label="Neutered"
+                                      size="small"
+                                      color="info"
+                                      variant="outlined"
+                                    />
+                                  )}
+                                  {pet.isMicrochipped && (
+                                    <Chip
+                                      icon={<CheckCircle />}
+                                      label="Microchipped"
+                                      size="small"
+                                      color="primary"
+                                      variant="outlined"
+                                    />
+                                  )}
+                                </Stack>
+
+                                {/* Health Issues */}
+                                {pet.healthIssues && pet.healthIssues.length > 0 && (
+                                  <Box sx={{ mt: 1 }}>
+                                    <Typography variant="caption" color="warning.main" sx={{ fontWeight: 600 }}>
+                                      Health Issues: {pet.healthIssues.join(', ')}
+                                    </Typography>
+                                  </Box>
+                                )}
+
+                                {/* Behavior Issues */}
+                                {pet.behaviorIssues && pet.behaviorIssues.length > 0 && (
+                                  <Box sx={{ mt: 1 }}>
+                                    <Typography variant="caption" color="warning.main" sx={{ fontWeight: 600 }}>
+                                      Behavior Issues: {pet.behaviorIssues.join(', ')}
+                                    </Typography>
+                                  </Box>
+                                )}
+
+                                {/* Medical Notes */}
+                                {pet.medicalNotes && (
+                                  <Box sx={{ mb: 1 }}>
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                      Medical Notes:
+                                    </Typography>
+                                    <Typography variant="body2" color="text.primary" sx={{ fontStyle: 'italic', backgroundColor: 'action.hover', p: 1, borderRadius: 1 }}>
+                                      {pet.medicalNotes}
+                                    </Typography>
+                                  </Box>
+                                )}
+
+                                {/* General Notes */}
+                                {pet.notes && (
+                                  <Box>
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                      Notes:
+                                    </Typography>
+                                    <Typography variant="body2" color="text.primary" sx={{ backgroundColor: 'action.hover', p: 1, borderRadius: 1 }}>
+                                      {pet.notes}
+                                    </Typography>
+                                  </Box>
+                                )}
+                              </Box>
+                            </Stack>
+                          </Paper>
+                        ))}
+                      </Stack>
+                    </Box>
+                  )}
 
                   {/* Description */}
                   {serviceRequest.description && (
