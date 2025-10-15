@@ -89,6 +89,9 @@ async def websocket_chat_endpoint(
                     await handle_message_read(message_data, current_user, service_request_id, db)
                 elif message_data.get("type") == "message_delivered":
                     await handle_message_delivered(message_data, current_user, service_request_id, db)
+                elif message_data.get("type") == "ping":
+                    # Handle ping to keep connection alive
+                    await websocket.send_text(json.dumps({"type": "pong"}))
                 else:
                     logger.warning(f"Unknown message type: {message_data.get('type')}")
                     
