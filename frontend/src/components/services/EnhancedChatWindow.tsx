@@ -594,8 +594,10 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         text.includes("📍 Location shared") ||
         text.includes("Location:") ||
         text.includes("Coordinates:")) {
+      console.log('📍 Rendering LocationMessage component');
       return <LocationMessage message={text} compact={true} />;
     }
+    console.log('📍 Not a location message, returning null');
     return null;
   };
 
@@ -1149,6 +1151,16 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       console.log("🖼️ No attachments to render");
       return null;
     }
+
+    console.log('🖼️ EnhancedChatWindow: Rendering attachments:', {
+      attachmentsCount: attachments.length,
+      attachments: attachments.map(att => ({
+        id: att.id,
+        fileName: att.file_name,
+        fileUrl: att.file_url,
+        fileType: att.file_type
+      }))
+    });
 
     return (
       <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>

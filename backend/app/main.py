@@ -64,7 +64,7 @@ def health_check():
         "version": "1.1.1",
         "firebase_fixed": True,
         "cors_fixed": True,
-        "deployment_time": "2025-01-21T23:58:00Z",
+        "deployment_time": "2025-01-21T23:59:30Z",
         "chat_fixed": True,
         "db_schema_fixed": True,
         "sqlalchemy_reserved_word_fixed": True,
