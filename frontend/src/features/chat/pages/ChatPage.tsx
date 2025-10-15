@@ -17,6 +17,7 @@ import {
 import { ArrowBack, Home, Message, Wifi, WifiOff, Info, ExpandLess, ExpandMore } from "@mui/icons-material";
 import { EnhancedChatWindow } from "../../../components/services/EnhancedChatWindow";
 import { ServiceRequestInfo } from "../../../components/services/ServiceRequestInfo";
+import { createTask } from "../../../services/tasks/taskService";
 import type {
   ChatConversation,
   ChatMessage,
@@ -437,8 +438,7 @@ export const ChatPage = () => {
         isCompleted: false,
       };
 
-      // Import task service dynamically to avoid circular dependencies
-      const { createTask } = await import('../../../services/tasks/taskService');
+      // Create task using imported service
       const newTask = await createTask(taskData);
       
       console.log('✅ Task created for meeting:', newTask);
