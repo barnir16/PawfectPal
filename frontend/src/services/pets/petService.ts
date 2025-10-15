@@ -1,5 +1,5 @@
 import { apiRequest } from '../api';
-import type { Pet } from '../../types/pets';
+import type { Pet, PetType, PetGender } from '../../types/pets';
 import type { LocationHistory } from '../../types/location';
 import type { UploadResponse } from '../../types/common';
 
@@ -65,57 +65,66 @@ export const transformPetToBackend = (pet: Omit<Pet, 'id'>): BackendPetCreate =>
  * Transform backend pet data to frontend Pet format
  */
 const transformPetFromBackend = (backendPet: any): Pet => {
-  return {
+  console.log('🔄 Transforming pet from backend:', backendPet);
+  
+  const transformedPet = {
     // Basic information
     id: backendPet.id,
     name: backendPet.name,
-    type: backendPet.breed_type || backendPet.type,
-    breed: backendPet.breed,
+    type: (backendPet.breed_type || backendPet.type || 'other') as PetType,
+    breed: backendPet.breed || 'Unknown',
     
     // Physical attributes
     age: backendPet.age,
-    birthDate: backendPet.birth_date,
-    gender: backendPet.gender,
+    birthDate: backendPet.birth_date || backendPet.birthDate,
+    gender: (backendPet.gender || 'unknown') as PetGender,
     color: backendPet.color,
-    weightKg: backendPet.weight_kg,
-    weightUnit: backendPet.weight_unit || 'kg',
+    weightKg: backendPet.weight_kg || backendPet.weightKg,
+    weightUnit: (backendPet.weight_unit || backendPet.weightUnit || 'kg') as 'kg' | 'lb',
     
     // Health information
-    isNeutered: backendPet.is_neutered || false,
-    isVaccinated: backendPet.is_vaccinated || false,
-    isMicrochipped: backendPet.is_microchipped || false,
-    healthIssues: backendPet.health_issues ? backendPet.health_issues.split(', ').filter(Boolean) : [],
-    behaviorIssues: backendPet.behavior_issues ? backendPet.behavior_issues.split(', ').filter(Boolean) : [],
-    microchipNumber: backendPet.microchip_number,
+    isNeutered: Boolean(backendPet.is_neutered || backendPet.isNeutered),
+    isVaccinated: Boolean(backendPet.is_vaccinated || backendPet.isVaccinated),
+    isMicrochipped: Boolean(backendPet.is_microchipped || backendPet.isMicrochipped),
+    healthIssues: Array.isArray(backendPet.health_issues) 
+      ? backendPet.health_issues 
+      : (backendPet.health_issues ? backendPet.health_issues.split(',').map((s: string) => s.trim()).filter(Boolean) : []),
+    behaviorIssues: Array.isArray(backendPet.behavior_issues) 
+      ? backendPet.behavior_issues 
+      : (backendPet.behavior_issues ? backendPet.behavior_issues.split(',').map((s: string) => s.trim()).filter(Boolean) : []),
+    microchipNumber: backendPet.microchip_number || backendPet.microchipNumber,
     
     // Medical records
-    lastVetVisit: backendPet.last_vet_visit,
-    nextVetVisit: backendPet.next_vet_visit,
-    vetName: backendPet.vet_name,
-    vetPhone: backendPet.vet_phone,
-    vetAddress: backendPet.vet_address,
-    medicalNotes: backendPet.medical_notes,
+    lastVetVisit: backendPet.last_vet_visit || backendPet.lastVetVisit,
+    nextVetVisit: backendPet.next_vet_visit || backendPet.nextVetVisit,
+    vetName: backendPet.vet_name || backendPet.vetName,
+    vetPhone: backendPet.vet_phone || backendPet.vetPhone,
+    vetAddress: backendPet.vet_address || backendPet.vetAddress,
+    medicalNotes: backendPet.medical_notes || backendPet.medicalNotes,
     
     // Media and notes
-    imageUrl: backendPet.photo_uri,
+    imageUrl: backendPet.photo_uri || backendPet.imageUrl,
     notes: backendPet.notes,
     
     // Tracking and location
-    isTrackingEnabled: backendPet.is_tracking_enabled || false,
+    isTrackingEnabled: Boolean(backendPet.is_tracking_enabled || backendPet.isTrackingEnabled),
     lastLocation: backendPet.last_known_latitude && backendPet.last_known_longitude ? {
       latitude: backendPet.last_known_latitude,
       longitude: backendPet.last_known_longitude
     } : undefined,
-    lastSeen: backendPet.last_location_update,
-    isLost: backendPet.is_lost || false,
+    lastSeen: backendPet.last_location_update || backendPet.lastSeen,
+    isLost: Boolean(backendPet.is_lost || backendPet.isLost),
     
     // Metadata
-    isActive: backendPet.is_active !== undefined ? backendPet.is_active : true,
-    isBirthdayGiven: backendPet.is_birthday_given || false,
-    ownerId: backendPet.user_id || 1,
-    createdAt: backendPet.created_at,
-    updatedAt: backendPet.updated_at,
+    isActive: Boolean(backendPet.is_active !== undefined ? backendPet.is_active : true),
+    isBirthdayGiven: Boolean(backendPet.is_birthday_given || backendPet.isBirthdayGiven),
+    ownerId: backendPet.user_id || backendPet.ownerId || 1,
+    createdAt: backendPet.created_at || backendPet.createdAt,
+    updatedAt: backendPet.updated_at || backendPet.updatedAt,
   };
+  
+  console.log('✅ Transformed pet:', transformedPet);
+  return transformedPet;
 };
 
 /**
