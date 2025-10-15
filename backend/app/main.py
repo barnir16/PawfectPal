@@ -95,7 +95,7 @@ app.add_middleware(
 )
 
 # Serve static files (uploaded images)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+# app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")  # Removed duplicate
 
 # Include auth routes first (from user.py router with /auth prefix)
 app.include_router(user.router)

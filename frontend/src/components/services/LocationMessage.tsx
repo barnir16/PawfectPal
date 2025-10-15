@@ -25,8 +25,23 @@ export const LocationMessage: React.FC<LocationMessageProps> = ({ message, compa
     lngMatch,
     latitude,
     longitude,
-    hasCoordinates: !!(latitude && longitude)
+    hasCoordinates: !!(latitude && longitude),
+    willRender: !!(latitude && longitude)
   });
+
+  if (!latitude || !longitude) {
+    console.log('📍 LocationMessage: No valid coordinates found, returning invalid location message');
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+        <LocationOn color="error" />
+        <Typography variant="body2" color="text.secondary">
+          {t('chat.invalidLocation') || 'Invalid location data'}
+        </Typography>
+      </Box>
+    );
+  }
+
+  console.log('📍 LocationMessage: Valid coordinates found, rendering location preview');
 
   // Get Google Maps API key from environment or use a fallback
   const getGoogleMapsApiKey = () => {
@@ -53,17 +68,6 @@ export const LocationMessage: React.FC<LocationMessageProps> = ({ message, compa
       window.open(directionsUrl, '_blank');
     }
   };
-
-  if (!latitude || !longitude) {
-    return (
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-        <LocationOn color="error" />
-        <Typography variant="body2" color="text.secondary">
-          {t('chat.invalidLocation') || 'Invalid location data'}
-        </Typography>
-      </Box>
-    );
-  }
 
   return (
     <Card 
