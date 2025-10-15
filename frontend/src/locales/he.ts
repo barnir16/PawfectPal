@@ -81,6 +81,7 @@ export const he = {
     repeatUntil: 'חזור עד (אופציונלי)',
     vaccineReminderFrequency: 'תדירות תזכורת חיסון',
     notificationChannels: ' ערוצי התראות',
+    tryAdjustingSearch: 'נסה להפוך את החיפוש שלך',
   },
 
   // Navigation

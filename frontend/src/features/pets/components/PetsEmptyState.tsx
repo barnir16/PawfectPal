@@ -15,7 +15,7 @@ export const PetsEmptyState = ({
 }: PetsEmptyStateProps) => {
   const { t } = useLocalization();
   const emptyMessage = searchTerm || selectedType !== "All"
-    ? t('pets.tryAdjustingSearch')
+    ? t('common.tryAdjustingSearch')
     : t('pets.getStartedAddingFirstPet');
 
   return (

@@ -60,6 +60,7 @@ export const en = {
     select: 'Select',
     selectAll: 'Select All',
     deselectAll: 'Deselect All',
+    tryAdjustingSearch: 'Try adjusting your search',
   },
 
   // Navigation
