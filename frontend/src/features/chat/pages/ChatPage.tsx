@@ -730,12 +730,6 @@ export const ChatPage = () => {
                     provider={serviceRequest.assigned_provider}
                     compact={true}
                   />
-                  {/* Debug info */}
-                  <Box sx={{ mt: 2, p: 2, backgroundColor: 'grey.100', borderRadius: 1 }}>
-                    <Typography variant="caption" color="text.secondary">
-                      Debug: Pets count: {pets.length}, Service Request: {serviceRequest?.title}
-                    </Typography>
-                  </Box>
                 </Box>
               </Collapse>
             </Paper>

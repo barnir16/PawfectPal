@@ -361,7 +361,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
               <Box>
                 <Typography variant="subtitle2" fontWeight={600} sx={{ mb: compact ? 1 : 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Pets color="primary" />
-                  {t('common.pets')} ({pets.length})
+                  {t('common.pets')}
                 </Typography>
                 <Stack spacing={compact ? 1.5 : 2}>
                   {pets.map((pet) => (

@@ -332,18 +332,27 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
                 maxHeight: '80vh',
                 objectFit: 'contain',
               }}
+              onError={(e) => {
+                console.error('❌ Image failed to load in preview dialog:', attachment.file_url);
+                console.error('❌ Constructed URL:', getFullImageUrl(attachment.file_url));
+                setImageError(true);
+              }}
             />
           )}
           
           {isVideo && (
             <Box
               component="video"
-              src={attachment.file_url}
+              src={getFullImageUrl(attachment.file_url)}
               controls
               sx={{
                 width: '100%',
                 height: 'auto',
                 maxHeight: '80vh',
+              }}
+              onError={(e) => {
+                console.error('❌ Video failed to load in preview dialog:', attachment.file_url);
+                console.error('❌ Constructed URL:', getFullImageUrl(attachment.file_url));
               }}
             />
           )}
