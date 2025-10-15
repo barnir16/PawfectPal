@@ -2553,12 +2553,22 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           {selectedMedia && (
             <Box sx={{ textAlign: "center" }}>
               <img
-                src={selectedMedia.file_url}
+                src={selectedMedia.file_url.startsWith('http') ? selectedMedia.file_url : 
+                     (process.env.NODE_ENV === 'production' 
+                       ? 'https://pawfectpal-production-2f07.up.railway.app' + (selectedMedia.file_url.startsWith('/') ? selectedMedia.file_url : '/' + selectedMedia.file_url)
+                       : 'http://localhost:8000' + (selectedMedia.file_url.startsWith('/') ? selectedMedia.file_url : '/' + selectedMedia.file_url))}
                 alt={selectedMedia.file_name}
                 style={{
                   maxWidth: "100%",
                   maxHeight: "70vh",
                   objectFit: "contain",
+                }}
+                onError={(e) => {
+                  console.error('❌ Image failed to load:', selectedMedia.file_url);
+                  console.error('❌ Constructed URL:', selectedMedia.file_url.startsWith('http') ? selectedMedia.file_url : 
+                     (process.env.NODE_ENV === 'production' 
+                       ? 'https://pawfectpal-production-2f07.up.railway.app' + (selectedMedia.file_url.startsWith('/') ? selectedMedia.file_url : '/' + selectedMedia.file_url)
+                       : 'http://localhost:8000' + (selectedMedia.file_url.startsWith('/') ? selectedMedia.file_url : '/' + selectedMedia.file_url)));
                 }}
               />
             </Box>
