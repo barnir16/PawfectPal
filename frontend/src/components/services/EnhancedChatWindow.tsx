@@ -180,7 +180,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   const [offlineMessages, setOfflineMessages] = useState<ChatMessageCreate[]>([]);
   
   // Service request context panel
-  const [showServiceContext, setShowServiceContext] = useState(false);
+  const [showServiceContext, setShowServiceContext] = useState(true);
   
   // Reply functionality
   const [replyingTo, setReplyingTo] = useState<ReplyToMessage | null>(null);
@@ -1497,7 +1497,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                 {pet.age && (
                                   <Chip
                                     icon={<Cake fontSize="small" />}
-                                    label={`${pet.age}y`}
+                                    label={`Age: ${pet.age}y`}
                                     size="small"
                                     variant="outlined"
                                     sx={{ fontSize: '0.7rem', height: 20 }}
@@ -1506,7 +1506,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                 {pet.weightKg && (
                                   <Chip
                                     icon={<Scale fontSize="small" />}
-                                    label={`${pet.weightKg}${pet.weightUnit}`}
+                                    label={`Weight: ${pet.weightKg}${pet.weightUnit || 'kg'}`}
                                     size="small"
                                     variant="outlined"
                                     color="secondary"
@@ -1516,7 +1516,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                 {pet.gender && (
                                   <Chip
                                     icon={<Pets fontSize="small" />}
-                                    label={pet.gender}
+                                    label={`Gender: ${pet.gender}`}
                                     size="small"
                                     variant="outlined"
                                     color="info"
@@ -1526,7 +1526,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                 {pet.color && (
                                   <Chip
                                     icon={<ColorLens fontSize="small" />}
-                                    label={pet.color}
+                                    label={`Color: ${pet.color}`}
                                     size="small"
                                     variant="outlined"
                                     color="warning"
