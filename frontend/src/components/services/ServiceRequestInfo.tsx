@@ -56,6 +56,15 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
   compact = false,
 }) => {
   const { t } = useLocalization();
+  
+  // Debug logging
+  console.log('🔍 ServiceRequestInfo Debug:', {
+    serviceRequest: serviceRequest?.title,
+    petsCount: pets?.length,
+    pets: pets,
+    provider: provider?.username,
+    compact
+  });
 
   const getServiceTypeTranslation = (serviceType: string) => {
     const serviceTypeMap: Record<string, string> = {
@@ -327,7 +336,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
             )}
 
             {/* Pets Information */}
-            {pets.length > 0 && (
+            {pets && pets.length > 0 && (
               <Box>
                 <Typography variant="subtitle2" fontWeight={600} sx={{ mb: compact ? 1 : 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Pets color="primary" />

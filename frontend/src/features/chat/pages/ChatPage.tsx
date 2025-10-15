@@ -236,21 +236,27 @@ export const ChatPage = () => {
         // Fetch pets if they're not included in the service request
         if (serviceRequestData.pet_ids && serviceRequestData.pet_ids.length > 0) {
           try {
+            console.log('🐾 Fetching pets for service request:', serviceRequestData.pet_ids);
             const petsData = await Promise.all(
               serviceRequestData.pet_ids.map(petId => getPet(petId))
             );
-            console.log('🔍 ChatPage: Pets fetched', petsData);
+            console.log('🐾 Pets fetched successfully:', petsData);
             setPets(petsData);
           } catch (petError) {
             console.warn('⚠️ ChatPage: Failed to fetch pets', petError);
             // If service request has pets data, use that as fallback
             if (serviceRequestData.pets) {
+              console.log('🐾 Using pets from service request as fallback:', serviceRequestData.pets);
               setPets(serviceRequestData.pets);
             }
           }
         } else if (serviceRequestData.pets) {
           // Use pets from service request if available
+          console.log('🐾 Using pets from service request:', serviceRequestData.pets);
           setPets(serviceRequestData.pets);
+        } else {
+          console.log('🐾 No pets found for service request');
+          setPets([]);
         }
         
         // Then fetch the conversation
@@ -718,6 +724,12 @@ export const ChatPage = () => {
                     provider={serviceRequest.assigned_provider}
                     compact={true}
                   />
+                  {/* Debug info */}
+                  <Box sx={{ mt: 2, p: 2, backgroundColor: 'grey.100', borderRadius: 1 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      Debug: Pets count: {pets.length}, Service Request: {serviceRequest?.title}
+                    </Typography>
+                  </Box>
                 </Box>
               </Collapse>
             </Paper>

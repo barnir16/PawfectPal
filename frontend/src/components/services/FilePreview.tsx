@@ -98,6 +98,8 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
 
   // Helper function to get full URL for images
   const getFullImageUrl = (url: string) => {
+    if (!url) return '';
+    
     if (url.startsWith('http')) {
       return url;
     }
@@ -107,7 +109,9 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
       ? 'https://pawfectpal-production.up.railway.app' 
       : 'http://localhost:8000';
     
-    return baseUrl + (url.startsWith('/') ? url : '/' + url);
+    const fullUrl = baseUrl + (url.startsWith('/') ? url : '/' + url);
+    console.log('🖼️ Image URL constructed:', { original: url, full: fullUrl });
+    return fullUrl;
   };
 
   const handleDownload = (e: React.MouseEvent) => {
