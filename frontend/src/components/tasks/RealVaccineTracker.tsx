@@ -94,6 +94,8 @@ interface VaccineSuggestion {
   nextDueDate?: string;
   isOverdue?: boolean;
   isDueSoon?: boolean;
+  petId?: number;
+  petName?: string;
 }
 
 interface VaccineTrackerProps {
@@ -128,11 +130,11 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
     
     
     if (region === 'israel') {
-      if (pet.breedType === 'dog') {
+      if (pet.type === 'dog') {
         // Only use puppy vaccines for pets actually under 16 weeks (4 months)
         const isPuppy = ageInWeeks > 0 && ageInWeeks <= 16;
         return isPuppy ? israeliVaccineSchemas.puppies : israeliVaccineSchemas.adultDogs;
-      } else if (pet.breedType === 'cat') {
+      } else if (pet.type === 'cat') {
         // Only use kitten vaccines for pets actually under 16 weeks (4 months)
         const isKitten = ageInWeeks > 0 && ageInWeeks <= 16;
         return isKitten ? israeliVaccineSchemas.kittens : israeliVaccineSchemas.adultCats;
@@ -278,7 +280,7 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
     try {
       // Convert vaccine records to task format for calendar export
       const vaccineTasks = vaccines.map(vaccine => ({
-        id: vaccine.id,
+        id: parseInt(vaccine.id),
         title: `${vaccine.vaccineName} - ${vaccine.petName}`,
         description: `Vaccine: ${vaccine.vaccineName}\nPet: ${vaccine.petName}\nType: ${vaccine.type}`,
         dateTime: vaccine.nextDueDate || new Date().toISOString(),
@@ -306,7 +308,7 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
     try {
       // Convert vaccine records to task format for Google Calendar sync
       const vaccineTasks = vaccines.map(vaccine => ({
-        id: vaccine.id,
+        id: parseInt(vaccine.id),
         title: `${vaccine.vaccineName} - ${vaccine.petName}`,
         description: `Vaccine: ${vaccine.vaccineName}\nPet: ${vaccine.petName}\nType: ${vaccine.type}`,
         dateTime: vaccine.nextDueDate || new Date().toISOString(),
@@ -329,7 +331,7 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
     }
   };
 
-  const getStatusInfo = (vaccine: VaccineRecord) => {
+  const getStatusInfo = (vaccine: VaccineDisplayRecord) => {
     if (vaccine.isOverdue) {
       return { color: 'error', icon: <WarningIcon />, text: 'Overdue' };
     } else if (vaccine.isDueSoon) {
@@ -441,7 +443,7 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
                   <MenuItem key={pet.id} value={pet.id}>
                     <Box display="flex" alignItems="center" gap={1}>
                       <PetsIcon fontSize="small" />
-                      {pet.name} ({pet.breedType} - {pet.breed})
+                      {pet.name} ({pet.type} - {pet.breed})
                     </Box>
                   </MenuItem>
                 ))}
