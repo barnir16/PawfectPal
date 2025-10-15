@@ -19,6 +19,15 @@ export const LocationMessage: React.FC<LocationMessageProps> = ({ message, compa
   const latitude = latMatch ? parseFloat(latMatch[1] || latMatch[2] || latMatch[3]) : null;
   const longitude = lngMatch ? parseFloat(lngMatch[1] || lngMatch[2] || lngMatch[3] || lngMatch[4]) : null;
 
+  console.log('📍 LocationMessage parsing:', {
+    message,
+    latMatch,
+    lngMatch,
+    latitude,
+    longitude,
+    hasCoordinates: !!(latitude && longitude)
+  });
+
   // Get Google Maps API key from environment or use a fallback
   const getGoogleMapsApiKey = () => {
     // Try to get from environment variable first

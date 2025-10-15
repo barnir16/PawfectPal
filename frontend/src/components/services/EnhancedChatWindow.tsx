@@ -910,7 +910,11 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     
     // Ensure we have a full URL for opening
     let fullUrl = attachment.file_url;
-    if (fullUrl.startsWith('/')) {
+    
+    // If it's already a full URL, use as-is
+    if (fullUrl.startsWith('http')) {
+      console.log('📁 File URL is already full:', fullUrl);
+    } else if (fullUrl.startsWith('/')) {
       // If it's a relative path, prepend the base URL
       const baseUrl = process.env.NODE_ENV === 'production' 
         ? 'https://pawfectpal-production-2f07.up.railway.app' 

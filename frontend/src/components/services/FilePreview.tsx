@@ -105,7 +105,9 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
   const getFullImageUrl = (url: string) => {
     if (!url) return '';
     
+    // If it's already a full URL, return as-is
     if (url.startsWith('http')) {
+      console.log('🖼️ Image URL is already full:', url);
       return url;
     }
     
