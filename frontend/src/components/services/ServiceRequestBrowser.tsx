@@ -22,6 +22,8 @@ import {
   Alert,
   CircularProgress,
   Fab,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import {
   Search,
@@ -38,7 +40,6 @@ import {
 } from "@mui/icons-material";
 import { useLocalization } from "../../contexts/LocalizationContext";
 import { ServiceRequestService } from "../../services/serviceRequests/serviceRequestService";
-import { marketplaceService } from "../../services/marketplace/marketplaceService";
 import type {
   ServiceRequestSummary,
   ServiceRequestFilters,
@@ -66,15 +67,29 @@ export const ServiceRequestBrowser: React.FC = () => {
     offset: 0,
   });
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState(0);
+  const [publicRequests, setPublicRequests] = useState<ServiceRequestSummary[]>([]);
 
   // Load service types
   useEffect(() => {
     const loadServiceTypes = async () => {
       try {
-        const types = await marketplaceService.getServiceTypes();
+        const response = await fetch('/api/service-types');
+        const types = await response.json();
         setServiceTypes(types);
       } catch (error) {
         console.error("Failed to load service types:", error);
+        // Fallback to hardcoded service types
+        setServiceTypes([
+          { id: 1, name: 'Dog Walking', description: 'Professional dog walking services' },
+          { id: 2, name: 'Pet Sitting', description: 'In-home pet care services' },
+          { id: 3, name: 'Grooming', description: 'Pet grooming and styling' },
+          { id: 4, name: 'Training', description: 'Pet behavior training' },
+          { id: 5, name: 'Veterinary', description: 'Veterinary care services' },
+          { id: 6, name: 'Boarding', description: 'Pet boarding services' },
+          { id: 7, name: 'Pet Taxi', description: 'Pet transportation services' },
+          { id: 8, name: 'Daycare', description: 'Pet daycare services' }
+        ]);
       }
     };
     loadServiceTypes();
@@ -97,6 +112,24 @@ export const ServiceRequestBrowser: React.FC = () => {
     };
 
     loadRequests();
+  }, [filters]);
+
+  // Load public service requests (marketplace)
+  useEffect(() => {
+    const loadPublicRequests = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await ServiceRequestService.getPublicServicePosts(filters);
+        setPublicRequests(data);
+      } catch (err: any) {
+        setError(err.message || "Failed to load public service requests");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPublicRequests();
   }, [filters]);
 
   // Filter requests based on search query
@@ -139,7 +172,22 @@ export const ServiceRequestBrowser: React.FC = () => {
       }
     };
 
+    const loadPublicRequests = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await ServiceRequestService.getPublicServicePosts(filters);
+        setPublicRequests(data);
+      } catch (err: any) {
+        setError(err.message || "Failed to load public service requests");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Load both tabs
     loadRequests();
+    loadPublicRequests();
   };
 
   const getServiceTypeColor = (serviceType: string) => {
@@ -318,6 +366,10 @@ export const ServiceRequestBrowser: React.FC = () => {
     </Card>
   );
 
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       <Box
@@ -330,11 +382,27 @@ export const ServiceRequestBrowser: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<Add />}
-          onClick={() => navigate("/marketplace")}
+          onClick={() => navigate('/service-request-form')}
         >
           {t("services.createRequest")}
         </Button>
       </Box>
+
+      {/* Tabs */}
+      <Paper sx={{ mb: 3 }}>
+        <Tabs value={activeTab} onChange={handleTabChange} aria-label="service request tabs">
+          <Tab 
+            label={t("services.myRequests")} 
+            icon={<Person />} 
+            iconPosition="start"
+          />
+          <Tab 
+            label={t("services.publicPosts")} 
+            icon={<Visibility />} 
+            iconPosition="start"
+          />
+        </Tabs>
+      </Paper>
 
       {/* Filters and Search */}
       <Paper sx={{ p: 3, mb: 3 }}>
@@ -471,16 +539,40 @@ export const ServiceRequestBrowser: React.FC = () => {
         </Box>
       ) : error ? (
         <Alert severity="error">{error}</Alert>
-      ) : !filteredRequests || filteredRequests.length === 0 ? (
-        <Alert severity="info">
-          {searchQuery
-            ? t("services.noMatchingRequests")
-            : t("services.noRequestsFound")}
-        </Alert>
       ) : (
-        <Grid container spacing={3}>
-          {filteredRequests.map(renderRequestCard)}
-        </Grid>
+        <>
+          {/* My Requests Tab */}
+          {activeTab === 0 && (
+            <>
+              {!filteredRequests || filteredRequests.length === 0 ? (
+                <Alert severity="info">
+                  {searchQuery
+                    ? t("services.noMatchingRequests")
+                    : t("services.noRequestsFound")}
+                </Alert>
+              ) : (
+                <Grid container spacing={3}>
+                  {filteredRequests.map(renderRequestCard)}
+                </Grid>
+              )}
+            </>
+          )}
+
+          {/* Public Posts Tab */}
+          {activeTab === 1 && (
+            <>
+              {!publicRequests || publicRequests.length === 0 ? (
+                <Alert severity="info">
+                  {t("services.noPublicPosts")}
+                </Alert>
+              ) : (
+                <Grid container spacing={3}>
+                  {publicRequests.map(renderRequestCard)}
+                </Grid>
+              )}
+            </>
+          )}
+        </>
       )}
 
       {/* Floating Action Button */}
@@ -488,7 +580,7 @@ export const ServiceRequestBrowser: React.FC = () => {
         color="primary"
         aria-label="add"
         sx={{ position: "fixed", bottom: 16, right: 16 }}
-        onClick={() => navigate("/marketplace")}
+        onClick={() => navigate("/service-request-form")}
       >
         <Add />
       </Fab>

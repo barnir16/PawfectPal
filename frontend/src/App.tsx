@@ -19,6 +19,7 @@ import { BookService } from "./features/services/pages/BookService";
 import { ServiceRequestBrowser } from "./components/services/ServiceRequestBrowser";
 import { ServiceRequestDetails } from "./components/services/ServiceRequestDetails";
 import { MyServiceRequests } from "./components/services/MyServiceRequests";
+import { ServiceRequestForm } from "./components/services/ServiceRequestForm";
 import ServiceDetailsPage from "./features/services/pages/ServiceDetailsPage";
 import { PetForm } from "./features/pets/components/PetForm/PetForm";
 import { PetDetail } from "./features/pets/components/PetDetail/PetDetail";
@@ -34,7 +35,6 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import RealVaccineTracker from "./components/tasks/RealVaccineTracker";
 import { ChatListPage } from "./features/chat/pages/ChatListPage";
 import { ChatPage } from "./features/chat/pages/ChatPage";
-import { MarketplacePostsPage } from "./features/marketplace/pages/MarketplacePostsPage";
 import { ProviderProfilePage } from "./features/services/pages/ProviderProfilePage";
 import { ProviderProfileSetupPage } from "./features/provider/pages/ProviderProfileSetupPage";
 import "./utils/testVaccines"; // Import test utility
@@ -147,6 +147,7 @@ const AppContent = () => {
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/services/:id" element={<ServiceDetailsPage />} />
           <Route path="/bookservice" element={<BookService />} />
+          <Route path="/service-request-form" element={<ServiceRequestForm />} />
           <Route
             path="/service-requests"
             element={
@@ -165,7 +166,6 @@ const AppContent = () => {
           <Route path="/test-vaccines" element={<RealVaccineTracker />} />
           <Route path="/chat-list" element={<ChatListPage />} />
           <Route path="/chat/:id" element={<ChatPage />} />
-          <Route path="/marketplace" element={<MarketplacePostsPage />} />
           <Route path="/provider/:id" element={<ProviderProfilePage />} />
           <Route path="/provider-profile-setup" element={<ProviderProfileSetupPage />} />
           <Route path="/auth" element={<Navigate to="/dashboard" replace />} />

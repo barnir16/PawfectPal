@@ -25,7 +25,7 @@ export const railwayConfig = {
   getApiBaseUrl: () => {
     if (railwayConfig.isRailway()) {
       // Railway production URL
-      return 'https://pawfectpal-production-2f07.up.railway.app';
+      return 'https://pawfectpal-production.up.railway.app';
     }
     // Local development
     return 'http://localhost:8000';

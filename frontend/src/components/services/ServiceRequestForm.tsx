@@ -38,7 +38,14 @@ const serviceRequestSchema = z.object({
   experience_years_min: z.number().min(0).max(50).optional(),
   languages: z.array(z.string()).optional(),
   special_requirements: z.string().optional(),
-  is_urgent: z.boolean().default(false)
+  is_urgent: z.boolean().default(false),
+  
+  // Marketplace functionality
+  request_type: z.enum(['direct', 'public']).default('direct'),
+  is_public: z.boolean().default(false),
+  max_providers: z.number().min(1).max(50).optional(),
+  response_deadline: z.string().optional(),
+  auto_assign: z.boolean().default(false)
 });
 
 type ServiceRequestFormData = z.infer<typeof serviceRequestSchema>;
@@ -77,7 +84,14 @@ export const ServiceRequestForm: React.FC<ServiceRequestFormProps> = ({
       experience_years_min: undefined,
       languages: [],
       special_requirements: '',
-      is_urgent: false
+      is_urgent: false,
+      
+      // Marketplace functionality
+      request_type: 'direct',
+      is_public: false,
+      max_providers: undefined,
+      response_deadline: undefined,
+      auto_assign: false
     }
   });
 
@@ -350,6 +364,131 @@ export const ServiceRequestForm: React.FC<ServiceRequestFormProps> = ({
             )}
           />
         </Grid>
+
+        {/* Request Type Selection */}
+        <Grid size={{ xs: 12 }}>
+          <Typography variant="h6" gutterBottom>
+            {t('services.requestType')}
+          </Typography>
+          <Controller
+            name="request_type"
+            control={control}
+            render={({ field }) => (
+              <FormControl fullWidth>
+                <InputLabel>{t('services.selectRequestType')}</InputLabel>
+                <Select
+                  {...field}
+                  label={t('services.selectRequestType')}
+                >
+                  <MenuItem value="direct">
+                    <Box>
+                      <Typography variant="body1" fontWeight={600}>
+                        {t('services.directRequest')}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {t('services.directRequestDescription')}
+                      </Typography>
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value="public">
+                    <Box>
+                      <Typography variant="body1" fontWeight={600}>
+                        {t('services.publicPost')}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {t('services.publicPostDescription')}
+                      </Typography>
+                    </Box>
+                  </MenuItem>
+                </Select>
+              </FormControl>
+            )}
+          />
+        </Grid>
+
+        {/* Public Post Options */}
+        <Controller
+          name="is_public"
+          control={control}
+          render={({ field }) => {
+            const requestType = watch('request_type');
+            const isPublic = requestType === 'public';
+            
+            return (
+              <>
+                {/* Max Providers */}
+                {isPublic && (
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Controller
+                      name="max_providers"
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          fullWidth
+                          type="number"
+                          label={t('services.maxProviders')}
+                          placeholder="10"
+                          helperText={t('services.maxProvidersHelp')}
+                        />
+                      )}
+                    />
+                  </Grid>
+                )}
+
+                {/* Response Deadline */}
+                {isPublic && (
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Controller
+                      name="response_deadline"
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          fullWidth
+                          type="datetime-local"
+                          label={t('services.responseDeadline')}
+                          InputLabelProps={{ shrink: true }}
+                          helperText={t('services.responseDeadlineHelp')}
+                        />
+                      )}
+                    />
+                  </Grid>
+                )}
+
+                {/* Auto Assign */}
+                {isPublic && (
+                  <Grid size={{ xs: 12 }}>
+                    <Controller
+                      name="auto_assign"
+                      control={control}
+                      render={({ field }) => (
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={field.value}
+                              onChange={field.onChange}
+                            />
+                          }
+                          label={
+                            <Box>
+                              <Typography variant="body1">
+                                {t('services.autoAssign')}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                {t('services.autoAssignDescription')}
+                              </Typography>
+                            </Box>
+                          }
+                        />
+                      )}
+                    />
+                  </Grid>
+                )}
+              </>
+            );
+          }}
+        />
 
         {/* Urgent */}
         <Grid size={{ xs: 12 }}>
