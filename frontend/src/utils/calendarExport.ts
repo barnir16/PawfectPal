@@ -1,4 +1,5 @@
 import type { Task } from '../types/tasks/task';
+import { googleCalendarService } from '../services/calendar/googleCalendarService';
 
 /**
  * Calendar export utility for tasks
@@ -169,8 +170,7 @@ export const syncWithGoogleCalendar = async (
   try {
     console.log('Syncing tasks with Google Calendar...');
     
-    // Import the Google Calendar service
-    const { googleCalendarService } = await import('../services/calendar/googleCalendarService');
+    // Use the imported Google Calendar service
     
     // Check if Google Calendar is configured
     const isConfigured = await googleCalendarService.isConfigured();
