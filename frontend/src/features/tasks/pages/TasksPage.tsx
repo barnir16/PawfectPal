@@ -31,7 +31,6 @@ import BeautifulTaskManager from "../../../components/tasks/BeautifulTaskManager
 import type { Task } from "../../../types/tasks/task";
 import type { Pet } from "../../../types/pets/pet";
 import { useLocalization } from "../../../contexts/LocalizationContext";
-import { testVaccineGeneration } from "../../../utils/testVaccines";
 
 export const Tasks = () => {
   const navigate = useNavigate();
@@ -331,13 +330,6 @@ export const Tasks = () => {
       <Box>
         <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6">Vaccine Tracking</Typography>
-          <Button
-            variant="outlined"
-            onClick={testVaccineGeneration}
-            sx={{ mb: 2 }}
-          >
-            🧪 Test Vaccine Generation
-          </Button>
         </Box>
         <RealVaccineTracker
           onAddVaccine={() => navigate("/tasks/new?type=vaccine")}
