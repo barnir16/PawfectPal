@@ -55,10 +55,6 @@ class FirebaseMessagingService {
         return false;
       }
 
-      // TEMPORARILY DISABLE FCM TO FIX OTHER ISSUES
-      console.log('🔕 FCM temporarily disabled to fix other issues');
-      return false;
-
       // Get Firebase config
       const firebaseConfig = configService.getAll();
       

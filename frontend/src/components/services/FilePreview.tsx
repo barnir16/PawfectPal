@@ -112,12 +112,13 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
     }
     
     // If it's a relative path, prepend the base URL
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://pawfectpal-production.up.railway.app' 
-      : 'http://localhost:8000';
+    const baseUrl = import.meta.env.VITE_API_URL || 
+      (process.env.NODE_ENV === 'production' 
+        ? 'https://pawfectpal-production.up.railway.app' 
+        : 'http://localhost:8000');
     
     const fullUrl = baseUrl + (url.startsWith('/') ? url : '/' + url);
-    console.log('🖼️ Image URL constructed:', { original: url, full: fullUrl });
+    console.log('🖼️ Image URL constructed:', { original: url, full: fullUrl, baseUrl });
     return fullUrl;
   };
 

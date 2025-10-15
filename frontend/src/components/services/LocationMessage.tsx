@@ -52,6 +52,13 @@ export const LocationMessage: React.FC<LocationMessageProps> = ({ message, compa
       return apiKey;
     }
     
+    // Try to get from shared config
+    const sharedApiKey = import.meta.env.VITE_SHARED_GOOGLE_MAPS_API_KEY;
+    if (sharedApiKey) {
+      console.log('📍 Using Google Maps API key from shared config:', sharedApiKey.substring(0, 10) + '...');
+      return sharedApiKey;
+    }
+    
     // Fallback to a public key (may have usage limits)
     const fallbackKey = 'AIzaSyBFw0Qbyq9zTFTd-tUY6dOWWgU6xVqjJkY';
     console.log('📍 Using fallback Google Maps API key:', fallbackKey.substring(0, 10) + '...');
