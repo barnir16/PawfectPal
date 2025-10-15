@@ -1162,6 +1162,7 @@ export const en = {
     searchMessages: 'Search Messages',
     searchPlaceholder: 'Search in messages...',
     noSearchResults: 'No messages found matching your search.',
+    selectedFiles: 'Selected Files',
     searchHint: 'Type to search through your messages...',
     download: 'Download',
     open: 'Open',
