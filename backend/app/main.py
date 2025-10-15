@@ -79,45 +79,20 @@ def railway_test():
         "cors_fix": "simple_clean"
     }
 
-# Manual CORS headers for all responses (more reliable than middleware)
-@app.middleware("http")
-async def add_cors_headers(request, call_next):
-    # Handle preflight requests
-    if request.method == "OPTIONS":
-        response = Response()
-        origin = request.headers.get("origin")
-        if origin in [
-            "https://pawfectpal-production-2f07.up.railway.app",
-            "https://pawfectpal-production.up.railway.app",
-            "http://localhost:3000",
-            "http://localhost:5173"
-        ]:
-            response.headers["Access-Control-Allow-Origin"] = origin
-        else:
-            response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-        response.headers["Access-Control-Allow-Headers"] = "*"
-        response.headers["Access-Control-Expose-Headers"] = "*"
-        return response
-    
-    # Handle actual requests
-    response = await call_next(request)
-    origin = request.headers.get("origin")
-    if origin in [
+# Enhanced CORS configuration for Railway
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
         "https://pawfectpal-production-2f07.up.railway.app",
         "https://pawfectpal-production.up.railway.app",
         "http://localhost:3000",
-        "http://localhost:5173"
-    ]:
-        response.headers["Access-Control-Allow-Origin"] = origin
-    else:
-        response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Credentials"] = "true"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-    response.headers["Access-Control-Allow-Headers"] = "*"
-    response.headers["Access-Control-Expose-Headers"] = "*"
-    return response
+        "http://localhost:5173",
+        "*"
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["*"],
+)
 
 # Serve static files (uploaded images)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
