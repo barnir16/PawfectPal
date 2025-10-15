@@ -8,6 +8,7 @@ export interface WeightRecord {
   date: Date;
   notes?: string;
   source: 'manual' | 'vet' | 'auto';
+  petName?: string; // Add optional petName field
 }
 
 export interface WeightTrend {
@@ -156,7 +157,7 @@ export class WeightMonitoringService {
         petId: latestRecord.petId,
         type: 'health_range',
         severity: 'high',
-        message: t ? t('weight.weightOutsideRange').replace('{weight}', `${latestRecord.weight}`).replace('{unit}', latestRecord.weightUnit).replace('{range}', `${healthRange.minWeight}-${healthRange.maxWeight} ${latestRecord.weightUnit}`) : `Weight (${latestRecord.weight} ${latestRecord.weightUnit}) is below healthy minimum (${healthRange.minWeight} ${healthRange.weightUnit})`,
+        message: t ? t('weight.weightOutsideRange').replace('{weight}', `${latestRecord.weight}`).replace('{unit}', latestRecord.weightUnit).replace('{range}', `${healthRange.minWeight}-${healthRange.maxWeight} ${latestRecord.weightUnit}`) : `Weight (${latestRecord.weight} ${latestRecord.weightUnit}) is below healthy minimum (${healthRange.minWeight} ${healthRange.unit})`,
         date: new Date(),
         isAcknowledged: false,
         recommendedAction: t ? t('weight.consultVeterinarian') : 'Consult your veterinarian about proper nutrition and feeding schedule.'
