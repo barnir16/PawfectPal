@@ -180,7 +180,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   const [offlineMessages, setOfflineMessages] = useState<ChatMessageCreate[]>([]);
   
   // Service request context panel
-  const [showServiceContext, setShowServiceContext] = useState(true);
+  const [showServiceContext, setShowServiceContext] = useState(false);
   
   // Reply functionality
   const [replyingTo, setReplyingTo] = useState<ReplyToMessage | null>(null);
@@ -1466,141 +1466,167 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                       <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
                         Detailed Pet Information
                       </Typography>
-                      <Stack spacing={2}>
+                      <Box sx={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' },
+                        gap: 2 
+                      }}>
                         {serviceRequest.pets.map((pet) => (
-                          <Paper key={pet.id} elevation={1} sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 2 }}>
-                            <Stack direction="row" alignItems="center" spacing={2}>
-                              <Avatar 
-                                sx={{ width: 50, height: 50, backgroundColor: 'primary.light' }}
-                                src={pet.imageUrl}
-                              >
-                                <Pets />
-                              </Avatar>
+                          <Paper key={pet.id} elevation={1} sx={{ p: 1.5, border: 1, borderColor: 'divider', borderRadius: 2 }}>
+                            <Stack spacing={1}>
+                              {/* Pet Header */}
+                              <Stack direction="row" alignItems="center" spacing={1}>
+                                <Avatar 
+                                  sx={{ width: 32, height: 32, backgroundColor: 'primary.light' }}
+                                  src={pet.imageUrl}
+                                >
+                                  <Pets fontSize="small" />
+                                </Avatar>
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                  <Typography variant="subtitle2" fontWeight={600} sx={{ lineHeight: 1.2 }}>
+                                    {pet.name}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
+                                    {pet.type} {pet.breed && `• ${pet.breed}`}
+                                  </Typography>
+                                </Box>
+                              </Stack>
                               
-                              {/* Pet Details */}
-                              <Box sx={{ flex: 1 }}>
-                                <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
-                                  {pet.name}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                  {pet.type} {pet.breed && `• ${pet.breed}`}
-                                </Typography>
-                                
-                                <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap">
-                                  {pet.age && (
-                                    <Chip
-                                      icon={<Cake />}
-                                      label={`${pet.age} years old`}
-                                      size="small"
-                                      variant="outlined"
-                                    />
-                                  )}
-                                  {pet.weightKg && (
-                                    <Chip
-                                      icon={<Scale />}
-                                      label={`Weight: ${pet.weightKg} ${pet.weightUnit}`}
-                                      size="small"
-                                      variant="outlined"
-                                      color="secondary"
-                                    />
-                                  )}
-                                  {pet.gender && (
-                                    <Chip
-                                      icon={<Pets />}
-                                      label={`Gender: ${pet.gender}`}
-                                      size="small"
-                                      variant="outlined"
-                                      color="info"
-                                    />
-                                  )}
-                                  {pet.color && (
-                                    <Chip
-                                      icon={<ColorLens />}
-                                      label={`Color: ${pet.color}`}
-                                      size="small"
-                                      variant="outlined"
-                                      color="warning"
-                                    />
-                                  )}
-                                </Stack>
-
-                                {/* Health Status */}
-                                <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
-                                  {pet.isVaccinated && (
-                                    <Chip
-                                      icon={<Vaccines />}
-                                      label="Vaccinated"
-                                      size="small"
-                                      color="success"
-                                      variant="outlined"
-                                    />
-                                  )}
-                                  {pet.isNeutered && (
-                                    <Chip
-                                      icon={<MedicalServices />}
-                                      label="Neutered"
-                                      size="small"
-                                      color="info"
-                                      variant="outlined"
-                                    />
-                                  )}
-                                  {pet.isMicrochipped && (
-                                    <Chip
-                                      icon={<CheckCircle />}
-                                      label="Microchipped"
-                                      size="small"
-                                      color="primary"
-                                      variant="outlined"
-                                    />
-                                  )}
-                                </Stack>
-
-                                {/* Health Issues */}
-                                {pet.healthIssues && pet.healthIssues.length > 0 && (
-                                  <Box sx={{ mt: 1 }}>
-                                    <Typography variant="caption" color="warning.main" sx={{ fontWeight: 600 }}>
-                                      Health Issues: {pet.healthIssues.join(', ')}
-                                    </Typography>
-                                  </Box>
+                              {/* Basic Info Chips */}
+                              <Stack direction="row" spacing={0.5} flexWrap="wrap" sx={{ gap: 0.5 }}>
+                                {pet.age && (
+                                  <Chip
+                                    icon={<Cake fontSize="small" />}
+                                    label={`${pet.age}y`}
+                                    size="small"
+                                    variant="outlined"
+                                    sx={{ fontSize: '0.7rem', height: 20 }}
+                                  />
                                 )}
-
-                                {/* Behavior Issues */}
-                                {pet.behaviorIssues && pet.behaviorIssues.length > 0 && (
-                                  <Box sx={{ mt: 1 }}>
-                                    <Typography variant="caption" color="warning.main" sx={{ fontWeight: 600 }}>
-                                      Behavior Issues: {pet.behaviorIssues.join(', ')}
-                                    </Typography>
-                                  </Box>
+                                {pet.weightKg && (
+                                  <Chip
+                                    icon={<Scale fontSize="small" />}
+                                    label={`${pet.weightKg}${pet.weightUnit}`}
+                                    size="small"
+                                    variant="outlined"
+                                    color="secondary"
+                                    sx={{ fontSize: '0.7rem', height: 20 }}
+                                  />
                                 )}
-
-                                {/* Medical Notes */}
-                                {pet.medicalNotes && (
-                                  <Box sx={{ mb: 1 }}>
-                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-                                      Medical Notes:
-                                    </Typography>
-                                    <Typography variant="body2" color="text.primary" sx={{ fontStyle: 'italic', backgroundColor: 'action.hover', p: 1, borderRadius: 1 }}>
-                                      {pet.medicalNotes}
-                                    </Typography>
-                                  </Box>
+                                {pet.gender && (
+                                  <Chip
+                                    icon={<Pets fontSize="small" />}
+                                    label={pet.gender}
+                                    size="small"
+                                    variant="outlined"
+                                    color="info"
+                                    sx={{ fontSize: '0.7rem', height: 20 }}
+                                  />
                                 )}
+                                {pet.color && (
+                                  <Chip
+                                    icon={<ColorLens fontSize="small" />}
+                                    label={pet.color}
+                                    size="small"
+                                    variant="outlined"
+                                    color="warning"
+                                    sx={{ fontSize: '0.7rem', height: 20 }}
+                                  />
+                                )}
+                              </Stack>
 
-                                {/* General Notes */}
-                                {pet.notes && (
-                                  <Box>
-                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                              {/* Health Status */}
+                              <Stack direction="row" spacing={0.5} flexWrap="wrap" sx={{ gap: 0.5 }}>
+                                {pet.isVaccinated && (
+                                  <Chip
+                                    icon={<Vaccines fontSize="small" />}
+                                    label="Vaccinated"
+                                    size="small"
+                                    color="success"
+                                    variant="outlined"
+                                    sx={{ fontSize: '0.7rem', height: 20 }}
+                                  />
+                                )}
+                                {pet.isNeutered && (
+                                  <Chip
+                                    icon={<MedicalServices fontSize="small" />}
+                                    label="Neutered"
+                                    size="small"
+                                    color="info"
+                                    variant="outlined"
+                                    sx={{ fontSize: '0.7rem', height: 20 }}
+                                  />
+                                )}
+                                {pet.isMicrochipped && (
+                                  <Chip
+                                    icon={<CheckCircle fontSize="small" />}
+                                    label="Chipped"
+                                    size="small"
+                                    color="primary"
+                                    variant="outlined"
+                                    sx={{ fontSize: '0.7rem', height: 20 }}
+                                  />
+                                )}
+                              </Stack>
+
+                              {/* Issues */}
+                              {(pet.healthIssues?.length > 0 || pet.behaviorIssues?.length > 0) && (
+                                <Box>
+                                  {pet.healthIssues?.length > 0 && (
+                                    <Typography variant="caption" color="warning.main" sx={{ fontWeight: 600, fontSize: '0.7rem' }}>
+                                      Health: {pet.healthIssues.join(', ')}
+                                    </Typography>
+                                  )}
+                                  {pet.behaviorIssues?.length > 0 && (
+                                    <Typography variant="caption" color="warning.main" sx={{ fontWeight: 600, fontSize: '0.7rem', display: 'block' }}>
+                                      Behavior: {pet.behaviorIssues.join(', ')}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              )}
+
+                              {/* Notes */}
+                              {(pet.medicalNotes || pet.notes) && (
+                                <Box>
+                                  {pet.medicalNotes && (
+                                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', fontWeight: 600 }}>
+                                      Medical:
+                                    </Typography>
+                                  )}
+                                  {pet.medicalNotes && (
+                                    <Typography variant="caption" color="text.primary" sx={{ 
+                                      fontSize: '0.7rem', 
+                                      display: 'block', 
+                                      backgroundColor: 'action.hover', 
+                                      p: 0.5, 
+                                      borderRadius: 0.5,
+                                      fontStyle: 'italic'
+                                    }}>
+                                      {pet.medicalNotes.length > 50 ? `${pet.medicalNotes.substring(0, 50)}...` : pet.medicalNotes}
+                                    </Typography>
+                                  )}
+                                  {pet.notes && (
+                                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', fontWeight: 600, display: 'block', mt: 0.5 }}>
                                       Notes:
                                     </Typography>
-                                    <Typography variant="body2" color="text.primary" sx={{ backgroundColor: 'action.hover', p: 1, borderRadius: 1 }}>
-                                      {pet.notes}
+                                  )}
+                                  {pet.notes && (
+                                    <Typography variant="caption" color="text.primary" sx={{ 
+                                      fontSize: '0.7rem', 
+                                      display: 'block', 
+                                      backgroundColor: 'action.hover', 
+                                      p: 0.5, 
+                                      borderRadius: 0.5
+                                    }}>
+                                      {pet.notes.length > 50 ? `${pet.notes.substring(0, 50)}...` : pet.notes}
                                     </Typography>
-                                  </Box>
-                                )}
-                              </Box>
+                                  )}
+                                </Box>
+                              )}
                             </Stack>
                           </Paper>
                         ))}
-                      </Stack>
+                      </Box>
                     </Box>
                   )}
 
