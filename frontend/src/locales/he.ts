@@ -1243,6 +1243,7 @@ export const he = {
     petBehaviorIssues: 'בעיות התנהגות',
     petMedicalNotes: 'הערות רפואיות',
     petNotes: 'הערות',
+    invalidLocation: 'נתוני מיקום לא תקינים',
     requestStatus: {
       open: 'פתוח',
       in_progress: 'בתהליך',

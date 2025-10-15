@@ -1196,6 +1196,7 @@ export const en = {
     petBehaviorIssues: 'Behavior Issues',
     petMedicalNotes: 'Medical Notes',
     petNotes: 'Notes',
+    invalidLocation: 'Invalid location data',
     requestStatus: {
       open: 'Open',
       in_progress: 'In Progress',

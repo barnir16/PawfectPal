@@ -305,6 +305,18 @@ export const ChatPage = () => {
     fetchData();
   }, [id]);
 
+  // Debug effect for ServiceRequestInfo rendering
+  useEffect(() => {
+    if (serviceRequest) {
+      console.log('🔍 ChatPage: Rendering ServiceRequestInfo with:', {
+        serviceRequest: serviceRequest?.title,
+        petsCount: pets?.length,
+        pets: pets,
+        provider: serviceRequest.assigned_provider?.username
+      });
+    }
+  }, [serviceRequest, pets]);
+
   const handleSendMessage = async (msg: ChatMessageCreate) => {
     if (!conversation) return;
     
