@@ -11,8 +11,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application
 COPY . .
 
+# Make startup script executable
+RUN chmod +x start.sh
+
 # Expose port
 EXPOSE 8080
 
-# Start the application with Railway-compatible port handling
-CMD ["sh", "-c", "PORT=${PORT:-8080} && echo \"Starting on port $PORT\" && python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT"]
+# Start the application with migrations
+CMD ["./start.sh"]

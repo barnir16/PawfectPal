@@ -2,6 +2,7 @@ from fastapi import FastAPI, Response, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
+import os
 from app.dependencies.db import get_db
 from app.models.user import UserORM
 from app.models.provider_profile import ProviderProfileORM
@@ -35,6 +36,18 @@ try:
 except Exception as e:
     print(f"AI router import failed: {e}")
     AI_AVAILABLE = False
+
+# Run migrations on startup if requested
+if os.getenv("RUN_MIGRATIONS_ON_STARTUP", "false").lower() == "true":
+    try:
+        from alembic.config import Config
+        from alembic import command
+        print("🔄 Running migrations on startup...")
+        alembic_cfg = Config("alembic.ini")
+        command.upgrade(alembic_cfg, "head")
+        print("✅ Migrations completed successfully!")
+    except Exception as e:
+        print(f"❌ Migration failed: {e}")
 
 app = FastAPI(
     title="PawfectPal API",
