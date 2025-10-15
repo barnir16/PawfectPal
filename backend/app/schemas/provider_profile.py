@@ -67,3 +67,4 @@ class ProviderProfileSummary(BaseModel):
     class Config:
         from_attributes = True
 
+

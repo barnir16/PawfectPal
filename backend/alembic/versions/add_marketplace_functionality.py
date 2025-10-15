@@ -69,3 +69,4 @@ def downgrade() -> None:
     op.drop_column('service_requests', 'max_providers')
     op.drop_column('service_requests', 'is_public')
     op.drop_column('service_requests', 'request_type')
+
