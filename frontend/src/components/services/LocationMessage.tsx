@@ -19,6 +19,16 @@ export const LocationMessage: React.FC<LocationMessageProps> = ({ message, compa
   const latitude = latMatch ? parseFloat(latMatch[1] || latMatch[2] || latMatch[3]) : null;
   const longitude = lngMatch ? parseFloat(lngMatch[1] || lngMatch[2] || lngMatch[3] || lngMatch[4]) : null;
 
+  // Get Google Maps API key from environment or use a fallback
+  const getGoogleMapsApiKey = () => {
+    // Try to get from environment variable first
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    if (apiKey) return apiKey;
+    
+    // Fallback to a public key (may have usage limits)
+    return 'AIzaSyBFw0Qbyq9zTFTd-tUY6dOWWgU6xVqjJkY';
+  };
+
   const handleOpenInMaps = () => {
     if (latitude && longitude) {
       // Open in Google Maps
@@ -92,7 +102,7 @@ export const LocationMessage: React.FC<LocationMessageProps> = ({ message, compa
               overflow: 'hidden',
               backgroundColor: '#f5f5f5',
               position: 'relative',
-              backgroundImage: `url(https://maps.googleapis.com/maps/api/staticmap?center=${latitude},${longitude}&zoom=15&size=300x120&markers=color:red%7C${latitude},${longitude}&key=AIzaSyBFw0Qbyq9zTFTd-tUY6dOWWgU6xVqjJkY)`,
+              backgroundImage: `url(https://maps.googleapis.com/maps/api/staticmap?center=${latitude},${longitude}&zoom=15&size=300x120&markers=color:red%7C${latitude},${longitude}&key=${getGoogleMapsApiKey()})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               border: (theme) => `1px solid ${theme.palette.divider}`,
