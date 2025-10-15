@@ -86,7 +86,8 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
       fileType: attachment.file_type,
       fileUrl: attachment.file_url,
       isImage,
-      isVideo
+      isVideo,
+      fullUrl: getFullImageUrl(attachment.file_url)
     });
     
     if (isImage || isVideo) {
