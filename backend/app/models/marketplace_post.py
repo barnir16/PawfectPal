@@ -55,3 +55,4 @@ class MarketplacePostORM(Base):
     def __repr__(self):
         return f"<MarketplacePost(id={self.id}, title='{self.title}', service_type='{self.service_type}')>"
 
+

@@ -74,10 +74,17 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
       weightKg: pet.weightKg,
       imageUrl: pet.imageUrl,
       healthIssues: pet.healthIssues,
-      behaviorIssues: pet.behaviorIssues
+      behaviorIssues: pet.behaviorIssues,
+      gender: pet.gender,
+      weightUnit: pet.weightUnit,
+      breed: pet.breed,
+      color: pet.color
     })),
     petsCondition: pets && pets.length > 0,
-    petsTruthy: !!pets
+    petsTruthy: !!pets,
+    petsType: typeof pets,
+    petsArray: Array.isArray(pets),
+    firstPet: pets?.[0]
   });
 
   const getServiceTypeTranslation = (serviceType: string) => {

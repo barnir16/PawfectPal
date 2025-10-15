@@ -107,7 +107,32 @@ def get_service_requests(
     )
 
     requests = query.offset(offset).limit(limit).all()
-    return requests
+    
+    # Populate pets for each request
+    from app.schemas.pet import PetRead
+    result = []
+    for request in requests:
+        pets = []
+        if hasattr(request, 'pet_ids') and request.pet_ids:
+            pets = db.query(PetORM).filter(PetORM.id.in_(request.pet_ids)).all()
+        
+        request_data = {
+            "id": request.id,
+            "title": request.title,
+            "service_type": request.service_type,
+            "location": request.location,
+            "budget_min": request.budget_min,
+            "budget_max": request.budget_max,
+            "is_urgent": request.is_urgent,
+            "created_at": request.created_at,
+            "views_count": request.views_count,
+            "responses_count": request.responses_count,
+            "user": request.user,
+            "pets": [PetRead.model_validate(pet) for pet in pets]
+        }
+        result.append(ServiceRequestSummary.model_validate(request_data))
+    
+    return result
 
 
 @router.get("/my-requests/", response_model=List[ServiceRequestRead])
@@ -122,7 +147,43 @@ def get_my_service_requests(
         .all()
     )
 
-    return requests
+    # Populate pets for each request
+    from app.schemas.pet import PetRead
+    result = []
+    for request in requests:
+        pets = []
+        if hasattr(request, 'pet_ids') and request.pet_ids:
+            pets = db.query(PetORM).filter(PetORM.id.in_(request.pet_ids)).all()
+        
+        request_data = {
+            "id": request.id,
+            "user_id": request.user_id,
+            "assigned_provider_id": request.assigned_provider_id,
+            "service_type": request.service_type,
+            "title": request.title,
+            "description": request.description,
+            "pet_ids": request.pet_ids,
+            "location": request.location,
+            "preferred_dates": request.preferred_dates,
+            "budget_min": request.budget_min,
+            "budget_max": request.budget_max,
+            "experience_years_min": request.experience_years_min,
+            "languages": request.languages,
+            "special_requirements": request.special_requirements,
+            "is_urgent": request.is_urgent,
+            "status": request.status,
+            "views_count": request.views_count,
+            "responses_count": request.responses_count,
+            "created_at": request.created_at,
+            "updated_at": request.updated_at,
+            "expires_at": request.expires_at,
+            "user": request.user,
+            "assigned_provider": request.assigned_provider,
+            "pets": [PetRead.model_validate(pet) for pet in pets]
+        }
+        result.append(ServiceRequestRead.model_validate(request_data))
+    
+    return result
 
 
 @router.get("/{request_id}/", response_model=ServiceRequestRead)
@@ -168,7 +229,41 @@ def get_service_request(
     request.views_count += 1
     db.commit()
 
-    return request
+    # Fetch pets for this service request
+    pets = []
+    if hasattr(request, 'pet_ids') and request.pet_ids:
+        pets = db.query(PetORM).filter(PetORM.id.in_(request.pet_ids)).all()
+    
+    # Create the response with pets populated
+    from app.schemas.pet import PetRead
+    response_data = {
+        "id": request.id,
+        "user_id": request.user_id,
+        "assigned_provider_id": request.assigned_provider_id,
+        "service_type": request.service_type,
+        "title": request.title,
+        "description": request.description,
+        "pet_ids": request.pet_ids,
+        "location": request.location,
+        "preferred_dates": request.preferred_dates,
+        "budget_min": request.budget_min,
+        "budget_max": request.budget_max,
+        "experience_years_min": request.experience_years_min,
+        "languages": request.languages,
+        "special_requirements": request.special_requirements,
+        "is_urgent": request.is_urgent,
+        "status": request.status,
+        "views_count": request.views_count,
+        "responses_count": request.responses_count,
+        "created_at": request.created_at,
+        "updated_at": request.updated_at,
+        "expires_at": request.expires_at,
+        "user": request.user,
+        "assigned_provider": request.assigned_provider,
+        "pets": [PetRead.model_validate(pet) for pet in pets]
+    }
+    
+    return ServiceRequestRead.model_validate(response_data)
 
 
 @router.post("/{request_id}/assign-provider", response_model=ServiceRequestRead)

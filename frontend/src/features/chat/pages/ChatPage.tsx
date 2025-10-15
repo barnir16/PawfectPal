@@ -233,30 +233,36 @@ export const ChatPage = () => {
         console.log('🔍 ChatPage: Service request fetched', serviceRequestData);
         setServiceRequest(serviceRequestData);
         
-        // Fetch pets if they're not included in the service request
-        if (serviceRequestData.pet_ids && serviceRequestData.pet_ids.length > 0) {
-          try {
-            console.log('🐾 Fetching pets for service request:', serviceRequestData.pet_ids);
-            const petsData = await Promise.all(
-              serviceRequestData.pet_ids.map(petId => getPet(petId))
-            );
-            console.log('🐾 Pets fetched successfully:', petsData);
-            setPets(petsData);
-          } catch (petError) {
-            console.warn('⚠️ ChatPage: Failed to fetch pets', petError);
-            // If service request has pets data, use that as fallback
-            if (serviceRequestData.pets) {
-              console.log('🐾 Using pets from service request as fallback:', serviceRequestData.pets);
-              setPets(serviceRequestData.pets);
-            }
-          }
-        } else if (serviceRequestData.pets) {
-          // Use pets from service request if available
+        // Use pets from service request (now populated by backend)
+        if (serviceRequestData.pets && serviceRequestData.pets.length > 0) {
           console.log('🐾 Using pets from service request:', serviceRequestData.pets);
+          console.log('🐾 Pets data structure check:', {
+            pets: serviceRequestData.pets,
+            firstPet: serviceRequestData.pets[0],
+            petsCount: serviceRequestData.pets.length,
+            petsType: typeof serviceRequestData.pets,
+            isArray: Array.isArray(serviceRequestData.pets)
+          });
           setPets(serviceRequestData.pets);
         } else {
-          console.log('🐾 No pets found for service request');
-          setPets([]);
+          console.log('🐾 No pets found in service request, trying to fetch separately');
+          // Fallback: fetch pets separately if not included
+          if (serviceRequestData.pet_ids && serviceRequestData.pet_ids.length > 0) {
+            try {
+              console.log('🐾 Fetching pets for service request:', serviceRequestData.pet_ids);
+              const petsData = await Promise.all(
+                serviceRequestData.pet_ids.map(petId => getPet(petId))
+              );
+              console.log('🐾 Pets fetched successfully:', petsData);
+              setPets(petsData);
+            } catch (petError) {
+              console.warn('⚠️ ChatPage: Failed to fetch pets', petError);
+              setPets([]);
+            }
+          } else {
+            console.log('🐾 No pets found for service request');
+            setPets([]);
+          }
         }
         
         // Then fetch the conversation
