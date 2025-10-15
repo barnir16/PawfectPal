@@ -13,7 +13,7 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
   const { t } = useLocalization();
   let chipColor: "primary" | "secondary" | "default" = "default";
   // Handle both 'type' and 'breedType' for backward compatibility
-  const petType = pet.type || pet.breedType || "other";
+  const petType = pet.type || "other";
   if (petType === "dog") chipColor = "primary";
   else if (petType === "cat") chipColor = "secondary";
 
@@ -27,9 +27,7 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
         name: pet.name,
         age: pet.age,
         birthDate: pet.birthDate,
-        birth_date: pet.birth_date,
         isBirthdayGiven: pet.isBirthdayGiven,
-        is_birthday_given: pet.is_birthday_given,
         ageType: pet.age !== undefined ? 'age field' : 'birthdate',
         fullPetObject: pet,
         timestamp: new Date().toISOString()
@@ -37,8 +35,8 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
     }
     
     // Always prioritize birthdate calculation if birthday is given
-    const birthDate = pet.birthDate || pet.birth_date;
-    if (birthDate && (pet.isBirthdayGiven || pet.is_birthday_given)) {
+    const birthDate = pet.birthDate;
+    if (birthDate && pet.isBirthdayGiven) {
       try {
         // For ISO date strings like '2025-01-01', ensure we parse as local time
         let birth;
@@ -121,7 +119,7 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
 
   // Format weight display
   const formatWeight = () => {
-    const weight = pet.weightKg || pet.weight_kg;
+    const weight = pet.weightKg;
     if (!weight) return t('pets.notSpecified');
     const unit = pet.weightUnit || 'kg';
     const localizedUnit = unit === 'kg' ? t('pets.kg') : t('pets.pounds');
@@ -156,7 +154,8 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
       height: "100%", 
       display: "flex", 
       flexDirection: "column",
-      minWidth: 0, // Allow card to shrink
+      minWidth: 280, // Slightly wider minimum width
+      maxWidth: 350, // Maximum width to prevent cards from being too wide
       overflow: "hidden" // Prevent content overflow
     }}>
       <CardHeader
@@ -168,7 +167,7 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
         }}
         avatar={
           <Avatar
-            src={pet.imageUrl || pet.photo_uri}
+            src={pet.imageUrl}
             alt={pet.name}
             sx={{ width: 60, height: 60, bgcolor: "primary.main" }}
           >
@@ -176,11 +175,8 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
           </Avatar>
         }
         title={
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0, width: "100%" }}>
             <Typography variant="h6" component="div" sx={{ 
-              overflow: "hidden", 
-              textOverflow: "ellipsis", 
-              whiteSpace: "nowrap",
               flex: 1,
               minWidth: 0 
             }}>
@@ -227,20 +223,43 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
         }
       />
       <CardContent sx={{ flexGrow: 1, pt: 0 }}>
-        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-          <Typography variant="body2" color="text.secondary">
-            <strong>{t('pets.age')}:</strong> {displayAge}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            <strong>{t('pets.weight')}:</strong> {formatWeight()}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            <strong>{t('pets.lastVetVisit')}:</strong> {formatDate(pet.lastVetVisit || pet.last_vet_visit)}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            <strong>{t('pets.nextVaccination')}:</strong> {formatDate(pet.nextVetVisit || pet.next_vet_visit)}
-          </Typography>
-        </Box>
+        <Stack spacing={1.5}>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ minWidth: '80px' }}>
+              <strong>{t('pets.age')}:</strong>
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {displayAge}
+            </Typography>
+          </Box>
+
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ minWidth: '80px' }}>
+              <strong>{t('pets.weight')}:</strong>
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {formatWeight()}
+            </Typography>
+          </Box>
+
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ minWidth: '80px' }}>
+              <strong>{t('pets.lastVetVisit')}:</strong>
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {formatDate(pet.lastVetVisit)}
+            </Typography>
+          </Box>
+
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ minWidth: '80px' }}>
+              <strong>{t('pets.nextVaccination')}:</strong>
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {formatDate(pet.nextVetVisit)}
+            </Typography>
+          </Box>
+        </Stack>
       </CardContent>
       <CardActions sx={{ mt: "auto", justifyContent: "flex-end" }}>
         <Button size="small" onClick={() => pet.id && onEdit(pet.id)}>

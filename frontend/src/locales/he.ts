@@ -81,6 +81,7 @@ export const he = {
     repeatUntil: 'חזור עד (אופציונלי)',
     vaccineReminderFrequency: 'תדירות תזכורת חיסון',
     notificationChannels: ' ערוצי התראות',
+    tryAdjustingSearch: 'נסה להפוך את החיפוש שלך',
   },
 
   // Navigation
@@ -810,6 +811,10 @@ export const he = {
     averageWeight: 'משקל ממוצע',
     weightGoals: 'יעדי משקל',
     noGoalsSet: 'לא הוגדרו יעדים',
+    progress: 'התקדמות',
+    goalsDescription: 'מעקב אחר את הדרך של חיית המחמד שלך',
+    setGoalDescription: 'צור יעדים משקל אישיים עבור חיית המחמד שלך',
+    createFirstGoal: 'צור יעד משקל ראשון',
     weightAlerts: 'התראות משקל',
     weightGain: 'עלייה במשקל',
     weightLoss: 'ירידה במשקל',

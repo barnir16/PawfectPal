@@ -60,6 +60,7 @@ export const en = {
     select: 'Select',
     selectAll: 'Select All',
     deselectAll: 'Deselect All',
+    tryAdjustingSearch: 'Try adjusting your search',
   },
 
   // Navigation
@@ -1031,6 +1032,8 @@ export const en = {
     weightTracking: 'Weight Tracking',
     addWeight: 'Add Weight',
     editWeight: 'Edit Weight',
+    editWeightRecord: 'Edit Weight Record',
+    editWeightGoal: 'Edit Weight Goal',
     date: 'Date',
     notes: 'Notes',
     source: 'Source',
@@ -1075,6 +1078,10 @@ export const en = {
     averageWeight: 'Average Weight',
     weightGoals: 'Weight Goals',
     noGoalsSet: 'No Goals Set',
+    progress: 'Progress',
+    goalsDescription: 'Track your pet\'s weight journey and celebrate milestones',
+    setGoalDescription: 'Create personalized weight goals for your pets to track their health journey',
+    createFirstGoal: 'Create First Goal',
     weightAlerts: 'Weight Alerts',
     weightAlertsCount: 'Weight Alerts ({count})',
     weightWarning: 'Weight Warning',

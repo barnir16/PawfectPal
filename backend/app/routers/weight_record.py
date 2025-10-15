@@ -26,12 +26,17 @@ async def get_all_weight_records(
 ):
     """Get all weight records for the current user's pets"""
     try:
+        print(f"🔍 GET REQUEST: limit={limit}, offset={offset}, user_id={current_user.id}")
+
         # Get all pets owned by the current user
         user_pets = db.query(PetORM).filter(PetORM.user_id == current_user.id).all()
         pet_ids = [pet.id for pet in user_pets]
 
         if not pet_ids:
+            print("❌ No pets found for user")
             return []
+
+        print(f"📋 Found {len(user_pets)} pets: {pet_ids}")
 
         # Get weight records for user's pets
         weight_records = (
@@ -43,11 +48,14 @@ async def get_all_weight_records(
             .all()
         )
 
+        print(f"📊 Found {len(weight_records)} weight records")
+
         # Convert to response format with pet information
         result = []
         for record in weight_records:
             pet = next((p for p in user_pets if p.id == record.pet_id), None)
             if pet:
+                print(f"🔄 Processing record {record.id}: weight={record.weight}, notes='{record.notes}'")
                 result.append(
                     WeightRecordWithPet(
                         id=record.id,
@@ -64,8 +72,10 @@ async def get_all_weight_records(
                     )
                 )
 
+        print(f"✅ Returning {len(result)} records")
         return result
     except Exception as e:
+        print(f"❌ Exception in get_all_weight_records: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch weight records: {str(e)}",
@@ -219,15 +229,20 @@ async def update_weight_record(
 ):
     """Update an existing weight record"""
     try:
+        print(f"🔄 UPDATE REQUEST: record_id={record_id}, data={weight_record_update.model_dump()}")
+
         # Get the weight record and verify ownership
         db_weight_record = (
             db.query(WeightRecordORM).filter(WeightRecordORM.id == record_id).first()
         )
 
         if not db_weight_record:
+            print(f"❌ Weight record {record_id} not found")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Weight record not found"
             )
+
+        print(f"📋 Found record: {db_weight_record.weight}kg, notes='{db_weight_record.notes}'")
 
         # Verify the pet belongs to the current user
         pet = (
@@ -239,6 +254,7 @@ async def update_weight_record(
         )
 
         if not pet:
+            print(f"❌ Access denied for record {record_id}")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied to this weight record",
@@ -246,17 +262,24 @@ async def update_weight_record(
 
         # Update the weight record
         update_data = weight_record_update.model_dump(exclude_unset=True)
+        print(f"📝 Update data: {update_data}")
+
         for field, value in update_data.items():
+            print(f"🔄 Setting {field} = {value}")
             setattr(db_weight_record, field, value)
 
+        print(f"💾 Before commit - notes: '{db_weight_record.notes}'")
         db_weight_record.updated_at = datetime.utcnow()
         db.commit()
+        print(f"✅ After commit - notes: '{db_weight_record.notes}'")
         db.refresh(db_weight_record)
+        print(f"🔄 After refresh - notes: '{db_weight_record.notes}'")
 
         return db_weight_record
     except HTTPException:
         raise
     except Exception as e:
+        print(f"❌ Exception in update: {e}")
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
