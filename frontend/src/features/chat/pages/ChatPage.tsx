@@ -320,17 +320,6 @@ export const ChatPage = () => {
     fetchData();
   }, [id]);
 
-  // Debug effect for ServiceRequestInfo rendering
-  useEffect(() => {
-    if (serviceRequest) {
-      console.log('🔍 ChatPage: Rendering ServiceRequestInfo with:', {
-        serviceRequest: serviceRequest?.title,
-        petsCount: pets?.length,
-        pets: pets,
-        provider: serviceRequest.assigned_provider?.username
-      });
-    }
-  }, [serviceRequest, pets]);
 
   const handleSendMessage = async (msg: ChatMessageCreate) => {
     if (!conversation) return;
@@ -1067,6 +1056,18 @@ export const ChatPage = () => {
               } : undefined}
             />
         </Box>
+        
+        {/* Service Details Section */}
+        {serviceRequest && (
+          <Box sx={{ borderTop: 1, borderColor: "divider" }}>
+            <ServiceRequestInfo
+              serviceRequest={serviceRequest}
+              pets={pets}
+              provider={serviceRequest.assigned_provider}
+              compact={true}
+            />
+          </Box>
+        )}
       </Box>
     </Box>
   );
