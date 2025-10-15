@@ -4,7 +4,7 @@
   "webDir": "public",
   "bundledWebRuntime": false,
   "server": {
-    "url": "https://pawfectpal-production-2f07.up.railway.app",
+    "url": "https://pawfectpal-production.up.railway.app",
     "cleartext": true
   }
 }

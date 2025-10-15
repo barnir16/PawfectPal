@@ -103,7 +103,7 @@ export const MyServiceRequests: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<Add />}
-          onClick={() => navigate('/marketplace')}
+          onClick={() => navigate('/service-request-form')}
         >
           {t('services.createRequest')}
         </Button>
@@ -120,7 +120,7 @@ export const MyServiceRequests: React.FC = () => {
           <Button
             variant="contained"
             startIcon={<Add />}
-            onClick={() => navigate('/marketplace')}
+            onClick={() => navigate('/service-request-form')}
           >
             {t('services.createRequest')}
           </Button>
