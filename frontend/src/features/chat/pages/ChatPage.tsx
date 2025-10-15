@@ -12,7 +12,6 @@ import {
   Button,
   Chip,
   Stack,
-  Collapse,
   List,
   ListItem,
   ListItemIcon,
@@ -26,8 +25,6 @@ import {
   Wifi, 
   WifiOff, 
   Info, 
-  ExpandLess, 
-  ExpandMore,
   Pets,
   LocationOn,
   AttachMoney,
@@ -79,7 +76,6 @@ export const ChatPage = () => {
   const [otherUserTyping, setOtherUserTyping] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [offlineStatus, setOfflineStatus] = useState<OfflineStatus>(offlineMessageService.getOfflineStatus());
-  const [isServiceInfoExpanded, setIsServiceInfoExpanded] = useState(false);
   const wsInitialized = useRef(false);
 
   // Initialize message status tracker
@@ -674,9 +670,6 @@ export const ChatPage = () => {
                   size="small"
                   variant="outlined"
                 />
-                <IconButton onClick={() => setIsServiceInfoExpanded(!isServiceInfoExpanded)}>
-                  {isServiceInfoExpanded ? <ExpandLess /> : <ExpandMore />}
-                </IconButton>
               </Box>
             </Box>
           </Paper>
