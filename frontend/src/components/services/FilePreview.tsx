@@ -87,12 +87,16 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
       fileUrl: attachment.file_url,
       isImage,
       isVideo,
-      fullUrl: getFullImageUrl(attachment.file_url)
+      fullUrl: getFullImageUrl(attachment.file_url),
+      onOpen: !!onOpen,
+      previewOpen: previewOpen
     });
     
     if (isImage || isVideo) {
+      console.log('🖼️ Opening image/video preview');
       setPreviewOpen(true);
     } else {
+      console.log('🖼️ Calling onOpen handler');
       onOpen?.(attachment);
     }
   };
