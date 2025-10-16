@@ -900,7 +900,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       
       const response = await fetch(fullUrl);
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw 'HTTP error! status: ' + response.status;
       }
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
