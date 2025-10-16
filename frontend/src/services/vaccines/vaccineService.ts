@@ -1,177 +1,226 @@
-import { apiRequest } from '../api';
-import type { Vaccine, AgeRestriction, VaccinationSchedule } from '../../types/vaccines';
+import { getBaseUrl, getToken } from '../api';
 
-/**
- * Get all vaccines
- */
-export const getVaccines = async (): Promise<Vaccine[]> => {
-  return apiRequest<Vaccine[]>('/vaccines');
-};
+export interface VaccinationRecord {
+  id: number;
+  pet_id: number;
+  vaccine_name: string;
+  vaccine_type: string;
+  date_administered: string;
+  next_due_date: string;
+  batch_number?: string;
+  manufacturer?: string;
+  veterinarian: string;
+  clinic: string;
+  dose_number: number;
+  notes?: string;
+  is_completed: boolean;
+  reminder_sent: boolean;
+  created_at: string;
+  updated_at?: string;
+}
 
-/**
- * Get a single vaccine by ID
- */
-export const getVaccine = async (vaccineId: number): Promise<Vaccine> => {
-  return apiRequest<Vaccine>(`/vaccines/${vaccineId}`);
-};
+export interface VaccinationSummary {
+  pet_id: number;
+  total_vaccinations: number;
+  up_to_date: boolean;
+  next_due_date?: string;
+  overdue_count: number;
+  due_soon_count: number;
+  completed_series: string[];
+}
 
-/**
- * Create a new vaccine record
- */
-export const createVaccine = async (vaccine: Omit<Vaccine, 'id'>): Promise<Vaccine> => {
-  return apiRequest<Vaccine>('/vaccines', {
-    method: 'POST',
-    body: JSON.stringify(vaccine)
-  });
-};
+export interface VaccinationReminder {
+  vaccination_id: number;
+  pet_id: number;
+  pet_name: string;
+  vaccine_name: string;
+  due_date: string;
+  days_until_due: number;
+  is_overdue: boolean;
+}
 
-/**
- * Update an existing vaccine
- */
-export const updateVaccine = async (
-  vaccineId: number, 
-  updates: Partial<Vaccine>
-): Promise<Vaccine> => {
-  return apiRequest<Vaccine>(`/vaccines/${vaccineId}`, {
-    method: 'PATCH',
-    body: JSON.stringify(updates)
-  });
-};
+export interface VaccinationListResponse {
+  vaccinations: VaccinationRecord[];
+  total: number;
+  page: number;
+  page_size: number;
+}
 
-/**
- * Delete a vaccine
- */
-export const deleteVaccine = async (vaccineId: number): Promise<void> => {
-  return apiRequest(`/vaccines/${vaccineId}`, {
-    method: 'DELETE'
-  });
-};
+// Get all vaccinations for a specific pet
+export const getPetVaccinations = async (petId: number): Promise<VaccinationListResponse> => {
+  try {
+    const token = await getToken();
+    const response = await fetch(`${getBaseUrl()}/vaccinations/pet/${petId}/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
-/**
- * Get all age restrictions for vaccines
- */
-export const getAgeRestrictions = async (): Promise<AgeRestriction[]> => {
-  return apiRequest<AgeRestriction[]>('/vaccines/age-restrictions');
-};
+    if (!response.ok) {
+      throw new Error(`Failed to fetch vaccinations: ${response.statusText}`);
+    }
 
-/**
- * Get a single age restriction by ID
- */
-export const getAgeRestriction = async (restrictionId: number): Promise<AgeRestriction> => {
-  return apiRequest<AgeRestriction>(`/vaccines/age-restrictions/${restrictionId}`);
-};
-
-/**
- * Create a new age restriction
- */
-export const createAgeRestriction = async (
-  restriction: Omit<AgeRestriction, 'id'>
-): Promise<AgeRestriction> => {
-  return apiRequest<AgeRestriction>('/vaccines/age-restrictions', {
-    method: 'POST',
-    body: JSON.stringify(restriction)
-  });
-};
-
-/**
- * Update an age restriction
- */
-export const updateAgeRestriction = async (
-  restrictionId: number,
-  updates: Partial<AgeRestriction>
-): Promise<AgeRestriction> => {
-  return apiRequest<AgeRestriction>(`/vaccines/age-restrictions/${restrictionId}`, {
-    method: 'PATCH',
-    body: JSON.stringify(updates)
-  });
-};
-
-/**
- * Delete an age restriction
- */
-export const deleteAgeRestriction = async (restrictionId: number): Promise<void> => {
-  return apiRequest(`/vaccines/age-restrictions/${restrictionId}`, {
-    method: 'DELETE'
-  });
-};
-
-/**
- * Get vaccine schedule for a pet
- */
-export const getPetVaccineSchedule = async (petId: number): Promise<VaccinationSchedule[]> => {
-  return apiRequest<VaccinationSchedule[]>(`/pets/${petId}/vaccine-schedule`);
-};
-
-/**
- * Record a vaccine administration
- */
-export const recordVaccineAdministration = async (
-  petId: number,
-  vaccineId: number,
-  data: {
-    administeredAt: string;
-    nextDueDate?: string;
-    veterinarian?: string;
-    notes?: string;
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching pet vaccinations:', error);
+    throw error;
   }
-): Promise<VaccinationSchedule> => {
-  return apiRequest<VaccinationSchedule>(`/pets/${petId}/vaccinations`, {
-    method: 'POST',
-    body: JSON.stringify({
-      vaccine_id: vaccineId,
-      ...data
-    })
-  });
 };
 
-/**
- * Update a vaccine administration record
- */
-export const updateVaccineAdministration = async (
-  petId: number,
-  administrationId: number,
-  updates: {
-    administeredAt?: string;
-    nextDueDate?: string | null;
-    veterinarian?: string;
-    notes?: string;
+// Get all vaccinations for all user's pets
+export const getAllVaccinations = async (): Promise<VaccinationRecord[]> => {
+  try {
+    const token = await getToken();
+    const response = await fetch(`${getBaseUrl()}/vaccinations/all/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch all vaccinations: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching all vaccinations:', error);
+    throw error;
   }
-): Promise<VaccinationSchedule> => {
-  return apiRequest<VaccinationSchedule>(`/pets/${petId}/vaccinations/${administrationId}`, {
-    method: 'PATCH',
-    body: JSON.stringify(updates)
-  });
 };
 
-/**
- * Delete a vaccine administration record
- */
-export const deleteVaccineAdministration = async (
-  petId: number,
-  administrationId: number
-): Promise<void> => {
-  return apiRequest(`/pets/${petId}/vaccinations/${administrationId}`, {
-    method: 'DELETE'
-  });
+// Get vaccination summary for a pet
+export const getVaccinationSummary = async (petId: number): Promise<VaccinationSummary> => {
+  try {
+    const token = await getToken();
+    const response = await fetch(`${getBaseUrl()}/vaccinations/pet/${petId}/summary/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch vaccination summary: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching vaccination summary:', error);
+    throw error;
+  }
 };
 
-/**
- * Get upcoming vaccinations for a pet
- */
-export const getUpcomingVaccinations = async (
-  petId: number,
-  daysAhead: number = 30
-): Promise<VaccinationSchedule[]> => {
-  return apiRequest<VaccinationSchedule[]>(
-    `/pets/${petId}/vaccinations/upcoming?days=${daysAhead}`
-  );
+// Get vaccinations due soon
+export const getVaccinationsDueSoon = async (daysAhead: number = 30): Promise<VaccinationReminder[]> => {
+  try {
+    const token = await getToken();
+    const response = await fetch(`${getBaseUrl()}/vaccinations/due-soon/?days_ahead=${daysAhead}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch vaccinations due soon: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching vaccinations due soon:', error);
+    throw error;
+  }
 };
 
-/**
- * Get overdue vaccinations for a pet
- */
-export const getOverdueVaccinations = async (petId: number): Promise<VaccinationSchedule[]> => {
-  return apiRequest<VaccinationSchedule[]>(
-    `/pets/${petId}/vaccinations/overdue`
-  );
+// Get overdue vaccinations
+export const getOverdueVaccinations = async (): Promise<VaccinationReminder[]> => {
+  try {
+    const token = await getToken();
+    const response = await fetch(`${getBaseUrl()}/vaccinations/overdue/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch overdue vaccinations: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching overdue vaccinations:', error);
+    throw error;
+  }
+};
+
+// Create a new vaccination record
+export const createVaccination = async (petId: number, vaccination: Partial<VaccinationRecord>): Promise<VaccinationRecord> => {
+  try {
+    const token = await getToken();
+    const response = await fetch(`${getBaseUrl()}/vaccinations/pet/${petId}/`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(vaccination),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create vaccination: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error creating vaccination:', error);
+    throw error;
+  }
+};
+
+// Update a vaccination record
+export const updateVaccination = async (vaccinationId: number, vaccination: Partial<VaccinationRecord>): Promise<VaccinationRecord> => {
+  try {
+    const token = await getToken();
+    const response = await fetch(`${getBaseUrl()}/vaccinations/${vaccinationId}/`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(vaccination),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update vaccination: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error updating vaccination:', error);
+    throw error;
+  }
+};
+
+// Delete a vaccination record
+export const deleteVaccination = async (vaccinationId: number): Promise<void> => {
+  try {
+    const token = await getToken();
+    const response = await fetch(`${getBaseUrl()}/vaccinations/${vaccinationId}/`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to delete vaccination: ${response.statusText}`);
+    }
+  } catch (error) {
+    console.error('Error deleting vaccination:', error);
+    throw error;
+  }
 };

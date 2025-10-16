@@ -1,79 +1,63 @@
-// src/types/tasks/task.ts
+// Task types for PawfectPal
 
-import type { Coordinates } from '../common';
+export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
+export type RepeatUnit = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
-export type TaskPriority = 'low' | 'medium' | 'high';
-
-export type TaskCategory = 
-  | 'feeding' 
-  | 'medication' 
-  | 'grooming' 
-  | 'exercise' 
-  | 'training' 
-  | 'vet' 
-  | 'vaccination' 
-  | 'deworming' 
-  | 'other';
-
+/**
+ * Represents a task/reminder in the PawfectPal application
+ */
 export interface Task {
-  id?: number;
+  id: number; // Required - always present from backend
   title: string;
   description: string;
-  dateTime: string; // ISO date string
-  isCompleted: boolean;
-  priority: TaskPriority;
-  category: TaskCategory;
+  dateTime: string; // ISO datetime string
   repeatInterval?: number;
-  repeatUnit?: 'day' | 'week' | 'month' | 'year';
-  lastCompleted?: string; // ISO date string
-  nextDueDate?: string;  // ISO date string
-  petIds: number[];
-  attachments: string[];
-  notes?: string;
-  createdBy: number; // User ID
-  assignedTo?: number; // User ID
-  createdAt?: string; // ISO date string
-  updatedAt?: string; // ISO date string
-  reminderTime?: number; // Minutes before
-  location?: string;
-  coordinates?: Coordinates;
-  isRecurring: boolean;
-  recurrenceRule?: string; // iCal RRULE string
-  completionHistory?: {
-    date: string; // ISO date string
-    completedBy: number; // User ID
-    notes?: string;
-  }[];
+  repeatUnit?: RepeatUnit;
+  repeatEndDate?: string; // ISO date string for when repetition should end
+  petIds: number[]; // Array of pet IDs this task applies to
+  attachments: string[]; // Array of image URLs
+  priority?: TaskPriority;
+  status?: TaskStatus;
+  isCompleted?: boolean;
+  createdAt?: string; // ISO datetime string
+  updatedAt?: string; // ISO datetime string
+  ownerId?: number;
 }
 
+/**
+ * Task creation data
+ */
+export type TaskCreateData = Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'ownerId'>;
+
+/**
+ * Task update data
+ */
+export type TaskUpdateData = Partial<TaskCreateData>;
+
+/**
+ * Task filters for searching/filtering
+ */
+export interface TaskFilters {
+  priority?: TaskPriority | TaskPriority[];
+  status?: TaskStatus | TaskStatus[];
+  petId?: number;
+  dateFrom?: string; // ISO date string
+  dateTo?: string; // ISO date string
+  isCompleted?: boolean;
+  searchQuery?: string;
+  sortBy?: 'dateTime' | 'priority' | 'title' | 'createdAt';
+  sortOrder?: 'asc' | 'desc';
+}
+
+/**
+ * Task statistics
+ */
 export interface TaskStats {
   total: number;
   completed: number;
+  pending: number;
   overdue: number;
-  dueToday: number;
-  dueThisWeek: number;
-  byCategory: Record<TaskCategory, number>;
-  byPriority: {
-    low: number;
-    medium: number;
-    high: number;
-  };
-  completionRate: number;
-  averageCompletionTime?: number; // in minutes
-}
-
-export interface TaskFilterOptions {
-  status?: 'all' | 'completed' | 'pending' | 'overdue';
-  priority?: TaskPriority[];
-  category?: TaskCategory[];
-  petIds?: number[];
-  dateRange?: {
-    start: string; // ISO date string
-    end: string;   // ISO date string
-  };
-  searchQuery?: string;
-  assignedTo?: number[]; // User IDs
-  createdBy?: number[];  // User IDs
-  sortBy?: 'dueDate' | 'priority' | 'createdAt' | 'title';
-  sortOrder?: 'asc' | 'desc';
+  upcomingToday: number;
+  upcomingWeek: number;
 }

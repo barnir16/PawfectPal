@@ -2,7 +2,10 @@ import { Box, TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import {
   Search as SearchIcon,
   FilterList as FilterListIcon,
+  GridView as GridViewIcon,
+  ViewList as ViewListIcon,
 } from "@mui/icons-material";
+import { useLocalization } from "../../../contexts/LocalizationContext";
 
 interface PetsToolbarProps {
   searchTerm: string;
@@ -14,8 +17,6 @@ interface PetsToolbarProps {
   onAddPet: () => void;
 }
 
-const petTypes = ["All", "Dog", "Cat", "Bird", "Rabbit", "Other"];
-
 export const PetsToolbar = ({
   searchTerm,
   selectedType,
@@ -24,6 +25,17 @@ export const PetsToolbar = ({
   onTypeChange,
   onViewChange,
 }: PetsToolbarProps) => {
+  const { t } = useLocalization();
+  
+  const petTypes = [
+    t('pets.all'), 
+    t('pets.dog'), 
+    t('pets.cat'), 
+    t('pets.bird'), 
+    t('pets.rabbit'), 
+    t('pets.other')
+  ];
+  
   return (
     <Box
       sx={{
@@ -35,7 +47,7 @@ export const PetsToolbar = ({
       }}
     >
       <TextField
-        placeholder="Search pets..."
+        placeholder={t('pets.searchPets')}
         variant="outlined"
         size="small"
         value={searchTerm}
@@ -75,14 +87,10 @@ export const PetsToolbar = ({
         size="small"
       >
         <ToggleButton value="grid" aria-label="grid view">
-          <Box component="span" className="material-icons">
-            view_module
-          </Box>
+          <GridViewIcon />
         </ToggleButton>
         <ToggleButton value="table" aria-label="table view">
-          <Box component="span" className="material-icons">
-            view_list
-          </Box>
+          <ViewListIcon />
         </ToggleButton>
       </ToggleButtonGroup>
     </Box>

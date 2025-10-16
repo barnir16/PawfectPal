@@ -1,9 +1,12 @@
-import { ToggleButton, ToggleButtonGroup, Button } from "@mui/material";
+import { ToggleButton, ToggleButtonGroup, Button, Tooltip } from "@mui/material";
 import {
   ViewList as ViewListIcon,
   ViewModule as ViewModuleIcon,
   Add as AddIcon,
+  Download as DownloadIcon,
+  Sync as SyncIcon,
 } from "@mui/icons-material";
+import { useLocalization } from "../../../contexts/LocalizationContext";
 
 interface TasksToolbarProps {
   view: "list" | "grid";
@@ -12,6 +15,8 @@ interface TasksToolbarProps {
     newView: "list" | "grid" | null
   ) => void;
   onAddTask: () => void;
+  onExportTasks?: () => void;
+  onSyncWithGoogleCalendar?: () => void;
   children?: React.ReactNode;
 }
 
@@ -19,8 +24,12 @@ export const TasksToolbar = ({
   view,
   onViewChange,
   onAddTask,
+  onExportTasks,
+  onSyncWithGoogleCalendar,
   children,
 }: TasksToolbarProps) => {
+  const { t } = useLocalization();
+  
   return (
     <div
       style={{
@@ -39,8 +48,33 @@ export const TasksToolbar = ({
           startIcon={<AddIcon />}
           onClick={onAddTask}
         >
-          Add Task
+          {t('tasks.addTask')}
         </Button>
+        
+        {onExportTasks && (
+          <Tooltip title={t('tasks.exportToICal')}>
+            <Button
+              variant="outlined"
+              startIcon={<DownloadIcon />}
+              onClick={onExportTasks}
+            >
+              {t('tasks.export')}
+            </Button>
+          </Tooltip>
+        )}
+        
+        {onSyncWithGoogleCalendar && (
+          <Tooltip title={t('tasks.syncWithGoogleCalendar')}>
+            <Button
+              variant="outlined"
+              startIcon={<SyncIcon />}
+              onClick={onSyncWithGoogleCalendar}
+            >
+              {t('tasks.syncCalendar')}
+            </Button>
+          </Tooltip>
+        )}
+        
         {children}
       </div>
 
@@ -51,10 +85,10 @@ export const TasksToolbar = ({
         aria-label="task view"
         size="small"
       >
-        <ToggleButton value="list" aria-label="list view">
+        <ToggleButton value="list" aria-label={t('tasks.listView')}>
           <ViewListIcon />
         </ToggleButton>
-        <ToggleButton value="grid" aria-label="grid view">
+        <ToggleButton value="grid" aria-label={t('tasks.gridView')}>
           <ViewModuleIcon />
         </ToggleButton>
       </ToggleButtonGroup>

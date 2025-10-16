@@ -1,7 +1,9 @@
 import type { Coordinates } from '../location';
-
+import { Pet } from '../pets';
+import { User } from '../auth';
 /**
  * Types of services available in PawfectPal
+ * Matches backend ServiceType enum exactly
  */
 export type ServiceType =
   | 'walking'
@@ -9,12 +11,7 @@ export type ServiceType =
   | 'boarding'
   | 'grooming'
   | 'veterinary'
-  | 'training'
-  | 'daycare'
-  | 'pet_taxi'
-  | 'pet_sitting'
-  | 'pet_hotel'
-  | 'other';
+  | 'training';
 
 /**
  * Possible statuses for a service
@@ -31,16 +28,18 @@ export type ServiceStatus =
  * Represents a service booking in the PawfectPal application
  */
 export interface Service {
-  id?: number;
+  id: number; // Required - always present from backend
+  user_id: number;
   pet_id: number;
+  pet_name: string;
   service_type: ServiceType;
   status: ServiceStatus;
   start_datetime: string; // ISO date string
-  end_datetime?: string;  // ISO date string
+  end_datetime?: string; // ISO date string
   duration_hours?: number;
   price?: number;
   currency: string;
-  
+
   // Location information
   pickup_address?: string;
   dropoff_address?: string;
@@ -48,28 +47,28 @@ export interface Service {
   pickup_longitude?: number;
   dropoff_latitude?: number;
   dropoff_longitude?: number;
-  
+
   // Provider information
   provider_id?: number;
   provider_notes?: string;
   customer_notes?: string;
-  
+
   // Media
   before_images: string[];
   after_images: string[];
-  
+
   // Additional details
   service_report?: string;
-  rating?: number;
-  review?: string;
-  
+
   // Timestamps
   created_at?: string; // ISO date string
   updated_at?: string; // ISO date string
-  cancelled_at?: string; // ISO date string
-  completed_at?: string; // ISO date string
-}
 
+  // Relationships (added from ORM)
+  user?: User;
+  pet?: Pet;
+  provider?: User;
+}
 /**
  * Service provider information
  */

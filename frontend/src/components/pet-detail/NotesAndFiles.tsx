@@ -27,7 +27,7 @@ import {
   InsertPhoto as ImageIcon,
   Description as DocumentIcon,
 } from "@mui/icons-material";
-import { format } from "date-fns";
+
 
 // Types
 type FileType = "pdf" | "image" | "document" | "other";
@@ -159,7 +159,7 @@ export const NotesAndFiles = ({
             multiline
             rows={3}
             variant="outlined"
-            placeholder="Add a new note..."
+            placeholder={t('pets.addNewNotePlaceholder')}
             value={newNote}
             onChange={(e) => setNewNote(e.target.value)}
             sx={{ mb: 1 }}

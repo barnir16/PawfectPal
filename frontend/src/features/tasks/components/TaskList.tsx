@@ -9,8 +9,8 @@ import {
   Box,
   Typography,
   IconButton,
-  Chip,
 } from "@mui/material";
+import { useLocalization } from "../../../contexts/LocalizationContext";
 import { styled } from "@mui/material/styles";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -51,6 +51,7 @@ export const TaskList = ({
   onTaskToggle,
   onTaskClick,
 }: TaskListProps) => {
+  const { t } = useLocalization();
   const handleToggle =
     (taskId: number | string, currentStatus: boolean) =>
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,7 +78,7 @@ export const TaskList = ({
   if (tasks.length === 0) {
     return (
       <Box sx={{ py: 4, textAlign: "center" }}>
-        <Typography color="text.secondary">No tasks found</Typography>
+        <Typography color="text.secondary">{t('tasks.noTasks')}</Typography>
       </Box>
     );
   }
@@ -132,24 +133,17 @@ export const TaskList = ({
                 </Typography>
               }
               secondary={
-                <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-                  <Typography variant="caption">
+                <React.Fragment>
+                  <Typography variant="caption" component="span" sx={{ mr: 2 }}>
                     {new Date(task.dueDate).toLocaleDateString()}
                   </Typography>
-                  <Chip
-                    label={task.priority}
-                    size="small"
-                    color={
-                      task.priority === "high"
-                        ? "error"
-                        : task.priority === "medium"
-                          ? "warning"
-                          : "default"
-                    }
-                    variant="outlined"
-                  />
-                  <Typography variant="caption">{task.pet}</Typography>
-                </Box>
+                                  <Typography variant="caption" component="span" sx={{ mr: 2 }}>
+                  {t('tasks.priority')}: {t(`tasks.${task.priority}`)}
+                </Typography>
+                  <Typography variant="caption" component="span">
+                    {task.pet}
+                  </Typography>
+                </React.Fragment>
               }
             />{" "}
           </ListItemButton>

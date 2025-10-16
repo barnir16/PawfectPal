@@ -1,9 +1,10 @@
-import { useState, type ChangeEvent } from "react";
+import { useState, useEffect, type ChangeEvent } from "react";
 import { Avatar, Box, Button } from "@mui/material";
 import {
   AddAPhoto as AddPhotoIcon,
   Delete as DeleteIcon,
 } from "@mui/icons-material";
+import { useLocalization } from "../../contexts/LocalizationContext";
 
 interface PetImageUploadProps {
   imageUrl?: string | null;
@@ -18,7 +19,13 @@ export const PetImageUpload = ({
   onRemove,
   disabled = false,
 }: PetImageUploadProps) => {
+  const { t } = useLocalization();
   const [preview, setPreview] = useState<string | null>(imageUrl || null);
+
+  // Update preview when imageUrl prop changes
+  useEffect(() => {
+    setPreview(imageUrl || null);
+  }, [imageUrl]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -74,7 +81,14 @@ export const PetImageUpload = ({
         disabled={disabled}
       />
 
-      <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 1,
+          alignItems: "center",
+        }}
+      >
         <label htmlFor="pet-photo-upload">
           <Button
             component="span"
@@ -82,7 +96,7 @@ export const PetImageUpload = ({
             startIcon={<AddPhotoIcon />}
             disabled={disabled}
           >
-            {preview ? "Change Photo" : "Add Photo"}
+            {preview ? t("pets.changePhoto") : t("pets.addPhoto")}
           </Button>
         </label>
 
@@ -94,7 +108,7 @@ export const PetImageUpload = ({
             onClick={handleRemove}
             disabled={disabled}
           >
-            Remove
+            {t("common.delete")}
           </Button>
         )}
       </Box>

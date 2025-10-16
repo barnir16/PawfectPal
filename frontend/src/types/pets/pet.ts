@@ -29,22 +29,20 @@ export type HealthStatus = 'excellent' | 'good' | 'fair' | 'poor' | 'critical';
 
 /**
  * Represents a pet in the PawfectPal application
+ * Updated to match backend database schema
  */
 export interface Pet {
   // Basic information
-  id?: number;
+  id: number; // Required - always present from backend
   name: string;
-  type: PetType;
+  type: PetType; // Maps to backend 'breed_type'
   breed: string;
-  breedType?: string; // For backward compatibility
   
   // Physical attributes
   age?: number;
-  ageUnit?: 'days' | 'weeks' | 'months' | 'years';
   birthDate?: string; // ISO date string
   gender: PetGender;
   color?: string;
-  size?: PetSize;
   weightKg?: number;
   weightUnit: 'kg' | 'lb';
   
@@ -52,11 +50,9 @@ export interface Pet {
   isNeutered: boolean;
   isVaccinated: boolean;
   isMicrochipped: boolean;
-  healthStatus?: HealthStatus;
-  healthIssues: string[];
-  behaviorIssues: string[];
-  allergies?: string[];
-  medications?: string[];
+  healthIssues: string[]; // Array of health issues
+  behaviorIssues: string[]; // Array of behavior issues
+  microchipNumber?: string;
   
   // Medical records
   lastVetVisit?: string; // ISO date string
@@ -73,18 +69,13 @@ export interface Pet {
   isLost: boolean;
   
   // Additional information
-  description?: string;
   notes?: string;
   imageUrl?: string;
-  microchipNumber?: string;
-  tattooNumber?: string;
   
   // Ownership and metadata
   ownerId: number;
   isActive: boolean;
   isBirthdayGiven: boolean;
-  activityLevel?: ActivityLevel;
-  favoriteActivities?: string[];
   
   // Timestamps
   createdAt?: string; // ISO datetime string

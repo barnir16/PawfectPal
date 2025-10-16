@@ -1,3 +1,6 @@
+import {Pet} from "../pets/pet"
+import {Service} from "../services/service"
+import { Task } from "../tasks";
 /**
  * Represents a user in the PawfectPal application
  */
@@ -8,26 +11,41 @@ export interface User {
   phone?: string;
   full_name?: string;
   profile_image?: string;
+
+  // OAuth information
+  google_id?: string;
+  profile_picture_url?: string;
+
+  // User status information (updated for Railway build)
   is_active: boolean;
+  is_email_verified: boolean;
+  is_phone_verified: boolean;
+  date_joined: string;
+
+  // Service provider information
   is_provider: boolean;
-  provider_services?: string[];
-  provider_rating?: number;
-  provider_bio?: string;
-  provider_hourly_rate?: number;
+  provider_profile?: ProviderProfile;
+
+  // Address information
   address?: string;
   city?: string;
   state?: string;
   country?: string;
   postal_code?: string;
-  date_joined: string; // ISO date string
-  last_login?: string; // ISO date string
-  preferences?: UserPreferences;
-  settings?: UserSettings;
-  is_email_verified: boolean;
-  is_phone_verified: boolean;
-  timezone?: string;
-  language?: string;
-  notification_preferences?: NotificationPreferences;
+  latitude?: number; // Added from ORM
+  longitude?: number; // Added from ORM
+
+  // Relationships (added based on ORM)
+  pets?: Pet[];
+  tasks?: Task[];
+  booked_services?: Service[];
+}
+
+export interface ProviderProfile {
+  services?: string[];
+  bio?: string;
+  hourly_rate?: number;
+  rating?: number;
 }
 
 /**

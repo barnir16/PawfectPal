@@ -9,6 +9,7 @@ import {
   Typography,
 } from "@mui/material";
 import { ArrowBack as ArrowBackIcon } from "@mui/icons-material";
+import { useLocalization } from "../../../../contexts/LocalizationContext";
 
 // Import our new components
 import { PetHeader } from "../../../../components/pet-detail/PetHeader";
@@ -17,8 +18,14 @@ import { MedicalRecords } from "../../../../components/pet-detail/MedicalRecords
 import { Appointments } from "../../../../components/pet-detail/Appointments";
 import { NotesAndFiles } from "../../../../components/pet-detail/NotesAndFiles";
 import { ActionButtons } from "../../../../components/pet-detail/ActionButtons";
+import { BreedInfoCard } from "../../../../components/pets/BreedInfoCard";
+import RealVaccineTracker from "../../../../components/tasks/RealVaccineTracker";
+import { PetWeightMonitor } from "../../../../components/pets/PetWeightMonitor";
+import LocationTracking from "../../../../components/pet-detail/LocationTracking";
 import type { Task } from "../../../../components/pet-detail/Appointments";
 import type { FileAttachment } from "../../../../components/pet-detail/NotesAndFiles";
+import { getPet, deletePet } from "../../../../services/pets/petService";
+import type { Pet } from "../../../../types/pets/pet";
 // Mock data - replace with API calls in a real app
 const mockPet = {
   id: "1",
@@ -129,30 +136,47 @@ function a11yProps(index: number) {
 export const PetDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useLocalization();
   const [tabValue, setTabValue] = useState(0);
-  const [pet, setPet] = useState(mockPet);
+  const [pet, setPet] = useState<Pet | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // In a real app, fetch pet data by ID
+  // Fetch pet data by ID
   useEffect(() => {
     const fetchPet = async () => {
-      try {
-        // Simulate API call
-        // const response = await api.get(`/pets/${id}`);
-        // setPet(response.data);
+      if (!id) {
+        setError("Pet ID not provided");
         setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError(null);
+        console.log('🔍 Fetching pet with ID:', id);
+        const petData = await getPet(parseInt(id));
+        console.log('🔍 Pet data fetched:', petData);
+        console.log('🔍 Pet type:', petData.type);
+        console.log('🔍 Pet type:', petData.type);
+        console.log('🔍 Pet breed:', petData.breed);
+        console.log('🔍 Pet weightKg:', petData.weightKg);
+        console.log('🔍 Pet weightUnit:', petData.weightUnit);
+        console.log('🔍 Full pet object:', JSON.stringify(petData, null, 2));
+        setPet(petData);
       } catch (error) {
         console.error("Error fetching pet:", error);
-        // Handle error (e.g., show error message, redirect, etc.)
+        setError("Failed to load pet details. Pet may not exist.");
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    if (id) {
-      fetchPet();
-    }
+    fetchPet();
   }, [id]);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    console.log('🔍 Tab changed from', tabValue, 'to', newValue);
     setTabValue(newValue);
   };
 
@@ -160,15 +184,21 @@ export const PetDetail = () => {
     navigate(`/pets/${id}/edit`);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
+    if (!pet?.id) return;
+    
     if (
       window.confirm(
-        "Are you sure you want to delete this pet? This action cannot be undone."
+        t('pets.deleteConfirmation', { name: pet.name })
       )
     ) {
-      // Handle delete logic
-      console.log("Deleting pet:", id);
-      navigate("/pets");
+      try {
+        await deletePet(pet.id);
+        navigate("/pets");
+      } catch (error) {
+        console.error("Error deleting pet:", error);
+        alert(t('pets.failedToDelete'));
+      }
     }
   };
 
@@ -183,7 +213,31 @@ export const PetDetail = () => {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>; // Replace with a proper loading component
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+          <Typography>{t('pets.loading')}</Typography>
+        </Box>
+      </Container>
+    );
+  }
+
+  if (error || !pet) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 4 }}>
+          <Typography variant="h6" color="error" gutterBottom>
+            {error || t('pets.notFound')}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t('pets.notFoundDescription')}
+          </Typography>
+          <IconButton onClick={() => navigate('/pets')} sx={{ mr: 1 }}>
+            <ArrowBackIcon />
+          </IconButton>
+        </Box>
+      </Container>
+    );
   }
 
   return (
@@ -202,7 +256,7 @@ export const PetDetail = () => {
               <ArrowBackIcon />
             </IconButton>
             <Typography variant="h4" component="h1">
-              Pet Details
+              {t('pets.details')}
             </Typography>
           </Box>
 
@@ -225,9 +279,13 @@ export const PetDetail = () => {
             onChange={handleTabChange}
             aria-label="pet detail tabs"
           >
-            <Tab label="Medical Records" {...a11yProps(0)} />
-            <Tab label="Appointments" {...a11yProps(1)} />
-            <Tab label="Notes & Files" {...a11yProps(2)} />
+            <Tab label={t('pets.medicalRecords')} {...a11yProps(0)} />
+            <Tab label={t('pets.appointments')} {...a11yProps(1)} />
+            <Tab label={t('pets.notesAndFiles')} {...a11yProps(2)} />
+            <Tab label={t('pets.breedInfo')} {...a11yProps(3)} />
+            <Tab label={t('pets.vaccines')} {...a11yProps(4)} />
+            <Tab label={t('pets.weightMonitor')} {...a11yProps(5)} />
+            <Tab label={t('pets.locationTracking')} {...a11yProps(6)} />
           </Tabs>
         </Box>
 
@@ -254,6 +312,39 @@ export const PetDetail = () => {
             onDeleteNote={(id) => console.log("Delete note:", id)}
             onUploadFile={(file) => console.log("Upload file:", file)}
             onDeleteFile={(id) => console.log("Delete file:", id)}
+          />
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={3}>
+          <BreedInfoCard
+            petType={pet?.type || 'dog'}
+            breedName={pet?.breed || 'Mixed Breed'}
+            currentWeight={pet?.weightKg || pet?.weight_kg || 0}
+            weightUnit={pet?.weightUnit || 'kg'}
+          />
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={4}>
+          <RealVaccineTracker />
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={5}>
+          <PetWeightMonitor pet={pet} />
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={6}>
+          <LocationTracking
+            petId={pet.id || 0}
+            petName={pet.name}
+            isTrackingEnabled={pet.isTrackingEnabled || pet.is_tracking_enabled || false}
+            lastKnownLocation={pet.lastLocation ? {
+              latitude: pet.lastLocation.latitude || pet.lastKnownLatitude || pet.last_known_latitude || 0,
+              longitude: pet.lastLocation.longitude || pet.lastKnownLongitude || pet.last_known_longitude || 0,
+              accuracy: 0
+            } : undefined}
+            lastLocationUpdate={pet.lastSeen || pet.last_location_update}
+            onLocationUpdate={(coordinates) => console.log('Location updated:', coordinates)}
+            onTrackingToggle={(enabled) => console.log('Tracking toggled:', enabled)}
           />
         </TabPanel>
       </Box>

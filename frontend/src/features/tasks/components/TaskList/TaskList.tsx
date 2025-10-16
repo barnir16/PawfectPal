@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { format, parseISO, isBefore, isToday, isTomorrow } from "date-fns";
+import { useLocalization } from "../../../../contexts/LocalizationContext";
+
 import {
   Box,
   Button,
@@ -10,7 +11,6 @@ import {
   Chip,
   Divider,
   FormControl,
-  Grid,
   IconButton,
   InputLabel,
   MenuItem,
@@ -37,8 +37,28 @@ import {
 import { DataGrid } from "@mui/x-data-grid";
 import type { GridColDef, GridSortModel } from "@mui/x-data-grid";
 
+// Helper functions to replace date-fns
+const isToday = (date: string | Date) => {
+  const today = new Date();
+  const d = new Date(date);
+  return today.toDateString() === d.toDateString();
+};
+
+const isTomorrow = (date: string | Date) => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const d = new Date(date);
+  return tomorrow.toDateString() === d.toDateString();
+};
+
+const isBefore = (date: string | Date, compareDate: string | Date) => {
+  const d = new Date(date);
+  const compare = new Date(compareDate);
+  return d < compare;
+};
+
 // Types
-type Priority = "low" | "medium" | "high";
+type Priority = "low" | "medium" | "high" | "urgent";
 
 type TaskStatus = "pending" | "in_progress" | "completed" | "overdue";
 
@@ -57,74 +77,6 @@ interface Task {
   completedAt?: string;
 }
 
-// Mock data - replace with real data from your API
-const mockTasks: Task[] = [
-  {
-    id: "1",
-    title: "Vet Appointment",
-    description: "Annual checkup and vaccinations",
-    dueDate: "2023-12-15T14:30:00.000Z",
-    priority: "high",
-    status: "pending",
-    petIds: ["1"],
-    petNames: ["Max"],
-    category: "Vet Visit",
-    createdAt: "2023-11-01T10:00:00.000Z",
-    updatedAt: "2023-11-01T10:00:00.000Z",
-  },
-  {
-    id: "2",
-    title: "Grooming",
-    description: "Full grooming session",
-    dueDate: "2023-12-05T10:00:00.000Z",
-    priority: "medium",
-    status: "in_progress",
-    petIds: ["1"],
-    petNames: ["Max"],
-    category: "Grooming",
-    createdAt: "2023-11-10T15:30:00.000Z",
-    updatedAt: "2023-11-10T15:30:00.000Z",
-  },
-  {
-    id: "3",
-    title: "Buy Food",
-    description: "Dry food and treats",
-    dueDate: "2023-11-28T18:00:00.000Z",
-    priority: "low",
-    status: "pending",
-    petIds: ["1", "2"],
-    petNames: ["Max", "Bella"],
-    category: "Shopping",
-    createdAt: "2023-11-20T09:15:00.000Z",
-    updatedAt: "2023-11-20T09:15:00.000Z",
-  },
-  {
-    id: "4",
-    title: "Deworming",
-    description: "Monthly deworming treatment",
-    dueDate: "2023-11-25T09:00:00.000Z",
-    priority: "high",
-    status: "overdue",
-    petIds: ["1", "2"],
-    petNames: ["Max", "Bella"],
-    category: "Medication",
-    createdAt: "2023-11-01T14:20:00.000Z",
-    updatedAt: "2023-11-25T10:00:00.000Z",
-  },
-  {
-    id: "5",
-    title: "Training Session",
-    description: "Obedience training",
-    dueDate: "2023-12-20T16:00:00.000Z",
-    priority: "medium",
-    status: "pending",
-    petIds: ["1"],
-    petNames: ["Max"],
-    category: "Training",
-    createdAt: "2023-11-15T11:45:00.000Z",
-    updatedAt: "2023-11-15T11:45:00.000Z",
-  },
-];
 
 // Priority chip component
 export const PriorityChip = ({ priority }: { priority: Priority }) => {
@@ -132,6 +84,7 @@ export const PriorityChip = ({ priority }: { priority: Priority }) => {
     low: { label: "Low", color: "success" as const },
     medium: { label: "Medium", color: "warning" as const },
     high: { label: "High", color: "error" as const },
+    urgent: { label: "Urgent", color: "error" as const },
   };
 
   const { label, color } = priorityMap[priority];
@@ -180,18 +133,34 @@ export const StatusChip = ({ status }: { status: TaskStatus }) => {
 
 // Date cell component
 export const DateCell = ({ date }: { date: string }) => {
-  const dueDate = parseISO(date);
+  const dueDate = new Date(date);
   const today = new Date();
 
   let textColor = "text.primary";
-  let dateText = format(dueDate, "MMM d, yyyy h:mm a");
+  let dateText = dueDate.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric'
+  }) + ' ' + dueDate.toLocaleTimeString('en-US', { 
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
 
   if (isToday(dueDate)) {
     textColor = "info.main";
-    dateText = `Today, ${format(dueDate, "h:mm a")}`;
+    dateText = `Today, ${dueDate.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit', 
+      hour12: true 
+    })}`;
   } else if (isTomorrow(dueDate)) {
     textColor = "info.main";
-    dateText = `Tomorrow, ${format(dueDate, "h:mm a")}`;
+    dateText = `Tomorrow, ${dueDate.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit', 
+      hour12: true 
+    })}`;
   } else if (isBefore(dueDate, today)) {
     textColor = "error.main";
   }
@@ -237,10 +206,14 @@ export const PetAvatars = ({ petNames }: { petNames?: string[] }) => {
 };
 
 // Main TaskList component
-const TaskList = () => {
+const TaskList = ({ tasks: propTasks, onDelete }: {
+  tasks: Task[];
+  onDelete: (id: number) => void;
+}) => {
   const theme = useTheme();
-  const [tasks, setTasks] = useState<Task[]>(mockTasks);
-  const [filteredTasks, setFilteredTasks] = useState<Task[]>(mockTasks);
+  const { t } = useLocalization();
+  const [tasks, setTasks] = useState<Task[]>(propTasks);
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>(propTasks);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
@@ -253,9 +226,15 @@ const TaskList = () => {
     page: 0,
   });
 
+  // Update tasks when props change
+  useEffect(() => {
+    setTasks(propTasks);
+    setFilteredTasks(propTasks);
+  }, [propTasks]);
+
   // Get unique categories for filter
   const categories = Array.from(
-    new Set(tasks.map((task) => task.category || "Uncategorized"))
+    new Set(tasks.map((task) => task.category || t('errors.uncategorized')))
   );
 
   // Apply filters and search
@@ -283,7 +262,7 @@ const TaskList = () => {
 
     if (categoryFilter !== "all") {
       result = result.filter(
-        (task) => (task.category || "Uncategorized") === categoryFilter
+        (task) => (task.category || t('errors.uncategorized')) === categoryFilter
       );
     }
 
@@ -299,7 +278,7 @@ const TaskList = () => {
   // Delete task
   const deleteTask = (taskId: string) => {
     if (window.confirm("Are you sure you want to delete this task?")) {
-      setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
+      onDelete(Number(taskId));
     }
   };
 
@@ -360,7 +339,14 @@ const TaskList = () => {
       width: 200,
       renderCell: (params) => <DateCell date={params.row.dueDate} />,
       valueFormatter: (value: string) =>
-        value ? format(parseISO(value), "yyyy-MM-dd HH:mm") : "",
+        value ? new Date(value).toLocaleString('en-US', { 
+          year: 'numeric', 
+          month: '2-digit', 
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        }) : "",
     },
     {
       field: "actions",
@@ -412,87 +398,88 @@ const TaskList = () => {
         />
         <Divider />
         <CardContent>
-          <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                variant="outlined"
-                placeholder="Search tasks..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />,
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={2}>
-              <FormControl fullWidth>
-                <InputLabel id="status-filter-label">Status</InputLabel>
-                <Select
-                  labelId="status-filter-label"
-                  value={statusFilter}
-                  label="Status"
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                >
-                  <MenuItem value="all">All Statuses</MenuItem>
-                  <MenuItem value="pending">Pending</MenuItem>
-                  <MenuItem value="in_progress">In Progress</MenuItem>
-                  <MenuItem value="completed">Completed</MenuItem>
-                  <MenuItem value="overdue">Overdue</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6} md={2}>
-              <FormControl fullWidth>
-                <InputLabel id="priority-filter-label">Priority</InputLabel>
-                <Select
-                  labelId="priority-filter-label"
-                  value={priorityFilter}
-                  label="Priority"
-                  onChange={(e) => setPriorityFilter(e.target.value)}
-                >
-                  <MenuItem value="all">All Priorities</MenuItem>
-                  <MenuItem value="high">High</MenuItem>
-                  <MenuItem value="medium">Medium</MenuItem>
-                  <MenuItem value="low">Low</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6} md={2}>
-              <FormControl fullWidth>
-                <InputLabel id="category-filter-label">Category</InputLabel>
-                <Select
-                  labelId="category-filter-label"
-                  value={categoryFilter}
-                  label="Category"
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                >
-                  <MenuItem value="all">All Categories</MenuItem>
-                  {categories.map((category) => (
-                    <MenuItem key={category} value={category}>
-                      {category}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6} md={2}>
-              <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<FilterListIcon />}
-                onClick={() => {
-                  setSearchTerm("");
-                  setStatusFilter("all");
-                  setPriorityFilter("all");
-                  setCategoryFilter("all");
-                }}
-                sx={{ height: "56px" }}
-              >
-                Clear Filters
-              </Button>
-            </Grid>
-          </Grid>
+                     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(5, 1fr)' }, gap: 2, mb: 3 }}>
+             <Box>
+               <TextField
+                 fullWidth
+                 variant="outlined"
+                 placeholder={t('tasks.searchTasksPlaceholder')}
+                 value={searchTerm}
+                 onChange={(e) => setSearchTerm(e.target.value)}
+                 InputProps={{
+                   startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />,
+                 }}
+               />
+             </Box>
+             <Box>
+               <FormControl fullWidth>
+                 <InputLabel id="status-filter-label">Status</InputLabel>
+                 <Select
+                   labelId="status-filter-label"
+                   value={statusFilter}
+                   label="Status"
+                   onChange={(e) => setStatusFilter(e.target.value)}
+                 >
+                   <MenuItem value="all">All Statuses</MenuItem>
+                   <MenuItem value="pending">Pending</MenuItem>
+                   <MenuItem value="in_progress">In Progress</MenuItem>
+                   <MenuItem value="completed">Completed</MenuItem>
+                   <MenuItem value="overdue">Overdue</MenuItem>
+                 </Select>
+               </FormControl>
+             </Box>
+             <Box>
+               <FormControl fullWidth>
+                 <InputLabel id="priority-filter-label">Priority</InputLabel>
+                 <Select
+                   labelId="priority-filter-label"
+                   value={priorityFilter}
+                   label="Priority"
+                   onChange={(e) => setPriorityFilter(e.target.value)}
+                 >
+                   <MenuItem value="all">All Priorities</MenuItem>
+                   <MenuItem value="high">High</MenuItem>
+                   <MenuItem value="medium">Medium</MenuItem>
+                   <MenuItem value="low">Low</MenuItem>
+                   <MenuItem value="urgent">Urgent</MenuItem>
+                 </Select>
+               </FormControl>
+             </Box>
+             <Box>
+               <FormControl fullWidth>
+                 <InputLabel id="category-filter-label">Category</InputLabel>
+                 <Select
+                   labelId="category-filter-label"
+                   value={categoryFilter}
+                   label="Category"
+                   onChange={(e) => setCategoryFilter(e.target.value)}
+                 >
+                   <MenuItem value="all">All Categories</MenuItem>
+                   {categories.map((category) => (
+                     <MenuItem key={category} value={category}>
+                       {category}
+                     </MenuItem>
+                   ))}
+                 </Select>
+               </FormControl>
+             </Box>
+             <Box>
+               <Button
+                 fullWidth
+                 variant="outlined"
+                 startIcon={<FilterListIcon />}
+                 onClick={() => {
+                   setSearchTerm("");
+                   setStatusFilter("all");
+                   setPriorityFilter("all");
+                   setCategoryFilter("all");
+                 }}
+                 sx={{ height: "56px" }}
+               >
+                 Clear Filters
+               </Button>
+             </Box>
+           </Box>
 
           <Box sx={{ height: 500, width: "100%" }}>
             <DataGrid
