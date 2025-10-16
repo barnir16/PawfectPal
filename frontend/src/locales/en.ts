@@ -17,6 +17,8 @@ export const en = {
   for: 'for',
   in_progress: 'In Progress',
   Details: 'Details',
+  petTaxi: 'Pet Taxi',
+  daycare: 'Daycare',
 
   // Common
   common: {
@@ -1266,7 +1268,8 @@ export const en = {
     boarding: 'Pet Boarding',
     grooming: 'Pet Grooming',
     training: 'Training',
-    'אילוף': 'Training',
+    petTaxi: 'Pet Taxi',
+    daycare: 'Daycare',
     // Service statuses matching backend ServiceStatus enum
     pending: 'Pending',
     confirmed: 'Confirmed',
@@ -1303,6 +1306,7 @@ export const en = {
     specialRequirements: 'Special Requirements',
     specialRequirementsPlaceholder: 'Any special requirements or notes...',
     isUrgent: 'Urgent Request',
+    requestCreatedSuccessfully: 'Service request created successfully!',
     
     // Marketplace functionality
     requestType: 'Request Type',
