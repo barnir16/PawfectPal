@@ -59,6 +59,13 @@ export const LocationMessage: React.FC<LocationMessageProps> = ({ message, compa
       return sharedApiKey;
     }
     
+    // Try to get from Railway environment
+    const railwayApiKey = import.meta.env.RAILWAY_GOOGLE_MAPS_API_KEY;
+    if (railwayApiKey) {
+      console.log('📍 Using Google Maps API key from Railway:', railwayApiKey.substring(0, 10) + '...');
+      return railwayApiKey;
+    }
+    
     // Fallback to a public key (may have usage limits)
     const fallbackKey = 'AIzaSyBFw0Qbyq9zTFTd-tUY6dOWWgU6xVqjJkY';
     console.log('📍 Using fallback Google Maps API key:', fallbackKey.substring(0, 10) + '...');
