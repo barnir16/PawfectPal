@@ -891,7 +891,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         // If it's a relative path, prepend the base URL
         const baseUrl = import.meta.env.VITE_API_URL || 
           (process.env.NODE_ENV === 'production' 
-            ? 'https://pawfectpal-production.up.railway.app' 
+            ? 'https://pawfectpal-production-2f07.up.railway.app' 
             : 'http://localhost:8000');
         fullUrl = baseUrl + (fullUrl.startsWith('/') ? fullUrl : '/' + fullUrl);
       }
@@ -937,7 +937,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       // If it's a relative path, prepend the base URL
       const baseUrl = import.meta.env.VITE_API_URL || 
         (process.env.NODE_ENV === 'production' 
-          ? 'https://pawfectpal-production.up.railway.app' 
+          ? 'https://pawfectpal-production-2f07.up.railway.app' 
           : 'http://localhost:8000');
       fullUrl = baseUrl + (fullUrl.startsWith('/') ? fullUrl : '/' + fullUrl);
       console.log('📁 Constructed URL:', { baseUrl, originalUrl: attachment.file_url, fullUrl });
@@ -2757,7 +2757,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
               <img
                 src={selectedMedia.file_url.startsWith('http') ? selectedMedia.file_url : 
                      (process.env.NODE_ENV === 'production' 
-                       ? 'https://pawfectpal-production.up.railway.app' + (selectedMedia.file_url.startsWith('/') ? selectedMedia.file_url : '/' + selectedMedia.file_url)
+                       ? 'https://pawfectpal-production-2f07.up.railway.app' + (selectedMedia.file_url.startsWith('/') ? selectedMedia.file_url : '/' + selectedMedia.file_url)
                        : 'http://localhost:8000' + (selectedMedia.file_url.startsWith('/') ? selectedMedia.file_url : '/' + selectedMedia.file_url))}
                 alt={selectedMedia.file_name}
                 style={{
@@ -2769,7 +2769,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                   console.error('❌ Image failed to load:', selectedMedia.file_url);
                   console.error('❌ Constructed URL:', selectedMedia.file_url.startsWith('http') ? selectedMedia.file_url : 
                      (process.env.NODE_ENV === 'production' 
-                       ? 'https://pawfectpal-production.up.railway.app' + (selectedMedia.file_url.startsWith('/') ? selectedMedia.file_url : '/' + selectedMedia.file_url)
+                       ? 'https://pawfectpal-production-2f07.up.railway.app' + (selectedMedia.file_url.startsWith('/') ? selectedMedia.file_url : '/' + selectedMedia.file_url)
                        : 'http://localhost:8000' + (selectedMedia.file_url.startsWith('/') ? selectedMedia.file_url : '/' + selectedMedia.file_url)));
                 }}
               />

@@ -260,7 +260,7 @@ export class WebSocketService {
 
   private getWebSocketUrl(serviceRequestId: number, token: string): string {
     const baseUrl = process.env.NODE_ENV === 'production' 
-      ? 'wss://pawfectpal-production.up.railway.app'
+      ? 'wss://pawfectpal-production-2f07.up.railway.app'
       : 'ws://localhost:8000';
     
     return `${baseUrl}/ws/chat/${serviceRequestId}?token=${encodeURIComponent(token)}`;
