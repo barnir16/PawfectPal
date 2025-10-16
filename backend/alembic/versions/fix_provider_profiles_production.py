@@ -99,3 +99,4 @@ def downgrade() -> None:
     # Don't drop tables in downgrade to avoid data loss
     print("⚠️ Skipping downgrade to avoid data loss")
     pass
+
