@@ -294,7 +294,7 @@ export const TaskForm = () => {
       )}
 
       <Card>
-        <CardHeader title={t('tasks.taskDetails')} />
+        <CardHeader title={isVaccineForm ? 'Vaccine Details' : t('tasks.taskDetails')} />
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)}>
             <Grid container spacing={3}>
@@ -305,7 +305,7 @@ export const TaskForm = () => {
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label={t('tasks.taskTitle')}
+                      label={isVaccineForm ? 'Vaccine Title' : t('tasks.taskTitle')}
                       fullWidth
                       required
                       error={!!errors.title}
