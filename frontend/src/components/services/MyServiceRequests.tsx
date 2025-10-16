@@ -56,7 +56,7 @@ export const MyServiceRequests: React.FC = () => {
   };
 
   const handleDeleteRequest = async (id: number) => {
-    if (window.confirm(t('common.confirm'))) {
+    if (window.confirm(t('common.confirmDelete'))) {
       try {
         await ServiceRequestService.deleteServiceRequest(id);
         setRequests(requests.filter(req => req.id !== id));
