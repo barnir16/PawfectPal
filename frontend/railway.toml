@@ -1,5 +1,5 @@
 [deploy]
-startCommand = "npx serve -s dist -l 8080 --single"
+startCommand = "node serve.js"
 
 [env]
 NODE_ENV = "production"

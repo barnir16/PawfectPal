@@ -69,6 +69,12 @@ export const LocationMessage: React.FC<LocationMessageProps> = ({ message, compa
     // Fallback to a public key (may have usage limits)
     const fallbackKey = 'AIzaSyBFw0Qbyq9zTFTd-tUY6dOWWgU6xVqjJkY';
     console.log('📍 Using fallback Google Maps API key:', fallbackKey.substring(0, 10) + '...');
+    console.log('📍 All environment variables:', {
+      VITE_GOOGLE_MAPS_API_KEY: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+      VITE_SHARED_GOOGLE_MAPS_API_KEY: import.meta.env.VITE_SHARED_GOOGLE_MAPS_API_KEY,
+      RAILWAY_GOOGLE_MAPS_API_KEY: import.meta.env.RAILWAY_GOOGLE_MAPS_API_KEY,
+      NODE_ENV: process.env.NODE_ENV
+    });
     return fallbackKey;
   };
 
