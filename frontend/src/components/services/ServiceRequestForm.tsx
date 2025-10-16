@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   TextField,
@@ -15,7 +16,8 @@ import {
   Card,
   CardContent,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Snackbar
 } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -61,9 +63,11 @@ export const ServiceRequestForm: React.FC<ServiceRequestFormProps> = ({
 }) => {
   const { t } = useLocalization();
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [pets, setPets] = useState<Pet[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const {
     control,
@@ -98,6 +102,21 @@ export const ServiceRequestForm: React.FC<ServiceRequestFormProps> = ({
   const selectedPetIds = watch('pet_ids');
   const selectedLanguages = watch('languages') || [];
 
+  // Service type mapping from short names to full names expected by backend
+  const getServiceTypeMapping = (shortName: string): string => {
+    const mapping: { [key: string]: string } = {
+      walking: 'Dog Walking',
+      sitting: 'Pet Sitting',
+      boarding: 'Boarding',
+      grooming: 'Grooming',
+      veterinary: 'Veterinary',
+      training: 'Training',
+      petTaxi: 'Pet Taxi',
+      daycare: 'Daycare'
+    };
+    return mapping[shortName] || shortName;
+  };
+
   // Load user's pets
   useEffect(() => {
     const loadPets = async () => {
@@ -119,10 +138,25 @@ export const ServiceRequestForm: React.FC<ServiceRequestFormProps> = ({
       setIsLoading(true);
       setError(null);
 
-      const request = await ServiceRequestService.createServiceRequest(data);
-      
+      // Map service type from short name to full name expected by backend
+      const requestData = {
+        ...data,
+        service_type: getServiceTypeMapping(data.service_type)
+      };
+
+      const request = await ServiceRequestService.createServiceRequest(requestData);
+
+      // Show success message
+      setSuccessMessage(t('services.requestCreatedSuccessfully') || 'Service request created successfully!');
+
+      // If onSuccess callback is provided, use it (for embedded usage)
       if (onSuccess) {
         onSuccess(request.id);
+      } else {
+        // Otherwise, navigate back to service requests after a delay
+        setTimeout(() => {
+          navigate('/service-requests');
+        }, 2000);
       }
     } catch (error: any) {
       setError(error.response?.data?.detail || 'Failed to create service request');
@@ -185,6 +219,8 @@ export const ServiceRequestForm: React.FC<ServiceRequestFormProps> = ({
                   <MenuItem value="grooming">{t('services.grooming')}</MenuItem>
                   <MenuItem value="veterinary">{t('services.veterinary')}</MenuItem>
                   <MenuItem value="training">{t('services.training')}</MenuItem>
+                  <MenuItem value="petTaxi">{t('services.petTaxi')}</MenuItem>
+                  <MenuItem value="daycare">{t('services.daycare')}</MenuItem>
                 </Select>
               </FormControl>
             )}
@@ -528,6 +564,22 @@ export const ServiceRequestForm: React.FC<ServiceRequestFormProps> = ({
           </Box>
         </Grid>
       </Grid>
+
+      {/* Success Snackbar */}
+      <Snackbar
+        open={!!successMessage}
+        autoHideDuration={4000}
+        onClose={() => setSuccessMessage(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSuccessMessage(null)}
+          severity="success"
+          sx={{ width: '100%' }}
+        >
+          {successMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

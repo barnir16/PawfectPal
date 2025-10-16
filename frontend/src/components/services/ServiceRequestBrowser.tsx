@@ -9,7 +9,6 @@ import {
   Button,
   Grid,
   Avatar,
-  Divider,
   Paper,
   FormControl,
   InputLabel,
@@ -18,7 +17,6 @@ import {
   TextField,
   InputAdornment,
   IconButton,
-  Badge,
   Alert,
   CircularProgress,
   Fab,
@@ -29,10 +27,8 @@ import {
   Search,
   LocationOn,
   AttachMoney,
-  Schedule,
   Person,
   Pets,
-  FilterList,
   Refresh,
   Add,
   Visibility,
@@ -40,6 +36,7 @@ import {
 } from "@mui/icons-material";
 import { useLocalization } from "../../contexts/LocalizationContext";
 import { ServiceRequestService } from "../../services/serviceRequests/serviceRequestService";
+import { getBaseUrl } from "../../services/api";
 import type {
   ServiceRequestSummary,
   ServiceRequestFilters,
@@ -69,12 +66,15 @@ export const ServiceRequestBrowser: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState(0);
   const [publicRequests, setPublicRequests] = useState<ServiceRequestSummary[]>([]);
-
   // Load service types
   useEffect(() => {
     const loadServiceTypes = async () => {
       try {
-        const response = await fetch('/api/service-types');
+        // Use the configured API client instead of direct fetch
+        const response = await fetch(`${getBaseUrl()}/api/service-types`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const types = await response.json();
         setServiceTypes(types);
       } catch (error) {
@@ -142,55 +142,42 @@ export const ServiceRequestBrowser: React.FC = () => {
     const filtered = requests.filter(
       (request) =>
         request.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        request.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         request.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         request.user.full_name.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredRequests(filtered);
   }, [searchQuery, requests]);
-
-  const handleFilterChange = (key: keyof ServiceRequestFilters, value: any) => {
-    setFilters((prev) => ({
-      ...prev,
-      [key]: value,
-      offset: 0, // Reset to first page when filters change
-    }));
-  };
-
-  const handleRefresh = () => {
-    const loadRequests = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await ServiceRequestService.getServiceRequests(filters);
-        setRequests(data);
-        setFilteredRequests(data);
-      } catch (err: any) {
-        setError(err.message || "Failed to load service requests");
-      } finally {
-        setLoading(false);
-      }
+  const getServiceTypeTranslationKey = (serviceType: string): string => {
+    // Map backend service type names to frontend translation keys
+    const serviceTypeTranslationMapping: { [key: string]: string } = {
+      'Dog Walking': 'walking',
+      'Pet Sitting': 'sitting',
+      'Boarding': 'boarding',
+      'Grooming': 'grooming',
+      'Veterinary': 'veterinary',
+      'Training': 'training',
+      'Pet Taxi': 'petTaxi',
+      'Daycare': 'daycare'
     };
 
-    const loadPublicRequests = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await ServiceRequestService.getPublicServicePosts(filters);
-        setPublicRequests(data);
-      } catch (err: any) {
-        setError(err.message || "Failed to load public service requests");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Load both tabs
-    loadRequests();
-    loadPublicRequests();
+    return serviceTypeTranslationMapping[serviceType] || serviceType.toLowerCase();
   };
 
   const getServiceTypeColor = (serviceType: string) => {
+    // Map backend service type names to frontend short names for color coding
+    const serviceTypeMapping: { [key: string]: string } = {
+      'Dog Walking': 'walking',
+      'Pet Sitting': 'sitting',
+      'Boarding': 'boarding',
+      'Grooming': 'grooming',
+      'Veterinary': 'veterinary',
+      'Training': 'training',
+      'Pet Taxi': 'petTaxi',
+      'Daycare': 'daycare'
+    };
+
+    const shortName = serviceTypeMapping[serviceType] || serviceType;
+
     const colors: {
       [key: string]: "primary" | "secondary" | "success" | "warning" | "error";
     } = {
@@ -199,8 +186,11 @@ export const ServiceRequestBrowser: React.FC = () => {
       boarding: "success",
       grooming: "warning",
       veterinary: "error",
+      training: "warning",
+      petTaxi: "primary",
+      daycare: "secondary",
     };
-    return colors[serviceType] || "default";
+    return colors[shortName] || "default";
   };
 
   const formatBudget = (min?: number, max?: number) => {
@@ -247,7 +237,7 @@ export const ServiceRequestBrowser: React.FC = () => {
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Chip
-              label={t(`services.${request.service_type}`)}
+              label={t(`services.${getServiceTypeTranslationKey(request.service_type)}`)}
               color={getServiceTypeColor(request.service_type)}
               size="small"
             />
@@ -275,7 +265,7 @@ export const ServiceRequestBrowser: React.FC = () => {
             overflow: "hidden",
           }}
         >
-          {request.description}
+          Service request details...
         </Typography>
 
         {/* User Info */}
@@ -368,6 +358,47 @@ export const ServiceRequestBrowser: React.FC = () => {
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
+  };
+
+  const handleRefresh = () => {
+    const loadRequests = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await ServiceRequestService.getServiceRequests(filters);
+        setRequests(data);
+        setFilteredRequests(data);
+      } catch (err: any) {
+        setError(err.message || "Failed to load service requests");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const loadPublicRequests = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await ServiceRequestService.getPublicServicePosts(filters);
+        setPublicRequests(data);
+      } catch (err: any) {
+        setError(err.message || "Failed to load public service requests");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Load both tabs
+    loadRequests();
+    loadPublicRequests();
+  };
+
+  const handleFilterChange = (key: keyof ServiceRequestFilters, value: any) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value,
+      offset: 0, // Reset to first page when filters change
+    }));
   };
 
   return (
