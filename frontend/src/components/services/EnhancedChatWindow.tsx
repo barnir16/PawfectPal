@@ -883,7 +883,25 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   // File handling functions
   const handleFileDownload = async (attachment: MediaAttachment) => {
     try {
-      const response = await fetch(attachment.file_url);
+      // Ensure we have a full URL for downloading
+      let fullUrl = attachment.file_url;
+      
+      // If it's already a full URL, use as-is
+      if (!fullUrl.startsWith('http')) {
+        // If it's a relative path, prepend the base URL
+        const baseUrl = import.meta.env.VITE_API_URL || 
+          (process.env.NODE_ENV === 'production' 
+            ? 'https://pawfectpal-production.up.railway.app' 
+            : 'http://localhost:8000');
+        fullUrl = baseUrl + (fullUrl.startsWith('/') ? fullUrl : '/' + fullUrl);
+      }
+      
+      console.log('📥 Downloading file:', { originalUrl: attachment.file_url, fullUrl });
+      
+      const response = await fetch(fullUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -915,15 +933,16 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     let fullUrl = attachment.file_url;
     
     // If it's already a full URL, use as-is
-    if (fullUrl.startsWith('http')) {
-      console.log('📁 File URL is already full:', fullUrl);
-    } else if (fullUrl.startsWith('/')) {
+    if (!fullUrl.startsWith('http')) {
       // If it's a relative path, prepend the base URL
-      const baseUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://pawfectpal-production.up.railway.app' 
-        : 'http://localhost:8000';
-      fullUrl = baseUrl + fullUrl;
+      const baseUrl = import.meta.env.VITE_API_URL || 
+        (process.env.NODE_ENV === 'production' 
+          ? 'https://pawfectpal-production.up.railway.app' 
+          : 'http://localhost:8000');
+      fullUrl = baseUrl + (fullUrl.startsWith('/') ? fullUrl : '/' + fullUrl);
       console.log('📁 Constructed URL:', { baseUrl, originalUrl: attachment.file_url, fullUrl });
+    } else {
+      console.log('📁 File URL is already full:', fullUrl);
     }
     
     console.log('📁 Opening full URL:', fullUrl);
