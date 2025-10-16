@@ -234,6 +234,8 @@ export const en = {
     notGivenYet: 'Not given yet',
     nextVaccination: 'Next Vaccination',
     viewDetails: 'View Details',
+    edit: 'Edit',
+    delete: 'Delete',
     selectType: 'Select a type',
     selectGender: 'Select a gender',
     selectAgeType: 'Select age type',
@@ -658,6 +660,7 @@ export const en = {
     exportData: 'Export Data',
     importData: 'Import Data',
     completeVaccine: 'Complete Vaccine',
+    addToSchedule: 'Add to Schedule',
     backToTasks: 'Back to Tasks',
     filterByPet: 'Filter by Pet',
     allRecords: 'All Records',
@@ -860,6 +863,11 @@ export const en = {
     
     // Extra info
     allStatuses: 'All Statuses',
+    selectPets: 'Select Pet',
+    time: 'Time',
+    date: 'Date',
+    repeatEndDate: 'Repeat End Date',
+    repeatInterval: 'Repeat Interval',
   },
 
   // Task Priorities

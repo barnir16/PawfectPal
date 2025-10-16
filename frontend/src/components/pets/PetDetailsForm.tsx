@@ -25,10 +25,10 @@ export const PetDetailsForm = ({
   isSubmitting = false,
 }: PetDetailsFormProps) => {
   const { t } = useLocalization();
-  
+
   return (
     <Grid container spacing={3}>
-      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+      <Grid item xs={12} sm={6} md={6} lg={4}>
         <Controller
           name="weight"
           control={control}
@@ -37,15 +37,17 @@ export const PetDetailsForm = ({
               {...field}
               fullWidth
               type="number"
-              label={t('pets.weightOptional')}
+              label={t("pets.weightOptional")}
               error={!!errors.weight}
-              helperText={errors.weight?.message || t('pets.enterWeightGreaterThan0')}
+              helperText={
+                errors.weight?.message || t("pets.enterWeightGreaterThan0")
+              }
               disabled={isSubmitting}
-              inputProps={{ 
-                min: 0.1, 
-                max: 200, 
+              inputProps={{
+                min: 0.1,
+                max: 200,
                 step: 0.1,
-                placeholder: "0.0"
+                placeholder: "0.0",
               }}
               InputProps={{
                 endAdornment: (
@@ -66,8 +68,8 @@ export const PetDetailsForm = ({
                           }}
                           disabled={isSubmitting}
                         >
-                          <option value="kg">{t('pets.kg')}</option>
-                          <option value="lb">{t('pets.pounds')}</option>
+                          <option value="kg">{t("pets.kg")}</option>
+                          <option value="lb">{t("pets.pounds")}</option>
                         </select>
                       )}
                     />
@@ -79,7 +81,11 @@ export const PetDetailsForm = ({
                   </InputAdornment>
                 ),
               }}
-              onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+              onChange={(e) =>
+                field.onChange(
+                  e.target.value ? parseFloat(e.target.value) : undefined
+                )
+              }
               value={field.value || ""}
             />
           )}
@@ -94,7 +100,7 @@ export const PetDetailsForm = ({
             <TextField
               {...field}
               fullWidth
-              label={t('pets.colorMarkings')}
+              label={t("pets.colorMarkings")}
               error={!!errors.color}
               helperText={errors.color?.message}
               disabled={isSubmitting}
@@ -118,7 +124,7 @@ export const PetDetailsForm = ({
             <TextField
               {...field}
               fullWidth
-              label={t('pets.microchipNumber')}
+              label={t("pets.microchipNumber")}
               error={!!errors.microchipNumber}
               helperText={errors.microchipNumber?.message}
               disabled={isSubmitting}
@@ -140,7 +146,7 @@ export const PetDetailsForm = ({
                   disabled={isSubmitting}
                 />
               }
-              label={t('pets.spayedNeutered')}
+              label={t("pets.spayedNeutered")}
             />
           )}
         />
