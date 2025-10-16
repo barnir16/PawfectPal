@@ -30,6 +30,8 @@ export const en = {
     add: 'Add',
     close: 'Close',
     loading: 'Loading...',
+    saving: 'Saving...',
+    deleting: 'Deleting...',
     error: 'Error',
     success: 'Success',
     warning: 'Warning',
@@ -63,6 +65,7 @@ export const en = {
     selectAll: 'Select All',
     deselectAll: 'Deselect All',
     tryAdjustingSearch: 'Try adjusting your search',
+    confirmDelete: 'Are you sure you want to delete this service request?',
   },
 
   // Navigation
@@ -451,7 +454,7 @@ export const en = {
     upToDateVaccines: 'Up to Date',
     allVaccineRecords: 'All Vaccine Records',
     regionalVaccineSuggestions: 'Regional Vaccine Suggestions',
-    israeliStandards: 'Israeli Standards',
+
     mandatory: 'Mandatory',
     recommended: 'Recommended',
     preventative: 'Preventative',
@@ -604,6 +607,7 @@ export const en = {
     vaccineName: 'Vaccine Name',
     vaccineType: 'Vaccine Type',
     vaccineDate: 'Vaccine Date',
+    israeliStandards: 'Israeli Standards',
 
     // Smart Suggestions
     smartVaccineSuggestions: 'Smart Vaccine Suggestions',
@@ -672,7 +676,11 @@ export const en = {
     notes: 'Notes',
     notesPlaceholder: 'Additional notes about this vaccination...',
     edit: 'Edit',
-    delete: 'Delete',
+    administeredDate: 'Administered Date',
+    confirmDeleteVaccine: 'Are you sure you want to delete this vaccine record?',
+    updateVaccine: 'Update Vaccine',
+    at: 'at',
+    delete: 'Delete', 
     refresh: 'Refresh',
     loadingVaccineData: 'Loading vaccine data...',
     failedToLoadVaccineData: 'Failed to load vaccine data',
@@ -680,6 +688,10 @@ export const en = {
     syncWithGoogleCalendar: 'Sync with Google Calendar',
     vaccinesExported: 'Vaccines exported to calendar!',
     vaccinesSynced: 'Vaccines synced with Google Calendar!',
+    vaccineUpdated: 'Vaccine updated successfully!',
+    vaccineUpdateFailed: 'Failed to update vaccine',
+    vaccineDeleted: 'Vaccine deleted successfully!',
+    vaccineDeleteFailed: 'Failed to delete vaccine',
   },
 
   // HttpStatusError
@@ -792,8 +804,11 @@ export const en = {
     petLabel: 'Pet',
     category: 'Category',
     notes: 'Notes',
+    edit: 'Edit',
+    delete: 'Delete',
     listView: 'List View',
     gridView: 'Grid View',
+    markComplete: 'Mark Complete',
     markIncomplete: 'Mark Incomplete',
     addNewTask: 'Add New Task',
     createTask: 'Create Task',
@@ -1213,6 +1228,10 @@ export const en = {
       completed: 'Completed',
       closed: 'Closed',
     },
+      shareExperience: 'Share Experience',
+      scheduleConsultation: 'Schedule Consultation',
+      shareMyLocation: 'Share My Location',
+      quickReplies: 'Quick Replies',
   },
   services: {
     title: 'Services',
