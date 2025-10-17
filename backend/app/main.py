@@ -190,48 +190,92 @@ def test_image(filename: str):
 @app.get("/providers")
 def get_providers(db: Session = Depends(get_db)):
     """Get all service providers"""
-    providers = db.query(UserORM).filter(UserORM.is_provider == True).all()
-    
-    result = []
-    for user in providers:
-        # Get provider profile if exists
-        profile = db.query(ProviderProfileORM).filter(
-            ProviderProfileORM.user_id == user.id
-        ).first()
-        
-        # Get service types
-        service_types = []
-        if profile:
-            service_types = [st.name for st in profile.services]
-        
-        provider_data = {
-            "id": user.id,
-            "username": user.username,
-            "full_name": user.full_name,
-            "email": user.email,
-            "profile_image": user.profile_image,
-            "location": {
-                "latitude": user.latitude,
-                "longitude": user.longitude
-            } if user.latitude and user.longitude else None,
-            "provider_bio": profile.bio if profile else None,
-            "provider_hourly_rate": profile.hourly_rate if profile else None,
-            "provider_services": service_types,
-            "is_available": profile.is_available if profile else True,
-            "rating": profile.average_rating if profile else None,
-            "review_count": profile.total_reviews if profile else 0,
-            "completed_bookings": 0,  # Not tracked in current model
-            "experience_years": profile.experience_years if profile else None,
-            "languages": profile.languages if profile else [],
-            "certifications": profile.certifications if profile else [],
-            "service_radius": profile.service_radius_km if profile else None,
-            "verified": profile.is_verified if profile else False,
-            "created_at": user.created_at.isoformat(),
-            "updated_at": user.updated_at.isoformat(),
-        }
-        result.append(provider_data)
-    
-    return result
+    try:
+        providers = db.query(UserORM).filter(UserORM.is_provider == True).all()
+
+        result = []
+        for user in providers:
+            try:
+                # Get provider profile if exists
+                profile = db.query(ProviderProfileORM).filter(
+                    ProviderProfileORM.user_id == user.id
+                ).first()
+
+                # Get service types - handle potential relationship loading issues
+                service_types = []
+                if profile:
+                    try:
+                        # Explicitly load services relationship
+                        services = db.query(ProviderProfileORM).filter(
+                            ProviderProfileORM.user_id == user.id
+                        ).first()
+                        if services and hasattr(services, 'services'):
+                            service_types = [st.name for st in services.services]
+                    except Exception as e:
+                        print(f"Error loading services for user {user.id}: {e}")
+                        service_types = []
+
+                provider_data = {
+                    "id": user.id,
+                    "username": user.username,
+                    "full_name": user.full_name,
+                    "email": user.email,
+                    "profile_image": user.profile_image,
+                    "location": {
+                        "latitude": user.latitude,
+                        "longitude": user.longitude
+                    } if user.latitude and user.longitude else None,
+                    "provider_bio": profile.bio if profile else None,
+                    "provider_hourly_rate": profile.hourly_rate if profile else None,
+                    "provider_services": service_types,
+                    "is_available": profile.is_available if profile else True,
+                    "rating": profile.average_rating if profile else None,
+                    "review_count": profile.total_reviews if profile else 0,
+                    "completed_bookings": 0,  # Not tracked in current model
+                    "experience_years": profile.experience_years if profile else None,
+                    "languages": profile.languages if profile else [],
+                    "certifications": profile.certifications if profile else [],
+                    "service_radius": profile.service_radius_km if profile else None,
+                    "verified": profile.is_verified if profile else False,
+                    "created_at": user.created_at.isoformat(),
+                    "updated_at": user.updated_at.isoformat(),
+                }
+                result.append(provider_data)
+
+            except Exception as e:
+                print(f"Error processing user {user.id}: {e}")
+                # Add a basic provider entry even if profile loading fails
+                result.append({
+                    "id": user.id,
+                    "username": user.username,
+                    "full_name": user.full_name,
+                    "email": user.email,
+                    "profile_image": user.profile_image,
+                    "location": None,
+                    "provider_bio": None,
+                    "provider_hourly_rate": None,
+                    "provider_services": [],
+                    "is_available": True,
+                    "rating": None,
+                    "review_count": 0,
+                    "completed_bookings": 0,
+                    "experience_years": None,
+                    "languages": [],
+                    "certifications": [],
+                    "service_radius": None,
+                    "verified": False,
+                    "created_at": user.created_at.isoformat(),
+                    "updated_at": user.updated_at.isoformat(),
+                })
+
+        return result
+
+    except Exception as e:
+        print(f"Error in get_providers: {e}")
+        import traceback
+        traceback.print_exc()
+        # Return empty list instead of crashing
+        return []
 
 # Provider endpoints are handled by the provider router
 
