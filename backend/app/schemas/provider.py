@@ -5,7 +5,7 @@ from typing import List, Optional
 # Base provider info
 class ProviderExtras(BaseModel):
     is_provider: bool = False
-    provider_services: Optional[List[int]] = None
+    provider_services: Optional[List[str]] = None  # Changed from List[int] to List[str] for service names
     provider_rating: Optional[float] = None
     provider_rating_count: Optional[int] = None
     provider_bio: Optional[str] = None

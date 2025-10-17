@@ -85,31 +85,22 @@ def get_providers(
                 user_data = UserRead.model_validate(p).model_dump()
                 print(f"🔍 DEBUG: Provider {p.id} validated successfully")
 
-                # Check if provider has profile
-                if hasattr(p, "provider_profile") and p.provider_profile:
-                    print(f"🔍 DEBUG: Provider {p.id} has provider_profile")
-                    print(
-                        f"🔍 DEBUG: Provider {p.id} profile bio: {p.provider_profile.bio}"
-                    )
-                    print(
-                        f"🔍 DEBUG: Provider {p.id} profile rating: {p.provider_profile.rating}"
-                    )
-                    print(
-                        f"🔍 DEBUG: Provider {p.id} profile rating_count: {p.provider_profile.rating_count}"
-                    )
+                # Check if provider has enhanced profile
+                if hasattr(p, "enhanced_provider_profile") and p.enhanced_provider_profile:
+                    print(f"🔍 DEBUG: Provider {p.id} has enhanced_provider_profile")
 
                     try:
                         # Safely get services
                         services = []
                         if (
-                            hasattr(p.provider_profile, "services")
-                            and p.provider_profile.services
+                            hasattr(p.enhanced_provider_profile, "services")
+                            and p.enhanced_provider_profile.services
                         ):
                             print(
                                 f"🔍 DEBUG: Provider {p.id} has services relationship"
                             )
                             services = [
-                                service.name for service in p.provider_profile.services
+                                service.name for service in p.enhanced_provider_profile.services
                             ]
                             print(f"🔍 DEBUG: Provider {p.id} services: {services}")
                         else:
@@ -118,10 +109,10 @@ def get_providers(
                         user_data.update(
                             {
                                 "provider_services": services,
-                                "provider_bio": p.provider_profile.bio,
-                                "provider_hourly_rate": p.provider_profile.hourly_rate,
-                                "provider_rating": p.provider_profile.rating,
-                                "provider_rating_count": p.provider_profile.rating_count
+                                "provider_bio": p.enhanced_provider_profile.bio,
+                                "provider_hourly_rate": p.enhanced_provider_profile.hourly_rate,
+                                "provider_rating": p.enhanced_provider_profile.average_rating,
+                                "provider_rating_count": p.enhanced_provider_profile.total_reviews
                                 or 0,
                             }
                         )
@@ -132,7 +123,6 @@ def get_providers(
                         print(
                             f"❌ DEBUG: Error processing provider {p.id} profile: {profile_error}"
                         )
-                        print(f"❌ DEBUG: Profile error type: {type(profile_error)}")
                         # Add default values if there's an error
                         user_data.update(
                             {
@@ -144,7 +134,7 @@ def get_providers(
                             }
                         )
                 else:
-                    print(f"🔍 DEBUG: Provider {p.id} has no provider_profile")
+                    print(f"🔍 DEBUG: Provider {p.id} has no enhanced_provider_profile")
 
                 results.append(user_data)
                 print(f"🔍 DEBUG: Provider {p.id} added to results successfully")
@@ -156,7 +146,6 @@ def get_providers(
                 continue
 
         print(f"🔍 DEBUG: Returning {len(results)} providers")
-        print(f"🔍 DEBUG: Results: {results}")
         return results
 
     except Exception as e:
