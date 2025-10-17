@@ -184,6 +184,12 @@ def google_auth(request: GoogleAuthRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Authentication failed: {str(e)}")
 
 
+@router.get("/me", response_model=UserRead)
+def get_current_user_info(current_user: UserORM = Depends(get_current_user)):
+    """Get current user information"""
+    return UserRead.model_validate(current_user)
+
+
 @router.patch("/me", response_model=UserRead)
 def update_user(
     update: UserUpdate,
@@ -257,20 +263,6 @@ def update_user(
 
     db.commit()
     db.refresh(current_user)
-    print(f"DEBUG: Current user provider_profile after refresh: {current_user.provider_profile}")
-    print(f"DEBUG: Provider profile services after refresh: {current_user.provider_profile.services if current_user.provider_profile else 'No profile'}")
-
-    # Explicitly load the provider_profile relationship with joined loading
-    if current_user.is_provider:
-        from sqlalchemy.orm import joinedload
-        current_user = db.query(UserORM).options(
-            joinedload(UserORM.provider_profile).joinedload(ProviderORM.services),
-            joinedload(UserORM.enhanced_provider_profile).joinedload(ProviderProfileORM.services)
-        ).filter(UserORM.id == current_user.id).first()
-        print(f"DEBUG: After joinedload - provider_profile: {current_user.provider_profile}")
-        print(f"DEBUG: After joinedload - enhanced_provider_profile: {current_user.enhanced_provider_profile}")
-        print(f"DEBUG: After joinedload - services: {current_user.provider_profile.services if current_user.provider_profile else 'No profile'}")
-        print(f"DEBUG: After joinedload - enhanced services: {current_user.enhanced_provider_profile.services if current_user.enhanced_provider_profile else 'No enhanced profile'}")
 
     # Now return the user data which will trigger UserRead.model_validate
     return UserRead.model_validate(current_user)
