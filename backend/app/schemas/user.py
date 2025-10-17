@@ -43,8 +43,8 @@ class UserRead(ProviderExtras, UserContact, UserBase):
     country: Optional[str] = None
     postal_code: Optional[str] = None
 
-    latitude: Optional[str] = None
-    longitude: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
     @classmethod
     def model_validate(cls, obj, **kwargs):
@@ -136,8 +136,8 @@ class UserUpdate(ProviderExtras, BaseModel):
     google_id: Optional[str] = None
     profile_picture_url: Optional[str] = None
 
-    latitude: Optional[str] = None
-    longitude: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
     # Provider fields - override to use service names instead of IDs
     provider_services: Optional[List[str]] = None  # Changed from List[int] to List[str]

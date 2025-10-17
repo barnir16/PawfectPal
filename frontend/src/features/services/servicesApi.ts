@@ -44,6 +44,21 @@ export async function getServices(status: "active" | "history"): Promise<Service
 function transformUserToServiceProvider(user: BackendUserRead): ServiceProvider {
   // Parse provider_services if it's a JSON string and narrow to ServiceType[]
   const allowed: ServiceType[] = ['walking', 'sitting', 'boarding', 'grooming', 'veterinary'];
+
+  // Map backend service names to frontend service types
+  const serviceNameMap: { [key: string]: ServiceType } = {
+    'Dog Walking': 'walking',
+    'Pet Sitting': 'sitting',
+    'Boarding': 'boarding',
+    'Grooming': 'grooming',
+    'Veterinary': 'veterinary',
+    'walking': 'walking',
+    'sitting': 'sitting',
+    'boarding': 'boarding',
+    'grooming': 'grooming',
+    'veterinary': 'veterinary',
+  };
+
   let provider_services: ServiceType[] = [];
   if (user.provider_services) {
     let raw: string[] = [];
@@ -54,11 +69,23 @@ function transformUserToServiceProvider(user: BackendUserRead): ServiceProvider 
       } catch (e) {
         raw = [user.provider_services];
       }
-    } else {
+    } else if (Array.isArray(user.provider_services)) {
       raw = user.provider_services as string[];
+    } else {
+      raw = [];
     }
-    provider_services = raw.filter((v): v is ServiceType => (allowed as string[]).includes(v));
+
+    // Map service names to service types
+    provider_services = raw
+      .map(serviceName => serviceNameMap[serviceName])
+      .filter((serviceType): serviceType is ServiceType => serviceType !== undefined && allowed.includes(serviceType));
   }
+
+  console.log('🔍 Service transformation:', {
+    original: user.provider_services,
+    mapped: provider_services,
+    userId: user.id
+  });
 
   return {
     id: user.id,
@@ -95,13 +122,37 @@ async function fetchBackendProviders(filter?: string[]): Promise<ServiceProvider
     // Backend expects repeated query params or a single param; we’ll append all values
     for (const f of filter) params.append('filter', f);
   }
-  const res = await fetch(`${getBaseUrl()}/providers/?${params.toString()}`, {
+
+  const url = `${getBaseUrl()}/providers/?${params.toString()}`;
+  console.log(' Fetching backend providers:', {
+    url,
+    hasToken: !!token,
+    filter
+  });
+
+  const res = await fetch(url, {
     headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
   });
+
+  console.log(' Backend response:', {
+    status: res.status,
+    statusText: res.statusText,
+    ok: res.ok,
+    url: res.url
+  });
+
   if (!res.ok) {
+    const errorText = await res.text();
+    console.error(' Backend providers fetch failed:', {
+      status: res.status,
+      errorText,
+      url
+    });
     throw new Error(`Failed to fetch backend providers (${res.status})`);
   }
+
   const data: BackendUserRead[] = await res.json();
+  console.log(' Backend providers loaded:', data.length);
   return data.map(transformUserToServiceProvider);
 }
 
@@ -140,6 +191,7 @@ export async function getProviders(filter?: string[]): Promise<ServiceProvider[]
   return merged;
 }
 // [HYBRID_PROVIDER_FETCH - END]
+
 
 // Create a provider review (rating with optional comment)
 export async function createProviderReview(providerId: number, rating: number, comment?: string) {

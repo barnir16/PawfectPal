@@ -35,7 +35,7 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
         {/* Provider Header */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
           <Avatar 
-            src={provider.profile_image} 
+            src={provider.profile_image || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face&seed=default"}
             alt={provider.full_name || provider.username}
             sx={{ width: 56, height: 56 }}
           />

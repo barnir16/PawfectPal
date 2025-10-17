@@ -50,7 +50,7 @@ const steps = [
 export const ProviderProfileSetupPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useLocalization();
-  const { user } = useAuth();
+  const { user, checkAuth } = useAuth();
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -159,9 +159,27 @@ export const ProviderProfileSetupPage: React.FC = () => {
         isProvider: user?.is_provider
       });
 
-      if (!token) {
-        setError('Authentication token not found. Please log in again.');
-        return;
+      // First, make the user a provider if they're not already one
+      if (!user?.is_provider) {
+        console.log("🔄 Making user a provider...");
+        const providerResponse = await fetch(`${getBaseUrl()}/auth/me/provider`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!providerResponse.ok) {
+          const errorText = await providerResponse.text();
+          throw new Error(`Failed to become provider: ${providerResponse.status} ${errorText}`);
+        }
+
+        const updatedUser = await providerResponse.json();
+        console.log("✅ User is now a provider:", updatedUser);
+
+        // Update the user context
+        await checkAuth();
       }
 
       // First, check if user already has a provider profile
@@ -248,7 +266,6 @@ export const ProviderProfileSetupPage: React.FC = () => {
       }
 
       // Refresh user data after successful profile creation/update
-      const { checkAuth } = useAuth();
       await checkAuth();
 
       // Redirect to provider profile page
@@ -471,11 +488,11 @@ export const ProviderProfileSetupPage: React.FC = () => {
     }
   };
 
-  if (!user?.is_provider) {
+  if (!user) {
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="error">
-          You need to be a service provider to access this page.
+          You need to be logged in to access this page.
         </Alert>
       </Box>
     );
