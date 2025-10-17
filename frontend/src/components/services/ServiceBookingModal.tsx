@@ -16,9 +16,7 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import { useLocalization } from '../../contexts/LocalizationContext';
-import { ServiceTypeDropdown } from './ServiceTypeDropdown';
-import type { ServiceProvider, ServiceType } from '../../types/services';
+import { getFullImageUrl } from '../../utils/image';
 
 interface ServiceBookingModalProps {
   open: boolean;
@@ -140,10 +138,10 @@ export const ServiceBookingModal: React.FC<ServiceBookingModalProps> = ({
     >
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <img 
-              src={provider.profile_image} 
+            <img
+              src={getFullImageUrl(provider.profile_image)}
               alt={provider.full_name}
-              style={{ width: 50, height: 50, borderRadius: '50%' }}
+              style={{ width: 50, height: 50, borderRadius: '50%', objectFit: 'cover' }}
             />
             <Box>
               <Typography variant="h6">{provider.full_name}</Typography>

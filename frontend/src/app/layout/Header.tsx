@@ -57,52 +57,9 @@ export const Header = ({ onMenuClick, desktopOpen = true }: HeaderProps) => {
     handleClose();
   };
 
-  const handleToggleProvider = async () => {
-    try {
-      console.log("🔄 Attempting to become a provider...");
-      console.log("Current user:", user);
-
-      const token = await getToken();
-      if (!token) throw new Error("No auth token found");
-
-      console.log("🔑 Token found, making API call...");
-      const res = await fetch(`${getBaseUrl()}/auth/me/provider`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      console.log("📡 API response status:", res.status);
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error("❌ API error:", errorText);
-        throw new Error(
-          `Failed to become provider: ${res.status} ${errorText}`
-        );
-      }
-
-      const updatedUser = await res.json();
-      console.log("✅ Updated user:", updatedUser);
-      setUser(updatedUser);
-      console.log("🎉 Successfully became a provider!");
-
-      // If user just became a provider, redirect to profile setup
-      if (!user?.is_provider && updatedUser.is_provider) {
-        // Navigate to provider profile setup page
-        window.location.href = '/provider-profile-setup';
-      }
-    } catch (err: unknown) {
-      console.error("❌ Error becoming provider:", err);
-
-      let message = "Unknown error";
-      if (err instanceof Error) {
-        message = err.message;
-      }
-
-      alert(`Error becoming provider: ${message}`);
-    }
+  const handleToggleProvider = () => {
+    // Navigate to provider setup page instead of immediately making them a provider
+    navigate('/provider-profile-setup');
   };
 
   const open = Boolean(anchorEl);

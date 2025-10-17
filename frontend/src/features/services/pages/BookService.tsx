@@ -26,17 +26,14 @@ import { getFullImageUrl } from "../../../utils/image";
 import { CardMedia, CardActions, Button } from "@mui/material";
 
 export const BookService = () => {
+
   const { t } = useLocalization();
   const navigate = useNavigate();
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
-  const [filteredProviders, setFilteredProviders] = useState<ServiceProvider[]>(
-    []
-  );
+  const [filteredProviders, setFilteredProviders] = useState<ServiceProvider[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedServiceType, setSelectedServiceType] = useState<
-    ServiceType | ""
-  >("");
+  const [selectedServiceType, setSelectedServiceType] = useState<ServiceType | "">("");
 
   useEffect(() => {
     const fetchProviders = async () => {
@@ -44,6 +41,7 @@ export const BookService = () => {
       setError(null);
       try {
         const data = await getProviders();
+
         setProviders(data);
         setFilteredProviders(data);
       } catch (err: any) {
@@ -69,6 +67,7 @@ export const BookService = () => {
   }, [selectedServiceType, providers]);
 
   const renderContent = () => {
+
     if (loading) {
       return (
         <Box
@@ -103,19 +102,15 @@ export const BookService = () => {
       );
     }
 
-    return (
+return (
       <Grid container spacing={3}>
         {filteredProviders.map((provider) => (
-          <Grid key={provider.id} size={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid item key={provider.id} xs={12} sm={6} md={4}>
             <ServiceProviderCard
               provider={provider}
               onRequestService={(provider) => {
-                console.log("Service request created for provider:", provider);
-                // TODO: Navigate to chat or show success message
               }}
               onViewProfile={(provider) => {
-                console.log('🔍 Provider profile click:', provider);
-                console.log('🔍 Provider ID:', provider.id, 'Type:', typeof provider.id);
                 navigate(`/provider/${provider.id}`);
               }}
             />
@@ -124,6 +119,7 @@ export const BookService = () => {
       </Grid>
     );
   };
+
 
   return (
     <ServiceErrorBoundary>

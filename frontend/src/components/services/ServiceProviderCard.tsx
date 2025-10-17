@@ -29,6 +29,7 @@ import {
 } from "@mui/icons-material";
 import { useLocalization } from "../../contexts/LocalizationContext";
 import { ServiceRequestForm } from "./ServiceRequestForm";
+import { getFullImageUrl } from '../../utils/image';
 import type { ServiceProvider } from "../../types/services";
 import {
   createProviderReview,
@@ -137,6 +138,8 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
         display: "flex",
         flexDirection: "column",
         transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+        maxWidth: 300,
+        width: "100%",
         "&:hover": {
           transform: "translateY(-4px)",
           boxShadow: 4,
@@ -147,7 +150,7 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
       <CardContent sx={{ flexGrow: 1, pb: 1 }}>
         <Box sx={{ display: "flex", alignItems: "flex-start", mb: 2 }}>
           <Avatar
-            src={provider.profile_image}
+            src={getFullImageUrl(provider.profile_image)}
             alt={provider.full_name}
             sx={{
               width: 80,
@@ -219,7 +222,7 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
               {provider.provider_rating.toFixed(1)}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              ({provider.provider_rating_count || 0} {t('services.reviews') || 'reviews'})
+              ({provider.reviews_count || 0} {t('services.reviews') || 'reviews'})
             </Typography>
           </Box>
         )}

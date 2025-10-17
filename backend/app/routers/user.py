@@ -273,62 +273,74 @@ def toggle_provider_status(
     db: Session = Depends(get_db),
     current_user: UserORM = Depends(get_current_user),
 ):
-    # Flip current value
-    current_user.is_provider = not current_user.is_provider
+    """Toggle provider status for current user"""
+    try:
+        # Flip current value
+        current_user.is_provider = not current_user.is_provider
 
-    if current_user.is_provider:
-        # Becoming a provider: create provider record if not exists
-        if (
-            not db.query(ProviderORM)
-            .filter(ProviderORM.user_id == current_user.id)
-            .first()
-        ):
-            db.add(ProviderORM(user_id=current_user.id))
-        
-        # Also create enhanced provider profile if not exists
-        if (
-            not db.query(ProviderProfileORM)
-            .filter(ProviderProfileORM.user_id == current_user.id)
-            .first()
-        ):
-            # Create a basic enhanced provider profile
-            enhanced_profile = ProviderProfileORM(
-                user_id=current_user.id,
-                bio="",
-                hourly_rate=None,
-                service_radius_km=None,
-                is_available=True,
-                experience_years=None,
-                languages=[],
-                certifications=[],
-                is_verified=False,
-                average_rating=None,
-                total_reviews=0
+        if current_user.is_provider:
+            # Becoming a provider: create provider record if not exists
+            existing_provider = (
+                db.query(ProviderORM)
+                .filter(ProviderORM.user_id == current_user.id)
+                .first()
             )
-            db.add(enhanced_profile)
-    else:
-        # Unbecoming a provider: remove provider record
-        existing_provider = (
-            db.query(ProviderORM).filter(ProviderORM.user_id == current_user.id).first()
-        )
-        if existing_provider:
-            db.delete(existing_provider)
-            # Clear provider-related fields if needed
-            current_user.provider_bio = None
-            current_user.provider_hourly_rate = None
-            current_user.provider_rating = None
-            current_user.provider_services = None
-        
-        # Also remove enhanced provider profile
-        existing_enhanced_profile = (
-            db.query(ProviderProfileORM).filter(ProviderProfileORM.user_id == current_user.id).first()
-        )
-        if existing_enhanced_profile:
-            db.delete(existing_enhanced_profile)
+            if not existing_provider:
+                db.add(ProviderORM(user_id=current_user.id))
 
-    db.commit()
-    db.refresh(current_user)
-    return current_user
+            # Also create enhanced provider profile if not exists
+            existing_enhanced_profile = (
+                db.query(ProviderProfileORM)
+                .filter(ProviderProfileORM.user_id == current_user.id)
+                .first()
+            )
+            if not existing_enhanced_profile:
+                # Create a basic enhanced provider profile
+                enhanced_profile = ProviderProfileORM(
+                    user_id=current_user.id,
+                    bio="",
+                    hourly_rate=None,
+                    service_radius_km=None,
+                    is_available=True,
+                    experience_years=None,
+                    languages=[],
+                    certifications=[],
+                    is_verified=False,
+                    average_rating=None,
+                    total_reviews=0
+                )
+                db.add(enhanced_profile)
+        else:
+            # Unbecoming a provider: remove provider record
+            existing_provider = (
+                db.query(ProviderORM).filter(ProviderORM.user_id == current_user.id).first()
+            )
+            if existing_provider:
+                db.delete(existing_provider)
+                # Clear provider-related fields if needed
+                current_user.provider_bio = None
+                current_user.provider_hourly_rate = None
+                current_user.provider_rating = None
+                current_user.provider_services = None
+
+            # Also remove enhanced provider profile
+            existing_enhanced_profile = (
+                db.query(ProviderProfileORM).filter(ProviderProfileORM.user_id == current_user.id).first()
+            )
+            if existing_enhanced_profile:
+                db.delete(existing_enhanced_profile)
+
+        db.commit()
+        db.refresh(current_user)
+        return current_user
+
+    except Exception as e:
+        db.rollback()
+        print(f"❌ Error toggling provider status: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to update provider status: {str(e)}"
+        )
 
 
 @user_router.get("/me", response_model=UserRead)
