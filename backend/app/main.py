@@ -210,19 +210,22 @@ def get_providers(db: Session = Depends(get_db)):
             "full_name": user.full_name,
             "email": user.email,
             "profile_image": user.profile_image,
-            "location": profile.location if profile else None,
+            "location": {
+                "latitude": user.latitude,
+                "longitude": user.longitude
+            } if user.latitude and user.longitude else None,
             "provider_bio": profile.bio if profile else None,
             "provider_hourly_rate": profile.hourly_rate if profile else None,
             "provider_services": service_types,
             "is_available": profile.is_available if profile else True,
             "rating": profile.average_rating if profile else None,
-            "review_count": profile.review_count if profile else 0,
-            "completed_bookings": profile.completed_bookings if profile else 0,
+            "review_count": profile.total_reviews if profile else 0,
+            "completed_bookings": 0,  # Not tracked in current model
             "experience_years": profile.experience_years if profile else None,
             "languages": profile.languages if profile else [],
             "certifications": profile.certifications if profile else [],
-            "service_radius": profile.service_radius if profile else None,
-            "verified": profile.verified if profile else False,
+            "service_radius": profile.service_radius_km if profile else None,
+            "verified": profile.is_verified if profile else False,
             "created_at": user.created_at.isoformat(),
             "updated_at": user.updated_at.isoformat(),
         }
