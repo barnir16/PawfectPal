@@ -64,9 +64,9 @@ class UserRead(ProviderExtras, UserContact, UserBase):
             # Handle services as list of ServiceTypeORM objects from ProviderORM
             print(f"DEBUG: Using provider_profile: {obj.provider_profile}")
             if hasattr(obj.provider_profile, 'services') and obj.provider_profile.services:
-                service_ids = [service.id for service in obj.provider_profile.services]
-                print(f"DEBUG: Provider profile services IDs: {service_ids}")
-                data["provider_services"] = service_ids
+                service_names = [service.name for service in obj.provider_profile.services]
+                print(f"DEBUG: Provider profile services names: {service_names}")
+                data["provider_services"] = service_names
             else:
                 print(f"DEBUG: Provider profile has no services or services not loaded")
                 data["provider_services"] = None
@@ -80,13 +80,13 @@ class UserRead(ProviderExtras, UserContact, UserBase):
             print(f"DEBUG: Using enhanced_provider_profile: {obj.enhanced_provider_profile}")
             # Handle services as list of ServiceTypeORM objects from ProviderProfileORM
             if hasattr(obj.enhanced_provider_profile, 'services') and obj.enhanced_provider_profile.services:
-                service_ids = [service.id for service in obj.enhanced_provider_profile.services]
-                print(f"DEBUG: Enhanced provider profile services IDs: {service_ids}")
+                service_names = [service.name for service in obj.enhanced_provider_profile.services]
+                print(f"DEBUG: Enhanced provider profile services names: {service_names}")
                 # If we already have services from provider_profile, merge them
                 if data["provider_services"]:
-                    data["provider_services"] = list(set(data["provider_services"] + service_ids))
+                    data["provider_services"] = list(set(data["provider_services"] + service_names))
                 else:
-                    data["provider_services"] = service_ids
+                    data["provider_services"] = service_names
             else:
                 print(f"DEBUG: Enhanced provider profile has no services or services not loaded")
 
