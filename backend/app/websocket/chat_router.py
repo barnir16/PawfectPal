@@ -35,9 +35,15 @@ async def websocket_chat_endpoint(
             return
             
         # Get current user from token
-        current_user = await get_current_user_websocket(token, db)
+        current_user = await get_current_user_websocket(token)
         if not current_user:
             await websocket.close(code=1008, reason="Invalid authentication")
+            return
+            
+        # Refresh the user from the database to get the latest data
+        current_user = db.query(UserORM).filter(UserORM.id == current_user.id).first()
+        if not current_user:
+            await websocket.close(code=1008, reason="User not found")
             return
             
         # Verify service request exists and user has access

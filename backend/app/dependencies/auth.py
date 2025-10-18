@@ -1,4 +1,4 @@
-from fastapi import HTTPException, Depends, status
+from fastapi import HTTPException, Depends, status, WebSocket
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 from app.auth.utils import oauth2_scheme, get_user_by_username
@@ -31,8 +31,21 @@ def get_current_user(
     return user
 
 
-def get_current_user_websocket(token: str) -> Optional[UserORM]:
-    """Get current authenticated user for WebSocket connections"""
+def get_current_user_websocket(token: str = None, websocket: WebSocket = None) -> Optional[UserORM]:
+    """Get current authenticated user for WebSocket connections
+    
+    Args:
+        token: JWT token from the WebSocket connection
+        websocket: Optional WebSocket instance (for compatibility with FastAPI's dependency injection)
+    """
+    # Handle case where token is passed as part of WebSocket query params
+    if websocket is not None and token is None:
+        query_params = dict(websocket.scope.get("query_string", b"").decode().split("&"))
+        token = query_params.get("token")
+        
+    if not token:
+        return None
+        
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: Optional[str] = payload.get("sub")
@@ -46,6 +59,7 @@ def get_current_user_websocket(token: str) -> Optional[UserORM]:
     from sqlalchemy.orm import sessionmaker
     from sqlalchemy import create_engine
     from config import DATABASE_URL
+    from fastapi import WebSocket
     
     engine = create_engine(DATABASE_URL)
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
