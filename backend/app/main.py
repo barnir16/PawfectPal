@@ -100,11 +100,13 @@ app.add_middleware(
         "https://pawfectpal-production.up.railway.app",
         "http://localhost:3000",
         "http://localhost:5173",
-        "*"
+        "https://pawfectpal.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=600,  # Cache preflight response for 10 minutes
 )
 
 # Serve static files (uploaded images)
