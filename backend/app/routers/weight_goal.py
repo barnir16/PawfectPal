@@ -198,6 +198,22 @@ async def update_weight_goal(
 
         # Update the weight goal
         update_data = weight_goal_update.model_dump(exclude_unset=True)
+        
+        # If pet_id is being updated, verify the new pet belongs to the current user
+        if 'pet_id' in update_data:
+            new_pet = (
+                db.query(PetORM)
+                .filter(
+                    PetORM.id == update_data['pet_id'], PetORM.user_id == current_user.id
+                )
+                .first()
+            )
+            if not new_pet:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Pet not found or access denied",
+                )
+        
         for field, value in update_data.items():
             setattr(db_weight_goal, field, value)
 

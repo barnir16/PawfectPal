@@ -100,11 +100,13 @@ app.add_middleware(
         "https://pawfectpal-production.up.railway.app",
         "http://localhost:3000",
         "http://localhost:5173",
-        "*"
+        "https://pawfectpal.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=600,  # Cache preflight response for 10 minutes
 )
 
 # Serve static files (uploaded images)
@@ -185,52 +187,6 @@ def test_image(filename: str):
         "size": image_path.stat().st_size if image_path.exists() else 0,
         "url": f"https://pawfectpal-production.up.railway.app/uploads/images/{filename}",
     }
-
-
-@app.get("/providers")
-def get_providers(db: Session = Depends(get_db)):
-    """Get all service providers"""
-    providers = db.query(UserORM).filter(UserORM.is_provider == True).all()
-    
-    result = []
-    for user in providers:
-        # Get provider profile if exists
-        profile = db.query(ProviderProfileORM).filter(
-            ProviderProfileORM.user_id == user.id
-        ).first()
-        
-        # Get service types
-        service_types = []
-        if profile:
-            service_types = [st.name for st in profile.services]
-        
-        provider_data = {
-            "id": user.id,
-            "username": user.username,
-            "full_name": user.full_name,
-            "email": user.email,
-            "profile_image": user.profile_image,
-            "location": profile.location if profile else None,
-            "provider_bio": profile.bio if profile else None,
-            "provider_hourly_rate": profile.hourly_rate if profile else None,
-            "provider_services": service_types,
-            "is_available": profile.is_available if profile else True,
-            "rating": profile.average_rating if profile else None,
-            "review_count": profile.review_count if profile else 0,
-            "completed_bookings": profile.completed_bookings if profile else 0,
-            "experience_years": profile.experience_years if profile else None,
-            "languages": profile.languages if profile else [],
-            "certifications": profile.certifications if profile else [],
-            "service_radius": profile.service_radius if profile else None,
-            "verified": profile.verified if profile else False,
-            "created_at": user.created_at.isoformat(),
-            "updated_at": user.updated_at.isoformat(),
-        }
-        result.append(provider_data)
-    
-    return result
-
-# Provider endpoints are handled by the provider router
 
 
 @app.get("/")
