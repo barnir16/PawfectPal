@@ -101,7 +101,7 @@ function transformUserToServiceProvider(user: BackendUserRead): ServiceProvider 
     } : undefined,
     distance_km: undefined, // Will be calculated on frontend
     is_available: true, // Default to available
-    languages: ["עברית"], // Default language
+    languages: ["English", "Hebrew"], // Default language
     experience_years: undefined,
     response_time_minutes: undefined,
     completed_bookings: undefined,
