@@ -11,7 +11,7 @@
 
 ## 🎥 Demo Video  
 
-[![Watch the Demo](frontend/public/PawFectPal_thumbnail.jpg)](https://youtu.be/4o4uWqYNfxs)  
+[![Watch the Demo](frontend/public/PawFectPal_thumbnail.png)](https://youtu.be/4o4uWqYNfxs)  
 *Click the thumbnail to watch the full demo on YouTube!*
 
 ---
