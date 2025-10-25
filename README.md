@@ -154,13 +154,6 @@ This project is licensed under the **MIT License** – see the LICENSE file for 
 
 ---
 
-## 💌 Contact
-
-For questions or support, please open an issue on GitHub or contact us at:  
-📧 [your-email@example.com](mailto:your-email@example.com)
-
----
-
 ## ❤️ Made With Love
 
 Built by  
