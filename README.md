@@ -4,7 +4,7 @@
 
 ---
 
-## 🌐 Live Demo  https://pawfectpal-production-2f07.up.railway.app/auth
+## 🌐 Live Demo
 🚀 **Try it here:** [https://pawfectpal-production-2f07.up.railway.app](https://pawfectpal-production-2f07.up.railway.app)
 
 ---
