@@ -320,7 +320,46 @@ async def chat_with_ai(
 
 @router.get("/test")
 async def test_ai():
-    return {"message": "AI service is working", "status": "ok"}
+    # Diagnostic probe to find exactly why the API key fetch fails
+    from app.services.firebase_admin import firebase_admin
+    
+    diagnostic = {}
+    diagnostic["firebase_initialized"] = firebase_admin.initialized
+    
+    # Try initializing
+    try:
+        init_res = firebase_admin.initialize()
+        diagnostic["initialize_called"] = str(init_res)
+        diagnostic["access_token_exists"] = bool(firebase_admin.access_token)
+    except Exception as e:
+        diagnostic["initialize_error"] = str(e)
+        
+    # Try fetching config
+    try:
+        cfg = firebase_admin.get_remote_config()
+        diagnostic["config_keys"] = list(cfg.keys()) if cfg else []
+    except Exception as e:
+        diagnostic["fetch_config_error"] = str(e)
+        
+    # Check what get_config_value("gemini_api_key") returns
+    try:
+        gemini_val = firebase_admin.get_config_value("gemini_api_key")
+        diagnostic["gemini_config_val_exists"] = bool(gemini_val)
+        if gemini_val:
+            diagnostic["gemini_val_prefix"] = gemini_val[:10]
+    except Exception as e:
+        diagnostic["gemini_val_error"] = str(e)
+        
+    # Check the final method
+    try:
+        final_key = firebase_admin.get_gemini_api_key()
+        diagnostic["final_key_exists"] = bool(final_key)
+        if final_key:
+            diagnostic["final_key_prefix"] = final_key[:10]
+    except Exception as e:
+        diagnostic["final_key_error"] = str(e)
+        
+    return {"message": "AI service diagnostic", "status": "ok", "diagnostic": diagnostic}
 
 
 @router.get("/firebase-config", response_model=FirebaseConfigResponse)
