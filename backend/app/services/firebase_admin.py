@@ -77,16 +77,16 @@ class FirebaseAdminService:
                     print("Firebase initialization failed, cannot fetch Remote Config")
                     return {}
             
-            # Use Firebase REST API with API key
+            # Use Firebase REST API with OAuth2 Bearer Token
             url = f"https://firebaseremoteconfig.googleapis.com/v1/projects/{self.project_id}/remoteConfig"
-            params = {
-                "key": self.access_token  # This is the Firebase API key
+            headers = {
+                "Authorization": f"Bearer {self.access_token}"
             }
             
             print(f"Fetching Remote Config from: {url}")
-            print(f"Using API key: {self.access_token[:20]}...")
+            print(f"Using OAuth2 Token: {self.access_token[:20]}...")
             
-            response = requests.get(url, params=params, timeout=10)
+            response = requests.get(url, headers=headers, timeout=10)
             response.raise_for_status()
             
             data = response.json()
