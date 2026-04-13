@@ -20,6 +20,7 @@ class WeightGoalCreate(WeightGoalBase):
 
 class WeightGoalUpdate(BaseModel):
     """Schema for updating a weight goal"""
+    pet_id: Optional[int] = Field(None, description="ID of the pet")
     target_weight: Optional[float] = Field(None, gt=0, description="Target weight value")
     weight_unit: Optional[str] = Field(None, description="Weight unit (kg or lbs)")
     goal_type: Optional[str] = Field(None, description="Type of goal")

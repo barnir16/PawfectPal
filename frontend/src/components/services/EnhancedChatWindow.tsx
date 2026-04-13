@@ -14,7 +14,6 @@ import {
   ListItemText,
   Button,
   Stack,
-  Divider,
   Tooltip,
   Menu,
   MenuItem,
@@ -28,8 +27,6 @@ import {
   Alert,
   Snackbar,
   Collapse,
-  LinearProgress,
-  Badge,
 } from "@mui/material";
 import {
   Send,
@@ -39,7 +36,6 @@ import {
   Schedule,
   Pets,
   CheckCircle,
-  AccessTime,
   MoreVert,
   Reply,
   Star,
@@ -52,19 +48,13 @@ import {
   Person,
   Favorite,
   ThumbUp,
-  ThumbDown,
   Message,
-  Refresh,
   Error,
   Warning,
-  Info,
-  Wifi,
   WifiOff,
   CloudOff,
-  CloudDone,
   Replay,
   Business,
-  Home,
   AttachMoney,
   Emergency,
   ExpandMore,
@@ -85,10 +75,8 @@ import type {
   ReplyToMessage,
 } from "../../types/services/chat";
 import type { Pet } from "../../types/pets/pet";
-import { chatService } from "../../services/chat/chatService";
 import { formatMessageTime } from "../../utils/timeUtils";
 import { ReplyMessage } from "./ReplyMessage";
-import { ReplyButton } from "./ReplyButton";
 import { MessageReactions } from "./MessageReactions";
 import { MessageSearch } from "./MessageSearch";
 import { FilePreview } from "./FilePreview";
@@ -111,7 +99,7 @@ interface EnhancedChatWindowProps {
     title: string;
     service_type: string;
     description: string;
-    status: 'open' | 'in_progress' | 'completed' | 'closed';
+    status: "open" | "in_progress" | "completed" | "closed";
     location?: string;
     budget_min?: number;
     budget_max?: number;
@@ -165,125 +153,167 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [otherUserTyping, setOtherUserTyping] = useState(false);
-  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(
+    null
+  );
   const [hoveredMessageId, setHoveredMessageId] = useState<number | null>(null);
-  
+
   // Enhanced error handling and connection status
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'reconnecting'>('connected');
+  const [connectionStatus, setConnectionStatus] = useState<
+    "connected" | "disconnected" | "reconnecting"
+  >("connected");
   const [errorState, setErrorState] = useState<{
-    type: 'network' | 'permission' | 'validation' | 'server' | null;
+    type: "network" | "permission" | "validation" | "server" | null;
     message: string;
     retryable: boolean;
-  }>({ type: null, message: '', retryable: false });
+  }>({ type: null, message: "", retryable: false });
   const [retryCount, setRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
-  const [offlineMessages, setOfflineMessages] = useState<ChatMessageCreate[]>([]);
-  
+  const [offlineMessages, setOfflineMessages] = useState<ChatMessageCreate[]>(
+    []
+  );
+
   // Service request context panel
-  const [showServiceContext, setShowServiceContext] = useState(true);
-  
+  const [showServiceContext, setShowServiceContext] = useState(false);
+
   // Reply functionality
   const [replyingTo, setReplyingTo] = useState<ReplyToMessage | null>(null);
-  const [messageReactions, setMessageReactions] = useState<Map<number, any[]>>(new Map());
-  
+  const [messageReactions, setMessageReactions] = useState<Map<number, any[]>>(
+    new Map()
+  );
+
   // Search functionality
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [highlightedMessageId, setHighlightedMessageId] = useState<number | null>(null);
-  
+  const [highlightedMessageId, setHighlightedMessageId] = useState<
+    number | null
+  >(null);
+
   // File upload progress
-  const [uploadProgress, setUploadProgress] = useState<Map<string, { progress: number; status: 'uploading' | 'completed' | 'error'; error?: string }>>(new Map());
-  
+  const [uploadProgress, setUploadProgress] = useState<
+    Map<
+      string,
+      {
+        progress: number;
+        status: "uploading" | "completed" | "error";
+        error?: string;
+      }
+    >
+  >(new Map());
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
-  const quickReplies: QuickReply[] = user?.is_provider ? [
-    // Provider-specific quick replies
-    {
-      id: "greeting",
-      text: t('chat.quickReplies.provider.greeting') || "Hi! I'm interested in providing this service for you.",
-      icon: <Pets />,
-    },
-    {
-      id: "availability",
-      text: t('chat.quickReplies.provider.availability') || "I'm available for this service. When would be a good time to discuss the details?",
-      icon: <Schedule />,
-    },
-    {
-      id: "experience",
-      text: t('chat.quickReplies.provider.experience') || "I have extensive experience with this type of service. Would you like to schedule a consultation?",
-      icon: <Star />,
-    },
-    {
-      id: "location",
-      text: t('chat.quickReplies.provider.location') || "I'm located nearby. Would you like to meet in person to discuss the service?",
-      icon: <LocationOn />,
-    },
-    {
-      id: "photos",
-      text: t('chat.quickReplies.provider.photos') || "Could you share some photos of your pet? This will help me provide the best care.",
-      icon: <Image />,
-    },
-    {
-      id: "instructions",
-      text: t('chat.quickReplies.provider.instructions') || "Please share any special instructions or requirements for your pet's care.",
-      icon: <Pets />,
-    },
-  ] : [
-    // Client-specific quick replies
-    {
-      id: "greeting",
-      text: t('chat.quickReplies.client.greeting') || "Hi! I'm interested in your service request.",
-      icon: <Pets />,
-    },
-    {
-      id: "availability",
-      text: t('chat.quickReplies.client.availability') || "I'm available for this service. When would you like to meet?",
-      icon: <Schedule />,
-    },
-    {
-      id: "location",
-      text: t('chat.quickReplies.client.location') || "Could you share the exact location?",
-      icon: <LocationOn />,
-    },
-    {
-      id: "photos",
-      text: "Could you send some photos of your pet?",
-      icon: <Image />,
-    },
-    {
-      id: "confirm",
-      text: "Perfect! I'll be there at the scheduled time.",
-      icon: <CheckCircle />,
-    },
-    {
-      id: "instructions",
-      text: "Please share any special instructions for your pet.",
-      icon: <Pets />,
-    },
-  ];
+  const quickReplies: QuickReply[] = user?.is_provider
+    ? [
+        // Provider-specific quick replies
+        {
+          id: "greeting",
+          text:
+            t("chat.quickReplies.provider.greeting") ||
+            "Hi! I'm interested in providing this service for you.",
+          icon: <Pets />,
+        },
+        {
+          id: "availability",
+          text:
+            t("chat.quickReplies.provider.availability") ||
+            "I'm available for this service. When would be a good time to discuss the details?",
+          icon: <Schedule />,
+        },
+        {
+          id: "experience",
+          text:
+            t("chat.quickReplies.provider.experience") ||
+            "I have extensive experience with this type of service. Would you like to schedule a consultation?",
+          icon: <Star />,
+        },
+        {
+          id: "location",
+          text:
+            t("chat.quickReplies.provider.location") ||
+            "I'm located nearby. Would you like to meet in person to discuss the service?",
+          icon: <LocationOn />,
+        },
+        {
+          id: "photos",
+          text:
+            t("chat.quickReplies.provider.photos") ||
+            "Could you share some photos of your pet? This will help me provide the best care.",
+          icon: <Image />,
+        },
+        {
+          id: "instructions",
+          text:
+            t("chat.quickReplies.provider.instructions") ||
+            "Please share any special instructions or requirements for your pet's care.",
+          icon: <Pets />,
+        },
+      ]
+    : [
+        // Client-specific quick replies
+        {
+          id: "greeting",
+          text:
+            t("chat.quickReplies.client.greeting") ||
+            "Hi! I'm interested in your service request.",
+          icon: <Pets />,
+        },
+        {
+          id: "availability",
+          text:
+            t("chat.quickReplies.client.availability") ||
+            "I'm available for this service. When would you like to meet?",
+          icon: <Schedule />,
+        },
+        {
+          id: "location",
+          text:
+            t("chat.quickReplies.client.location") ||
+            "Could you share the exact location?",
+          icon: <LocationOn />,
+        },
+        {
+          id: "photos",
+          text: "Could you send some photos of your pet?",
+          icon: <Image />,
+        },
+        {
+          id: "confirm",
+          text: "Perfect! I'll be there at the scheduled time.",
+          icon: <CheckCircle />,
+        },
+        {
+          id: "instructions",
+          text: "Please share any special instructions for your pet.",
+          icon: <Pets />,
+        },
+      ];
 
   // Debug logging for quick replies
-  console.log('🔍 Quick Replies Debug:', {
+  console.log("🔍 Quick Replies Debug:", {
     user: user,
     isProvider: user?.is_provider,
     quickRepliesCount: quickReplies.length,
-    quickReplies: quickReplies.map(r => ({ id: r.id, text: r.text.substring(0, 30) + '...' }))
+    quickReplies: quickReplies.map((r) => ({
+      id: r.id,
+      text: r.text.substring(0, 30) + "...",
+    })),
   });
 
   // File validation constants
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
   const MAX_FILES = 5;
   const ALLOWED_FILE_TYPES = [
-    'image/jpeg',
-    'image/png', 
-    'image/gif',
-    'image/webp',
-    'application/pdf',
-    'text/plain',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "application/pdf",
+    "text/plain",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   ];
 
   const validateFile = (file: File): string | null => {
@@ -291,12 +321,12 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     if (file.size > MAX_FILE_SIZE) {
       return `File "${file.name}" is too large. Maximum size is ${MAX_FILE_SIZE / (1024 * 1024)}MB`;
     }
-    
+
     // Check file type
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {
       return `File "${file.name}" has an unsupported type. Allowed types: images, PDF, text, Word documents`;
     }
-    
+
     return null;
   };
 
@@ -305,13 +335,13 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     if (files.length > MAX_FILES) {
       return `Too many files. Maximum ${MAX_FILES} files allowed`;
     }
-    
+
     // Validate each file
     for (const file of files) {
       const error = validateFile(file);
       if (error) return error;
     }
-    
+
     return null;
   };
 
@@ -336,9 +366,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             sx={{
               p: 2.5,
               backgroundColor: (theme) =>
-                theme.palette.mode === "dark"
-                  ? "grey.800"
-                  : "white",
+                theme.palette.mode === "dark" ? "grey.800" : "white",
               borderRadius: "20px 20px 20px 6px",
               boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
               border: (theme) =>
@@ -388,7 +416,10 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                     "&:nth-of-type(3)": { animationDelay: "0.4s" },
                   },
                   "@keyframes typing": {
-                    "0%, 60%, 100%": { transform: "translateY(0)", opacity: 0.4 },
+                    "0%, 60%, 100%": {
+                      transform: "translateY(0)",
+                      opacity: 0.4,
+                    },
                     "30%": { transform: "translateY(-10px)", opacity: 1 },
                   },
                 }}
@@ -430,12 +461,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
               backgroundColor: isOwn
                 ? "primary.main"
                 : (theme) =>
-                    theme.palette.mode === "dark"
-                      ? "grey.800"
-                      : "white",
-              borderRadius: isOwn
-                ? "20px 20px 6px 20px"
-                : "20px 20px 20px 6px",
+                    theme.palette.mode === "dark" ? "grey.800" : "white",
+              borderRadius: isOwn ? "20px 20px 6px 20px" : "20px 20px 20px 6px",
               boxShadow: isOwn
                 ? "0 2px 8px rgba(0,0,0,0.15)"
                 : "0 1px 4px rgba(0,0,0,0.1)",
@@ -515,16 +542,19 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
   // Helper function to parse attachment data from message
   const parseMessageAttachments = (message: ChatMessage): MediaAttachment[] => {
-    console.log('🔍 parseMessageAttachments Debug:', {
+    console.log("🔍 parseMessageAttachments Debug:", {
       messageId: message.id,
       messageType: message.message_type,
       messageMetadata: message.message_metadata,
       hasAttachments: !!message.message_metadata?.attachments,
-      attachments: message.message_metadata?.attachments
+      attachments: message.message_metadata?.attachments,
     });
-    
+
     // First try to get attachments from message_metadata
-    if (message.message_metadata?.attachments && Array.isArray(message.message_metadata.attachments)) {
+    if (
+      message.message_metadata?.attachments &&
+      Array.isArray(message.message_metadata.attachments)
+    ) {
       const parsed = message.message_metadata.attachments.map((att: any) => ({
         id: att.id,
         file_name: att.file_name,
@@ -533,10 +563,10 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         file_size: att.file_size,
         created_at: att.created_at,
       }));
-      console.log('🔍 Parsed attachments from metadata:', parsed);
+      console.log("🔍 Parsed attachments from metadata:", parsed);
       return parsed;
     }
-    
+
     // Fallback: try to parse JSON data from message (backward compatibility)
     try {
       const parsed = JSON.parse(message.message);
@@ -562,7 +592,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     if (message.message_metadata?.original_message) {
       return message.message_metadata.original_message;
     }
-    
+
     // Fallback: try to parse JSON data from message (backward compatibility)
     try {
       const parsed = JSON.parse(message.message);
@@ -575,30 +605,33 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   // Helper function to render location messages
   const renderLocationMessage = (message: ChatMessage) => {
     const text = getDisplayMessage(message);
-    
-    console.log('📍 Location message check:', {
+
+    console.log("📍 Location message check:", {
       messageId: message.id,
       messageType: message.message_type,
       text: text,
-      isLocation: message.message_type === "location" || 
-        text.includes("Lat:") || 
+      isLocation:
+        message.message_type === "location" ||
+        text.includes("Lat:") ||
         text.includes("Lng:") ||
         text.includes("📍 Location shared") ||
         text.includes("Location:") ||
-        text.includes("Coordinates:")
+        text.includes("Coordinates:"),
     });
-    
+
     // Check if this is a location message by type or content
-    if (message.message_type === "location" || 
-        text.includes("Lat:") || 
-        text.includes("Lng:") ||
-        text.includes("📍 Location shared") ||
-        text.includes("Location:") ||
-        text.includes("Coordinates:")) {
-      console.log('📍 Rendering LocationMessage component');
+    if (
+      message.message_type === "location" ||
+      text.includes("Lat:") ||
+      text.includes("Lng:") ||
+      text.includes("📍 Location shared") ||
+      text.includes("Location:") ||
+      text.includes("Coordinates:")
+    ) {
+      console.log("📍 Rendering LocationMessage component");
       return <LocationMessage message={text} compact={true} />;
     }
-    console.log('📍 Not a location message, returning null');
+    console.log("📍 Not a location message, returning null");
     return null;
   };
 
@@ -609,8 +642,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   // Connection status monitoring
   useEffect(() => {
     const handleOnline = () => {
-      setConnectionStatus('connected');
-      setErrorState({ type: null, message: '', retryable: false });
+      setConnectionStatus("connected");
+      setErrorState({ type: null, message: "", retryable: false });
       // Retry sending offline messages
       if (offlineMessages.length > 0) {
         retryOfflineMessages();
@@ -618,16 +651,17 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     };
 
     const handleOffline = () => {
-      setConnectionStatus('disconnected');
-      setErrorState({ 
-        type: 'network', 
-        message: 'You are offline. Messages will be sent when connection is restored.', 
-        retryable: true 
+      setConnectionStatus("disconnected");
+      setErrorState({
+        type: "network",
+        message:
+          "You are offline. Messages will be sent when connection is restored.",
+        retryable: true,
       });
     };
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     // Check initial connection status
     if (!navigator.onLine) {
@@ -635,64 +669,69 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     }
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, [offlineMessages]);
 
   // Enhanced error handling functions
-  const handleError = (error: any, context: string = '') => {
+  const handleError = (error: any, context: string = "") => {
     console.error(`❌ ${context}:`, error);
-    
-    let errorType: 'network' | 'permission' | 'validation' | 'server' = 'server';
-    let message = 'An unexpected error occurred';
+
+    let errorType: "network" | "permission" | "validation" | "server" =
+      "server";
+    let message = "An unexpected error occurred";
     let retryable = false;
 
     if (error?.response?.status) {
       switch (error.response.status) {
         case 400:
-          errorType = 'validation';
-          message = error.response.data?.detail || 'Invalid request. Please check your input.';
+          errorType = "validation";
+          message =
+            error.response.data?.detail ||
+            "Invalid request. Please check your input.";
           retryable = false;
           break;
         case 401:
-          errorType = 'permission';
-          message = 'Please log in again to continue.';
+          errorType = "permission";
+          message = "Please log in again to continue.";
           retryable = false;
           break;
         case 403:
-          errorType = 'permission';
-          message = 'You don\'t have permission to perform this action.';
+          errorType = "permission";
+          message = "You don't have permission to perform this action.";
           retryable = false;
           break;
         case 404:
-          errorType = 'server';
-          message = 'The requested resource was not found.';
+          errorType = "server";
+          message = "The requested resource was not found.";
           retryable = false;
           break;
         case 413:
-          errorType = 'validation';
-          message = 'File too large. Please reduce file size and try again.';
+          errorType = "validation";
+          message = "File too large. Please reduce file size and try again.";
           retryable = false;
           break;
         case 429:
-          errorType = 'server';
-          message = 'Too many requests. Please wait a moment and try again.';
+          errorType = "server";
+          message = "Too many requests. Please wait a moment and try again.";
           retryable = true;
           break;
         case 500:
-          errorType = 'server';
-          message = 'Server error. Please try again later.';
+          errorType = "server";
+          message = "Server error. Please try again later.";
           retryable = true;
           break;
         default:
-          errorType = 'server';
-          message = error.response.data?.detail || 'An error occurred. Please try again.';
+          errorType = "server";
+          message =
+            error.response.data?.detail ||
+            "An error occurred. Please try again.";
           retryable = true;
       }
-    } else if (error?.code === 'NETWORK_ERROR' || !navigator.onLine) {
-      errorType = 'network';
-      message = 'Network error. Please check your connection.';
+    } else if (error?.code === "NETWORK_ERROR" || !navigator.onLine) {
+      errorType = "network";
+      message = "Network error. Please check your connection.";
       retryable = true;
     }
 
@@ -703,19 +742,19 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
   const retryOfflineMessages = async () => {
     if (offlineMessages.length === 0) return;
-    
+
     setIsRetrying(true);
-    setConnectionStatus('reconnecting');
-    
+    setConnectionStatus("reconnecting");
+
     try {
       for (const message of offlineMessages) {
         await onSendMessage(message);
       }
       setOfflineMessages([]);
-      setConnectionStatus('connected');
-      setErrorState({ type: null, message: '', retryable: false });
+      setConnectionStatus("connected");
+      setErrorState({ type: null, message: "", retryable: false });
     } catch (error) {
-      handleError(error, 'Retry offline messages');
+      handleError(error, "Retry offline messages");
     } finally {
       setIsRetrying(false);
     }
@@ -723,16 +762,16 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
   const retryLastAction = async () => {
     if (!errorState.retryable) return;
-    
+
     setIsRetrying(true);
-    setRetryCount(prev => prev + 1);
-    
+    setRetryCount((prev) => prev + 1);
+
     try {
       // This would be implemented based on the last failed action
       // For now, we'll just clear the error state
-      setErrorState({ type: null, message: '', retryable: false });
+      setErrorState({ type: null, message: "", retryable: false });
     } catch (error) {
-      handleError(error, 'Retry action');
+      handleError(error, "Retry action");
     } finally {
       setIsRetrying(false);
     }
@@ -752,7 +791,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     });
 
     // Ensure we have a valid message
-    const messageText = input.trim() || (selectedFiles.length > 0 ? "📎 Shared files" : "");
+    const messageText =
+      input.trim() || (selectedFiles.length > 0 ? "📎 Shared files" : "");
     if (!messageText) {
       console.warn("📤 Cannot send empty message");
       return;
@@ -786,21 +826,21 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         // Use regular message endpoint
         await onSendMessage(newMessage);
       }
-      
+
       setInput("");
       setSelectedFiles([]);
       setReplyingTo(null); // Clear reply state
-      setErrorState({ type: null, message: '', retryable: false });
+      setErrorState({ type: null, message: "", retryable: false });
       scrollToBottom();
     } catch (error) {
       // If offline, queue the message
       if (!navigator.onLine) {
-        setOfflineMessages(prev => [...prev, newMessage]);
+        setOfflineMessages((prev) => [...prev, newMessage]);
         setInput("");
         setSelectedFiles([]);
-        handleError(error, 'Send message (offline)');
+        handleError(error, "Send message (offline)");
       } else {
-        handleError(error, 'Send message');
+        handleError(error, "Send message");
       }
     }
   };
@@ -809,16 +849,19 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   const handleReplyToMessage = (message: ChatMessage) => {
     const replyTo: ReplyToMessage = {
       message_id: message.id,
-      sender_name: message.sender?.username || 'Unknown',
-      message_preview: message.message.length > 50 
-        ? message.message.substring(0, 50) + '...' 
-        : message.message,
+      sender_name: message.sender?.username || "Unknown",
+      message_preview:
+        message.message.length > 50
+          ? message.message.substring(0, 50) + "..."
+          : message.message,
       message_type: message.message_type,
     };
     setReplyingTo(replyTo);
     // Focus on input field
     setTimeout(() => {
-      const inputElement = document.querySelector('textarea[placeholder*="message"]') as HTMLTextAreaElement;
+      const inputElement = document.querySelector(
+        'textarea[placeholder*="message"]'
+      ) as HTMLTextAreaElement;
       if (inputElement) {
         inputElement.focus();
       }
@@ -836,7 +879,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       setSnackbarMessage(`Added ${emoji} reaction`);
       setSnackbarOpen(true);
     } catch (error) {
-      console.error('Failed to add reaction:', error);
+      console.error("Failed to add reaction:", error);
     }
   };
 
@@ -870,9 +913,11 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   const handleSearchMessageClick = (message: ChatMessage) => {
     setHighlightedMessageId(message.id);
     // Scroll to the message
-    const messageElement = document.querySelector(`[data-message-id="${message.id}"]`);
+    const messageElement = document.querySelector(
+      `[data-message-id="${message.id}"]`
+    );
     if (messageElement) {
-      messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      messageElement.scrollIntoView({ behavior: "smooth", block: "center" });
       // Remove highlight after 3 seconds
       setTimeout(() => {
         setHighlightedMessageId(null);
@@ -885,26 +930,30 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     try {
       // Ensure we have a full URL for downloading
       let fullUrl = attachment.file_url;
-      
+
       // If it's already a full URL, use as-is
-      if (!fullUrl.startsWith('http')) {
+      if (!fullUrl.startsWith("http")) {
         // If it's a relative path, prepend the base URL
-        const baseUrl = import.meta.env.VITE_API_URL || 
-          (process.env.NODE_ENV === 'production' 
-            ? 'https://pawfectpal-production-2f07.up.railway.app' 
-            : 'http://localhost:8000');
-        fullUrl = baseUrl + (fullUrl.startsWith('/') ? fullUrl : '/' + fullUrl);
+        const baseUrl =
+          import.meta.env.VITE_API_URL ||
+          (process.env.NODE_ENV === "production"
+            ? "https://pawfectpal-production-2f07.up.railway.app"
+            : "http://localhost:8000");
+        fullUrl = baseUrl + (fullUrl.startsWith("/") ? fullUrl : "/" + fullUrl);
       }
-      
-      console.log('📥 Downloading file:', { originalUrl: attachment.file_url, fullUrl });
-      
+
+      console.log("📥 Downloading file:", {
+        originalUrl: attachment.file_url,
+        fullUrl,
+      });
+
       const response = await fetch(fullUrl);
       if (!response.ok) {
-        throw 'HTTP error! status: ' + response.status;
+        throw "HTTP error! status: " + response.status;
       }
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = attachment.file_name;
       document.body.appendChild(link);
@@ -914,63 +963,73 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       setSnackbarMessage(`Downloaded ${attachment.file_name}`);
       setSnackbarOpen(true);
     } catch (error) {
-      console.error('Failed to download file:', error);
-      setSnackbarMessage('Failed to download file');
+      console.error("Failed to download file:", error);
+      setSnackbarMessage("Failed to download file");
       setSnackbarOpen(true);
     }
   };
 
   const handleFileOpen = (attachment: MediaAttachment) => {
-    console.log('📁 Opening file:', {
+    console.log("📁 Opening file:", {
       fileName: attachment.file_name,
       fileUrl: attachment.file_url,
       fileType: attachment.file_type,
-      isRelative: attachment.file_url.startsWith('/'),
-      nodeEnv: process.env.NODE_ENV
+      isRelative: attachment.file_url.startsWith("/"),
+      nodeEnv: process.env.NODE_ENV,
     });
-    
+
     // Ensure we have a full URL for opening
     let fullUrl = attachment.file_url;
-    
+
     // If it's already a full URL, use as-is
-    if (!fullUrl.startsWith('http')) {
+    if (!fullUrl.startsWith("http")) {
       // If it's a relative path, prepend the base URL
-      const baseUrl = import.meta.env.VITE_API_URL || 
-        (process.env.NODE_ENV === 'production' 
-          ? 'https://pawfectpal-production-2f07.up.railway.app' 
-          : 'http://localhost:8000');
-      fullUrl = baseUrl + (fullUrl.startsWith('/') ? fullUrl : '/' + fullUrl);
-      console.log('📁 Constructed URL:', { baseUrl, originalUrl: attachment.file_url, fullUrl });
+      const baseUrl =
+        import.meta.env.VITE_API_URL ||
+        (process.env.NODE_ENV === "production"
+          ? "https://pawfectpal-production-2f07.up.railway.app"
+          : "http://localhost:8000");
+      fullUrl = baseUrl + (fullUrl.startsWith("/") ? fullUrl : "/" + fullUrl);
+      console.log("📁 Constructed URL:", {
+        baseUrl,
+        originalUrl: attachment.file_url,
+        fullUrl,
+      });
     } else {
-      console.log('📁 File URL is already full:', fullUrl);
+      console.log("📁 File URL is already full:", fullUrl);
     }
-    
-    console.log('📁 Opening full URL:', fullUrl);
-    
+
+    console.log("📁 Opening full URL:", fullUrl);
+
     // Try to open the file
     try {
-      const newWindow = window.open(fullUrl, '_blank');
+      const newWindow = window.open(fullUrl, "_blank");
       if (!newWindow) {
-        console.error('❌ Failed to open window - popup blocked?');
+        console.error("❌ Failed to open window - popup blocked?");
         // Fallback: try to download the file
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = fullUrl;
         link.download = attachment.file_name;
-        link.target = '_blank';
+        link.target = "_blank";
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        console.log('📁 Fallback: triggered download');
+        console.log("📁 Fallback: triggered download");
       } else {
-        console.log('✅ Successfully opened file in new window');
+        console.log("✅ Successfully opened file in new window");
       }
     } catch (error) {
-      console.error('❌ Error opening file:', error);
+      console.error("❌ Error opening file:", error);
     }
   };
 
-  const handleFileUploadProgress = (fileName: string, progress: number, status: 'uploading' | 'completed' | 'error', error?: string) => {
-    setUploadProgress(prev => {
+  const handleFileUploadProgress = (
+    fileName: string,
+    progress: number,
+    status: "uploading" | "completed" | "error",
+    error?: string
+  ) => {
+    setUploadProgress((prev) => {
       const newMap = new Map(prev);
       newMap.set(fileName, { progress, status, error });
       return newMap;
@@ -978,7 +1037,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   };
 
   const handleCancelUpload = (fileName: string) => {
-    setUploadProgress(prev => {
+    setUploadProgress((prev) => {
       const newMap = new Map(prev);
       newMap.delete(fileName);
       return newMap;
@@ -999,7 +1058,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       setSnackbarOpen(true);
       // Clear the input
       if (event.target) {
-        event.target.value = '';
+        event.target.value = "";
       }
       return;
     }
@@ -1166,24 +1225,24 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
   const renderMessageAttachments = (attachments: MediaAttachment[]) => {
     console.log("🖼️ Rendering attachments:", attachments);
-    
+
     if (attachments.length === 0) {
       console.log("🖼️ No attachments to render");
       return null;
     }
 
-    console.log('🖼️ EnhancedChatWindow: Rendering attachments:', {
+    console.log("🖼️ EnhancedChatWindow: Rendering attachments:", {
       attachmentsCount: attachments.length,
-      attachments: attachments.map(att => ({
+      attachments: attachments.map((att) => ({
         id: att.id,
         fileName: att.file_name,
         fileUrl: att.file_url,
-        fileType: att.file_type
-      }))
+        fileType: att.file_type,
+      })),
     });
 
     return (
-      <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+      <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 1 }}>
         {attachments.map((attachment) => (
           <FilePreview
             key={attachment.id}
@@ -1224,446 +1283,596 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         boxShadow: { xs: 0, md: 3 },
       }}
     >
-          {/* Header */}
-          <Box
+      {/* Header */}
+      <Box
+        sx={{
+          p: 3,
+          borderBottom: 1,
+          borderColor: "divider",
+          backgroundColor: (theme) =>
+            theme.palette.mode === "dark" ? "grey.800" : "white",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Avatar
+            sx={{ width: 40, height: 40, backgroundColor: "primary.main" }}
+          >
+            <Pets />
+          </Avatar>
+          <Box>
+            {user?.is_provider && (
+              <Chip
+                label="Provider"
+                size="small"
+                color="primary"
+                icon={<Business />}
+                sx={{ fontSize: "0.7rem", height: 20 }}
+              />
+            )}
+          </Box>
+        </Box>
+
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {/* Search Button */}
+          <Tooltip title={t("chat.searchMessages") || "Search Messages"}>
+            <IconButton
+              onClick={handleOpenSearch}
+              sx={{
+                backgroundColor: "transparent",
+                color: "text.secondary",
+                "&:hover": {
+                  backgroundColor: "primary.main",
+                  color: "white",
+                },
+              }}
+            >
+              <Search />
+            </IconButton>
+          </Tooltip>
+
+          {/* Service Context Toggle */}
+          {serviceRequest && (
+            <Tooltip
+              title={
+                showServiceContext
+                  ? "Hide service details"
+                  : "Show service details"
+              }
+            >
+              <IconButton
+                onClick={() => setShowServiceContext(!showServiceContext)}
+                sx={{
+                  backgroundColor: "transparent",
+                  color: "text.secondary",
+                  "&:hover": {
+                    backgroundColor: "grey.100",
+                    color: "primary.main",
+                  },
+                }}
+              >
+                {showServiceContext ? <ExpandLess /> : <ExpandMore />}
+              </IconButton>
+            </Tooltip>
+          )}
+
+          <Tooltip title="Quick Actions">
+            <IconButton
+              onClick={handleMenuOpen}
+              sx={{
+                backgroundColor: "transparent",
+                color: "text.secondary",
+                "&:hover": {
+                  backgroundColor: "grey.100",
+                },
+              }}
+            >
+              <MoreVert />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </Box>
+
+      {/* Error Banner */}
+      {errorState.type && (
+        <Collapse in={!!errorState.type}>
+          <Alert
+            severity={
+              errorState.type === "network"
+                ? "warning"
+                : errorState.type === "permission"
+                  ? "error"
+                  : errorState.type === "validation"
+                    ? "info"
+                    : "error"
+            }
             sx={{
-              p: 3,
+              borderRadius: 0,
+              borderLeft: 0,
+              borderRight: 0,
+            }}
+            action={
+              errorState.retryable && (
+                <Button
+                  color="inherit"
+                  size="small"
+                  onClick={retryLastAction}
+                  disabled={isRetrying}
+                  startIcon={
+                    isRetrying ? <CircularProgress size={16} /> : <Replay />
+                  }
+                >
+                  {isRetrying ? "Retrying..." : "Retry"}
+                </Button>
+              )
+            }
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              {errorState.type === "network" && <WifiOff />}
+              {errorState.type === "permission" && <Error />}
+              {errorState.type === "validation" && <Warning />}
+              {errorState.type === "server" && <CloudOff />}
+              <Typography variant="body2">{errorState.message}</Typography>
+            </Box>
+          </Alert>
+        </Collapse>
+      )}
+
+      {/* Service Request Context Panel */}
+      {serviceRequest && (
+        <Collapse in={showServiceContext}>
+          <Paper
+            elevation={0}
+            sx={{
+              borderRadius: 0,
+              borderLeft: 0,
+              borderRight: 0,
               borderBottom: 1,
               borderColor: "divider",
-              backgroundColor: (theme) => theme.palette.mode === "dark" ? "grey.800" : "white",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
+              backgroundColor: (theme) =>
+                theme.palette.mode === "dark" ? "grey.800" : "grey.50",
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Avatar sx={{ width: 40, height: 40, backgroundColor: "primary.main" }}>
-                <Pets />
-              </Avatar>
-              <Box>
-                {user?.is_provider && (
-                  <Chip
-                    label="Provider"
-                    size="small"
-                    color="primary"
-                    icon={<Business />}
-                    sx={{ fontSize: "0.7rem", height: 20 }}
-                  />
-                )}
-              </Box>
-            </Box>
-            
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              {/* Search Button */}
-              <Tooltip title={t('chat.searchMessages') || 'Search Messages'}>
-                <IconButton 
-                  onClick={handleOpenSearch}
-                  sx={{
-                    backgroundColor: "transparent",
-                    color: "text.secondary",
-                    "&:hover": {
-                      backgroundColor: "primary.main",
-                      color: "white",
-                    },
-                  }}
-                >
-                  <Search />
-                </IconButton>
-              </Tooltip>
-
-              {/* Service Context Toggle */}
-              {serviceRequest && (
-                <Tooltip title={showServiceContext ? "Hide service details" : "Show service details"}>
-                  <IconButton 
-                    onClick={() => setShowServiceContext(!showServiceContext)}
-                    sx={{
-                      backgroundColor: "transparent",
-                      color: "text.secondary",
-                      "&:hover": {
-                        backgroundColor: "grey.100",
-                        color: "primary.main",
-                      },
-                    }}
-                  >
-                    {showServiceContext ? <ExpandLess /> : <ExpandMore />}
-                  </IconButton>
-                </Tooltip>
-              )}
-              
-              <Tooltip title="Quick Actions">
-                <IconButton 
-                  onClick={handleMenuOpen}
-                  sx={{
-                    backgroundColor: "transparent",
-                    color: "text.secondary",
-                    "&:hover": {
-                      backgroundColor: "grey.100",
-                    },
-                  }}
-                >
-                  <MoreVert />
-                </IconButton>
-              </Tooltip>
-            </Box>
-          </Box>
-
-          {/* Error Banner */}
-          {errorState.type && (
-            <Collapse in={!!errorState.type}>
-              <Alert 
-                severity={
-                  errorState.type === 'network' ? 'warning' :
-                  errorState.type === 'permission' ? 'error' :
-                  errorState.type === 'validation' ? 'info' :
-                  'error'
-                }
-                sx={{ 
-                  borderRadius: 0,
-                  borderLeft: 0,
-                  borderRight: 0,
+            <Box sx={{ p: 3 }}>
+              {/* Service Request Header */}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  mb: 2,
                 }}
-                action={
-                  errorState.retryable && (
-                    <Button
-                      color="inherit"
-                      size="small"
-                      onClick={retryLastAction}
-                      disabled={isRetrying}
-                      startIcon={isRetrying ? <CircularProgress size={16} /> : <Replay />}
-                    >
-                      {isRetrying ? 'Retrying...' : 'Retry'}
-                    </Button>
-                  )
-                }
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  {errorState.type === 'network' && <WifiOff />}
-                  {errorState.type === 'permission' && <Error />}
-                  {errorState.type === 'validation' && <Warning />}
-                  {errorState.type === 'server' && <CloudOff />}
-                  <Typography variant="body2">
-                    {errorState.message}
+                  <Business color="primary" />
+                  <Typography variant="h6" fontWeight={600}>
+                    {serviceRequest.title}
                   </Typography>
+                  {serviceRequest.is_urgent && (
+                    <Chip
+                      label="Urgent"
+                      size="small"
+                      color="error"
+                      icon={<Emergency />}
+                    />
+                  )}
                 </Box>
-              </Alert>
-            </Collapse>
-          )}
+                <Chip
+                  label={serviceRequest.status.replace("_", " ").toUpperCase()}
+                  size="small"
+                  color={
+                    serviceRequest.status === "completed"
+                      ? "success"
+                      : serviceRequest.status === "in_progress"
+                        ? "primary"
+                        : serviceRequest.status === "closed"
+                          ? "default"
+                          : "warning"
+                  }
+                />
+              </Box>
 
-          {/* Service Request Context Panel */}
-          {serviceRequest && (
-            <Collapse in={showServiceContext}>
-              <Paper 
-                elevation={0}
-                sx={{ 
-                  borderRadius: 0,
-                  borderLeft: 0,
-                  borderRight: 0,
-                  borderBottom: 1,
-                  borderColor: "divider",
-                  backgroundColor: (theme) => theme.palette.mode === "dark" ? "grey.800" : "grey.50",
+              {/* Service Details Grid */}
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                  gap: 2,
                 }}
               >
-                <Box sx={{ p: 3 }}>
-                  {/* Service Request Header */}
-                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+                {/* Left Column - Service Info */}
+                <Box>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={600}
+                    sx={{ mb: 1 }}
+                  >
+                    Service Details
+                  </Typography>
+                  <Stack spacing={1}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Business color="primary" />
-                      <Typography variant="h6" fontWeight={600}>
-                        {serviceRequest.title}
+                      <Pets fontSize="small" color="action" />
+                      <Typography variant="body2">
+                        <strong>Type:</strong> {serviceRequest.service_type}
                       </Typography>
-                      {serviceRequest.is_urgent && (
-                        <Chip
-                          label="Urgent"
-                          size="small"
-                          color="error"
-                          icon={<Emergency />}
-                        />
-                      )}
-                    </Box>
-                    <Chip
-                      label={serviceRequest.status.replace('_', ' ').toUpperCase()}
-                      size="small"
-                      color={
-                        serviceRequest.status === 'completed' ? 'success' :
-                        serviceRequest.status === 'in_progress' ? 'primary' :
-                        serviceRequest.status === 'closed' ? 'default' :
-                        'warning'
-                      }
-                    />
-                  </Box>
-
-                  {/* Service Details Grid */}
-                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 }}>
-                    {/* Left Column - Service Info */}
-                    <Box>
-                      <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
-                        Service Details
-                      </Typography>
-                      <Stack spacing={1}>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                          <Pets fontSize="small" color="action" />
-                          <Typography variant="body2">
-                            <strong>Type:</strong> {serviceRequest.service_type}
-                          </Typography>
-                        </Box>
-                        
-                        {serviceRequest.location && (
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                            <LocationOn fontSize="small" color="action" />
-                            <Typography variant="body2">
-                              <strong>Location:</strong> {serviceRequest.location}
-                            </Typography>
-                          </Box>
-                        )}
-                        
-                        {(serviceRequest.budget_min || serviceRequest.budget_max) && (
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                            <AttachMoney fontSize="small" color="action" />
-                            <Typography variant="body2">
-                              <strong>Budget:</strong> 
-                              {serviceRequest.budget_min && serviceRequest.budget_max 
-                                ? ` $${serviceRequest.budget_min} - $${serviceRequest.budget_max}`
-                                : serviceRequest.budget_min 
-                                  ? ` From $${serviceRequest.budget_min}`
-                                  : ` Up to $${serviceRequest.budget_max}`
-                              }
-                            </Typography>
-                          </Box>
-                        )}
-                      </Stack>
                     </Box>
 
-                    {/* Right Column - People & Pets */}
-                    <Box>
-                      <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
-                        People & Pets
-                      </Typography>
-                      <Stack spacing={1}>
-                        {/* Client Info */}
-                        {serviceRequest.user && (
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                            <Person fontSize="small" color="action" />
-                            <Typography variant="body2">
-                              <strong>Client:</strong> {serviceRequest.user.full_name || serviceRequest.user.username}
-                            </Typography>
-                          </Box>
-                        )}
-                        
-                        {/* Assigned Provider */}
-                        {serviceRequest.assigned_provider && (
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                            <Business fontSize="small" color="primary" />
-                            <Typography variant="body2">
-                              <strong>Provider:</strong> {serviceRequest.assigned_provider.full_name || serviceRequest.assigned_provider.username}
-                            </Typography>
-                          </Box>
-                        )}
-                        
-                        {/* Pets */}
-                        {serviceRequest.pets && serviceRequest.pets.length > 0 && (
-                          <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
-                            <Pets fontSize="small" color="action" />
-                            <Box>
-                              <Typography variant="body2">
-                                <strong>Pet{serviceRequest.pets.length > 1 ? 's' : ''}:</strong>
-                              </Typography>
-                              {serviceRequest.pets.map((pet, index) => (
-                                <Typography key={pet.id} variant="caption" sx={{ display: "block", ml: 1 }}>
-                                  {pet.name} ({pet.type}{pet.breed ? ` - ${pet.breed}` : ''})
-                                </Typography>
-                              ))}
-                            </Box>
-                          </Box>
-                        )}
-                      </Stack>
-                    </Box>
-                  </Box>
-
-                  {/* Detailed Pet Information */}
-                  {serviceRequest.pets && serviceRequest.pets.length > 0 && (
-                    <Box sx={{ mt: 3 }}>
-                      <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
-                        Detailed Pet Information
-                      </Typography>
-                      <Box sx={{ 
-                        display: 'grid', 
-                        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' },
-                        gap: 2 
-                      }}>
-                        {serviceRequest.pets.map((pet) => (
-                          <Paper key={pet.id} elevation={1} sx={{ p: 1.5, border: 1, borderColor: 'divider', borderRadius: 2 }}>
-                            <Stack spacing={1}>
-                              {/* Pet Header */}
-                              <Stack direction="row" alignItems="center" spacing={1}>
-                                <Avatar 
-                                  sx={{ width: 32, height: 32, backgroundColor: 'primary.light' }}
-                                  src={pet.imageUrl}
-                                >
-                                  <Pets fontSize="small" />
-                                </Avatar>
-                                <Box sx={{ flex: 1, minWidth: 0 }}>
-                                  <Typography variant="subtitle2" fontWeight={600} sx={{ lineHeight: 1.2 }}>
-                                    {pet.name}
-                                  </Typography>
-                                  <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.2 }}>
-                                    {pet.type} {pet.breed && `• ${pet.breed}`}
-                                  </Typography>
-                                </Box>
-                              </Stack>
-                              
-                              {/* Basic Info Chips */}
-                              <Stack direction="row" spacing={0.5} flexWrap="wrap" sx={{ gap: 0.5 }}>
-                                {pet.age && (
-                                  <Chip
-                                    icon={<Cake fontSize="small" />}
-                                    label={`Age: ${pet.age}y`}
-                                    size="small"
-                                    variant="outlined"
-                                    sx={{ fontSize: '0.7rem', height: 20 }}
-                                  />
-                                )}
-                                {pet.weightKg && (
-                                  <Chip
-                                    icon={<Scale fontSize="small" />}
-                                    label={`Weight: ${pet.weightKg}${pet.weightUnit || 'kg'}`}
-                                    size="small"
-                                    variant="outlined"
-                                    color="secondary"
-                                    sx={{ fontSize: '0.7rem', height: 20 }}
-                                  />
-                                )}
-                                {pet.gender && (
-                                  <Chip
-                                    icon={<Pets fontSize="small" />}
-                                    label={`Gender: ${pet.gender}`}
-                                    size="small"
-                                    variant="outlined"
-                                    color="info"
-                                    sx={{ fontSize: '0.7rem', height: 20 }}
-                                  />
-                                )}
-                                {pet.color && (
-                                  <Chip
-                                    icon={<ColorLens fontSize="small" />}
-                                    label={`Color: ${pet.color}`}
-                                    size="small"
-                                    variant="outlined"
-                                    color="warning"
-                                    sx={{ fontSize: '0.7rem', height: 20 }}
-                                  />
-                                )}
-                              </Stack>
-
-                              {/* Health Status */}
-                              <Stack direction="row" spacing={0.5} flexWrap="wrap" sx={{ gap: 0.5 }}>
-                                {pet.isVaccinated && (
-                                  <Chip
-                                    icon={<Vaccines fontSize="small" />}
-                                    label="Vaccinated"
-                                    size="small"
-                                    color="success"
-                                    variant="outlined"
-                                    sx={{ fontSize: '0.7rem', height: 20 }}
-                                  />
-                                )}
-                                {pet.isNeutered && (
-                                  <Chip
-                                    icon={<MedicalServices fontSize="small" />}
-                                    label="Neutered"
-                                    size="small"
-                                    color="info"
-                                    variant="outlined"
-                                    sx={{ fontSize: '0.7rem', height: 20 }}
-                                  />
-                                )}
-                                {pet.isMicrochipped && (
-                                  <Chip
-                                    icon={<CheckCircle fontSize="small" />}
-                                    label="Chipped"
-                                    size="small"
-                                    color="primary"
-                                    variant="outlined"
-                                    sx={{ fontSize: '0.7rem', height: 20 }}
-                                  />
-                                )}
-                              </Stack>
-
-                              {/* Issues */}
-                              {(pet.healthIssues?.length > 0 || pet.behaviorIssues?.length > 0) && (
-                                <Box>
-                                  {pet.healthIssues?.length > 0 && (
-                                    <Typography variant="caption" color="warning.main" sx={{ fontWeight: 600, fontSize: '0.7rem' }}>
-                                      Health: {pet.healthIssues.join(', ')}
-                                    </Typography>
-                                  )}
-                                  {pet.behaviorIssues?.length > 0 && (
-                                    <Typography variant="caption" color="warning.main" sx={{ fontWeight: 600, fontSize: '0.7rem', display: 'block' }}>
-                                      Behavior: {pet.behaviorIssues.join(', ')}
-                                    </Typography>
-                                  )}
-                                </Box>
-                              )}
-
-                              {/* Notes */}
-                              {(pet.medicalNotes || pet.notes) && (
-                                <Box>
-                                  {pet.medicalNotes && (
-                                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', fontWeight: 600 }}>
-                                      Medical:
-                                    </Typography>
-                                  )}
-                                  {pet.medicalNotes && (
-                                    <Typography variant="caption" color="text.primary" sx={{ 
-                                      fontSize: '0.7rem', 
-                                      display: 'block', 
-                                      backgroundColor: 'action.hover', 
-                                      p: 0.5, 
-                                      borderRadius: 0.5,
-                                      fontStyle: 'italic'
-                                    }}>
-                                      {pet.medicalNotes.length > 50 ? `${pet.medicalNotes.substring(0, 50)}...` : pet.medicalNotes}
-                                    </Typography>
-                                  )}
-                                  {pet.notes && (
-                                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', fontWeight: 600, display: 'block', mt: 0.5 }}>
-                                      Notes:
-                                    </Typography>
-                                  )}
-                                  {pet.notes && (
-                                    <Typography variant="caption" color="text.primary" sx={{ 
-                                      fontSize: '0.7rem', 
-                                      display: 'block', 
-                                      backgroundColor: 'action.hover', 
-                                      p: 0.5, 
-                                      borderRadius: 0.5
-                                    }}>
-                                      {pet.notes.length > 50 ? `${pet.notes.substring(0, 50)}...` : pet.notes}
-                                    </Typography>
-                                  )}
-                                </Box>
-                              )}
-                            </Stack>
-                          </Paper>
-                        ))}
+                    {serviceRequest.location && (
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <LocationOn fontSize="small" color="action" />
+                        <Typography variant="body2">
+                          <strong>Location:</strong> {serviceRequest.location}
+                        </Typography>
                       </Box>
-                    </Box>
-                  )}
+                    )}
 
-                  {/* Description */}
-                  {serviceRequest.description && (
-                    <Box sx={{ mt: 2 }}>
-                      <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
-                        Description
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {serviceRequest.description}
-                      </Typography>
-                    </Box>
-                  )}
+                    {(serviceRequest.budget_min ||
+                      serviceRequest.budget_max) && (
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <AttachMoney fontSize="small" color="action" />
+                        <Typography variant="body2">
+                          <strong>Budget:</strong>
+                          {serviceRequest.budget_min &&
+                          serviceRequest.budget_max
+                            ? ` $${serviceRequest.budget_min} - $${serviceRequest.budget_max}`
+                            : serviceRequest.budget_min
+                              ? ` From $${serviceRequest.budget_min}`
+                              : ` Up to $${serviceRequest.budget_max}`}
+                        </Typography>
+                      </Box>
+                    )}
+                  </Stack>
                 </Box>
-              </Paper>
-            </Collapse>
-          )}
+
+                {/* Right Column - People & Pets */}
+                <Box>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={600}
+                    sx={{ mb: 1 }}
+                  >
+                    People & Pets
+                  </Typography>
+                  <Stack spacing={1}>
+                    {/* Client Info */}
+                    {serviceRequest.user && (
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <Person fontSize="small" color="action" />
+                        <Typography variant="body2">
+                          <strong>Client:</strong>{" "}
+                          {serviceRequest.user.full_name ||
+                            serviceRequest.user.username}
+                        </Typography>
+                      </Box>
+                    )}
+
+                    {/* Assigned Provider */}
+                    {serviceRequest.assigned_provider && (
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <Business fontSize="small" color="primary" />
+                        <Typography variant="body2">
+                          <strong>Provider:</strong>{" "}
+                          {serviceRequest.assigned_provider.full_name ||
+                            serviceRequest.assigned_provider.username}
+                        </Typography>
+                      </Box>
+                    )}
+
+                    {/* Pets */}
+                    {serviceRequest.pets && serviceRequest.pets.length > 0 && (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: 1,
+                        }}
+                      >
+                        <Pets fontSize="small" color="action" />
+                        <Box>
+                          <Typography variant="body2">
+                            <strong>
+                              Pet{serviceRequest.pets.length > 1 ? "s" : ""}:
+                            </strong>
+                          </Typography>
+                          {serviceRequest.pets.map((pet, index) => (
+                            <Typography
+                              key={pet.id}
+                              variant="caption"
+                              sx={{ display: "block", ml: 1 }}
+                            >
+                              {pet.name} ({pet.type}
+                              {pet.breed ? ` - ${pet.breed}` : ""})
+                            </Typography>
+                          ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Stack>
+                </Box>
+              </Box>
+
+              {/* Detailed Pet Information */}
+              {serviceRequest.pets && serviceRequest.pets.length > 0 && (
+                <Box sx={{ mt: 3 }}>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={600}
+                    sx={{ mb: 2 }}
+                  >
+                    Detailed Pet Information
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: {
+                        xs: "1fr",
+                        sm: "repeat(2, 1fr)",
+                        lg: "repeat(3, 1fr)",
+                      },
+                      gap: 2,
+                    }}
+                  >
+                    {serviceRequest.pets.map((pet) => (
+                      <Paper
+                        key={pet.id}
+                        elevation={1}
+                        sx={{
+                          p: 1.5,
+                          border: 1,
+                          borderColor: "divider",
+                          borderRadius: 2,
+                        }}
+                      >
+                        <Stack spacing={1}>
+                          {/* Pet Header */}
+                          <Stack
+                            direction="row"
+                            alignItems="center"
+                            spacing={1}
+                          >
+                            <Avatar
+                              sx={{
+                                width: 32,
+                                height: 32,
+                                backgroundColor: "primary.light",
+                              }}
+                              src={pet.imageUrl}
+                            >
+                              <Pets fontSize="small" />
+                            </Avatar>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography
+                                variant="subtitle2"
+                                fontWeight={600}
+                                sx={{ lineHeight: 1.2 }}
+                              >
+                                {pet.name}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{ lineHeight: 1.2 }}
+                              >
+                                {pet.type} {pet.breed && `• ${pet.breed}`}
+                              </Typography>
+                            </Box>
+                          </Stack>
+
+                          {/* Basic Info Chips */}
+                          <Stack
+                            direction="row"
+                            spacing={0.5}
+                            flexWrap="wrap"
+                            sx={{ gap: 0.5 }}
+                          >
+                            {pet.age && (
+                              <Chip
+                                icon={<Cake fontSize="small" />}
+                                label={`Age: ${pet.age}y`}
+                                size="small"
+                                variant="outlined"
+                                sx={{ fontSize: "0.7rem", height: 20 }}
+                              />
+                            )}
+                            {pet.weightKg && (
+                              <Chip
+                                icon={<Scale fontSize="small" />}
+                                label={`Weight: ${pet.weightKg}${pet.weightUnit || "kg"}`}
+                                size="small"
+                                variant="outlined"
+                                color="secondary"
+                                sx={{ fontSize: "0.7rem", height: 20 }}
+                              />
+                            )}
+                            {pet.gender && (
+                              <Chip
+                                icon={<Pets fontSize="small" />}
+                                label={`Gender: ${pet.gender}`}
+                                size="small"
+                                variant="outlined"
+                                color="info"
+                                sx={{ fontSize: "0.7rem", height: 20 }}
+                              />
+                            )}
+                            {pet.color && (
+                              <Chip
+                                icon={<ColorLens fontSize="small" />}
+                                label={`Color: ${pet.color}`}
+                                size="small"
+                                variant="outlined"
+                                color="warning"
+                                sx={{ fontSize: "0.7rem", height: 20 }}
+                              />
+                            )}
+                          </Stack>
+
+                          {/* Health Status */}
+                          <Stack
+                            direction="row"
+                            spacing={0.5}
+                            flexWrap="wrap"
+                            sx={{ gap: 0.5 }}
+                          >
+                            {pet.isVaccinated && (
+                              <Chip
+                                icon={<Vaccines fontSize="small" />}
+                                label="Vaccinated"
+                                size="small"
+                                color="success"
+                                variant="outlined"
+                                sx={{ fontSize: "0.7rem", height: 20 }}
+                              />
+                            )}
+                            {pet.isNeutered && (
+                              <Chip
+                                icon={<MedicalServices fontSize="small" />}
+                                label="Neutered"
+                                size="small"
+                                color="info"
+                                variant="outlined"
+                                sx={{ fontSize: "0.7rem", height: 20 }}
+                              />
+                            )}
+                            {pet.isMicrochipped && (
+                              <Chip
+                                icon={<CheckCircle fontSize="small" />}
+                                label="Chipped"
+                                size="small"
+                                color="primary"
+                                variant="outlined"
+                                sx={{ fontSize: "0.7rem", height: 20 }}
+                              />
+                            )}
+                          </Stack>
+
+                          {/* Issues */}
+                          {(pet.healthIssues?.length > 0 ||
+                            pet.behaviorIssues?.length > 0) && (
+                            <Box>
+                              {pet.healthIssues?.length > 0 && (
+                                <Typography
+                                  variant="caption"
+                                  color="warning.main"
+                                  sx={{ fontWeight: 600, fontSize: "0.7rem" }}
+                                >
+                                  Health: {pet.healthIssues.join(", ")}
+                                </Typography>
+                              )}
+                              {pet.behaviorIssues?.length > 0 && (
+                                <Typography
+                                  variant="caption"
+                                  color="warning.main"
+                                  sx={{
+                                    fontWeight: 600,
+                                    fontSize: "0.7rem",
+                                    display: "block",
+                                  }}
+                                >
+                                  Behavior: {pet.behaviorIssues.join(", ")}
+                                </Typography>
+                              )}
+                            </Box>
+                          )}
+
+                          {/* Notes */}
+                          {(pet.medicalNotes || pet.notes) && (
+                            <Box>
+                              {pet.medicalNotes && (
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  sx={{ fontSize: "0.7rem", fontWeight: 600 }}
+                                >
+                                  Medical:
+                                </Typography>
+                              )}
+                              {pet.medicalNotes && (
+                                <Typography
+                                  variant="caption"
+                                  color="text.primary"
+                                  sx={{
+                                    fontSize: "0.7rem",
+                                    display: "block",
+                                    backgroundColor: "action.hover",
+                                    p: 0.5,
+                                    borderRadius: 0.5,
+                                    fontStyle: "italic",
+                                  }}
+                                >
+                                  {pet.medicalNotes.length > 50
+                                    ? `${pet.medicalNotes.substring(0, 50)}...`
+                                    : pet.medicalNotes}
+                                </Typography>
+                              )}
+                              {pet.notes && (
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  sx={{
+                                    fontSize: "0.7rem",
+                                    fontWeight: 600,
+                                    display: "block",
+                                    mt: 0.5,
+                                  }}
+                                >
+                                  Notes:
+                                </Typography>
+                              )}
+                              {pet.notes && (
+                                <Typography
+                                  variant="caption"
+                                  color="text.primary"
+                                  sx={{
+                                    fontSize: "0.7rem",
+                                    display: "block",
+                                    backgroundColor: "action.hover",
+                                    p: 0.5,
+                                    borderRadius: 0.5,
+                                  }}
+                                >
+                                  {pet.notes.length > 50
+                                    ? `${pet.notes.substring(0, 50)}...`
+                                    : pet.notes}
+                                </Typography>
+                              )}
+                            </Box>
+                          )}
+                        </Stack>
+                      </Paper>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+
+              {/* Description */}
+              {serviceRequest.description && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={600}
+                    sx={{ mb: 1 }}
+                  >
+                    Description
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {serviceRequest.description}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          </Paper>
+        </Collapse>
+      )}
 
       {/* Messages container */}
       <Box
@@ -1698,19 +1907,27 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       >
         {" "}
         {messages.length === 0 ? (
-          <Box sx={{ 
-            flex: 1, 
-            display: "flex", 
-            alignItems: "center", 
-            justifyContent: "center",
-            flexDirection: "column",
-            gap: 2,
-          }}>
-            <Message sx={{ fontSize: 64, color: "text.secondary", opacity: 0.5 }} />
+          <Box
+            sx={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexDirection: "column",
+              gap: 2,
+            }}
+          >
+            <Message
+              sx={{ fontSize: 64, color: "text.secondary", opacity: 0.5 }}
+            />
             <Typography variant="h6" color="text.secondary" textAlign="center">
               {t("services.noMessagesYet")}
             </Typography>
-            <Typography variant="body2" color="text.secondary" textAlign="center">
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              textAlign="center"
+            >
               {t("services.startConversation")}
             </Typography>
             <Button
@@ -1732,13 +1949,15 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                   size="small"
                   onClick={onLoadMore}
                   disabled={loadingMore}
-                  startIcon={loadingMore ? <CircularProgress size={16} /> : undefined}
+                  startIcon={
+                    loadingMore ? <CircularProgress size={16} /> : undefined
+                  }
                 >
                   {loadingMore ? "Loading..." : "Load More Messages"}
                 </Button>
               </Box>
             )}
-            
+
             {messages
               .filter((msg) => msg)
               .map((msg, index) => {
@@ -1765,8 +1984,11 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                       py: 1.5,
                       px: 0,
                       width: "100%",
-                      backgroundColor: highlightedMessageId === msg.id ? 'action.selected' : 'transparent',
-                      transition: 'background-color 0.3s ease-in-out',
+                      backgroundColor:
+                        highlightedMessageId === msg.id
+                          ? "action.selected"
+                          : "transparent",
+                      transition: "background-color 0.3s ease-in-out",
                       "&:hover": {
                         backgroundColor: "transparent", // Keep transparent background
                       },
@@ -1792,7 +2014,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                 transform: "translateX(-50%)",
                                 fontSize: "0.6rem",
                                 height: 16,
-                                backgroundColor: (theme) => theme.palette.primary.main,
+                                backgroundColor: (theme) =>
+                                  theme.palette.primary.main,
                                 color: "white",
                                 "& .MuiChip-label": {
                                   px: 0.5,
@@ -1855,7 +2078,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                   height: 0,
                                   borderLeft: "6px solid transparent",
                                   borderTop: "6px solid",
-                                  borderTopColor: (theme) => theme.palette.primary.main,
+                                  borderTopColor: (theme) =>
+                                    theme.palette.primary.main,
                                 }
                               : {
                                   content: '""',
@@ -1910,7 +2134,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                         ml: 1,
                                         fontSize: "0.6rem",
                                         height: 16,
-                                        backgroundColor: (theme) => theme.palette.primary.main,
+                                        backgroundColor: (theme) =>
+                                          theme.palette.primary.main,
                                         color: "white",
                                         "& .MuiChip-label": {
                                           px: 0.5,
@@ -1930,7 +2155,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                   />
                                 </Box>
                               )}
-                              
+
                               <Typography
                                 variant="body2"
                                 sx={{
@@ -1945,16 +2170,21 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
                               {/* Render attachments from parsed message */}
                               {parseMessageAttachments(msg).length > 0 &&
-                                renderMessageAttachments(parseMessageAttachments(msg))}
+                                renderMessageAttachments(
+                                  parseMessageAttachments(msg)
+                                )}
 
                               {/* Message reactions */}
-                              {msg.message_metadata?.reactions && msg.message_metadata.reactions.length > 0 && (
-                                <MessageReactions
-                                  reactions={msg.message_metadata.reactions}
-                                  onReactionClick={(emoji) => handleAddReaction(msg, emoji)}
-                                  currentUserId={user?.id}
-                                />
-                              )}
+                              {msg.message_metadata?.reactions &&
+                                msg.message_metadata.reactions.length > 0 && (
+                                  <MessageReactions
+                                    reactions={msg.message_metadata.reactions}
+                                    onReactionClick={(emoji) =>
+                                      handleAddReaction(msg, emoji)
+                                    }
+                                    currentUserId={user?.id}
+                                  />
+                                )}
 
                               {/* Render location message */}
                               {renderLocationMessage(msg)}
@@ -1999,15 +2229,23 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                   sx={{
                                     opacity: 0.6,
                                     fontSize: "0.75rem",
-                                    color: isOwn ? "primary.contrastText" : "text.secondary",
+                                    color: isOwn
+                                      ? "primary.contrastText"
+                                      : "text.secondary",
                                   }}
                                 >
                                   {formatMessageTime(msg.created_at)}
                                 </Typography>
-                                
+
                                 {/* Enhanced Message Status Indicators for own messages */}
                                 {isOwn && (
-                                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 0.5,
+                                    }}
+                                  >
                                     {/* Sent indicator */}
                                     <Tooltip title="Message sent">
                                       <Box
@@ -2015,48 +2253,64 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                           width: 16,
                                           height: 16,
                                           borderRadius: "50%",
-                                          backgroundColor: msg.delivery_status === 'sent' 
-                                            ? (theme) => theme.palette.grey[400]
-                                            : (theme) => theme.palette.success.main,
+                                          backgroundColor:
+                                            msg.delivery_status === "sent"
+                                              ? (theme) =>
+                                                  theme.palette.grey[400]
+                                              : (theme) =>
+                                                  theme.palette.success.main,
                                           display: "flex",
                                           alignItems: "center",
                                           justifyContent: "center",
                                           transition: "all 0.2s ease-in-out",
                                         }}
                                       >
-                                        <CheckCircle sx={{ fontSize: 10, color: "white" }} />
+                                        <CheckCircle
+                                          sx={{ fontSize: 10, color: "white" }}
+                                        />
                                       </Box>
                                     </Tooltip>
-                                    
+
                                     {/* Delivered indicator */}
-                                    {msg.delivery_status === 'delivered' && (
-                                      <Tooltip title={`Delivered at ${msg.delivered_at ? formatMessageTime(msg.delivered_at) : 'unknown time'}`}>
+                                    {msg.delivery_status === "delivered" && (
+                                      <Tooltip
+                                        title={`Delivered at ${msg.delivered_at ? formatMessageTime(msg.delivered_at) : "unknown time"}`}
+                                      >
                                         <Box
                                           sx={{
                                             width: 16,
                                             height: 16,
                                             borderRadius: "50%",
-                                            backgroundColor: (theme) => theme.palette.success.main,
+                                            backgroundColor: (theme) =>
+                                              theme.palette.success.main,
                                             display: "flex",
                                             alignItems: "center",
                                             justifyContent: "center",
                                             transition: "all 0.2s ease-in-out",
                                           }}
                                         >
-                                          <CheckCircle sx={{ fontSize: 10, color: "white" }} />
+                                          <CheckCircle
+                                            sx={{
+                                              fontSize: 10,
+                                              color: "white",
+                                            }}
+                                          />
                                         </Box>
                                       </Tooltip>
                                     )}
-                                    
+
                                     {/* Read indicator */}
-                                    {msg.delivery_status === 'read' && (
-                                      <Tooltip title={`Read at ${msg.read_at ? formatMessageTime(msg.read_at) : 'unknown time'}`}>
+                                    {msg.delivery_status === "read" && (
+                                      <Tooltip
+                                        title={`Read at ${msg.read_at ? formatMessageTime(msg.read_at) : "unknown time"}`}
+                                      >
                                         <Box
                                           sx={{
                                             width: 16,
                                             height: 16,
                                             borderRadius: "50%",
-                                            backgroundColor: (theme) => theme.palette.primary.main,
+                                            backgroundColor: (theme) =>
+                                              theme.palette.primary.main,
                                             display: "flex",
                                             alignItems: "center",
                                             justifyContent: "center",
@@ -2069,13 +2323,18 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                             },
                                           }}
                                         >
-                                          <Visibility sx={{ fontSize: 10, color: "white" }} />
+                                          <Visibility
+                                            sx={{
+                                              fontSize: 10,
+                                              color: "white",
+                                            }}
+                                          />
                                         </Box>
                                       </Tooltip>
                                     )}
                                   </Box>
                                 )}
-                                
+
                                 {/* Edited indicator */}
                                 {msg.is_edited && (
                                   <Typography
@@ -2084,20 +2343,23 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                       opacity: 0.6,
                                       fontSize: "0.7rem",
                                       fontStyle: "italic",
-                                      color: isOwn ? "primary.contrastText" : "text.secondary",
+                                      color: isOwn
+                                        ? "primary.contrastText"
+                                        : "text.secondary",
                                     }}
                                   >
                                     (edited)
                                   </Typography>
                                 )}
-                                
+
                                 {/* Message actions - only show on hover */}
                                 <Box
                                   sx={{
                                     display: "flex",
                                     alignItems: "center",
                                     gap: 0.5,
-                                    opacity: hoveredMessageId === msg.id ? 1 : 0,
+                                    opacity:
+                                      hoveredMessageId === msg.id ? 1 : 0,
                                     transition: "opacity 0.2s ease-in-out",
                                     ml: 1,
                                   }}
@@ -2108,10 +2370,12 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                     sx={{
                                       width: 20,
                                       height: 20,
-                                      color: isOwn ? "primary.contrastText" : "text.secondary",
+                                      color: isOwn
+                                        ? "primary.contrastText"
+                                        : "text.secondary",
                                       "&:hover": {
-                                        backgroundColor: isOwn 
-                                          ? "rgba(255,255,255,0.2)" 
+                                        backgroundColor: isOwn
+                                          ? "rgba(255,255,255,0.2)"
                                           : "rgba(0,0,0,0.1)",
                                       },
                                     }}
@@ -2119,17 +2383,19 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                   >
                                     <ContentCopy sx={{ fontSize: 12 }} />
                                   </IconButton>
-                                  
+
                                   <IconButton
                                     size="small"
                                     onClick={() => handleReplyToMessage(msg)}
                                     sx={{
                                       width: 20,
                                       height: 20,
-                                      color: isOwn ? "primary.contrastText" : "text.secondary",
+                                      color: isOwn
+                                        ? "primary.contrastText"
+                                        : "text.secondary",
                                       "&:hover": {
-                                        backgroundColor: isOwn 
-                                          ? "rgba(255,255,255,0.2)" 
+                                        backgroundColor: isOwn
+                                          ? "rgba(255,255,255,0.2)"
                                           : "rgba(0,0,0,0.1)",
                                       },
                                     }}
@@ -2137,7 +2403,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                   >
                                     <Reply sx={{ fontSize: 12 }} />
                                   </IconButton>
-                                  
+
                                   {/* Reaction buttons */}
                                   <IconButton
                                     size="small"
@@ -2145,10 +2411,12 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                     sx={{
                                       width: 20,
                                       height: 20,
-                                      color: isOwn ? "primary.contrastText" : "text.secondary",
+                                      color: isOwn
+                                        ? "primary.contrastText"
+                                        : "text.secondary",
                                       "&:hover": {
-                                        backgroundColor: isOwn 
-                                          ? "rgba(255,255,255,0.2)" 
+                                        backgroundColor: isOwn
+                                          ? "rgba(255,255,255,0.2)"
                                           : "rgba(0,0,0,0.1)",
                                         transform: "scale(1.2)",
                                       },
@@ -2157,17 +2425,19 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                   >
                                     <ThumbUp sx={{ fontSize: 12 }} />
                                   </IconButton>
-                                  
+
                                   <IconButton
                                     size="small"
                                     onClick={() => handleReaction(msg.id, "❤️")}
                                     sx={{
                                       width: 20,
                                       height: 20,
-                                      color: isOwn ? "primary.contrastText" : "text.secondary",
+                                      color: isOwn
+                                        ? "primary.contrastText"
+                                        : "text.secondary",
                                       "&:hover": {
-                                        backgroundColor: isOwn 
-                                          ? "rgba(255,255,255,0.2)" 
+                                        backgroundColor: isOwn
+                                          ? "rgba(255,255,255,0.2)"
                                           : "rgba(0,0,0,0.1)",
                                         transform: "scale(1.2)",
                                       },
@@ -2176,7 +2446,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                   >
                                     <Favorite sx={{ fontSize: 12 }} />
                                   </IconButton>
-                                  
+
                                   {isOwn && (
                                     <IconButton
                                       size="small"
@@ -2186,7 +2456,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                         height: 20,
                                         color: "error.main",
                                         "&:hover": {
-                                          backgroundColor: "rgba(255,255,255,0.2)",
+                                          backgroundColor:
+                                            "rgba(255,255,255,0.2)",
                                         },
                                       }}
                                       title="Delete message"
@@ -2205,25 +2476,25 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                 );
               })}
             <div ref={messagesEndRef} />
-            
+
             {/* Typing Indicator */}
-            {otherUserTyping && (
-              <TypingIndicator username="Provider" />
-            )}
+            {otherUserTyping && <TypingIndicator username="Provider" />}
           </List>
         )}
         {/* Quick Replies */}
         {showQuickReplies && (
-          <Paper 
+          <Paper
             elevation={0}
-            sx={{ 
-              mt: 2, 
+            sx={{
+              mt: 2,
               p: 3,
               borderRadius: 3,
-              backgroundColor: (theme) => theme.palette.mode === "dark" ? "grey.800" : "grey.50",
-              border: (theme) => theme.palette.mode === "dark" 
-                ? "1px solid rgba(255,255,255,0.1)" 
-                : "1px solid rgba(0,0,0,0.1)",
+              backgroundColor: (theme) =>
+                theme.palette.mode === "dark" ? "grey.800" : "grey.50",
+              border: (theme) =>
+                theme.palette.mode === "dark"
+                  ? "1px solid rgba(255,255,255,0.1)"
+                  : "1px solid rgba(0,0,0,0.1)",
             }}
           >
             <Box
@@ -2244,7 +2515,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                   backgroundColor: "transparent",
                   color: "text.secondary",
                   "&:hover": {
-                    backgroundColor: (theme) => theme.palette.error.light + "20",
+                    backgroundColor: (theme) =>
+                      theme.palette.error.light + "20",
                     color: "error.main",
                   },
                 }}
@@ -2260,7 +2532,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                   size="medium"
                   startIcon={reply.icon}
                   onClick={() => handleQuickReply(reply)}
-                  sx={{ 
+                  sx={{
                     justifyContent: "flex-start",
                     borderRadius: 2,
                     textTransform: "none",
@@ -2268,12 +2540,14 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                     px: 2,
                     transition: "all 0.2s ease-in-out",
                     "&:hover": {
-                      backgroundColor: (theme) => theme.palette.primary.light + "10",
+                      backgroundColor: (theme) =>
+                        theme.palette.primary.light + "10",
                       borderColor: (theme) => theme.palette.primary.main,
                       transform: "translateY(-1px)",
-                      boxShadow: (theme) => theme.palette.mode === "dark" 
-                        ? "0 4px 12px rgba(0,0,0,0.3)" 
-                        : "0 4px 12px rgba(0,0,0,0.1)",
+                      boxShadow: (theme) =>
+                        theme.palette.mode === "dark"
+                          ? "0 4px 12px rgba(0,0,0,0.3)"
+                          : "0 4px 12px rgba(0,0,0,0.1)",
                     },
                   }}
                 >
@@ -2287,17 +2561,29 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
       {/* File Preview */}
       {selectedFiles.length > 0 && (
-        <Paper 
+        <Paper
           elevation={0}
-          sx={{ 
-            p: 2, 
-            borderTop: 1, 
+          sx={{
+            p: 2,
+            borderTop: 1,
             borderColor: "divider",
-            backgroundColor: (theme) => theme.palette.mode === "dark" ? "grey.800" : "white",
+            backgroundColor: (theme) =>
+              theme.palette.mode === "dark" ? "grey.800" : "white",
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
-            <Typography variant="subtitle2" fontWeight={600} color="text.primary">
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              mb: 2,
+            }}
+          >
+            <Typography
+              variant="subtitle2"
+              fontWeight={600}
+              color="text.primary"
+            >
               {t("chat.selectedFiles")} ({selectedFiles.length})
             </Typography>
             <IconButton
@@ -2317,19 +2603,20 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           </Box>
           <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
             {selectedFiles.map((file, index) => (
-              <Card 
-                key={index} 
-                sx={{ 
-                  maxWidth: 140, 
+              <Card
+                key={index}
+                sx={{
+                  maxWidth: 140,
                   position: "relative",
                   borderRadius: 2,
                   overflow: "hidden",
                   transition: "all 0.2s ease-in-out",
                   "&:hover": {
                     transform: "translateY(-2px)",
-                    boxShadow: (theme) => theme.palette.mode === "dark" 
-                      ? "0 4px 12px rgba(0,0,0,0.3)" 
-                      : "0 4px 12px rgba(0,0,0,0.15)",
+                    boxShadow: (theme) =>
+                      theme.palette.mode === "dark"
+                        ? "0 4px 12px rgba(0,0,0,0.3)"
+                        : "0 4px 12px rgba(0,0,0,0.15)",
                   },
                 }}
               >
@@ -2348,17 +2635,18 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      backgroundColor: (theme) => theme.palette.mode === "dark" ? "grey.700" : "grey.100",
+                      backgroundColor: (theme) =>
+                        theme.palette.mode === "dark" ? "grey.700" : "grey.100",
                     }}
                   >
                     <InsertDriveFile fontSize="large" color="action" />
                   </Box>
                 )}
                 <CardContent sx={{ p: 1 }}>
-                  <Typography 
-                    variant="caption" 
+                  <Typography
+                    variant="caption"
                     noWrap
-                    sx={{ 
+                    sx={{
                       fontSize: "0.75rem",
                       fontWeight: 500,
                       color: "text.primary",
@@ -2366,9 +2654,9 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                   >
                     {file.name}
                   </Typography>
-                  <Typography 
-                    variant="caption" 
-                    sx={{ 
+                  <Typography
+                    variant="caption"
+                    sx={{
                       fontSize: "0.7rem",
                       color: "text.secondary",
                       display: "block",
@@ -2388,7 +2676,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                     color: "white",
                     width: 24,
                     height: 24,
-                    "&:hover": { 
+                    "&:hover": {
                       backgroundColor: "rgba(0,0,0,0.8)",
                       transform: "scale(1.1)",
                     },
@@ -2400,12 +2688,15 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
               </Card>
             ))}
           </Box>
-          
+
           {/* Upload Progress */}
           {Array.from(uploadProgress.entries()).map(([fileName, progress]) => (
             <FileUploadProgress
               key={fileName}
-              file={selectedFiles.find(f => f.name === fileName) || new File([], fileName)}
+              file={
+                selectedFiles.find((f) => f.name === fileName) ||
+                new File([], fileName)
+              }
               progress={progress.progress}
               status={progress.status}
               error={progress.error}
@@ -2423,7 +2714,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             p: 2,
             borderTop: 1,
             borderColor: "divider",
-            backgroundColor: (theme) => theme.palette.mode === "dark" ? "grey.800" : "grey.50",
+            backgroundColor: (theme) =>
+              theme.palette.mode === "dark" ? "grey.800" : "grey.50",
             borderRadius: 0,
           }}
         >
@@ -2442,13 +2734,14 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           p: { xs: 2, md: 3 },
           borderTop: 1,
           borderColor: "divider",
-          backgroundColor: (theme) => theme.palette.mode === "dark" ? "grey.800" : "white",
+          backgroundColor: (theme) =>
+            theme.palette.mode === "dark" ? "grey.800" : "white",
           borderRadius: 0,
           minHeight: { xs: "80px", md: "auto" },
           position: "relative",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "flex-end", gap: 1.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
           <input
             ref={fileInputRef}
             type="file"
@@ -2466,7 +2759,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           />
 
           {/* Action Buttons */}
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+          <Box sx={{ display: "flex", flexDirection: "row", gap: 0.5 }}>
             {/* Attach File */}
             <Tooltip title={t("chat.attachFile")}>
               <IconButton
@@ -2478,7 +2771,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                   borderRadius: 2,
                   transition: "all 0.2s ease-in-out",
                   "&:hover": {
-                    backgroundColor: (theme) => theme.palette.primary.light + "20",
+                    backgroundColor: (theme) =>
+                      theme.palette.primary.light + "20",
                     color: "primary.main",
                     transform: "scale(1.1)",
                   },
@@ -2499,7 +2793,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                   borderRadius: 2,
                   transition: "all 0.2s ease-in-out",
                   "&:hover": {
-                    backgroundColor: (theme) => theme.palette.primary.light + "20",
+                    backgroundColor: (theme) =>
+                      theme.palette.primary.light + "20",
                     color: "primary.main",
                     transform: "scale(1.1)",
                   },
@@ -2511,8 +2806,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
             {/* Share Location */}
             <Tooltip title={t("chat.shareLocation")}>
-              <IconButton 
-                size="small" 
+              <IconButton
+                size="small"
                 onClick={handleShareLocation}
                 sx={{
                   backgroundColor: "transparent",
@@ -2520,7 +2815,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                   borderRadius: 2,
                   transition: "all 0.2s ease-in-out",
                   "&:hover": {
-                    backgroundColor: (theme) => theme.palette.primary.light + "20",
+                    backgroundColor: (theme) =>
+                      theme.palette.primary.light + "20",
                     color: "primary.main",
                     transform: "scale(1.1)",
                   },
@@ -2540,7 +2836,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             onChange={(e) => {
               const value = e.target.value;
               setInput(value);
-              
+
               // Handle typing indicators
               if (value.trim() && !isTyping) {
                 setIsTyping(true);
@@ -2549,12 +2845,12 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                 setIsTyping(false);
                 onTypingChange?.(false);
               }
-              
+
               // Clear existing timeout
               if (typingTimeout) {
                 clearTimeout(typingTimeout);
               }
-              
+
               // Set new timeout to stop typing indicator
               const timeout = setTimeout(() => {
                 if (isTyping) {
@@ -2562,7 +2858,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                   onTypingChange?.(false);
                 }
               }, 2000); // Stop typing indicator after 2 seconds of inactivity
-              
+
               setTypingTimeout(timeout);
             }}
             onKeyDown={handleKeyPress}
@@ -2577,24 +2873,28 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                 backgroundColor: (theme) =>
                   theme.palette.mode === "dark" ? "grey.700" : "grey.50",
                 borderRadius: 4,
-                boxShadow: (theme) => theme.palette.mode === "dark" 
-                  ? "0 2px 8px rgba(0,0,0,0.3)" 
-                  : "0 2px 8px rgba(0,0,0,0.1)",
-                border: (theme) => theme.palette.mode === "dark" 
-                  ? "1px solid rgba(255,255,255,0.1)" 
-                  : "1px solid rgba(0,0,0,0.1)",
+                boxShadow: (theme) =>
+                  theme.palette.mode === "dark"
+                    ? "0 2px 8px rgba(0,0,0,0.3)"
+                    : "0 2px 8px rgba(0,0,0,0.1)",
+                border: (theme) =>
+                  theme.palette.mode === "dark"
+                    ? "1px solid rgba(255,255,255,0.1)"
+                    : "1px solid rgba(0,0,0,0.1)",
                 transition: "all 0.2s ease-in-out",
                 "&:hover": {
                   borderColor: (theme) => theme.palette.primary.main,
-                  boxShadow: (theme) => theme.palette.mode === "dark" 
-                    ? "0 4px 12px rgba(0,0,0,0.4)" 
-                    : "0 4px 12px rgba(0,0,0,0.15)",
+                  boxShadow: (theme) =>
+                    theme.palette.mode === "dark"
+                      ? "0 4px 12px rgba(0,0,0,0.4)"
+                      : "0 4px 12px rgba(0,0,0,0.15)",
                 },
                 "&.Mui-focused": {
                   borderColor: (theme) => theme.palette.primary.main,
-                  boxShadow: (theme) => theme.palette.mode === "dark" 
-                    ? "0 4px 12px rgba(0,0,0,0.4)" 
-                    : "0 4px 12px rgba(0,0,0,0.15)",
+                  boxShadow: (theme) =>
+                    theme.palette.mode === "dark"
+                      ? "0 4px 12px rgba(0,0,0,0.4)"
+                      : "0 4px 12px rgba(0,0,0,0.15)",
                 },
               },
               "& .MuiInputBase-input": {
@@ -2621,15 +2921,17 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
               width: 48,
               height: 48,
               transition: "all 0.2s ease-in-out",
-              boxShadow: (theme) => theme.palette.mode === "dark" 
-                ? "0 2px 8px rgba(0,0,0,0.3)" 
-                : "0 2px 8px rgba(0,0,0,0.15)",
+              boxShadow: (theme) =>
+                theme.palette.mode === "dark"
+                  ? "0 2px 8px rgba(0,0,0,0.3)"
+                  : "0 2px 8px rgba(0,0,0,0.15)",
               "&:hover": {
                 transform: "scale(1.05)",
                 backgroundColor: (theme) => theme.palette.primary.dark,
-                boxShadow: (theme) => theme.palette.mode === "dark" 
-                  ? "0 4px 12px rgba(0,0,0,0.4)" 
-                  : "0 4px 12px rgba(0,0,0,0.2)",
+                boxShadow: (theme) =>
+                  theme.palette.mode === "dark"
+                    ? "0 4px 12px rgba(0,0,0,0.4)"
+                    : "0 4px 12px rgba(0,0,0,0.2)",
               },
               "&:disabled": {
                 opacity: 0.5,
@@ -2639,48 +2941,53 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             }}
           >
             {isSending ? (
-              <CircularProgress 
-                size={20} 
-                sx={{ 
+              <CircularProgress
+                size={20}
+                sx={{
                   color: "white",
                   animation: "spin 1s linear infinite",
                   "@keyframes spin": {
                     "0%": { transform: "rotate(0deg)" },
                     "100%": { transform: "rotate(360deg)" },
                   },
-                }} 
+                }}
               />
             ) : (
-              <Send sx={{ 
-                transition: "transform 0.2s ease-in-out",
-                "&:hover": { transform: "translateX(2px)" },
-              }} />
+              <Send
+                sx={{
+                  transition: "transform 0.2s ease-in-out",
+                  "&:hover": { transform: "translateX(2px)" },
+                }}
+              />
             )}
           </IconButton>
         </Box>
-        
+
         {/* Character Count */}
         {input.length > 0 && (
-          <Box sx={{ 
-            position: "absolute", 
-            bottom: 8, 
-            right: 8,
-            opacity: 0.6,
-          }}>
+          <Box
+            sx={{
+              position: "absolute",
+              bottom: 8,
+              right: 8,
+              opacity: 0.6,
+            }}
+          >
             <Typography variant="caption" color="text.secondary">
               {input.length}/2000
             </Typography>
           </Box>
         )}
-        
+
         {/* Hidden help text for screen readers */}
         <Box sx={{ display: "none" }}>
           <Typography id="message-input-help">
-            Type your message here. Press Enter to send, Shift+Enter for new line.
-            Maximum 2000 characters.
+            Type your message here. Press Enter to send, Shift+Enter for new
+            line. Maximum 2000 characters.
           </Typography>
           <Typography id="send-button-help">
-            Click to send your message. Button is disabled when message is empty or sending.
+            Click to send your message. Button is disabled when message is empty
+            or sending.
           </Typography>
         </Box>
       </Paper>
@@ -2696,19 +3003,19 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           <>
             <MenuItem onClick={handleShareLocation}>
               <LocationOn sx={{ mr: 1 }} />
-              {t('chat.shareMyLocation')}
+              {t("chat.shareMyLocation")}
             </MenuItem>
             <MenuItem onClick={() => handleAction("request_photos")}>
               <Image sx={{ mr: 1 }} />
-              {t('chat.requestPetPhotos')}
+              {t("chat.requestPetPhotos")}
             </MenuItem>
             <MenuItem onClick={() => handleAction("schedule_meeting")}>
               <Schedule sx={{ mr: 1 }} />
-              {t('chat.scheduleConsultation')}
+              {t("chat.scheduleConsultation")}
             </MenuItem>
             <MenuItem onClick={() => handleAction("share_experience")}>
               <Star sx={{ mr: 1 }} />
-              {t('chat.shareExperience')}
+              {t("chat.shareExperience")}
             </MenuItem>
           </>
         ) : (
@@ -2716,15 +3023,15 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           <>
             <MenuItem onClick={handleShareLocation}>
               <LocationOn sx={{ mr: 1 }} />
-              {t('chat.shareLocation')}
+              {t("chat.shareLocation")}
             </MenuItem>
             <MenuItem onClick={() => handleAction("request_photos")}>
               <Image sx={{ mr: 1 }} />
-              {t('chat.requestPetPhotos')}
+              {t("chat.requestPetPhotos")}
             </MenuItem>
             <MenuItem onClick={() => handleAction("schedule_meeting")}>
               <Schedule sx={{ mr: 1 }} />
-              {t('chat.scheduleMeeting')}
+              {t("chat.scheduleMeeting")}
             </MenuItem>
           </>
         )}
@@ -2755,10 +3062,19 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           {selectedMedia && (
             <Box sx={{ textAlign: "center" }}>
               <img
-                src={selectedMedia.file_url.startsWith('http') ? selectedMedia.file_url : 
-                     (process.env.NODE_ENV === 'production' 
-                       ? 'https://pawfectpal-production-2f07.up.railway.app' + (selectedMedia.file_url.startsWith('/') ? selectedMedia.file_url : '/' + selectedMedia.file_url)
-                       : 'http://localhost:8000' + (selectedMedia.file_url.startsWith('/') ? selectedMedia.file_url : '/' + selectedMedia.file_url))}
+                src={
+                  selectedMedia.file_url.startsWith("http")
+                    ? selectedMedia.file_url
+                    : process.env.NODE_ENV === "production"
+                      ? "https://pawfectpal-production-2f07.up.railway.app" +
+                        (selectedMedia.file_url.startsWith("/")
+                          ? selectedMedia.file_url
+                          : "/" + selectedMedia.file_url)
+                      : "http://localhost:8000" +
+                        (selectedMedia.file_url.startsWith("/")
+                          ? selectedMedia.file_url
+                          : "/" + selectedMedia.file_url)
+                }
                 alt={selectedMedia.file_name}
                 style={{
                   maxWidth: "100%",
@@ -2766,11 +3082,24 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                   objectFit: "contain",
                 }}
                 onError={(e) => {
-                  console.error('❌ Image failed to load:', selectedMedia.file_url);
-                  console.error('❌ Constructed URL:', selectedMedia.file_url.startsWith('http') ? selectedMedia.file_url : 
-                     (process.env.NODE_ENV === 'production' 
-                       ? 'https://pawfectpal-production-2f07.up.railway.app' + (selectedMedia.file_url.startsWith('/') ? selectedMedia.file_url : '/' + selectedMedia.file_url)
-                       : 'http://localhost:8000' + (selectedMedia.file_url.startsWith('/') ? selectedMedia.file_url : '/' + selectedMedia.file_url)));
+                  console.error(
+                    "❌ Image failed to load:",
+                    selectedMedia.file_url
+                  );
+                  console.error(
+                    "❌ Constructed URL:",
+                    selectedMedia.file_url.startsWith("http")
+                      ? selectedMedia.file_url
+                      : process.env.NODE_ENV === "production"
+                        ? "https://pawfectpal-production-2f07.up.railway.app" +
+                          (selectedMedia.file_url.startsWith("/")
+                            ? selectedMedia.file_url
+                            : "/" + selectedMedia.file_url)
+                        : "http://localhost:8000" +
+                          (selectedMedia.file_url.startsWith("/")
+                            ? selectedMedia.file_url
+                            : "/" + selectedMedia.file_url)
+                  );
                 }}
               />
             </Box>
@@ -2795,14 +3124,17 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       </Dialog>
 
       {/* Demo Typing Indicator Button - Remove in production */}
-      <Box sx={{ 
-        p: 1.5, 
-        borderTop: 1, 
-        borderColor: "divider",
-        backgroundColor: (theme) => theme.palette.mode === "dark" ? "grey.900" : "grey.100",
-        display: "flex",
-        justifyContent: "center",
-      }}>
+      <Box
+        sx={{
+          p: 1.5,
+          borderTop: 1,
+          borderColor: "divider",
+          backgroundColor: (theme) =>
+            theme.palette.mode === "dark" ? "grey.900" : "grey.100",
+          display: "flex",
+          justifyContent: "center",
+        }}
+      >
         <Button
           variant="text"
           size="small"
@@ -2815,7 +3147,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
               setTimeout(() => setOtherUserTyping(false), 3000);
             }
           }}
-          sx={{ 
+          sx={{
             fontSize: "0.7rem",
             textTransform: "none",
             color: "text.secondary",

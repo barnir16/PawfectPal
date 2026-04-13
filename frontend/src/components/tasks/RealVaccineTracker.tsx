@@ -59,7 +59,7 @@ import {
   Sync as SyncIcon,
 } from '@mui/icons-material';
 import { getPets } from '../../services/pets/petService';
-import { getAllVaccinations, getVaccinationsDueSoon, getOverdueVaccinations } from '../../services/vaccines/vaccineService';
+import { getAllVaccinations, getVaccinationsDueSoon, getOverdueVaccinations, updateVaccination, deleteVaccination } from '../../services/vaccines/vaccineService';
 import { downloadTasksAsICal, syncTasksWithGoogleCalendar } from '../../services/tasks/taskService';
 import { israeliVaccineSchemas, vaccineNameTranslations } from '../../data/vaccines/israeliVaccines';
 import { useLocalization } from '../../contexts/LocalizationContext';
@@ -123,6 +123,23 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
   const [tabValue, setTabValue] = useState(0);
   const [region] = useState<'israel'>('israel'); // Can be expanded for other regions
   const [successMessage, setSuccessMessage] = useState('');
+
+  // Vaccine edit/delete state
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedVaccine, setSelectedVaccine] = useState<VaccineDisplayRecord | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Form state for vaccine editing
+  const [editFormData, setEditFormData] = useState({
+    vaccineName: '',
+    vaccineType: '',
+    administeredDate: '',
+    nextDueDate: '',
+    veterinarian: '',
+    clinic: '',
+    notes: ''
+  });
 
   // Get regional vaccine schema based on current region
   const getRegionalVaccineSchema = (pet: Pet): VaccineSchema => {
@@ -274,6 +291,169 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
+
+  // Vaccine edit/delete handlers
+  const handleEditVaccine = (vaccine: VaccineDisplayRecord) => {
+    setSelectedVaccine(vaccine);
+    setEditFormData({
+      vaccineName: vaccine.vaccineName,
+      vaccineType: vaccine.type,
+      administeredDate: vaccine.administeredDate,
+      nextDueDate: vaccine.nextDueDate,
+      veterinarian: vaccine.veterinarian,
+      clinic: vaccine.clinic,
+      notes: vaccine.notes || ''
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteVaccine = (vaccine: VaccineDisplayRecord) => {
+    setSelectedVaccine(vaccine);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleEditSubmit = async () => {
+    if (!selectedVaccine) return;
+
+    try {
+      setIsSubmitting(true);
+      await updateVaccination(parseInt(selectedVaccine.id), {
+        vaccine_name: editFormData.vaccineName,
+        vaccine_type: editFormData.vaccineType,
+        date_administered: editFormData.administeredDate,
+        next_due_date: editFormData.nextDueDate,
+        veterinarian: editFormData.veterinarian,
+        clinic: editFormData.clinic,
+        notes: editFormData.notes || undefined
+      });
+
+      setSuccessMessage(t('vaccines.vaccineUpdated') || 'Vaccine updated successfully!');
+      setIsEditDialogOpen(false);
+      setSelectedVaccine(null);
+
+      // Refresh vaccine data
+      const vaccinationsData = await getAllVaccinations();
+      const vaccineRecords: VaccineDisplayRecord[] = vaccinationsData.map(vaccination => {
+        const pet = pets.find(p => p.id === vaccination.pet_id);
+        const dueDate = new Date(vaccination.next_due_date);
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const soonDate = new Date(todayStart.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+        const isOverdue = dueDate < todayStart && !vaccination.is_completed;
+        const isDueSoon = dueDate >= todayStart && dueDate <= soonDate;
+
+        return {
+          id: vaccination.id.toString(),
+          petId: vaccination.pet_id,
+          petName: pet?.name || 'Unknown Pet',
+          vaccineName: getTranslatedVaccineName(vaccination.vaccine_name),
+          type: vaccination.vaccine_type || 'Vaccination',
+          administeredDate: vaccination.date_administered,
+          nextDueDate: vaccination.next_due_date,
+          veterinarian: vaccination.veterinarian,
+          clinic: vaccination.clinic,
+          notes: vaccination.notes || '',
+          isOverdue,
+          isDueSoon,
+          isCompleted: vaccination.is_completed,
+          priority: 'recommended',
+          category: 'vaccination',
+        };
+      });
+
+      const sortedVaccines = vaccineRecords.sort((a, b) => {
+        if (a.isOverdue && !b.isOverdue) return -1;
+        if (!a.isOverdue && b.isOverdue) return 1;
+
+        const dateA = new Date(a.nextDueDate || 0);
+        const dateB = new Date(b.nextDueDate || 0);
+        return dateA.getTime() - dateB.getTime();
+      });
+
+      setVaccines(sortedVaccines);
+    } catch (err) {
+      console.error('❌ Error updating vaccine:', err);
+      setError(t('vaccines.failedToUpdateVaccine') || 'Failed to update vaccine');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedVaccine) return;
+
+    try {
+      setIsSubmitting(true);
+      await deleteVaccination(parseInt(selectedVaccine.id));
+
+      setSuccessMessage(t('vaccines.vaccineDeleted') || 'Vaccine deleted successfully!');
+      setIsDeleteDialogOpen(false);
+      setSelectedVaccine(null);
+
+      // Refresh vaccine data
+      const vaccinationsData = await getAllVaccinations();
+      const vaccineRecords: VaccineDisplayRecord[] = vaccinationsData.map(vaccination => {
+        const pet = pets.find(p => p.id === vaccination.pet_id);
+        const dueDate = new Date(vaccination.next_due_date);
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const soonDate = new Date(todayStart.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+        const isOverdue = dueDate < todayStart && !vaccination.is_completed;
+        const isDueSoon = dueDate >= todayStart && dueDate <= soonDate;
+
+        return {
+          id: vaccination.id.toString(),
+          petId: vaccination.pet_id,
+          petName: pet?.name || 'Unknown Pet',
+          vaccineName: getTranslatedVaccineName(vaccination.vaccine_name),
+          type: vaccination.vaccine_type || 'Vaccination',
+          administeredDate: vaccination.date_administered,
+          nextDueDate: vaccination.next_due_date,
+          veterinarian: vaccination.veterinarian,
+          clinic: vaccination.clinic,
+          notes: vaccination.notes || '',
+          isOverdue,
+          isDueSoon,
+          isCompleted: vaccination.is_completed,
+          priority: 'recommended',
+          category: 'vaccination',
+        };
+      });
+
+      const sortedVaccines = vaccineRecords.sort((a, b) => {
+        if (a.isOverdue && !b.isOverdue) return -1;
+        if (!a.isOverdue && b.isOverdue) return 1;
+
+        const dateA = new Date(a.nextDueDate || 0);
+        const dateB = new Date(b.nextDueDate || 0);
+        return dateA.getTime() - dateB.getTime();
+      });
+
+      setVaccines(sortedVaccines);
+    } catch (err) {
+      console.error('❌ Error deleting vaccine:', err);
+      setError(t('vaccines.failedToDeleteVaccine') || 'Failed to delete vaccine');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const resetEditForm = () => {
+    setEditFormData({
+      vaccineName: '',
+      vaccineType: '',
+      administeredDate: '',
+      nextDueDate: '',
+      veterinarian: '',
+      clinic: '',
+      notes: ''
+    });
+    setSelectedVaccine(null);
+  };
+
+  // Export vaccines to calendar
 
   // Export vaccines to calendar
   const handleExportVaccines = async () => {
@@ -511,16 +691,36 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
 
                <CardContent>
                  {tabValue === 0 && (
-                   <VaccineList vaccines={overdueVaccines} title={t('vaccineTracking.overdueVaccines')} />
+                   <VaccineList 
+                     vaccines={overdueVaccines} 
+                     title={t('vaccineTracking.overdueVaccines')}
+                     onEditVaccine={handleEditVaccine}
+                     onDeleteVaccine={handleDeleteVaccine}
+                   />
                  )}
                  {tabValue === 1 && (
-                   <VaccineList vaccines={dueSoonVaccines} title={t('vaccineTracking.dueSoonVaccines')} />
+                   <VaccineList 
+                     vaccines={dueSoonVaccines} 
+                     title={t('vaccineTracking.dueSoonVaccines')}
+                     onEditVaccine={handleEditVaccine}
+                     onDeleteVaccine={handleDeleteVaccine}
+                   />
                  )}
                  {tabValue === 2 && (
-                   <VaccineList vaccines={upToDateVaccines} title={t('vaccineTracking.upToDateVaccines')} />
+                   <VaccineList 
+                     vaccines={upToDateVaccines} 
+                     title={t('vaccineTracking.upToDateVaccines')}
+                     onEditVaccine={handleEditVaccine}
+                     onDeleteVaccine={handleDeleteVaccine}
+                   />
                  )}
                  {tabValue === 3 && (
-                   <VaccineList vaccines={filteredVaccines} title={t('vaccineTracking.allVaccineRecords')} />
+                   <VaccineList 
+                     vaccines={filteredVaccines} 
+                     title={t('vaccineTracking.allVaccineRecords')}
+                     onEditVaccine={handleEditVaccine}
+                     onDeleteVaccine={handleDeleteVaccine}
+                   />
                  )}
                  {tabValue === 4 && (
                    <VaccineSuggestionsList suggestions={filteredSuggestions} title={t('vaccineTracking.regionalVaccineSuggestions')} />
@@ -528,10 +728,112 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
                </CardContent>
         </Card>
         
+        {/* Edit Vaccine Dialog */}
+        <Dialog open={isEditDialogOpen} onClose={() => setIsEditDialogOpen(false)} maxWidth="md" fullWidth>
+          <DialogTitle>{t('vaccines.editVaccine') || 'Edit Vaccine'}</DialogTitle>
+          <DialogContent>
+            <Stack spacing={3} sx={{ mt: 1 }}>
+              <TextField
+                label={t('vaccines.vaccineName') || 'Vaccine Name'}
+                value={editFormData.vaccineName}
+                onChange={(e) => setEditFormData({ ...editFormData, vaccineName: e.target.value })}
+                fullWidth
+                required
+              />
+              <TextField
+                label={t('vaccines.vaccineType') || 'Vaccine Type'}
+                value={editFormData.vaccineType}
+                onChange={(e) => setEditFormData({ ...editFormData, vaccineType: e.target.value })}
+                fullWidth
+              />
+              <TextField
+                label={t('vaccines.administeredDate') || 'Administered Date'}
+                type="datetime-local"
+                value={editFormData.administeredDate}
+                onChange={(e) => setEditFormData({ ...editFormData, administeredDate: e.target.value })}
+                fullWidth
+                slotProps={{
+                  inputLabel: { shrink: true }
+                }}
+              />
+              <TextField
+                label={t('vaccines.nextDueDate') || 'Next Due Date'}
+                type="datetime-local"
+                value={editFormData.nextDueDate}
+                onChange={(e) => setEditFormData({ ...editFormData, nextDueDate: e.target.value })}
+                fullWidth
+                slotProps={{
+                  inputLabel: { shrink: true }
+                }}
+              />
+              <TextField
+                label={t('vaccines.veterinarian') || 'Veterinarian'}
+                value={editFormData.veterinarian}
+                onChange={(e) => setEditFormData({ ...editFormData, veterinarian: e.target.value })}
+                fullWidth
+              />
+              <TextField
+                label={t('vaccines.clinic') || 'Clinic'}
+                value={editFormData.clinic}
+                onChange={(e) => setEditFormData({ ...editFormData, clinic: e.target.value })}
+                fullWidth
+              />
+              <TextField
+                label={t('vaccines.notes') || 'Notes'}
+                value={editFormData.notes}
+                onChange={(e) => setEditFormData({ ...editFormData, notes: e.target.value })}
+                fullWidth
+                multiline
+                rows={3}
+              />
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => { setIsEditDialogOpen(false); resetEditForm(); }}>
+              {t('common.cancel') || 'Cancel'}
+            </Button>
+            <Button
+              onClick={handleEditSubmit}
+              variant="contained"
+              disabled={!editFormData.vaccineName || isSubmitting}
+            >
+              {isSubmitting ? t('common.saving') || 'Saving...' : t('vaccines.updateVaccine') || 'Update Vaccine'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Delete Vaccine Dialog */}
+        <Dialog open={isDeleteDialogOpen} onClose={() => setIsDeleteDialogOpen(false)}>
+          <DialogTitle>{t('vaccines.deleteVaccine') || 'Delete Vaccine'}</DialogTitle>
+          <DialogContent>
+            <Typography>
+              {t('vaccines.confirmDeleteVaccine') || 'Are you sure you want to delete this vaccine record?'}
+            </Typography>
+            {selectedVaccine && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                <strong>{selectedVaccine.vaccineName}</strong> for <strong>{selectedVaccine.petName}</strong>
+              </Typography>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setIsDeleteDialogOpen(false)}>
+              {t('common.cancel') || 'Cancel'}
+            </Button>
+            <Button
+              onClick={handleDeleteConfirm}
+              variant="contained"
+              color="error"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? t('common.deleting') || 'Deleting...' : t('vaccines.delete') || 'Delete'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
         {/* Success Snackbar */}
-        <Snackbar 
-          open={!!successMessage} 
-          autoHideDuration={6000} 
+        <Snackbar
+          open={!!successMessage}
+          autoHideDuration={6000}
           onClose={() => setSuccessMessage('')}
         >
           <Alert onClose={() => setSuccessMessage('')} severity="success">
@@ -545,9 +847,11 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
 interface VaccineListProps {
   vaccines: VaccineDisplayRecord[];
   title: string;
+  onEditVaccine: (vaccine: VaccineDisplayRecord) => void;
+  onDeleteVaccine: (vaccine: VaccineDisplayRecord) => void;
 }
 
-const VaccineList: React.FC<VaccineListProps> = ({ vaccines, title }) => {
+const VaccineList: React.FC<VaccineListProps> = ({ vaccines, title, onEditVaccine, onDeleteVaccine }) => {
   const { t } = useLocalization();
   
   const getStatusInfo = (vaccine: VaccineDisplayRecord) => {
@@ -677,17 +981,25 @@ const VaccineList: React.FC<VaccineListProps> = ({ vaccines, title }) => {
                  </Stack>
                </Box>
                <Box>
-                 <Tooltip title={t('vaccines.edit')}>
-                   <IconButton size="small" color="primary">
-                     <EditIcon />
-                   </IconButton>
-                 </Tooltip>
-                 <Tooltip title={t('vaccines.delete')}>
-                   <IconButton size="small" color="error">
-                     <DeleteIcon />
-                   </IconButton>
-                 </Tooltip>
-               </Box>
+                <Tooltip title={t('vaccines.edit')}>
+                  <IconButton 
+                    size="small" 
+                    color="primary"
+                    onClick={() => onEditVaccine(vaccine)}
+                  >
+                    <EditIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title={t('vaccines.delete')}>
+                  <IconButton 
+                    size="small" 
+                    color="error"
+                    onClick={() => onDeleteVaccine(vaccine)}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Tooltip>
+              </Box>
              </Box>
            </Paper>
          );

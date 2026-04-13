@@ -340,7 +340,7 @@ export const WeightTrackingPage = () => {
 
   const handleUpdateWeightGoal = async () => {
     if (!editWeightGoal) return;
-    
+
     try {
       const goalData = {
         pet_id: Number(editWeightGoal.pet_id),
@@ -357,7 +357,7 @@ export const WeightTrackingPage = () => {
       } else {
         await WeightGoalService.createWeightGoal(goalData);
       }
-      
+
       setEditWeightGoalDialogOpen(false);
       setEditWeightGoal(null);
       loadData();
@@ -1088,6 +1088,7 @@ export const WeightTrackingPage = () => {
                             color: 'error.main',
                             '&:hover': { bgcolor: 'error.light' }
                           }}
+                          onClick={() => handleDeleteWeightGoal(goal.id)}
                         >
                           <DeleteIcon fontSize="small" />
                         </IconButton>
@@ -1288,83 +1289,6 @@ export const WeightTrackingPage = () => {
             {t('common.cancel')}
           </Button>
           <Button onClick={handleAddWeightGoal} variant="contained" disabled={!newWeightGoal.petId || !newWeightGoal.targetWeight}>
-            {t('common.save')}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Add Weight Record Dialog */}
-      <Dialog open={addWeightDialogOpen} onClose={() => setAddWeightDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>{t('weight.addWeightRecord')}</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid size={{ xs: 12 }}>
-              <FormControl fullWidth>
-                <InputLabel>{t('weight.selectPet')}</InputLabel>
-                <Select
-                  value={newWeightRecord.petId}
-                  label={t('weight.selectPet')}
-                  onChange={(e) => setNewWeightRecord(prev => ({ ...prev, petId: e.target.value }))}
-                >
-                  {pets.map((pet) => (
-                    <MenuItem key={pet.id} value={pet.id?.toString()}>
-                      {pet.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 12 }} sm={6}>
-              <TextField
-                fullWidth
-                label={t('weight.weight')}
-                type="number"
-                value={newWeightRecord.weight}
-                onChange={(e) => setNewWeightRecord(prev => ({ ...prev, weight: e.target.value }))}
-                inputProps={{ step: 0.1, min: 0 }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>{t('weight.weightUnit')}</InputLabel>
-                <Select
-                  value={newWeightRecord.weightUnit}
-                  label={t('weight.weightUnit')}
-                  onChange={(e) => setNewWeightRecord(prev => ({ ...prev, weightUnit: e.target.value as 'kg' | 'lbs' }))}
-                >
-                  <MenuItem value="kg">{t('pets.kg')}</MenuItem>
-                  <MenuItem value="lbs">{t('pets.pounds')}</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label={t('weight.date')}
-                type="date"
-                value={newWeightRecord.date}
-                onChange={(e) => setNewWeightRecord(prev => ({ ...prev, date: e.target.value }))}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label={t('weight.notes')}
-                multiline
-                rows={3}
-                value={newWeightRecord.notes}
-                onChange={(e) => setNewWeightRecord(prev => ({ ...prev, notes: e.target.value }))}
-                placeholder={t('weight.notesPlaceholder')}
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setAddWeightDialogOpen(false)}>
-            {t('common.cancel')}
-          </Button>
-          <Button onClick={handleAddWeightRecord} variant="contained" disabled={!newWeightRecord.petId || !newWeightRecord.weight}>
             {t('common.save')}
           </Button>
         </DialogActions>

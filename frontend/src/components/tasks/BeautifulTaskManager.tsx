@@ -149,7 +149,7 @@ const BeautifulTaskManager: React.FC = () => {
         petInfo,
         daysUntilDue,
         isOverdue,
-        status: isOverdue ? 'pending' as const : (backendTask.status || 'pending') as 'pending' | 'in_progress' | 'completed' | 'cancelled'
+        status: isOverdue ? 'overdue' as const : (backendTask.status || 'pending') as 'pending' | 'in_progress' | 'completed' | 'cancelled'
       };
     });
 
