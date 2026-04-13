@@ -97,7 +97,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://pawfectpal-production-2f07.up.railway.app",
+        "https://pawfectpal-production.up.railway.app",
         "https://pawfectpal-production-2f07.up.railway.app",
+        "https://pawfectpal-production.up.railway.app",
         "http://localhost:3000",
         "http://localhost:5173",
         "https://pawfectpal.vercel.app"
@@ -185,7 +187,7 @@ def test_image(filename: str):
         "exists": image_path.exists(),
         "is_file": image_path.is_file(),
         "size": image_path.stat().st_size if image_path.exists() else 0,
-        "url": f"https://pawfectpal-production-2f07.up.railway.app/uploads/images/{filename}",
+        "url": f"https://pawfectpal-production.up.railway.app/uploads/images/{filename}",
     }
 
 

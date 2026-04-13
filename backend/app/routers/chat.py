@@ -185,7 +185,7 @@ async def send_message_with_files(
                     {
                         "id": str(uuid.uuid4()),
                         "file_name": safe_filename,
-                        "file_url": f"https://pawfectpal-production-2f07.up.railway.app/uploads/chat/{unique_filename}",
+                        "file_url": f"https://pawfectpal-production.up.railway.app/uploads/chat/{unique_filename}",
                         "file_type": file.content_type or "application/octet-stream",
                         "file_size": len(content),
                         "created_at": datetime.now().isoformat(),
