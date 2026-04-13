@@ -47,7 +47,7 @@ interface ProfileFormData {
   postal_code?: string;
   latitude?: string;
   longitude?: string;
-  provider_services?: number[];
+  provider_services?: string[];
   provider_bio?: string;
   provider_hourly_rate?: string;
   provider_rating?: string;
@@ -80,11 +80,8 @@ const ProfilePage: React.FC = () => {
       postal_code: user?.postal_code || "",
       latitude: user?.latitude?.toString() || "",
       longitude: user?.longitude?.toString() || "",
-      // Check both user.provider and user.provider_info for provider data
-      provider_services:
-        user?.provider?.services?.map((s: any) => s.id) ||
-        (user?.provider_services ? user.provider_services : []) ||
-        [],
+      // Provider services are now service names, not IDs
+      provider_services: user?.provider_services || [],
       provider_bio: user?.provider?.bio || user?.provider_bio || "",
       provider_hourly_rate:
         user?.provider?.hourly_rate?.toString() ||
@@ -243,24 +240,25 @@ const ProfilePage: React.FC = () => {
 
       // Handle provider fields
       if (user.is_provider) {
-        // Convert service IDs to service names for backend compatibility
-        const serviceNames =
+        // Convert service names to service IDs for backend compatibility
+        const serviceIds =
           (formData.provider_services || [])
             .map(
-              (id) => serviceOptions.find((service) => service.id === id)?.name
+              (name) => serviceOptions.find((service) => service.name === name)?.id
             )
-            .filter((name) => name) || [];
+            .filter((id) => id !== undefined) as number[] || [];
 
         console.log("Form data provider fields:", {
           provider_services: formData.provider_services,
           provider_bio: formData.provider_bio,
           provider_hourly_rate: formData.provider_hourly_rate,
-          serviceNames: serviceNames,
+          serviceNames: formData.provider_services,
+          serviceIds: serviceIds,
           serviceOptions: serviceOptions,
         });
 
         // Send provider fields at top level instead of nested under provider_info
-        updatedPayload.provider_services = serviceNames;
+        updatedPayload.provider_services = formData.provider_services;
         updatedPayload.provider_bio = formData.provider_bio;
         updatedPayload.provider_hourly_rate = parseFloat(
           formData.provider_hourly_rate || "0"
@@ -291,11 +289,6 @@ const ProfilePage: React.FC = () => {
       setUser((prev) => ({
         ...prev,
         ...profileData,
-        // Ensure provider data is properly merged
-        provider: {
-          ...prev.provider,
-          ...(profileData.provider || {}),
-        },
       }));
 
       // Re-initialize form data after successful save (same logic as when user changes)
@@ -482,22 +475,17 @@ const ProfilePage: React.FC = () => {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      provider_services: e.target.value as number[],
+                      provider_services: e.target.value as string[],
                     })
                   }
                   disabled={!isEditing}
-                  renderValue={(selected) =>
-                    serviceOptions
-                      .filter((opt) => selected.includes(opt.id))
-                      .map((opt) => opt.name)
-                      .join(", ")
-                  }
+                  renderValue={(selected) => selected.join(", ")}
                 >
                   {serviceOptions.map((service) => (
-                    <MenuItem key={service.id} value={service.id}>
+                    <MenuItem key={service.id} value={service.name}>
                       <Checkbox
                         checked={(formData.provider_services ?? []).includes(
-                          service.id
+                          service.name
                         )}
                       />
                       <ListItemText primary={service.name} />

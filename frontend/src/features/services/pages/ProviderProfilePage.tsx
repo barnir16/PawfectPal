@@ -153,7 +153,7 @@ export const ProviderProfilePage: React.FC = () => {
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 3 }}>
                 <Avatar
-                  src={provider.profile_image}
+                  src={provider.profile_image || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face&seed=default"}
                   alt={provider.full_name}
                   sx={{ 
                     width: 120, 

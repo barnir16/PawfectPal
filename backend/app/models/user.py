@@ -13,6 +13,8 @@ if TYPE_CHECKING:
     from .chat_message import ChatMessageORM
     from .ai_conversation import AIConversationORM
     from .fcm_token import FCMTokenORM
+    from .marketplace_post import MarketplacePostORM
+    from .provider_profile import ProviderProfileORM
 
 
 class UserORM(Base):

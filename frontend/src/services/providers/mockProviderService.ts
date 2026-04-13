@@ -1,4 +1,6 @@
 import type { ServiceProvider } from '../../types/services';
+import { getBaseUrl } from "../api";
+import { getToken } from "../api";
 
 export class MockProviderService {
   private static providers: ServiceProvider[] = [];
@@ -9,10 +11,14 @@ export class MockProviderService {
    */
   private static async loadProviders(forceReload: boolean = false): Promise<void> {
     if (this.loaded && !forceReload) return;
-    
+
     try {
-      // Try to fetch from backend API first
-      const response = await fetch('/api/providers/');
+      // Try to fetch from backend API first using proper base URL and auth
+      const token = await getToken();
+      const response = await fetch(`${getBaseUrl()}/providers/`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
+      });
+
       if (response.ok) {
         this.providers = await response.json();
         this.loaded = true;
@@ -22,7 +28,7 @@ export class MockProviderService {
     } catch (error) {
       console.log('Backend API not available, using fallback data');
     }
-    
+
     // Fallback to sample data if backend is not available
     this.providers = this.getFallbackProviders();
     this.loaded = true;
