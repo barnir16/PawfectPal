@@ -937,7 +937,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         const baseUrl =
           import.meta.env.VITE_API_URL ||
           (process.env.NODE_ENV === "production"
-            ? "https://pawfectpal-production-2f07.up.railway.app"
+            ? "https://pawfectpal-production.up.railway.app"
             : "http://localhost:8000");
         fullUrl = baseUrl + (fullUrl.startsWith("/") ? fullUrl : "/" + fullUrl);
       }
@@ -987,7 +987,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       const baseUrl =
         import.meta.env.VITE_API_URL ||
         (process.env.NODE_ENV === "production"
-          ? "https://pawfectpal-production-2f07.up.railway.app"
+          ? "https://pawfectpal-production.up.railway.app"
           : "http://localhost:8000");
       fullUrl = baseUrl + (fullUrl.startsWith("/") ? fullUrl : "/" + fullUrl);
       console.log("📁 Constructed URL:", {
@@ -3066,7 +3066,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                   selectedMedia.file_url.startsWith("http")
                     ? selectedMedia.file_url
                     : process.env.NODE_ENV === "production"
-                      ? "https://pawfectpal-production-2f07.up.railway.app" +
+                      ? "https://pawfectpal-production.up.railway.app" +
                         (selectedMedia.file_url.startsWith("/")
                           ? selectedMedia.file_url
                           : "/" + selectedMedia.file_url)
@@ -3091,7 +3091,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                     selectedMedia.file_url.startsWith("http")
                       ? selectedMedia.file_url
                       : process.env.NODE_ENV === "production"
-                        ? "https://pawfectpal-production-2f07.up.railway.app" +
+                        ? "https://pawfectpal-production.up.railway.app" +
                           (selectedMedia.file_url.startsWith("/")
                             ? selectedMedia.file_url
                             : "/" + selectedMedia.file_url)
