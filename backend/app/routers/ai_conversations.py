@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from dependencies.db import get_db
-from dependencies.auth import get_current_user
-from models.user import UserORM
-from models.ai_conversation import AIConversationORM, AIConversationMessageORM
-from schemas.ai_conversation import (
+
+from app.dependencies.db import get_db
+from app.dependencies.auth import get_current_user
+from app.models.user import UserORM
+from app.models.ai_conversation import AIConversationORM, AIConversationMessageORM
+from app.schemas.ai_conversation import (
     AIConversationCreate, 
     AIConversationRead, 
     AIConversationUpdate,

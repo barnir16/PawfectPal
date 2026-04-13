@@ -7,7 +7,7 @@ import os
 import json
 from typing import Optional, Dict, Any
 from app.models.user import UserORM
-from services.firebase_admin import firebase_admin
+from app.services.firebase_admin import firebase_admin
 
 
 class FirebaseUserService:

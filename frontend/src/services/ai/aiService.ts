@@ -21,7 +21,7 @@ class AIService {
   private apiUrl: string;
 
   constructor() {
-    this.apiUrl = import.meta.env.VITE_API_URL || 'https://pawfectpal-production.up.railway.app';
+    this.apiUrl = import.meta.env.VITE_API_URL || 'https://pawfectpal-production-2f07.up.railway.app';
   }
 
   /**
