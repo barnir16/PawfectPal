@@ -2,8 +2,9 @@
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
-from app.main import app  # adjust if your FastAPI app entry point is different
+from app.main import app
 from app.models import UserORM
+from app.dependencies.auth import get_current_user
 
 client = TestClient(app)
 
@@ -57,7 +58,7 @@ from app.routers import ai_simple as ai
 
 
 def test_create_simple_prompt_includes_pet_info(sample_pet_context):
-    prompt = ai.create_simple_prompt("How is my dog?", sample_pet_context)
+    prompt = ai.create_simple_prompt("How is my dog?", sample_pet_context, None, "en")
     assert "Fido: Dog (Beagle)" in prompt
     assert "Whiskers: Cat (Siamese)" in prompt
     assert "USER QUESTION: How is my dog?" in prompt
@@ -97,16 +98,14 @@ def test_handle_simple_fallback_default(sample_pet_context):
 # Endpoint tests
 # ----------------------------
 @patch(
-    "services.firebase_user_service.firebase_user_service.get_gemini_api_key_for_user"
+    "app.services.firebase_user_service.firebase_user_service.get_gemini_api_key_for_user"
 )
 @patch("google.generativeai.GenerativeModel.generate_content")
 def test_chat_with_ai_gemini(mock_generate, mock_key, mock_user, sample_pet_context):
-    # Mock Gemini key and response
     mock_key.return_value = "fake-key"
     mock_generate.return_value = MagicMock(text="Gemini mock response")
 
-    # Patch dependency
-    app.dependency_overrides[ai.get_current_user] = lambda: mock_user
+    app.dependency_overrides[get_current_user] = lambda: mock_user
 
     response = client.post(
         "/ai/chat", json={"message": "How is Fido?", "pet_context": sample_pet_context}
@@ -117,15 +116,15 @@ def test_chat_with_ai_gemini(mock_generate, mock_key, mock_user, sample_pet_cont
     assert data["message"] == "Gemini mock response"
     assert any(a["id"] == "health_help" for a in data["suggested_actions"])
 
-    app.dependency_overrides = {}
+    app.dependency_overrides.clear()
 
 
 @patch(
-    "services.firebase_user_service.firebase_user_service.get_gemini_api_key_for_user"
+    "app.services.firebase_user_service.firebase_user_service.get_gemini_api_key_for_user"
 )
 def test_chat_with_ai_no_key_triggers_fallback(mock_key, mock_user, sample_pet_context):
     mock_key.return_value = None
-    app.dependency_overrides[ai.get_current_user] = lambda: mock_user
+    app.dependency_overrides[get_current_user] = lambda: mock_user
 
     response = client.post(
         "/ai/chat", json={"message": "Sort my pets", "pet_context": sample_pet_context}
@@ -135,13 +134,15 @@ def test_chat_with_ai_no_key_triggers_fallback(mock_key, mock_user, sample_pet_c
     data = response.json()
     assert "Here are your pets sorted from youngest to oldest" in data["message"]
 
-    app.dependency_overrides = {}
+    app.dependency_overrides.clear()
 
 
-@patch("services.firebase_user_service.firebase_user_service.get_available_configs")
+@patch(
+    "app.services.firebase_user_service.firebase_user_service.get_available_configs"
+)
 def test_firebase_config_endpoint_success(mock_configs, mock_user):
     mock_configs.return_value = {"feature_x": "enabled"}
-    app.dependency_overrides[ai.get_current_user] = lambda: mock_user
+    app.dependency_overrides[get_current_user] = lambda: mock_user
 
     response = client.get("/ai/firebase-config")
     assert response.status_code == 200
@@ -149,4 +150,4 @@ def test_firebase_config_endpoint_success(mock_configs, mock_user):
     assert data["firebase_available"] is True
     assert data["configs"]["feature_x"] == "enabled"
 
-    app.dependency_overrides = {}
+    app.dependency_overrides.clear()

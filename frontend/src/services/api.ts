@@ -11,7 +11,7 @@ export const getBaseUrl = (): string => {
 
     if (isProduction) {
       console.log('Production environment detected, using Railway URL');
-      return "https://pawfectpal-production.up.railway.app";
+      return "https://pawfectpal-production-2f07.up.railway.app";
     }
 
     // Use local backend in development
@@ -23,7 +23,7 @@ export const getBaseUrl = (): string => {
 };
 
 // Don't set BASE_URL at module load time - get it dynamically
-export const BASE_URL = "https://pawfectpal-production.up.railway.app";
+export const BASE_URL = "https://pawfectpal-production-2f07.up.railway.app";
 
 /**
  * Get stored authentication token
