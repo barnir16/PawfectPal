@@ -114,6 +114,32 @@ class TestAIEndpoints:
         data = response.json()
         assert "temporarily unavailable" in data["message"].lower()
 
+    def test_ai_chat_rate_limit_returns_retry_message(self, test_user, mock_pets):
+        request_data = {
+            "message": "What should I feed my dog?",
+            "pet_context": {"pets": mock_pets, "total_pets": 1},
+            "prompt_language": "en",
+        }
+
+        app.dependency_overrides[get_current_user] = lambda: test_user
+        try:
+            with patch(
+                "app.services.firebase_user_service.firebase_user_service.get_gemini_api_key_for_user",
+                return_value="test_api_key",
+            ), patch(
+                "google.generativeai.GenerativeModel.generate_content",
+                side_effect=Exception(
+                    "429 You exceeded your current quota. Please retry in 32.5s."
+                ),
+            ):
+                response = client.post("/ai/chat", json=request_data)
+        finally:
+            app.dependency_overrides.pop(get_current_user, None)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "try again in about 32 seconds" in data["message"].lower()
+
     def test_ai_chat_unauthorized(self, mock_pets):
         request_data = {
             "message": "What should I feed my dog?",
