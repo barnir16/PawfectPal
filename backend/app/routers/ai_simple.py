@@ -9,6 +9,7 @@ when that fetch works.
 from __future__ import annotations
 
 import os
+import re
 from typing import Any, Dict, List, Optional
 
 import google.generativeai as genai  # type: ignore
@@ -22,7 +23,7 @@ from app.services.firebase_user_service import firebase_user_service
 router = APIRouter(prefix="/ai", tags=["AI"])
 
 # Default model if GEMINI_MODEL is not set (override in Railway when Google deprecates a SKU)
-_DEFAULT_MODEL_NAME = "gemini-2.5-flash"
+_DEFAULT_MODEL_NAME = "gemini-2.5-flash-lite"
 
 
 class AIChatRequest(BaseModel):
@@ -139,15 +140,69 @@ def generate_simple_actions(
     ]
 
 
+def _is_hebrew(prompt_language: str) -> bool:
+    return (prompt_language or "en").lower().startswith("he")
+
+
+def _extract_retry_delay_seconds(error_message: str) -> Optional[int]:
+    match = re.search(r"retry in\s+(\d+(?:\.\d+)?)s", error_message, re.IGNORECASE)
+    if not match:
+        return None
+    try:
+        return max(1, int(float(match.group(1))))
+    except ValueError:
+        return None
+
+
+def _build_unavailable_response(
+    prompt_language: str = "en",
+    retry_after_seconds: Optional[int] = None,
+) -> AIChatResponse:
+    if _is_hebrew(prompt_language):
+        if retry_after_seconds:
+            message = (
+                f"שירות ה-AI עמוס כרגע. נסה שוב בעוד כ-{retry_after_seconds} שניות."
+            )
+        else:
+            message = "שירות ה-AI אינו זמין כרגע. נסה שוב בעוד כמה רגעים."
+        retry_label = "נסה שוב"
+        retry_description = "שלח את הבקשה שוב בעוד רגע"
+    else:
+        if retry_after_seconds:
+            message = (
+                f"The AI service is busy right now. Please try again in about "
+                f"{retry_after_seconds} seconds."
+            )
+        else:
+            message = "The AI service is temporarily unavailable. Please try again shortly."
+        retry_label = "Try Again"
+        retry_description = "Retry your request in a moment"
+
+    return AIChatResponse(
+        message=message,
+        suggested_actions=[
+            {
+                "id": "retry",
+                "type": "retry",
+                "label": retry_label,
+                "description": retry_description,
+            }
+        ],
+    )
+
+
 def handle_simple_fallback(
     message: str,
     pet_context: Dict[str, Any],
     conversation_history: Optional[List[Dict[str, str]]] = None,
+    prompt_language: str = "en",
+    allow_general: bool = True,
 ) -> AIChatResponse:
     """Rule-based fallback when Gemini is unavailable or fails."""
     _ = conversation_history
     pets = pet_context.get("pets", [])
     message_lower = message.lower()
+    is_hebrew = _is_hebrew(prompt_language)
 
     if "sort" in message_lower and "pet" in message_lower:
         sorted_pets = sorted(pets, key=lambda x: float(x.get("age", 0) or 0))
@@ -178,14 +233,22 @@ def handle_simple_fallback(
                 f"{health_text}{behavior_text}"
             )
         return AIChatResponse(
-            message="Here are your pets sorted from youngest to oldest:\n\n"
+            message=(
+                "להלן חיות המחמד שלך מהצעירה למבוגרת:\n\n"
+                if is_hebrew
+                else "Here are your pets sorted from youngest to oldest:\n\n"
+            )
             + "\n\n".join(pet_responses),
             suggested_actions=[
                 {
                     "id": "pet_care_plan",
                     "type": "create_task",
-                    "label": "Create Care Plan",
-                    "description": "Set up a care plan for your pets",
+                    "label": "צור תוכנית טיפול" if is_hebrew else "Create Care Plan",
+                    "description": (
+                        "הגדר תוכנית טיפול לחיות המחמד שלך"
+                        if is_hebrew
+                        else "Set up a care plan for your pets"
+                    ),
                 }
             ],
         )
@@ -200,42 +263,72 @@ def handle_simple_fallback(
         pet_name = mentioned_pet.get("name", "your pet")
         health_issues = mentioned_pet.get("health_issues", [])
         behavior_issues = mentioned_pet.get("behavior_issues", [])
-        msg = f"I can help with {pet_name}'s care. "
-        if health_issues:
-            msg += f"{pet_name} has health concerns: {', '.join(health_issues)}. "
-        if behavior_issues:
-            msg += f"Behavior issues: {', '.join(behavior_issues)}. "
-        msg += f"What specific aspect of {pet_name}'s care would you like help with?"
+        if is_hebrew:
+            msg = f"אני יכול לעזור עם הטיפול ב-{pet_name}. "
+            if health_issues:
+                msg += f"ל-{pet_name} יש בעיות בריאותיות: {', '.join(health_issues)}. "
+            if behavior_issues:
+                msg += f"יש גם נושאי התנהגות: {', '.join(behavior_issues)}. "
+            msg += f"באיזה היבט של הטיפול ב-{pet_name} תרצה עזרה?"
+            label = f"הטיפול של {pet_name}"
+            description = f"קבל עצות טיפול עבור {pet_name}"
+        else:
+            msg = f"I can help with {pet_name}'s care. "
+            if health_issues:
+                msg += f"{pet_name} has health concerns: {', '.join(health_issues)}. "
+            if behavior_issues:
+                msg += f"Behavior issues: {', '.join(behavior_issues)}. "
+            msg += f"What specific aspect of {pet_name}'s care would you like help with?"
+            label = f"{pet_name}'s Care"
+            description = f"Get care advice for {pet_name}"
         return AIChatResponse(
             message=msg,
             suggested_actions=[
                 {
                     "id": f"{str(pet_name).lower()}_care",
                     "type": "view_tips",
-                    "label": f"{pet_name}'s Care",
-                    "description": f"Get care advice for {pet_name}",
+                    "label": label,
+                    "description": description,
                 }
             ],
         )
 
+    if not allow_general:
+        return _build_unavailable_response(prompt_language)
+
     pet_names = [p.get("name", "?") for p in pets]
     return AIChatResponse(
         message=(
-            f"I'd be happy to help with your pet care questions! "
-            f"You have {len(pets)} pets: {', '.join(pet_names)}. What would you like to know?"
+            (
+                f"אשמח לעזור בשאלות על חיות המחמד שלך. "
+                f"יש לך {len(pets)} חיות מחמד: {', '.join(pet_names)}. במה תרצה עזרה?"
+            )
+            if is_hebrew
+            else (
+                f"I'd be happy to help with your pet care questions! "
+                f"You have {len(pets)} pets: {', '.join(pet_names)}. What would you like to know?"
+            )
         ),
         suggested_actions=[
             {
                 "id": "health_help",
                 "type": "view_tips",
-                "label": "Health Help",
-                "description": "Get health advice for your pets",
+                "label": "עזרה בריאותית" if is_hebrew else "Health Help",
+                "description": (
+                    "קבל עצות בריאות עבור חיות המחמד שלך"
+                    if is_hebrew
+                    else "Get health advice for your pets"
+                ),
             },
             {
                 "id": "behavior_help",
                 "type": "view_tips",
-                "label": "Behavior Help",
-                "description": "Get behavior advice for your pets",
+                "label": "עזרה התנהגותית" if is_hebrew else "Behavior Help",
+                "description": (
+                    "קבל עצות התנהגות עבור חיות המחמד שלך"
+                    if is_hebrew
+                    else "Get behavior advice for your pets"
+                ),
             },
         ],
     )
@@ -264,27 +357,15 @@ async def chat_with_ai(
     if not api_key:
         # Offline rules still help for sort / name detection
         fb = handle_simple_fallback(
-            request.message, request.pet_context, history
+            request.message,
+            request.pet_context,
+            history,
+            request.prompt_language,
+            False,
         )
-        if "sorted from youngest" in fb.message or "I can help with" in fb.message:
+        if fb.message != _build_unavailable_response(request.prompt_language).message:
             return fb
-        return AIChatResponse(
-            message="AI service is temporarily unavailable. Please try again later.",
-            suggested_actions=[
-                {
-                    "id": "retry",
-                    "type": "retry",
-                    "label": "Try Again",
-                    "description": "Retry your request",
-                },
-                {
-                    "id": "contact_support",
-                    "type": "contact_support",
-                    "label": "Contact Support",
-                    "description": "Get help from support",
-                },
-            ],
-        )
+        return _build_unavailable_response(request.prompt_language)
 
     model_name = (
         os.getenv("GEMINI_MODEL", _DEFAULT_MODEL_NAME).strip() or _DEFAULT_MODEL_NAME
@@ -303,7 +384,11 @@ async def chat_with_ai(
         message = _extract_response_text(raw)
         if not message:
             return handle_simple_fallback(
-                request.message, request.pet_context, history
+                request.message,
+                request.pet_context,
+                history,
+                request.prompt_language,
+                False,
             )
         return AIChatResponse(
             message=message,
@@ -312,9 +397,19 @@ async def chat_with_ai(
             ),
         )
     except Exception as e:
-        print(f"AI Chat Error: {e}")
+        error_message = str(e)
+        print(f"AI Chat Error: {error_message}")
+        if "429" in error_message or "quota" in error_message.lower():
+            return _build_unavailable_response(
+                request.prompt_language,
+                _extract_retry_delay_seconds(error_message),
+            )
         return handle_simple_fallback(
-            request.message, request.pet_context, history
+            request.message,
+            request.pet_context,
+            history,
+            request.prompt_language,
+            False,
         )
 
 

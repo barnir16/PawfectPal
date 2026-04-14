@@ -99,7 +99,10 @@ class FirebaseConfigService {
 
       // If API key is empty, we'll get it from Remote Config
       if (!firebaseConfig.apiKey) {
-        console.log('Firebase API key not set in config, will be loaded from Remote Config');
+        console.log('Firebase API key not set in browser config. Using fallback configuration.');
+        this.config = { ...this.fallbackConfig };
+        this.isInitialized = true;
+        return;
       }
 
       // Initialize Firebase with dynamic config
