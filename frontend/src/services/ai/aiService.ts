@@ -1,11 +1,9 @@
 /**
- * Simplified AI Service - Direct approach inspired by PawfectPlanner
+ * Simplified AI service used by the floating chatbot.
  */
 
 import { Pet } from '../../types/pets/pet';
-import { configService } from '../config/firebaseConfigService';
 import { getToken } from '../api';
-import { getTasks } from '../tasks/taskService';
 
 interface AIServiceResponse {
   message: string;
@@ -25,51 +23,37 @@ class AIService {
   }
 
   /**
-   * Detect primary language of a message
+   * Detect the dominant language of the user's message.
    */
   private detectLanguage(message: string): string {
-    const hebrewPattern = /[\u0590-\u05FF]/;
     const hebrewMatches = (message.match(/[\u0590-\u05FF]/g) || []).length;
     const totalLetters = (message.match(/[a-zA-Z]/g) || []).length + hebrewMatches;
-    
-    if (totalLetters === 0) return 'en'; // Default to English
-    
+
+    if (totalLetters === 0) return 'en';
+
     const hebrewRatio = hebrewMatches / totalLetters;
     return hebrewRatio > 0.3 ? 'he' : 'en';
   }
 
   /**
-   * Send a message to the AI with pet context
+   * Send a message to the AI with normalized pet context.
    */
   async sendMessage(
-    userMessage: string, 
-    pets: Pet[], 
+    userMessage: string,
+    pets: Pet[],
     selectedPet?: Pet[]
   ): Promise<AIServiceResponse> {
     try {
-      console.log('🤖 AI Service: Sending message with pets:', pets.length);
-      
-      // Detect language
       const language = this.detectLanguage(userMessage);
-      console.log('🤖 AI Service: Detected language:', language);
-      
-      // Prepare pet context - simplified format
       const petContext = this.preparePetContext(pets, selectedPet);
-      
-      // Get authentication token
       const token = await getToken();
-      console.log('🔑 AI Service Token:', token ? 'Present' : 'Missing');
-      
-      // Prepare request data
+
       const requestData = {
         message: userMessage,
         pet_context: petContext,
         prompt_language: language
       };
 
-      console.log('🤖 AI Request Data:', JSON.stringify(requestData, null, 2));
-      
-      // Call the simplified backend AI endpoint
       const response = await fetch(`${this.apiUrl}/ai/chat`, {
         method: 'POST',
         headers: {
@@ -80,10 +64,6 @@ class AIService {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('🤖 AI Service Error Response:', errorText);
-        
-        // Handle specific error types
         if (response.status === 408) {
           throw new Error('timeout');
         } else if (!navigator.onLine) {
@@ -94,22 +74,16 @@ class AIService {
       }
 
       const data = await response.json();
-      
-      console.log('🤖 AI Response received:', data.message?.substring(0, 100) + '...');
-      console.log('🤖 AI Suggested actions:', data.suggested_actions || []);
-      
+
       return {
         message: data.message || 'I apologize, but I had trouble processing your request.',
         suggestedActions: this.processSuggestedActions(data.suggested_actions || [])
       };
-
     } catch (error) {
-      console.error('🤖 AI Service Error:', error);
-      
-      // Return appropriate error message based on error type
-      const errorMessage = this.getErrorMessage(error);
+      console.error('AI service error:', error);
+
       return {
-        message: errorMessage,
+        message: this.getErrorMessage(error),
         suggestedActions: [
           {
             id: 'retry',
@@ -123,10 +97,10 @@ class AIService {
   }
 
   /**
-   * Prepare simplified pet context
+   * Prepare simplified pet context for the backend prompt builder.
    */
   private preparePetContext(pets: Pet[], selectedPet?: Pet[]): any {
-    const petData = pets.map(pet => {
+    const petData = pets.map((pet) => {
       return {
         name: pet.name || 'Unknown',
         type: pet.type || 'pet',
@@ -145,26 +119,26 @@ class AIService {
 
     return {
       pets: petData,
-      selected_pet: selectedPet ? petData.find(p => p.name === selectedPet[0]?.name) : null,
+      selected_pet: selectedPet ? petData.find((p) => p.name === selectedPet[0]?.name) : null,
       total_pets: pets.length
     };
   }
 
   /**
-   * Process health issues for AI context
+   * Normalize health issues for AI context.
    */
   private processHealthIssues(pet: Pet): string[] {
     const issues = pet.healthIssues || pet.health_issues || [];
     const parsedIssues = Array.isArray(issues) ? issues : [];
-    
-    return parsedIssues.map(issue => {
+
+    return parsedIssues.map((issue) => {
       if (typeof issue === 'string') return issue.toLowerCase();
       return issue.description || 'unknown issue';
     });
   }
 
   /**
-   * Calculate pet age (existing logic)
+   * Calculate pet age in years for prompt context.
    */
   private calculateAge(pet: Pet): number {
     const birthDate = pet.birthDate || pet.birth_date;
@@ -177,7 +151,7 @@ class AIService {
         } else {
           birth = new Date(birthDate);
         }
-        
+
         const now = new Date();
         const ageInDays = Math.floor((now.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24));
         return ageInDays / 365.25;
@@ -189,7 +163,7 @@ class AIService {
   }
 
   /**
-   * Process suggested actions from backend response
+   * Normalize suggested actions from backend response.
    */
   private processSuggestedActions(actions: any[]): Array<{
     id: string;
@@ -198,8 +172,8 @@ class AIService {
     description: string;
   }> {
     if (!Array.isArray(actions)) return [];
-    
-    return actions.map(action => {
+
+    return actions.map((action) => {
       if (typeof action === 'string') {
         return {
           id: `action_${Date.now()}_${Math.random()}`,
@@ -208,7 +182,7 @@ class AIService {
           description: `Quick action: ${action}`
         };
       }
-      
+
       return {
         id: action.id || `action_${Date.now()}_${Math.random()}`,
         type: action.type || 'general',
@@ -219,11 +193,11 @@ class AIService {
   }
 
   /**
-   * Get appropriate error message based on error type
+   * Map transport failures to user-facing messages.
    */
   private getErrorMessage(error: any): string {
     const errorStr = String(error).toLowerCase();
-    
+
     if (errorStr.includes('timeout')) {
       return 'Request timed out. Please try again with a shorter message.';
     } else if (errorStr.includes('connection_lost') || !navigator.onLine) {
@@ -235,16 +209,10 @@ class AIService {
     }
   }
 
-  /**
-   * Reset conversation history (no longer needed with simplified approach)
-   */
   resetConversation(): void {
-    console.log('🤖 AI Service: Conversation reset (simplified approach - no localStorage needed)');
+    // Conversation history currently lives on the backend or caller side.
   }
 
-  /**
-   * Get conversation length (no longer tracked with simplified approach)
-   */
   getConversationLength(): number {
     return 0;
   }
