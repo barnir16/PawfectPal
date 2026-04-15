@@ -141,13 +141,17 @@ def test_chat_with_ai_no_key_triggers_fallback(mock_key, mock_user, sample_pet_c
     "app.services.firebase_user_service.firebase_user_service.get_available_configs"
 )
 def test_firebase_config_endpoint_success(mock_configs, mock_user):
-    mock_configs.return_value = {"feature_x": "enabled"}
+    mock_configs.return_value = {
+        "enable_ai_chatbot": "true",
+        "gemini_api_key": "should-not-be-exposed",
+    }
     app.dependency_overrides[get_current_user] = lambda: mock_user
 
     response = client.get("/ai/firebase-config")
     assert response.status_code == 200
     data = response.json()
     assert data["firebase_available"] is True
-    assert data["configs"]["feature_x"] == "enabled"
+    assert data["configs"]["enable_ai_chatbot"] == "true"
+    assert "gemini_api_key" not in data["configs"]
 
     app.dependency_overrides.clear()

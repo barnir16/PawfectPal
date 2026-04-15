@@ -24,6 +24,13 @@ router = APIRouter(prefix="/ai", tags=["AI"])
 
 # Default model if GEMINI_MODEL is not set (override in Railway when Google deprecates a SKU)
 _DEFAULT_MODEL_NAME = "gemini-2.5-flash-lite"
+_SAFE_FIREBASE_CONFIG_KEYS = {
+    "api_base_url",
+    "enable_ai_chatbot",
+    "enable_google_auth",
+    "enable_push_notifications",
+    "google_client_id",
+}
 
 
 class AIChatRequest(BaseModel):
@@ -189,6 +196,13 @@ def _build_unavailable_response(
             }
         ],
     )
+
+
+def _get_safe_config_values(configs: Dict[str, str]) -> Dict[str, str]:
+    """Return only Firebase Remote Config values that are safe to expose."""
+    return {
+        key: value for key, value in configs.items() if key in _SAFE_FIREBASE_CONFIG_KEYS
+    }
 
 
 def handle_simple_fallback(
@@ -415,42 +429,34 @@ async def chat_with_ai(
 
 @router.get("/test")
 async def test_ai():
-    # Diagnostic probe to find exactly why the API key fetch fails
+    # Keep diagnostics high level so the endpoint does not reveal secret material.
     from app.services.firebase_admin import firebase_admin
     
     diagnostic = {}
     diagnostic["firebase_initialized"] = firebase_admin.initialized
     
-    # Try initializing
     try:
         init_res = firebase_admin.initialize()
         diagnostic["initialize_called"] = str(init_res)
         diagnostic["access_token_exists"] = bool(firebase_admin.access_token)
     except Exception as e:
         diagnostic["initialize_error"] = str(e)
-        
-    # Try fetching config
+
     try:
         cfg = firebase_admin.get_remote_config()
         diagnostic["config_keys"] = list(cfg.keys()) if cfg else []
     except Exception as e:
         diagnostic["fetch_config_error"] = str(e)
-        
-    # Check what get_config_value("gemini_api_key") returns
+
     try:
         gemini_val = firebase_admin.get_config_value("gemini_api_key")
         diagnostic["gemini_config_val_exists"] = bool(gemini_val)
-        if gemini_val:
-            diagnostic["gemini_val_prefix"] = gemini_val[:10]
     except Exception as e:
         diagnostic["gemini_val_error"] = str(e)
-        
-    # Check the final method
+
     try:
         final_key = firebase_admin.get_gemini_api_key()
         diagnostic["final_key_exists"] = bool(final_key)
-        if final_key:
-            diagnostic["final_key_prefix"] = final_key[:10]
     except Exception as e:
         diagnostic["final_key_error"] = str(e)
         
@@ -460,14 +466,16 @@ async def test_ai():
 @router.get("/firebase-config", response_model=FirebaseConfigResponse)
 async def get_firebase_config(current_user: UserORM = Depends(get_current_user)):
     try:
-        configs = firebase_user_service.get_available_configs(current_user)
+        configs = _get_safe_config_values(
+            firebase_user_service.get_available_configs(current_user)
+        )
         return FirebaseConfigResponse(
             configs=configs,
             user=current_user.username,
             firebase_available=len(configs) > 0,
         )
     except Exception as e:
-        print(f"Error getting Firebase config for {current_user.username}: {e}")
+        print(f"Error getting Firebase config: {e}")
         return FirebaseConfigResponse(
             configs={},
             user=current_user.username,

@@ -1,7 +1,4 @@
-"""
-Firebase Admin SDK service for proper authentication
-Handles Firebase Remote Config with service account authentication
-"""
+"""Firebase Remote Config access via service-account OAuth2."""
 
 import os
 import json
@@ -22,13 +19,6 @@ class FirebaseAdminService:
     def initialize(self):
         """Initialize Firebase Admin with service account from Railway environment"""
         try:
-            # Get Firebase API key from Railway environment
-            firebase_api_key = os.getenv("FIREBASE_API_KEY")
-            
-            if not firebase_api_key:
-                print("FIREBASE_API_KEY not found in Railway environment")
-                return False
-            
             # Get service account JSON from Railway environment
             service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
             
@@ -55,7 +45,7 @@ class FirebaseAdminService:
                 
                 self.access_token = self.credentials.token
                 self.initialized = True
-                print(f"Firebase Admin initialized successfully with token: {self.access_token[:20]}...")
+                print("Firebase Admin initialized successfully")
                 return True
                 
             except json.JSONDecodeError as e:
@@ -70,7 +60,7 @@ class FirebaseAdminService:
             return False
     
     def get_remote_config(self) -> Dict[str, Any]:
-        """Get Firebase Remote Config with API key authentication"""
+        """Get Firebase Remote Config with service-account OAuth2 authentication."""
         try:
             if not self.initialized:
                 if not self.initialize():
@@ -84,7 +74,6 @@ class FirebaseAdminService:
             }
             
             print(f"Fetching Remote Config from: {url}")
-            print(f"Using OAuth2 Token: {self.access_token[:20]}...")
             
             response = requests.get(url, headers=headers, timeout=10)
             response.raise_for_status()
@@ -122,6 +111,17 @@ class FirebaseAdminService:
         # Note: Firebase Remote Config API doesn't support API key authentication
         # This is just a placeholder for future implementation
         return {}
+
+    def _looks_like_firebase_web_key(self, candidate: Optional[str]) -> bool:
+        firebase_api_key = os.getenv("FIREBASE_API_KEY")
+        return bool(candidate and firebase_api_key and candidate == firebase_api_key)
+
+    def _is_valid_gemini_key(self, candidate: Optional[str]) -> bool:
+        return bool(
+            candidate
+            and candidate.startswith("AIza")
+            and not self._looks_like_firebase_web_key(candidate)
+        )
     
     def get_gemini_api_key(self) -> Optional[str]:
         """Get Gemini API key from Firebase Remote Config"""
@@ -130,33 +130,22 @@ class FirebaseAdminService:
             if not self.config:
                 self.get_remote_config()
             
-            # For now, use environment variable directly since Firebase Remote Config requires OAuth2
             env_key = os.getenv("GEMINI_API_KEY")
-            print(f"GEMINI_API_KEY from env: {env_key[:10] if env_key else 'None'}...")
-            if env_key and env_key.startswith("AIza") and not env_key.startswith("AIzaSyDoNs"):  # Valid Gemini API key format, not Firebase key
+            if self._is_valid_gemini_key(env_key):
                 print("Using Gemini API key from environment variable")
                 return env_key
-            elif env_key and env_key.startswith("AIzaSyDoNs"):
+            elif self._looks_like_firebase_web_key(env_key):
                 print("Detected Firebase API key instead of Gemini API key")
-                print("Please set GEMINI_API_KEY to a valid Gemini API key (not Firebase key)")
                 return None
             
-            # Try Firebase Remote Config as fallback (if OAuth2 is set up)
-            print(f"Available config keys: {list(self.config.keys()) if self.config else 'No config'}")
             gemini_key = self.get_config_value("gemini_api_key")
-            print(f"Gemini key from Firebase: {gemini_key[:10] if gemini_key else 'None'}...")
-            if gemini_key and gemini_key.startswith("AIza") and not gemini_key.startswith("AIzaSyDoNs"):
+            if self._is_valid_gemini_key(gemini_key):
                 print("Using Gemini API key from Firebase Remote Config")
                 return gemini_key
-            elif gemini_key and gemini_key.startswith("AIzaSyDoNs"):
+            elif self._looks_like_firebase_web_key(gemini_key):
                 print("Firebase Remote Config contains Firebase API key instead of Gemini API key")
-                print("Please update the 'gemini_api_key' in Firebase Remote Config with a valid Gemini API key")
             
             print("Gemini API key not found in Firebase Remote Config or environment")
-            print("To fix this immediately:")
-            print("   1. Go to Railway dashboard")
-            print("   2. Add environment variable: GEMINI_API_KEY = REDACTED_GEMINI_API_KEY")
-            print("   3. Or update Firebase Remote Config with proper OAuth2 setup")
             return None
             
         except Exception as e:
