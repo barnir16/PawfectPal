@@ -1231,7 +1231,6 @@ export const en = {
       shareExperience: 'Share Experience',
       scheduleConsultation: 'Schedule Consultation',
       shareMyLocation: 'Share My Location',
-      quickReplies: 'Quick Replies',
   },
   services: {
     title: 'Services',

@@ -37,6 +37,7 @@ import { ChatListPage } from "./features/chat/pages/ChatListPage";
 import { ChatPage } from "./features/chat/pages/ChatPage";
 import { ProviderProfilePage } from "./features/services/pages/ProviderProfilePage";
 import { ProviderProfileSetupPage } from "./features/provider/pages/ProviderProfileSetupPage";
+import { MarketplacePostsPage } from "./features/marketplace/pages/MarketplacePostsPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 
@@ -167,6 +168,7 @@ const AppContent = () => {
           <Route path="/chat/:id" element={<ChatPage />} />
           <Route path="/provider/:id" element={<ProviderProfilePage />} />
           <Route path="/provider-profile-setup" element={<ProviderProfileSetupPage />} />
+          <Route path="/marketplace" element={<MarketplacePostsPage />} />
           <Route path="/auth" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

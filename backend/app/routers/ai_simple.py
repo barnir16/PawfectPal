@@ -8,6 +8,7 @@ when that fetch works.
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 from typing import Any, Dict, List, Optional
@@ -19,6 +20,8 @@ from pydantic import BaseModel
 from app.dependencies.auth import get_current_user
 from app.models.user import UserORM
 from app.services.firebase_user_service import firebase_user_service
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 
@@ -412,7 +415,7 @@ async def chat_with_ai(
         )
     except Exception as e:
         error_message = str(e)
-        print(f"AI Chat Error: {error_message}")
+        logger.warning("AI chat request failed: %s", error_message)
         if "429" in error_message or "quota" in error_message.lower():
             return _build_unavailable_response(
                 request.prompt_language,
@@ -474,8 +477,11 @@ async def get_firebase_config(current_user: UserORM = Depends(get_current_user))
             user=current_user.username,
             firebase_available=len(configs) > 0,
         )
-    except Exception as e:
-        print(f"Error getting Firebase config: {e}")
+    except Exception:
+        logger.exception(
+            "Failed to fetch Firebase config for user %s",
+            current_user.username,
+        )
         return FirebaseConfigResponse(
             configs={},
             user=current_user.username,

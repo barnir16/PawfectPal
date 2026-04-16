@@ -47,30 +47,26 @@ export const ServiceRequestChat: React.FC = () => {
       
       // Fetch service request details
       const serviceRequest = await ServiceRequestService.getServiceRequest(parseInt(id));
-      console.log('Fetched service request:', serviceRequest);
       
       // If service request doesn't have pets, fetch them separately
       if (!serviceRequest.pets || serviceRequest.pets.length === 0) {
         try {
           const pets = await getPets();
           serviceRequest.pets = pets.filter(pet => serviceRequest.pet_ids?.includes(pet.id));
-          console.log('Fetched pets for service request:', serviceRequest.pets);
         } catch (petError) {
-          console.warn('Could not fetch pets:', petError);
+          console.error('Could not fetch pets for the service request.', petError);
         }
       }
       
       // Fetch conversation messages with better error handling
       try {
         const conversationData = await chatService.getConversation(parseInt(id));
-        console.log('Fetched conversation:', conversationData);
         
         // Ensure messages is always an array
         const messages = conversationData?.messages || [];
-        console.log('Processing messages:', messages);
         setMessages(messages.map(processMessage));
       } catch (chatError: any) {
-        console.warn('Could not fetch conversation, starting with empty chat:', chatError);
+        console.error('Could not fetch the existing conversation. Starting with an empty chat.', chatError);
         // Start with empty messages if conversation fetch fails
         setMessages([]);
       }
@@ -95,17 +91,13 @@ export const ServiceRequestChat: React.FC = () => {
         ...messageData,
         service_request_id: parseInt(id),
       });
-      
-      console.log('Message sent successfully:', sentMessage);
-      
+
       // Convert backend response to frontend format
       const processedMessage = processMessage(sentMessage);
-      
-      console.log('Processed message with attachments:', processedMessage);
-      
+
       // If the API returns undefined or empty object, create a mock message
       if (!sentMessage || (typeof sentMessage === 'object' && Object.keys(sentMessage).length === 0)) {
-        console.warn('API returned undefined or empty object, creating mock message');
+        console.error('Chat API returned an empty payload. Using a local fallback message.');
         const mockMessage: ChatMessage = {
           id: Date.now(),
           service_request_id: parseInt(id),
@@ -127,18 +119,9 @@ export const ServiceRequestChat: React.FC = () => {
             is_provider: false
           }
         };
-        setMessages(prev => {
-          const newMessages = [...prev, mockMessage];
-          console.log('Updated messages array with mock:', newMessages);
-          return newMessages;
-        });
+        setMessages(prev => [...prev, mockMessage]);
       } else {
-        console.log('API returned valid message:', sentMessage);
-        setMessages(prev => {
-          const newMessages = [...prev, sentMessage];
-          console.log('Updated messages array:', newMessages);
-          return newMessages;
-        });
+        setMessages(prev => [...prev, processedMessage]);
       }
     } catch (err: any) {
       console.error('Error sending message:', err);
@@ -151,7 +134,7 @@ export const ServiceRequestChat: React.FC = () => {
   const processMessage = (message: ChatMessage): ChatMessage => {
     // Ensure message is valid
     if (!message) {
-      console.warn('Invalid message received:', message);
+      console.error('Invalid message received from chat service.');
       return {
         id: 0,
         service_request_id: 0,
@@ -173,8 +156,6 @@ export const ServiceRequestChat: React.FC = () => {
   };
 
   const handleQuickAction = async (action: string, data?: any) => {
-    console.log('Quick action:', action, data);
-    
     try {
       let sentMessage: ChatMessage;
       
@@ -230,7 +211,7 @@ export const ServiceRequestChat: React.FC = () => {
           break;
           
         default:
-          console.log('Unknown action:', action);
+          return;
       }
     } catch (error) {
       console.error('Error handling quick action:', error);

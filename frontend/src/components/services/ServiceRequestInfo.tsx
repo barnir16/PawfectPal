@@ -56,36 +56,6 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
   compact = false,
 }) => {
   const { t } = useLocalization();
-  
-  // Debug logging
-  console.log('🔍 ServiceRequestInfo Debug:', {
-    serviceRequest: serviceRequest?.title,
-    petsCount: pets?.length,
-    pets: pets,
-    provider: provider?.username,
-    compact,
-    petsData: pets?.map(pet => ({
-      id: pet.id,
-      name: pet.name,
-      type: pet.type,
-      age: pet.age,
-      birthDate: pet.birthDate,
-      isBirthdayGiven: pet.isBirthdayGiven,
-      weightKg: pet.weightKg,
-      imageUrl: pet.imageUrl,
-      healthIssues: pet.healthIssues,
-      behaviorIssues: pet.behaviorIssues,
-      gender: pet.gender,
-      weightUnit: pet.weightUnit,
-      breed: pet.breed,
-      color: pet.color
-    })),
-    petsCondition: pets && pets.length > 0,
-    petsTruthy: !!pets,
-    petsType: typeof pets,
-    petsArray: Array.isArray(pets),
-    firstPet: pets?.[0]
-  });
 
   const getServiceTypeTranslation = (serviceType: string) => {
     const serviceTypeMap: Record<string, string> = {

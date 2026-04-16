@@ -364,7 +364,6 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
         <DialogContent>
           <ServiceRequestForm
             onSuccess={(requestId) => {
-              console.log("Service request created:", requestId);
               if (onRequestService) {
                 onRequestService(provider);
               }

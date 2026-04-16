@@ -27,16 +27,11 @@ export class NotificationHelper {
       const timeUntilTask = taskDateTime.getTime() - now.getTime();
 
       if (timeUntilTask > 0) {
-        // Web Notifications API can't schedule for later natively.
-        // As a simple approach, use setTimeout while app is running:
         setTimeout(() => {
           new Notification('PawfectPal Reminder', {
             body: `${task.title}: ${task.description}`,
           });
-          console.log(`Notification shown for task: ${task.title}`);
         }, timeUntilTask);
-      } else {
-        console.log('Task time is in the past, notification not scheduled.');
       }
     } catch (error) {
       console.error('Error scheduling notification:', error);
@@ -87,9 +82,8 @@ export class NotificationHelper {
 
   /**
    * Initialize notification settings
-   * (No special initialization needed for Web Notifications API)
    */
   static initializeNotifications(): void {
-    console.log('Web notifications ready');
+    // No special initialization is needed for the Web Notifications API.
   }
 }

@@ -1,5 +1,7 @@
-from typing import Optional, List
+from typing import List, Optional
+
 from pydantic import BaseModel, EmailStr, field_validator
+
 from .provider import ProviderExtras
 
 
@@ -19,24 +21,22 @@ class UserCreate(ProviderExtras, UserContact, UserBase):
     password: str
 
     @field_validator("password")
-    def validate_password(cls, v):
-        if len(v) < 8:
+    def validate_password(cls, value: str):
+        if len(value) < 8:
             raise ValueError("Password must be at least 8 characters")
-        if not any(c.isdigit() for c in v):
+        if not any(char.isdigit() for char in value):
             raise ValueError("Password must contain a digit")
-        if not any(c.isupper() for c in v):
+        if not any(char.isupper() for char in value):
             raise ValueError("Password must contain an uppercase letter")
-        return v
+        return value
 
 
 class UserRead(ProviderExtras, UserContact, UserBase):
     id: int
 
-    # OAuth information
     google_id: Optional[str] = None
     profile_picture_url: Optional[str] = None
 
-    # Address information
     address: Optional[str] = None
     city: Optional[str] = None
     state: Optional[str] = None
@@ -46,61 +46,48 @@ class UserRead(ProviderExtras, UserContact, UserBase):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
 
+    @staticmethod
+    def _service_names(profile) -> Optional[List[str]]:
+        if not profile or not hasattr(profile, "services") or not profile.services:
+            return None
+        return [service.name for service in profile.services]
+
     @classmethod
     def model_validate(cls, obj, **kwargs):
         data = obj.__dict__.copy()
-        print(f"DEBUG: UserRead.model_validate called for user {obj.username}")
-        print(f"DEBUG: provider_profile exists: {obj.provider_profile is not None}")
-        print(f"DEBUG: enhanced_provider_profile exists: {obj.enhanced_provider_profile is not None}")
 
-        # Initialize provider fields to None
-        data["provider_services"] = None
+        provider_profile = getattr(obj, "provider_profile", None)
+        enhanced_provider_profile = getattr(obj, "enhanced_provider_profile", None)
+
+        provider_services = cls._service_names(provider_profile)
+        enhanced_services = cls._service_names(enhanced_provider_profile)
+        if provider_services and enhanced_services:
+            provider_services = list(dict.fromkeys(provider_services + enhanced_services))
+        elif enhanced_services:
+            provider_services = enhanced_services
+
+        data["provider_services"] = provider_services
         data["provider_bio"] = None
         data["provider_hourly_rate"] = None
         data["provider_rating"] = None
         data["provider_rating_count"] = None
 
-        if obj.provider_profile:
-            # Handle services as list of ServiceTypeORM objects from ProviderORM
-            print(f"DEBUG: Using provider_profile: {obj.provider_profile}")
-            if hasattr(obj.provider_profile, 'services') and obj.provider_profile.services:
-                service_names = [service.name for service in obj.provider_profile.services]
-                print(f"DEBUG: Provider profile services names: {service_names}")
-                data["provider_services"] = service_names
-            else:
-                print(f"DEBUG: Provider profile has no services or services not loaded")
-                data["provider_services"] = None
-            data["provider_bio"] = obj.provider_profile.bio
-            data["provider_hourly_rate"] = obj.provider_profile.hourly_rate
-            data["provider_rating"] = obj.provider_profile.rating
-            data["provider_rating_count"] = obj.provider_profile.rating_count
+        if provider_profile:
+            data["provider_bio"] = provider_profile.bio
+            data["provider_hourly_rate"] = provider_profile.hourly_rate
+            data["provider_rating"] = provider_profile.rating
+            data["provider_rating_count"] = provider_profile.rating_count
 
-        # Also check enhanced provider profile if it exists (don't use elif to allow both)
-        if obj.enhanced_provider_profile:
-            print(f"DEBUG: Using enhanced_provider_profile: {obj.enhanced_provider_profile}")
-            # Handle services as list of ServiceTypeORM objects from ProviderProfileORM
-            if hasattr(obj.enhanced_provider_profile, 'services') and obj.enhanced_provider_profile.services:
-                service_names = [service.name for service in obj.enhanced_provider_profile.services]
-                print(f"DEBUG: Enhanced provider profile services names: {service_names}")
-                # If we already have services from provider_profile, merge them
-                if data["provider_services"]:
-                    data["provider_services"] = list(set(data["provider_services"] + service_names))
-                else:
-                    data["provider_services"] = service_names
-            else:
-                print(f"DEBUG: Enhanced provider profile has no services or services not loaded")
+        if enhanced_provider_profile:
+            if enhanced_provider_profile.bio:
+                data["provider_bio"] = enhanced_provider_profile.bio
+            if enhanced_provider_profile.hourly_rate is not None:
+                data["provider_hourly_rate"] = enhanced_provider_profile.hourly_rate
+            if enhanced_provider_profile.average_rating is not None:
+                data["provider_rating"] = enhanced_provider_profile.average_rating
+            if enhanced_provider_profile.total_reviews is not None:
+                data["provider_rating_count"] = enhanced_provider_profile.total_reviews
 
-            # Override other fields with enhanced profile data if available
-            if obj.enhanced_provider_profile.bio:
-                data["provider_bio"] = obj.enhanced_provider_profile.bio
-            if obj.enhanced_provider_profile.hourly_rate:
-                data["provider_hourly_rate"] = obj.enhanced_provider_profile.hourly_rate
-            if obj.enhanced_provider_profile.average_rating:
-                data["provider_rating"] = obj.enhanced_provider_profile.average_rating
-            if obj.enhanced_provider_profile.total_reviews:
-                data["provider_rating_count"] = obj.enhanced_provider_profile.total_reviews
-
-        print(f"DEBUG: Final provider_services value: {data.get('provider_services')}")
         return super().model_validate(data, **kwargs)
 
     class Config:
@@ -115,32 +102,27 @@ class UserPublic(UserBase):
 
 
 class UserUpdate(ProviderExtras, BaseModel):
-    # UserBase fields
     username: Optional[str] = None
     is_active: Optional[bool] = None
     email: Optional[EmailStr] = None
     full_name: Optional[str] = None
 
-    # UserContact fields
     phone: Optional[str] = None
     profile_image: Optional[str] = None
 
-    # Address fields
     address: Optional[str] = None
     city: Optional[str] = None
     state: Optional[str] = None
     country: Optional[str] = None
     postal_code: Optional[str] = None
 
-    # OAuth fields if you want editable
     google_id: Optional[str] = None
     profile_picture_url: Optional[str] = None
 
     latitude: Optional[float] = None
     longitude: Optional[float] = None
 
-    # Provider fields - override to use service names instead of IDs
-    provider_services: Optional[List[str]] = None  # Changed from List[int] to List[str]
+    provider_services: Optional[List[str]] = None
     provider_rating: Optional[float] = None
     provider_rating_count: Optional[int] = None
     provider_bio: Optional[str] = None

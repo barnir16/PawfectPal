@@ -27,7 +27,6 @@ interface BackendUserRead {
 
 export async function getServices(status: "active" | "history"): Promise<Service[]> {
   const token = await getToken();
-  console.log('🔑 Token for services API:', token ? 'Present' : 'Missing');
   
   const response = await fetch(`${getBaseUrl()}/service_booking/?status=${status}`, {
     headers: {
@@ -66,7 +65,7 @@ function transformUserToServiceProvider(user: BackendUserRead): ServiceProvider 
       try {
         const parsed = JSON.parse(user.provider_services);
         raw = Array.isArray(parsed) ? parsed : [parsed];
-      } catch (e) {
+      } catch {
         raw = [user.provider_services];
       }
     } else if (Array.isArray(user.provider_services)) {
@@ -80,13 +79,6 @@ function transformUserToServiceProvider(user: BackendUserRead): ServiceProvider 
       .map(serviceName => serviceNameMap[serviceName])
       .filter((serviceType): serviceType is ServiceType => serviceType !== undefined && allowed.includes(serviceType));
   }
-
-  console.log('🔍 Service transformation:', {
-    original: user.provider_services,
-    mapped: provider_services,
-    userId: user.id
-  });
-
   return {
     id: user.id,
     username: user.username,
@@ -124,21 +116,9 @@ async function fetchBackendProviders(filter?: string[]): Promise<ServiceProvider
   }
 
   const url = `${getBaseUrl()}/providers/?${params.toString()}`;
-  console.log(' Fetching backend providers:', {
-    url,
-    hasToken: !!token,
-    filter
-  });
 
   const res = await fetch(url, {
     headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
-  });
-
-  console.log(' Backend response:', {
-    status: res.status,
-    statusText: res.statusText,
-    ok: res.ok,
-    url: res.url
   });
 
   if (!res.ok) {
@@ -152,7 +132,6 @@ async function fetchBackendProviders(filter?: string[]): Promise<ServiceProvider
   }
 
   const data: BackendUserRead[] = await res.json();
-  console.log(' Backend providers loaded:', data.length);
   return data.map(transformUserToServiceProvider);
 }
 
@@ -187,7 +166,6 @@ export async function getProviders(filter?: string[]): Promise<ServiceProvider[]
   for (const p of backendProviders) byId.set(p.id, p); // backend overrides
 
   const merged = Array.from(byId.values());
-  console.log(`📊 Providers merged: mock=${mockProviders.length}, backend=${backendProviders.length}, merged=${merged.length}`);
   return merged;
 }
 // [HYBRID_PROVIDER_FETCH - END]

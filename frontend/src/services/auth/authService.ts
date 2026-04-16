@@ -106,18 +106,11 @@ export const resetPassword = async (
 export const initializeGoogleAuth = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     const oauthConfig = configService.getOAuthConfig();
-    
-    console.log('🔍 OAuth Config:', oauthConfig);
-    console.log('🔍 Google Client ID:', oauthConfig.googleClientId);
-    console.log('🔍 Is Google Auth Enabled:', oauthConfig.isGoogleAuthEnabled);
-    
+
     // Fallback to hardcoded values if config service fails
     const googleClientId = oauthConfig.googleClientId || '204752166323-r69volulegreitj2nflcoag0eae3iggk.apps.googleusercontent.com';
     const isGoogleAuthEnabled = oauthConfig.isGoogleAuthEnabled !== false; // Default to true
-    
-    console.log('🔧 Using Google Client ID:', googleClientId);
-    console.log('🔧 Using Google Auth Enabled:', isGoogleAuthEnabled);
-    
+
     if (!googleClientId || !isGoogleAuthEnabled) {
       reject(new Error("Google OAuth not configured or disabled"));
       return;
@@ -175,21 +168,15 @@ export const signInWithGoogle = (): Promise<LoginResponse> => {
     }
 
     // Use the popup-based OAuth2 flow which is more reliable
-    console.log('🚀 Initializing Google OAuth2 with client ID:', googleClientId);
-    console.log('🚀 Current domain:', window.location.origin);
-    
+
     // Use OAuth2 flow properly
     try {
-      console.log('🔄 Using OAuth2 flow...');
-      
       window.google.accounts.oauth2.initTokenClient({
         client_id: googleClientId,
         scope: 'openid email profile',
         callback: async (response: any) => {
-          console.log('🎯 OAuth2 callback received:', response);
-          
           if (response.error) {
-            console.error('❌ OAuth2 error:', response.error);
+            console.error('OAuth2 error:', response.error);
             reject(new Error(response.error));
             return;
           }
@@ -207,7 +194,6 @@ export const signInWithGoogle = (): Promise<LoginResponse> => {
             }
             
             const userInfo = await userInfoResponse.json();
-            console.log('📋 User info:', userInfo);
             
             // Create a JWT-like credential for the backend
             const credential = btoa(JSON.stringify({
@@ -226,14 +212,14 @@ export const signInWithGoogle = (): Promise<LoginResponse> => {
             
             resolve(loginResponse);
           } catch (error) {
-            console.error('❌ Error processing OAuth2:', error);
+            console.error('Error processing OAuth2:', error);
             reject(error);
           }
         },
       }).requestAccessToken();
       
     } catch (error) {
-      console.error('❌ Failed to initialize OAuth2:', error);
+      console.error('Failed to initialize OAuth2:', error);
       reject(error);
     }
   });

@@ -3,7 +3,7 @@
  */
 
 import { Pet } from '../../types/pets/pet';
-import { getToken } from '../api';
+import { getBaseUrl, getToken } from '../api';
 import { calculatePetAgeInYears } from '../../utils/petAge';
 
 interface AIServiceResponse {
@@ -20,7 +20,7 @@ class AIService {
   private apiUrl: string;
 
   constructor() {
-    this.apiUrl = import.meta.env.VITE_API_URL || 'https://pawfectpal-production.up.railway.app';
+    this.apiUrl = getBaseUrl();
   }
 
   /**
