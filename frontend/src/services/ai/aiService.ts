@@ -4,6 +4,7 @@
 
 import { Pet } from '../../types/pets/pet';
 import { getToken } from '../api';
+import { calculatePetAgeInYears } from '../../utils/petAge';
 
 interface AIServiceResponse {
   message: string;
@@ -106,14 +107,14 @@ class AIService {
         type: pet.type || 'pet',
         breed: pet.breed || 'Unknown',
         age: this.calculateAge(pet),
-        weight: pet.weightKg || pet.weight_kg || 0,
+        weight: pet.weightKg || 0,
         gender: pet.gender || 'Unknown',
         health_issues: this.processHealthIssues(pet),
-        behavior_issues: pet.behaviorIssues || pet.behavior_issues || [],
-        is_vaccinated: Boolean(pet.isVaccinated || pet.is_vaccinated),
-        is_neutered: Boolean(pet.isNeutered || pet.is_neutered),
-        last_vet_visit: pet.lastVetVisit || pet.last_vet_visit || null,
-        next_vet_visit: pet.nextVetVisit || pet.next_vet_visit || null
+        behavior_issues: pet.behaviorIssues || [],
+        is_vaccinated: Boolean(pet.isVaccinated),
+        is_neutered: Boolean(pet.isNeutered),
+        last_vet_visit: pet.lastVetVisit || null,
+        next_vet_visit: pet.nextVetVisit || null
       };
     });
 
@@ -128,38 +129,15 @@ class AIService {
    * Normalize health issues for AI context.
    */
   private processHealthIssues(pet: Pet): string[] {
-    const issues = pet.healthIssues || pet.health_issues || [];
-    const parsedIssues = Array.isArray(issues) ? issues : [];
-
-    return parsedIssues.map((issue) => {
-      if (typeof issue === 'string') return issue.toLowerCase();
-      return issue.description || 'unknown issue';
-    });
+    const issues = Array.isArray(pet.healthIssues) ? pet.healthIssues : [];
+    return issues.map((issue) => issue.toLowerCase());
   }
 
   /**
    * Calculate pet age in years for prompt context.
    */
   private calculateAge(pet: Pet): number {
-    const birthDate = pet.birthDate || pet.birth_date;
-    if (birthDate && (pet.isBirthdayGiven || pet.is_birthday_given)) {
-      try {
-        let birth;
-        if (typeof birthDate === 'string' && birthDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-          const [year, month, day] = birthDate.split('-').map(Number);
-          birth = new Date(year, month - 1, day);
-        } else {
-          birth = new Date(birthDate);
-        }
-
-        const now = new Date();
-        const ageInDays = Math.floor((now.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24));
-        return ageInDays / 365.25;
-      } catch (error) {
-        return pet.age || 0;
-      }
-    }
-    return pet.age || 0;
+    return calculatePetAgeInYears(pet) ?? 0;
   }
 
   /**

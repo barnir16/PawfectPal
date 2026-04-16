@@ -2,6 +2,7 @@ import { Avatar, Box, Button, Card, CardActions, CardContent, CardHeader, Chip, 
 import { Edit as EditIcon, Delete as DeleteIcon, Pets as PetsIcon } from "@mui/icons-material";
 import type { Pet } from "../../../types/pets/pet";
 import { useLocalization } from "../../../contexts/LocalizationContext";
+import { formatPetAge } from "../../../utils/petAge";
 
 interface PetCardProps {
   pet: Pet;
@@ -16,52 +17,12 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
   if (petType === "dog") chipColor = "primary";
   else if (petType === "cat") chipColor = "secondary";
 
-  const calculateAge = () => {
-    const birthDate = pet.birthDate;
-    if (birthDate && pet.isBirthdayGiven) {
-      try {
-        let birth;
-        if (typeof birthDate === "string" && birthDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-          const [year, month, day] = birthDate.split("-").map(Number);
-          birth = new Date(year, month - 1, day);
-        } else {
-          birth = new Date(birthDate);
-        }
-
-        if (isNaN(birth.getTime())) return t("pets.unknownAge");
-
-        const today = new Date();
-        const ageInMilliseconds = today.getTime() - birth.getTime();
-        const ageInDays = Math.floor(ageInMilliseconds / (1000 * 60 * 60 * 24));
-        const ageInMonths = Math.floor(ageInDays / 30.44);
-        const ageInYears = Math.floor(ageInDays / 365.25);
-
-        if (ageInDays < 0) {
-          return t("pets.futureBirthdate");
-        }
-
-        if (ageInYears < 1) {
-          const months = Math.max(0, ageInMonths);
-          return `${months} ${t("pets.months")}`;
-        }
-        return `${ageInYears} ${t("pets.years")}`;
-      } catch {
-        return t("pets.unknownAge");
-      }
-    }
-
-    if (pet.age !== undefined && pet.age !== null) {
-      if (pet.age < 1) {
-        const months = Math.floor(pet.age * 12);
-        return `${months} ${t("pets.months")}`;
-      }
-      return `${pet.age} ${t("pets.years")}`;
-    }
-
-    return t("pets.unknownAge");
-  };
-
-  const displayAge = calculateAge();
+  const displayAge = formatPetAge(pet, {
+    months: t("pets.months"),
+    years: t("pets.years"),
+    unknownAge: t("pets.unknownAge"),
+    futureBirthdate: t("pets.futureBirthdate"),
+  });
 
   const formatWeight = () => {
     const weight = pet.weightKg;

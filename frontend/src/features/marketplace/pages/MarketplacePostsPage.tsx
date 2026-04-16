@@ -4,21 +4,25 @@ import {
   Container,
   Typography,
   Grid,
-  Card,
-  CardContent,
   TextField,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
   Button,
-  Chip,
   CircularProgress,
   Alert,
   Fab,
   Tabs,
   Tab,
   Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Stack,
+  Divider,
+  Snackbar,
 } from '@mui/material';
 import {
   Add,
@@ -27,12 +31,13 @@ import {
   ViewList,
   ViewModule,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
-import { useLocalization } from '../../contexts/LocalizationContext';
-import { marketplaceService } from '../../services/marketplace/marketplaceService';
-import { MarketplacePostCard } from './MarketplacePostCard';
-import { MarketplacePostForm } from './MarketplacePostForm';
-import type { MarketplacePostSummary } from '../../types/services/marketplacePost';
+import { useLocalization } from '../../../contexts/LocalizationContext';
+import { marketplaceService } from '../../../services/marketplace/marketplaceService';
+import { MarketplacePostCard } from '../../../components/marketplace/MarketplacePostCard';
+import { MarketplacePostForm } from '../../../components/marketplace/MarketplacePostForm';
+import type { MarketplacePostSummary } from '../../../types/services/marketplacePost';
+import type { Pet } from '../../../types/pets/pet';
+import { getPets } from '../../../services/pets/petService';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -57,14 +62,17 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export const MarketplacePostsPage: React.FC = () => {
-  const navigate = useNavigate();
   const { t } = useLocalization();
   
   const [posts, setPosts] = useState<MarketplacePostSummary[]>([]);
   const [myPosts, setMyPosts] = useState<MarketplacePostSummary[]>([]);
+  const [userPets, setUserPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [serviceTypes, setServiceTypes] = useState<Array<{ id: number; name: string; description?: string }>>([]);
+  const [selectedPost, setSelectedPost] = useState<MarketplacePostSummary | null>(null);
+  const [editingPost, setEditingPost] = useState<MarketplacePostSummary | null>(null);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -86,21 +94,22 @@ export const MarketplacePostsPage: React.FC = () => {
     setError(null);
     
     try {
-      const [postsData, serviceTypesData] = await Promise.all([
+      const [postsData, serviceTypesData, petsData] = await Promise.all([
         marketplaceService.getPosts(),
         marketplaceService.getServiceTypes(),
+        getPets().catch(() => []),
       ]);
       
       setPosts(postsData);
       setServiceTypes(serviceTypesData);
+      setUserPets(petsData);
       
       // Load user's own posts
       try {
         const myPostsData = await marketplaceService.getMyPosts();
         setMyPosts(myPostsData);
-      } catch (error) {
-        // User might not be logged in or have posts
-        console.log('Could not load user posts:', error);
+      } catch {
+        setMyPosts([]);
       }
     } catch (error: any) {
       setError(error.message || 'Failed to load marketplace posts');
@@ -112,7 +121,7 @@ export const MarketplacePostsPage: React.FC = () => {
   const filteredPosts = posts.filter(post => {
     const matchesSearch = !searchQuery || 
       post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.description.toLowerCase().includes(searchQuery.toLowerCase());
+      (post.description || '').toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesServiceType = !selectedServiceType || post.service_type === selectedServiceType;
     const matchesLocation = !selectedLocation || 
@@ -126,25 +135,34 @@ export const MarketplacePostsPage: React.FC = () => {
     setTabValue(newValue);
   };
 
-  const handleCreateSuccess = (post: any) => {
+  const handleCreateSuccess = () => {
     setShowCreateForm(false);
+    setEditingPost(null);
+    setFeedbackMessage(t('marketplace.postSaved') || 'Marketplace post saved successfully');
     loadData(); // Refresh the data
   };
 
   const handleViewDetails = (post: MarketplacePostSummary) => {
-    navigate(`/marketplace/posts/${post.id}`);
+    setSelectedPost(post);
   };
 
   const handleContact = (post: MarketplacePostSummary) => {
-    // Navigate to chat or contact form
-    navigate(`/marketplace/posts/${post.id}/contact`);
+    setSelectedPost(post);
+    setFeedbackMessage(
+      t('marketplace.contactRecorded') ||
+        'Response recorded. Direct marketplace messaging is still being finalized.'
+    );
   };
 
   const handleEdit = (post: MarketplacePostSummary) => {
-    navigate(`/marketplace/posts/${post.id}/edit`);
+    setEditingPost(post);
+    setShowCreateForm(false);
   };
 
-  const handleDelete = (post: MarketplacePostSummary) => {
+  const handleDelete = () => {
+    setSelectedPost(null);
+    setEditingPost(null);
+    setFeedbackMessage(t('marketplace.postDeleted') || 'Marketplace post deleted');
     loadData(); // Refresh the data
   };
 
@@ -331,13 +349,101 @@ export const MarketplacePostsPage: React.FC = () => {
       </TabPanel>
 
       {/* Create Post Form */}
-      {showCreateForm && (
+      {(showCreateForm || editingPost) && (
         <MarketplacePostForm
-          pets={[]} // TODO: Load user's pets
+          pets={userPets}
+          postId={editingPost?.id}
+          initialData={
+            editingPost
+              ? {
+                  title: editingPost.title,
+                  description: editingPost.description,
+                  service_type: editingPost.service_type,
+                  location: editingPost.location,
+                  budget_min: editingPost.budget_min,
+                  budget_max: editingPost.budget_max,
+                  is_urgent: editingPost.is_urgent,
+                  pet_ids: editingPost.pets?.map((pet) => pet.id) || [],
+                }
+              : undefined
+          }
           onSuccess={handleCreateSuccess}
-          onCancel={() => setShowCreateForm(false)}
+          onCancel={() => {
+            setShowCreateForm(false);
+            setEditingPost(null);
+          }}
         />
       )}
+
+      <Dialog
+        open={Boolean(selectedPost)}
+        onClose={() => setSelectedPost(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        {selectedPost && (
+          <>
+            <DialogTitle>{selectedPost.title}</DialogTitle>
+            <DialogContent dividers>
+              <Stack spacing={2}>
+                <Typography variant="body1">
+                  {selectedPost.description}
+                </Typography>
+                <Divider />
+                <Typography variant="body2" color="text.secondary">
+                  {t('marketplace.serviceType') || 'Service Type'}: {selectedPost.service_type}
+                </Typography>
+                {selectedPost.location && (
+                  <Typography variant="body2" color="text.secondary">
+                    {t('marketplace.location') || 'Location'}: {selectedPost.location}
+                  </Typography>
+                )}
+                {(selectedPost.budget_min || selectedPost.budget_max) && (
+                  <Typography variant="body2" color="text.secondary">
+                    {t('marketplace.budget') || 'Budget'}:{' '}
+                    {selectedPost.budget_min ?? 0} - {selectedPost.budget_max ?? (t('marketplace.notSpecified') || 'Not specified')}
+                  </Typography>
+                )}
+                <Typography variant="body2" color="text.secondary">
+                  {t('marketplace.views') || 'Views'}: {selectedPost.views_count} • {t('marketplace.responses') || 'Responses'}: {selectedPost.responses_count}
+                </Typography>
+                {selectedPost.user && (
+                  <Typography variant="body2" color="text.secondary">
+                    {t('marketplace.postedBy') || 'Posted by'}:{' '}
+                    {selectedPost.user.full_name || selectedPost.user.username}
+                  </Typography>
+                )}
+                {selectedPost.pets && selectedPost.pets.length > 0 && (
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom>
+                      {t('marketplace.pets') || 'Pets'}
+                    </Typography>
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                      {selectedPost.pets.map((pet) => (
+                        <Alert key={pet.id} severity="info" sx={{ py: 0 }}>
+                          {pet.name}{pet.breed ? ` • ${pet.breed}` : ''}
+                        </Alert>
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
+              </Stack>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setSelectedPost(null)}>
+                {t('common.close') || 'Close'}
+              </Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
+
+      <Snackbar
+        open={Boolean(feedbackMessage)}
+        autoHideDuration={4000}
+        onClose={() => setFeedbackMessage(null)}
+        message={feedbackMessage}
+      />
 
       {/* Floating Action Button */}
       <Fab

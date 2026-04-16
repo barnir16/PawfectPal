@@ -1,8 +1,8 @@
 /**
- * WebSocket Service for Real-time Chat
- * Handles WebSocket connections and real-time messaging
+ * WebSocket Service for real-time chat
  */
-import { ChatMessage, ChatMessageCreate } from '../types/services/chat';
+import { ChatMessage, ChatMessageCreate } from '../../types/services/chat';
+import { getBaseUrl } from '../api';
 
 export interface WebSocketMessage {
   type: 'new_message' | 'message_sent' | 'typing' | 'message_status' | 'connection_established' | 'error';
@@ -37,7 +37,7 @@ export class WebSocketService {
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
   private isConnecting = false;
-  private isEnabled = true; // Add missing isEnabled property
+  private isEnabled = true;
   private pingInterval: NodeJS.Timeout | null = null;
   private messageHandlers: Map<string, ((data: any) => void)[]> = new Map();
   private connectionHandlers: ((connected: boolean) => void)[] = [];
@@ -59,12 +59,14 @@ export class WebSocketService {
       return true;
     }
 
+    if (!this.isEnabled) {
+      return false;
+    }
+
     this.isConnecting = true;
 
     try {
       const wsUrl = this.getWebSocketUrl(serviceRequestId, token);
-      console.log('🔌 Connecting to WebSocket:', wsUrl);
-
       this.ws = new WebSocket(wsUrl);
 
       return new Promise((resolve, reject) => {
@@ -74,46 +76,37 @@ export class WebSocketService {
         }
 
         this.ws.onopen = () => {
-          console.log('✅ WebSocket connected');
           this.isConnecting = false;
           this.reconnectAttempts = 0;
           this.notifyConnectionHandlers(true);
-          
-          // Start ping interval to keep connection alive
           this.startPingInterval();
-          
           resolve(true);
         };
 
         this.ws.onmessage = (event) => {
           try {
             const data: WebSocketMessage = JSON.parse(event.data);
-            console.log('📨 WebSocket message received:', data);
             this.handleMessage(data);
           } catch (error) {
-            console.error('❌ Error parsing WebSocket message:', error);
+            console.error('Error parsing WebSocket message:', error);
           }
         };
 
         this.ws.onclose = (event) => {
-          console.log('🔌 WebSocket closed:', event.code, event.reason);
           this.isConnecting = false;
-          this.stopPingInterval(); // Stop ping interval on close
+          this.stopPingInterval();
           this.notifyConnectionHandlers(false);
-          
-          // Attempt to reconnect if not a normal closure
+
           if (event.code !== 1000 && this.reconnectAttempts < this.maxReconnectAttempts) {
             this.scheduleReconnect(serviceRequestId, token);
           }
         };
 
         this.ws.onerror = (error) => {
-          console.error('❌ WebSocket error:', error);
           this.isConnecting = false;
           reject(error);
         };
 
-        // Set timeout for connection
         setTimeout(() => {
           if (this.isConnecting) {
             this.isConnecting = false;
@@ -123,7 +116,6 @@ export class WebSocketService {
       });
     } catch (error) {
       this.isConnecting = false;
-      console.error('❌ WebSocket connection error:', error);
       throw error;
     }
   }
@@ -133,11 +125,7 @@ export class WebSocketService {
    */
   disconnect(): void {
     if (this.ws) {
-      console.log('🔌 Disconnecting WebSocket');
-      
-      // Stop ping interval
       this.stopPingInterval();
-      
       this.ws.close(1000, 'User disconnected');
       this.ws = null;
       this.notifyConnectionHandlers(false);
@@ -149,7 +137,6 @@ export class WebSocketService {
    */
   sendMessage(message: ChatMessageCreate): void {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      console.warn('⚠️ WebSocket not connected, cannot send message');
       return;
     }
 
@@ -159,7 +146,6 @@ export class WebSocketService {
       message_type: message.message_type || 'text'
     };
 
-    console.log('📤 Sending message via WebSocket:', messageData);
     this.ws.send(JSON.stringify(messageData));
   }
 
@@ -259,11 +245,8 @@ export class WebSocketService {
   }
 
   private getWebSocketUrl(serviceRequestId: number, token: string): string {
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? 'wss://pawfectpal-production.up.railway.app'
-      : 'ws://localhost:8000';
-    
-    return `${baseUrl}/ws/chat/${serviceRequestId}?token=${encodeURIComponent(token)}`;
+    const websocketBaseUrl = getBaseUrl().replace(/^http/, 'ws');
+    return `${websocketBaseUrl}/ws/chat/${serviceRequestId}?token=${encodeURIComponent(token)}`;
   }
 
   private handleMessage(data: WebSocketMessage): void {
@@ -279,22 +262,18 @@ export class WebSocketService {
 
   private scheduleReconnect(serviceRequestId: number, token: string): void {
     this.reconnectAttempts++;
-    
-    // Disable WebSocket after 5 failed attempts
-    if (this.reconnectAttempts > 5) {
-      console.warn('⚠️ WebSocket disabled after multiple failed attempts. Real-time chat unavailable.');
+
+    if (this.reconnectAttempts > this.maxReconnectAttempts) {
       this.isEnabled = false;
       this.notifyConnectionHandlers(false);
       return;
     }
-    
+
     const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
-    
-    console.log(`🔄 Scheduling reconnect attempt ${this.reconnectAttempts} in ${delay}ms`);
-    
+
     setTimeout(() => {
-      this.connect(serviceRequestId, token).catch(error => {
-        console.error('❌ Reconnect failed:', error);
+      this.connect(serviceRequestId, token).catch(() => {
+        // Connection state is surfaced through handlers.
       });
     }, delay);
   }
@@ -303,19 +282,17 @@ export class WebSocketService {
    * Start ping interval to keep connection alive
    */
   private startPingInterval(): void {
-    this.stopPingInterval(); // Clear any existing interval
-    
+    this.stopPingInterval();
+
     this.pingInterval = setInterval(() => {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
         try {
           this.ws.send(JSON.stringify({ type: 'ping' }));
-          console.log('🏓 Sent ping to keep connection alive');
-        } catch (error) {
-          console.error('❌ Failed to send ping:', error);
+        } catch {
           this.stopPingInterval();
         }
       }
-    }, 30000); // Send ping every 30 seconds
+    }, 30000);
   }
 
   /**

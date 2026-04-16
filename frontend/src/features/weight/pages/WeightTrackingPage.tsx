@@ -41,6 +41,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { useLocalization } from '../../../contexts/LocalizationContext';
 import { useTheme } from '@mui/material/styles';
 import { getPets } from '../../../services/pets/petService';
+import { formatPetAge } from '../../../utils/petAge';
 
 import { WeightService } from '../../../services/weight/weightService';
 import WeightGoalService, { WeightGoal } from '../../../services/weight/weightGoalService';
@@ -678,55 +679,12 @@ export const WeightTrackingPage = () => {
             const goalProgress = currentGoal ? Math.min((currentWeight / currentGoal.target_weight) * 100, 100) : 0;
             const isGoalAchieved = currentGoal ? currentWeight >= currentGoal.target_weight : false;
 
-            // Calculate age using the same logic as other components
-            const calculateAge = () => {
-              const birthDate = pet.birthDate || pet.birth_date;
-              if (birthDate && (pet.isBirthdayGiven || pet.is_birthday_given)) {
-                try {
-                  let birth;
-                  if (typeof birthDate === 'string' && birthDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                    const [year, month, day] = birthDate.split('-').map(Number);
-                    birth = new Date(year, month - 1, day);
-                  } else {
-                    birth = new Date(birthDate);
-                  }
-
-                  if (isNaN(birth.getTime())) {
-                    return t('pets.unknownAge');
-                  }
-
-                  const now = new Date();
-                  const ageInMilliseconds = now.getTime() - birth.getTime();
-                  const ageInDays = Math.floor(ageInMilliseconds / (1000 * 60 * 60 * 24));
-                  const ageInMonths = Math.floor(ageInDays / 30.44);
-                  const ageInYears = Math.floor(ageInDays / 365.25);
-
-                  if (ageInDays < 0) {
-                    return t('pets.futureBirthdate');
-                  }
-
-                  if (ageInYears < 1) {
-                    const months = Math.max(0, ageInMonths);
-                    return `${months} ${t('pets.months')}`;
-                  }
-                  return `${ageInYears} ${t('pets.years')}`;
-                } catch (error) {
-                  console.log('Error calculating age from birthdate:', birthDate, error);
-                  return t('pets.unknownAge');
-                }
-              }
-
-              // Fallback to age field if no birthdate
-              if (pet.age !== undefined && pet.age !== null) {
-                if (pet.age < 1) {
-                  const months = Math.floor(pet.age * 12);
-                  return `${months} ${t('pets.months')}`;
-                }
-                return `${pet.age} ${t('pets.years')}`;
-              }
-
-              return t('pets.unknownAge');
-            };
+            const displayAge = formatPetAge(pet, {
+              months: t('pets.months'),
+              years: t('pets.years'),
+              unknownAge: t('pets.unknownAge'),
+              futureBirthdate: t('pets.futureBirthdate'),
+            });
 
             return (
               <Grid size={{ xs: 12, md: 6, lg: 4 }} key={pet.id}>
@@ -773,7 +731,7 @@ export const WeightTrackingPage = () => {
                         {currentWeight} {weightUnit === 'kg' ? t('pets.kg') : t('pets.pounds')}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
-                        {t('pets.age')}: {calculateAge()}
+                                {t('pets.age')}: {displayAge}
                       </Typography>
                       
                     </Box>
