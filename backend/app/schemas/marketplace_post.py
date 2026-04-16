@@ -25,6 +25,8 @@ class MarketplacePostCreate(MarketplacePostBase):
 class MarketplacePostUpdate(BaseModel):
     title: Optional[str] = Field(None, min_length=5, max_length=100)
     description: Optional[str] = Field(None, min_length=10, max_length=1000)
+    service_type: Optional[str] = None
+    pet_ids: Optional[List[int]] = None
     location: Optional[str] = Field(None, max_length=200)
     preferred_dates: Optional[List[str]] = None
     budget_min: Optional[int] = Field(None, ge=0)
@@ -56,6 +58,7 @@ class MarketplacePostSummary(BaseModel):
     """Summary view for browsing marketplace posts"""
     id: int
     title: str
+    description: str
     service_type: str
     location: Optional[str]
     budget_min: Optional[int]

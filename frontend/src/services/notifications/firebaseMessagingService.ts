@@ -5,6 +5,7 @@
 import { getMessaging, getToken, onMessage, Messaging } from 'firebase/messaging';
 import { initializeApp, FirebaseApp, getApp } from 'firebase/app';
 import { configService } from '../config/firebaseConfigService';
+import { SHARED_CONFIG } from '../../config/shared';
 
 export interface PushNotificationData {
   title: string;
@@ -49,56 +50,43 @@ class FirebaseMessagingService {
     if (this.isInitialized) return true;
 
     try {
-      // Check if notifications are enabled
       if (!configService.isFeatureEnabled('enableNotifications')) {
-        console.log('🔕 Notifications disabled in config');
         return false;
       }
 
-      // Get Firebase config
-      const firebaseConfig = configService.getAll();
-      
-      // Initialize Firebase app (check if already exists)
-      try {
-        this.app = getApp(); // Try to get existing app
-        console.log('🔔 Using existing Firebase app');
-      } catch (error) {
-        // App doesn't exist, create new one
-        this.app = initializeApp({
-          apiKey: firebaseConfig.googleClientId, // Using Google Client ID as API key
-          projectId: 'pawfectpal-ac5d7',
-          messagingSenderId: configService.get('firebaseMessagingSenderId') || '123456789',
-          appId: '1:123456789:web:abcdef'
-        });
-        console.log('🔔 Created new Firebase app');
+      const firebaseConfig = SHARED_CONFIG.firebase;
+      if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+        return false;
       }
 
-      // Initialize messaging
+      try {
+        this.app = getApp();
+      } catch {
+        this.app = initializeApp({
+          ...firebaseConfig,
+          messagingSenderId:
+            configService.get('firebaseMessagingSenderId') ||
+            firebaseConfig.messagingSenderId,
+        });
+      }
+
       this.messaging = getMessaging(this.app);
 
-      // Request notification permission
       const permission = await this.requestPermission();
       if (permission !== 'granted') {
-        console.warn('⚠️ Notification permission denied');
         return false;
       }
 
-      // Get FCM token
       this.fcmToken = await this.getFCMToken();
       if (!this.fcmToken) {
-        console.error('❌ Failed to get FCM token');
         return false;
       }
 
-      // Set up message listener
       this.setupMessageListener();
-
-      console.log('✅ Firebase Cloud Messaging initialized');
       this.isInitialized = true;
       return true;
-
     } catch (error) {
-      console.error('❌ Failed to initialize Firebase Cloud Messaging:', error);
+      console.error('Failed to initialize Firebase Cloud Messaging:', error);
       return false;
     }
   }
@@ -108,11 +96,9 @@ class FirebaseMessagingService {
    */
   private async requestPermission(): Promise<NotificationPermission> {
     try {
-      const permission = await Notification.requestPermission();
-      console.log('🔔 Notification permission:', permission);
-      return permission;
+      return await Notification.requestPermission();
     } catch (error) {
-      console.error('❌ Error requesting notification permission:', error);
+      console.error('Error requesting notification permission:', error);
       return 'denied';
     }
   }
@@ -124,19 +110,15 @@ class FirebaseMessagingService {
     if (!this.messaging) return null;
 
     try {
-      const token = await getToken(this.messaging, {
-        vapidKey: configService.get('firebaseVapidKey') || 'YOUR_VAPID_KEY' // Get from Remote Config
-      });
-      
-      if (token) {
-        console.log('🔑 FCM Token obtained:', token.substring(0, 20) + '...');
-        return token;
-      } else {
-        console.warn('⚠️ No FCM token available');
+      const vapidKey = configService.get('firebaseVapidKey');
+      if (!vapidKey || vapidKey === 'YOUR_VAPID_KEY') {
         return null;
       }
+
+      const token = await getToken(this.messaging, { vapidKey });
+      return token || null;
     } catch (error) {
-      console.error('❌ Error getting FCM token:', error);
+      console.error('Error getting FCM token:', error);
       return null;
     }
   }
@@ -148,18 +130,14 @@ class FirebaseMessagingService {
     if (!this.messaging) return;
 
     onMessage(this.messaging, (payload) => {
-      console.log('📨 FCM message received:', payload);
-      
-      // Notify all registered handlers
       this.messageHandlers.forEach(handler => {
         try {
           handler(payload);
         } catch (error) {
-          console.error('❌ Error in message handler:', error);
+          console.error('Error in notification message handler:', error);
         }
       });
 
-      // Show notification if app is in foreground
       this.showForegroundNotification(payload);
     });
   }
@@ -172,24 +150,21 @@ class FirebaseMessagingService {
     const data = payload.data;
 
     if (notification) {
-      // Create custom notification
       const notificationOptions: NotificationOptions = {
         body: notification.body,
         icon: notification.icon || '/favicon.ico',
         badge: notification.badge || '/favicon.ico',
         tag: data?.service_request_id || 'chat',
-        data: data,
+        data,
         requireInteraction: false,
-        silent: false
+        silent: false,
       };
 
-      // Show notification
       if ('serviceWorker' in navigator && 'showNotification' in ServiceWorkerRegistration.prototype) {
         navigator.serviceWorker.ready.then(registration => {
           registration.showNotification(notification.title, notificationOptions);
         });
       } else {
-        // Fallback to browser notification
         new Notification(notification.title, notificationOptions);
       }
     }
@@ -227,25 +202,10 @@ class FirebaseMessagingService {
   }
 
   /**
-   * Send chat notification
+   * Placeholder for future backend-backed notification sending.
    */
   async sendChatNotification(data: ChatNotificationData): Promise<void> {
-    if (!this.isReady()) {
-      console.warn('⚠️ FCM not ready, cannot send notification');
-      return;
-    }
-
-    try {
-      // This would typically be called from the backend
-      // For now, we'll just log the notification data
-      console.log('📤 Sending chat notification:', data);
-      
-      // In a real implementation, you would send this to your backend
-      // which would then send the notification via Firebase Admin SDK
-      
-    } catch (error) {
-      console.error('❌ Error sending chat notification:', error);
-    }
+    void data;
   }
 
   /**
@@ -253,15 +213,13 @@ class FirebaseMessagingService {
    */
   handleNotificationClick(notification: Notification): void {
     const data = notification.data;
-    
+
     if (data?.service_request_id) {
-      // Navigate to chat page
       window.location.href = `/chat/${data.service_request_id}`;
     }
-    
+
     notification.close();
   }
 }
 
 export const firebaseMessagingService = FirebaseMessagingService.getInstance();
-

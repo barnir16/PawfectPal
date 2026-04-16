@@ -1,6 +1,18 @@
 import { StorageHelper } from '../utils/StorageHelper';
 import { configService } from './config/firebaseConfigService';
 
+type QueryParamValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | Array<string | number | boolean>;
+
+export interface ApiRequestOptions extends RequestInit {
+  params?: Record<string, QueryParamValue>;
+}
+
 // Get API URL from Firebase config with fallback
 export const getBaseUrl = (): string => {
   try {
@@ -22,6 +34,35 @@ export const getBaseUrl = (): string => {
 
 // Don't set BASE_URL at module load time - get it dynamically
 export const BASE_URL = "https://pawfectpal-production.up.railway.app";
+
+const buildApiUrl = (
+  endpoint: string,
+  params?: Record<string, QueryParamValue>
+): string => {
+  const normalizedBaseUrl = getBaseUrl().replace(/\/+$/, '');
+  const url = new URL(`${normalizedBaseUrl}${endpoint}`);
+
+  if (!params) {
+    return url.toString();
+  }
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') {
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      value.forEach((item) => {
+        url.searchParams.append(key, String(item));
+      });
+      return;
+    }
+
+    url.searchParams.append(key, String(value));
+  });
+
+  return url.toString();
+};
 
 /**
  * Get stored authentication token
@@ -127,10 +168,11 @@ const handleAuthError = async (): Promise<void> => {
  */
 export const apiRequest = async <T>(
   endpoint: string,
-  options: RequestInit = {},
+  options: ApiRequestOptions = {},
   retryCount: number = 0
 ): Promise<T> => {
-  const headers = new Headers(options.headers);
+  const { params, ...requestOptions } = options;
+  const headers = new Headers(requestOptions.headers);
   const authHeaders = await getAuthHeaders();
 
   Object.entries(authHeaders).forEach(([key, value]) => {
@@ -139,17 +181,16 @@ export const apiRequest = async <T>(
     }
   });
 
-  if (options.body instanceof FormData) {
+  if (requestOptions.body instanceof FormData) {
     headers.delete('Content-Type');
   }
 
-  const baseUrl = getBaseUrl();
-  const fullUrl = `${baseUrl}${endpoint}`;
+  const fullUrl = buildApiUrl(endpoint, params);
 
   let response;
   try {
     response = await fetch(fullUrl, {
-      ...options,
+      ...requestOptions,
       headers
     });
   } catch (error) {
@@ -289,30 +330,30 @@ export function clearLocationWatch(): void {
  * API Client object for easy HTTP requests
  */
 export const apiClient = {
-  get: <T>(endpoint: string, options: RequestInit = {}): Promise<T> =>
+  get: <T>(endpoint: string, options: ApiRequestOptions = {}): Promise<T> =>
     apiRequest<T>(endpoint, { ...options, method: 'GET' }),
 
-  post: <T>(endpoint: string, data?: any, options: RequestInit = {}): Promise<T> =>
+  post: <T>(endpoint: string, data?: any, options: ApiRequestOptions = {}): Promise<T> =>
     apiRequest<T>(endpoint, {
       ...options,
       method: 'POST',
       body: data instanceof FormData ? data : (data ? JSON.stringify(data) : undefined)
     }),
 
-  put: <T>(endpoint: string, data?: any, options: RequestInit = {}): Promise<T> =>
+  put: <T>(endpoint: string, data?: any, options: ApiRequestOptions = {}): Promise<T> =>
     apiRequest<T>(endpoint, {
       ...options,
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined
     }),
 
-  patch: <T>(endpoint: string, data?: any, options: RequestInit = {}): Promise<T> =>
+  patch: <T>(endpoint: string, data?: any, options: ApiRequestOptions = {}): Promise<T> =>
     apiRequest<T>(endpoint, {
       ...options,
       method: 'PATCH',
       body: data ? JSON.stringify(data) : undefined
     }),
 
-  delete: <T>(endpoint: string, options: RequestInit = {}): Promise<T> =>
+  delete: <T>(endpoint: string, options: ApiRequestOptions = {}): Promise<T> =>
     apiRequest<T>(endpoint, { ...options, method: 'DELETE' }),
 };

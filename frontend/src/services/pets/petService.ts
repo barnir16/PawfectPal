@@ -65,15 +65,13 @@ export const transformPetToBackend = (pet: Omit<Pet, 'id'>): BackendPetCreate =>
  * Transform backend pet data to frontend Pet format
  */
 const transformPetFromBackend = (backendPet: any): Pet => {
-  console.log('🔄 Transforming pet from backend:', backendPet);
-  
-  const transformedPet = {
+  return {
     // Basic information
     id: backendPet.id,
     name: backendPet.name,
     type: (backendPet.breed_type || backendPet.type || 'other') as PetType,
     breed: backendPet.breed || 'Unknown',
-    
+
     // Physical attributes
     age: backendPet.age,
     birthDate: backendPet.birth_date || backendPet.birthDate,
@@ -81,19 +79,23 @@ const transformPetFromBackend = (backendPet: any): Pet => {
     color: backendPet.color,
     weightKg: backendPet.weight_kg || backendPet.weightKg,
     weightUnit: (backendPet.weight_unit || backendPet.weightUnit || 'kg') as 'kg' | 'lb',
-    
+
     // Health information
     isNeutered: Boolean(backendPet.is_neutered || backendPet.isNeutered),
     isVaccinated: Boolean(backendPet.is_vaccinated || backendPet.isVaccinated),
     isMicrochipped: Boolean(backendPet.is_microchipped || backendPet.isMicrochipped),
-    healthIssues: Array.isArray(backendPet.health_issues) 
-      ? backendPet.health_issues 
-      : (backendPet.health_issues ? backendPet.health_issues.split(',').map((s: string) => s.trim()).filter(Boolean) : []),
-    behaviorIssues: Array.isArray(backendPet.behavior_issues) 
-      ? backendPet.behavior_issues 
-      : (backendPet.behavior_issues ? backendPet.behavior_issues.split(',').map((s: string) => s.trim()).filter(Boolean) : []),
+    healthIssues: Array.isArray(backendPet.health_issues)
+      ? backendPet.health_issues
+      : (backendPet.health_issues
+        ? backendPet.health_issues.split(',').map((s: string) => s.trim()).filter(Boolean)
+        : []),
+    behaviorIssues: Array.isArray(backendPet.behavior_issues)
+      ? backendPet.behavior_issues
+      : (backendPet.behavior_issues
+        ? backendPet.behavior_issues.split(',').map((s: string) => s.trim()).filter(Boolean)
+        : []),
     microchipNumber: backendPet.microchip_number || backendPet.microchipNumber,
-    
+
     // Medical records
     lastVetVisit: backendPet.last_vet_visit || backendPet.lastVetVisit,
     nextVetVisit: backendPet.next_vet_visit || backendPet.nextVetVisit,
@@ -101,20 +103,22 @@ const transformPetFromBackend = (backendPet: any): Pet => {
     vetPhone: backendPet.vet_phone || backendPet.vetPhone,
     vetAddress: backendPet.vet_address || backendPet.vetAddress,
     medicalNotes: backendPet.medical_notes || backendPet.medicalNotes,
-    
+
     // Media and notes
     imageUrl: backendPet.photo_uri || backendPet.imageUrl,
     notes: backendPet.notes,
-    
+
     // Tracking and location
     isTrackingEnabled: Boolean(backendPet.is_tracking_enabled || backendPet.isTrackingEnabled),
-    lastLocation: backendPet.last_known_latitude && backendPet.last_known_longitude ? {
-      latitude: backendPet.last_known_latitude,
-      longitude: backendPet.last_known_longitude
-    } : undefined,
+    lastLocation: backendPet.last_known_latitude && backendPet.last_known_longitude
+      ? {
+          latitude: backendPet.last_known_latitude,
+          longitude: backendPet.last_known_longitude
+        }
+      : undefined,
     lastSeen: backendPet.last_location_update || backendPet.lastSeen,
     isLost: Boolean(backendPet.is_lost || backendPet.isLost),
-    
+
     // Metadata
     isActive: Boolean(backendPet.is_active !== undefined ? backendPet.is_active : true),
     isBirthdayGiven: Boolean(backendPet.is_birthday_given || backendPet.isBirthdayGiven),
@@ -122,9 +126,6 @@ const transformPetFromBackend = (backendPet: any): Pet => {
     createdAt: backendPet.created_at || backendPet.createdAt,
     updatedAt: backendPet.updated_at || backendPet.updatedAt,
   };
-  
-  console.log('✅ Transformed pet:', transformedPet);
-  return transformedPet;
 };
 
 /**
@@ -190,7 +191,7 @@ export const deletePet = async (petId: number): Promise<void> => {
  * Update a pet's location
  */
 export const updatePetLocation = async (
-  petId: number, 
+  petId: number,
   location: Omit<LocationHistory, 'id'>
 ): Promise<LocationHistory> => {
   return apiRequest<LocationHistory>(`/pets/${petId}/location/`, {
@@ -203,7 +204,7 @@ export const updatePetLocation = async (
  * Get location history for a pet
  */
 export const getPetLocationHistory = async (
-  petId: number, 
+  petId: number,
   limit: number = 100
 ): Promise<LocationHistory[]> => {
   return apiRequest<LocationHistory[]>(`/pets/${petId}/location/?limit=${limit}`);
@@ -213,12 +214,12 @@ export const getPetLocationHistory = async (
  * Upload a pet image
  */
 export const uploadPetImage = async (
-  petId: number, 
+  petId: number,
   file: File
 ): Promise<UploadResponse> => {
   const formData = new FormData();
   formData.append('file', file);
-  
+
   return apiRequest<UploadResponse>(`/image_upload/pet-image/${petId}/`, {
     method: 'POST',
     body: formData

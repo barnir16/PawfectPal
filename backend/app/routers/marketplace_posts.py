@@ -178,7 +178,36 @@ def update_marketplace_post(
     
     # Update fields
     update_data = post_update.dict(exclude_unset=True)
+
+    if "pet_ids" in update_data:
+        user_pets = db.query(PetORM).filter(
+            PetORM.user_id == current_user.id,
+            PetORM.id.in_(update_data["pet_ids"])
+        ).all()
+
+        if len(user_pets) != len(update_data["pet_ids"]):
+            raise HTTPException(
+                status_code=400,
+                detail="Some pet IDs do not belong to you"
+            )
+
+        post.pet_ids = update_data["pet_ids"]
+        post.pets = user_pets
+
+    if "service_type" in update_data:
+        service_type_obj = db.query(ServiceTypeORM).filter(
+            ServiceTypeORM.name == update_data["service_type"]
+        ).first()
+
+        if not service_type_obj:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Service type '{update_data['service_type']}' does not exist"
+            )
+
     for field, value in update_data.items():
+        if field == "pet_ids":
+            continue
         setattr(post, field, value)
     
     post.updated_at = datetime.utcnow()

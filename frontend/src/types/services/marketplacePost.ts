@@ -29,7 +29,8 @@ export interface MarketplacePost {
   pets?: Array<{
     id: number;
     name: string;
-    species: string;
+    type?: string;
+    species?: string;
     breed?: string;
   }>;
 }
@@ -83,4 +84,11 @@ export interface MarketplacePostSummary {
     username: string;
     full_name?: string;
   };
+  pets?: Array<{
+    id: number;
+    name: string;
+    type?: string;
+    species?: string;
+    breed?: string;
+  }>;
 }

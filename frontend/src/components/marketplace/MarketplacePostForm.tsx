@@ -24,13 +24,14 @@ import { Add, Remove, Save, Cancel } from '@mui/icons-material';
 import { useLocalization } from '../../contexts/LocalizationContext';
 import { marketplaceService } from '../../services/marketplace/marketplaceService';
 import type { MarketplacePostCreate } from '../../types/services/marketplacePost';
-import type { Pet } from '../../types/pet';
+import type { Pet } from '../../types/pets/pet';
 
 interface MarketplacePostFormProps {
   pets: Pet[];
   onSuccess?: (post: any) => void;
   onCancel?: () => void;
   initialData?: Partial<MarketplacePostCreate>;
+  postId?: number;
 }
 
 export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
@@ -38,6 +39,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
   onSuccess,
   onCancel,
   initialData,
+  postId,
 }) => {
   const { t } = useLocalization();
   const [loading, setLoading] = useState(false);
@@ -71,8 +73,8 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
     try {
       const types = await marketplaceService.getServiceTypes();
       setServiceTypes(types);
-    } catch (error) {
-      console.error('Failed to load service types:', error);
+    } catch (error: any) {
+      setError(error.message || 'Failed to load service types');
     }
   };
 
@@ -93,10 +95,17 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
     setError(null);
 
     try {
-      const post = await marketplaceService.createPost(formData);
+      const post = postId
+        ? await marketplaceService.updatePost(postId, formData)
+        : await marketplaceService.createPost(formData);
       onSuccess?.(post);
     } catch (error: any) {
-      setError(error.message || 'Failed to create marketplace post');
+      setError(
+        error.message ||
+          (postId
+            ? 'Failed to update marketplace post'
+            : 'Failed to create marketplace post')
+      );
     } finally {
       setLoading(false);
     }
@@ -139,8 +148,16 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
   return (
     <Card>
       <CardHeader 
-        title={t('marketplace.createPost') || 'Create Marketplace Post'}
-        subheader={t('marketplace.createPostSubtitle') || 'Share your service needs with all providers'}
+        title={
+          postId
+            ? t('marketplace.editPost') || 'Edit Marketplace Post'
+            : t('marketplace.createPost') || 'Create Marketplace Post'
+        }
+        subheader={
+          postId
+            ? t('marketplace.editPostSubtitle') || 'Update your marketplace request'
+            : t('marketplace.createPostSubtitle') || 'Share your service needs with all providers'
+        }
       />
       <CardContent>
         <form onSubmit={handleSubmit}>
@@ -232,7 +249,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
                 >
                   {pets.map((pet) => (
                     <MenuItem key={pet.id} value={pet.id}>
-                      {pet.name} ({pet.species})
+                      {pet.name} ({pet.type || t('pets.unknownType') || 'pet'})
                     </MenuItem>
                   ))}
                 </Select>
@@ -394,7 +411,13 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
               disabled={loading}
               startIcon={loading ? <CircularProgress size={20} /> : <Save />}
             >
-              {loading ? (t('common.creating') || 'Creating...') : (t('marketplace.createPost') || 'Create Post')}
+              {loading
+                ? postId
+                  ? (t('common.saving') || 'Saving...')
+                  : (t('common.creating') || 'Creating...')
+                : postId
+                  ? (t('common.save') || 'Save')
+                  : (t('marketplace.createPost') || 'Create Post')}
             </Button>
           </Box>
         </form>
