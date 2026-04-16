@@ -82,6 +82,7 @@ import { MessageSearch } from "./MessageSearch";
 import { FilePreview } from "./FilePreview";
 import { FileUploadProgress } from "./FileUploadProgress";
 import { LocationMessage } from "./LocationMessage";
+import { getBaseUrl } from "../../services/api";
 
 interface EnhancedChatWindowProps {
   messages: ChatMessage[];
@@ -126,6 +127,19 @@ interface QuickReply {
   icon?: React.ReactNode;
 }
 
+const resolveAttachmentUrl = (url: string) => {
+  if (!url) {
+    return "";
+  }
+
+  if (url.startsWith("http")) {
+    return url;
+  }
+
+  const baseUrl = getBaseUrl();
+  return `${baseUrl}${url.startsWith("/") ? url : `/${url}`}`;
+};
+
 export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   messages,
   onSendMessage,
@@ -152,7 +166,6 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [otherUserTyping, setOtherUserTyping] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(
     null
   );
@@ -291,17 +304,6 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         },
       ];
 
-  // Debug logging for quick replies
-  console.log("🔍 Quick Replies Debug:", {
-    user: user,
-    isProvider: user?.is_provider,
-    quickRepliesCount: quickReplies.length,
-    quickReplies: quickReplies.map((r) => ({
-      id: r.id,
-      text: r.text.substring(0, 30) + "...",
-    })),
-  });
-
   // File validation constants
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
   const MAX_FILES = 5;
@@ -344,96 +346,6 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
     return null;
   };
-
-  // Typing indicator component
-  const TypingIndicator = ({ username }: { username: string }) => (
-    <ListItem sx={{ mb: 1 }}>
-      <ListItemAvatar sx={{ minWidth: 40 }}>
-        <Avatar sx={{ width: 32, height: 32 }}>
-          <Person />
-        </Avatar>
-      </ListItemAvatar>
-      <ListItemText
-        sx={{
-          maxWidth: "75%",
-          ml: 2,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-start",
-        }}
-        primary={
-          <Paper
-            sx={{
-              p: 2.5,
-              backgroundColor: (theme) =>
-                theme.palette.mode === "dark" ? "grey.800" : "white",
-              borderRadius: "20px 20px 20px 6px",
-              boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
-              border: (theme) =>
-                theme.palette.mode === "dark"
-                  ? "1px solid rgba(255,255,255,0.1)"
-                  : "1px solid rgba(0,0,0,0.05)",
-              position: "relative",
-              "&::before": {
-                content: '""',
-                position: "absolute",
-                bottom: 0,
-                left: -6,
-                width: 0,
-                height: 0,
-                borderRight: "6px solid transparent",
-                borderTop: "6px solid",
-                borderTopColor: (theme) =>
-                  theme.palette.mode === "dark"
-                    ? theme.palette.grey[800]
-                    : "white",
-              },
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Typography
-                variant="caption"
-                sx={{
-                  color: "text.secondary",
-                  fontSize: "0.75rem",
-                  opacity: 0.7,
-                }}
-              >
-                {username} is typing
-              </Typography>
-              <Box
-                sx={{
-                  display: "flex",
-                  gap: 0.5,
-                  "& > div": {
-                    width: 6,
-                    height: 6,
-                    borderRadius: "50%",
-                    backgroundColor: (theme) => theme.palette.text.secondary,
-                    animation: "typing 1.4s infinite ease-in-out",
-                    "&:nth-of-type(1)": { animationDelay: "0s" },
-                    "&:nth-of-type(2)": { animationDelay: "0.2s" },
-                    "&:nth-of-type(3)": { animationDelay: "0.4s" },
-                  },
-                  "@keyframes typing": {
-                    "0%, 60%, 100%": {
-                      transform: "translateY(0)",
-                      opacity: 0.4,
-                    },
-                    "30%": { transform: "translateY(-10px)", opacity: 1 },
-                  },
-                }}
-              >
-                <Box />
-                <Box />
-                <Box />
-              </Box>
-            </Box>
-          </Paper>
-        }
-      />
-    </ListItem>
-  );
 
   // Skeleton loading component for messages
   const MessageSkeleton = ({ isOwn }: { isOwn: boolean }) => (
@@ -535,27 +447,19 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
   // Message reaction handlers
   const handleReaction = (messageId: number, reaction: string) => {
-    console.log("Reaction:", reaction, "on message:", messageId);
+    void messageId;
     setSnackbarMessage(`Added ${reaction} reaction`);
     setSnackbarOpen(true);
   };
 
   // Helper function to parse attachment data from message
   const parseMessageAttachments = (message: ChatMessage): MediaAttachment[] => {
-    console.log("🔍 parseMessageAttachments Debug:", {
-      messageId: message.id,
-      messageType: message.message_type,
-      messageMetadata: message.message_metadata,
-      hasAttachments: !!message.message_metadata?.attachments,
-      attachments: message.message_metadata?.attachments,
-    });
-
     // First try to get attachments from message_metadata
     if (
       message.message_metadata?.attachments &&
       Array.isArray(message.message_metadata.attachments)
     ) {
-      const parsed = message.message_metadata.attachments.map((att: any) => ({
+      return message.message_metadata.attachments.map((att: any) => ({
         id: att.id,
         file_name: att.file_name,
         file_url: att.file_url,
@@ -563,8 +467,6 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         file_size: att.file_size,
         created_at: att.created_at,
       }));
-      console.log("🔍 Parsed attachments from metadata:", parsed);
-      return parsed;
     }
 
     // Fallback: try to parse JSON data from message (backward compatibility)
@@ -606,19 +508,6 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   const renderLocationMessage = (message: ChatMessage) => {
     const text = getDisplayMessage(message);
 
-    console.log("📍 Location message check:", {
-      messageId: message.id,
-      messageType: message.message_type,
-      text: text,
-      isLocation:
-        message.message_type === "location" ||
-        text.includes("Lat:") ||
-        text.includes("Lng:") ||
-        text.includes("📍 Location shared") ||
-        text.includes("Location:") ||
-        text.includes("Coordinates:"),
-    });
-
     // Check if this is a location message by type or content
     if (
       message.message_type === "location" ||
@@ -628,10 +517,8 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
       text.includes("Location:") ||
       text.includes("Coordinates:")
     ) {
-      console.log("📍 Rendering LocationMessage component");
       return <LocationMessage message={text} compact={true} />;
     }
-    console.log("📍 Not a location message, returning null");
     return null;
   };
 
@@ -780,21 +667,10 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   const handleSend = async () => {
     if (!input.trim() && selectedFiles.length === 0) return;
 
-    console.log("📤 handleSend called with:", {
-      input: input.trim(),
-      selectedFilesCount: selectedFiles.length,
-      selectedFiles: selectedFiles.map((f) => ({
-        name: f.name,
-        size: f.size,
-        type: f.type,
-      })),
-    });
-
     // Ensure we have a valid message
     const messageText =
-      input.trim() || (selectedFiles.length > 0 ? "📎 Shared files" : "");
+      input.trim() || (selectedFiles.length > 0 ? "Shared files" : "");
     if (!messageText) {
-      console.warn("📤 Cannot send empty message");
       return;
     }
 
@@ -808,15 +684,6 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           : undefined,
       reply_to: replyingTo || undefined,
     };
-
-    console.log("📤 Created message:", {
-      message: newMessage.message,
-      message_type: newMessage.message_type,
-      hasAttachments: !!(
-        newMessage.attachments && newMessage.attachments.length > 0
-      ),
-      attachmentCount: newMessage.attachments?.length || 0,
-    });
 
     try {
       if (selectedFiles.length > 0 && onSendMessageWithFiles) {
@@ -874,9 +741,9 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
   const handleAddReaction = async (message: ChatMessage, emoji: string) => {
     try {
-      // TODO: Implement reaction API call
-      console.log(`Adding reaction ${emoji} to message ${message.id}`);
-      setSnackbarMessage(`Added ${emoji} reaction`);
+      void message;
+      void emoji;
+      setSnackbarMessage("Reactions are not available yet");
       setSnackbarOpen(true);
     } catch (error) {
       console.error("Failed to add reaction:", error);
@@ -894,8 +761,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   };
 
   const handleDeleteMessage = (message: ChatMessage) => {
-    // TODO: Implement delete message functionality
-    console.log("Delete message:", message.id);
+    void message;
     setSnackbarMessage("Delete functionality coming soon");
     setSnackbarOpen(true);
   };
@@ -928,25 +794,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   // File handling functions
   const handleFileDownload = async (attachment: MediaAttachment) => {
     try {
-      // Ensure we have a full URL for downloading
-      let fullUrl = attachment.file_url;
-
-      // If it's already a full URL, use as-is
-      if (!fullUrl.startsWith("http")) {
-        // If it's a relative path, prepend the base URL
-        const baseUrl =
-          import.meta.env.VITE_API_URL ||
-          (process.env.NODE_ENV === "production"
-            ? "https://pawfectpal-production.up.railway.app"
-            : "http://localhost:8000");
-        fullUrl = baseUrl + (fullUrl.startsWith("/") ? fullUrl : "/" + fullUrl);
-      }
-
-      console.log("📥 Downloading file:", {
-        originalUrl: attachment.file_url,
-        fullUrl,
-      });
-
+      const fullUrl = resolveAttachmentUrl(attachment.file_url);
       const response = await fetch(fullUrl);
       if (!response.ok) {
         throw "HTTP error! status: " + response.status;
@@ -970,42 +818,12 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   };
 
   const handleFileOpen = (attachment: MediaAttachment) => {
-    console.log("📁 Opening file:", {
-      fileName: attachment.file_name,
-      fileUrl: attachment.file_url,
-      fileType: attachment.file_type,
-      isRelative: attachment.file_url.startsWith("/"),
-      nodeEnv: process.env.NODE_ENV,
-    });
-
-    // Ensure we have a full URL for opening
-    let fullUrl = attachment.file_url;
-
-    // If it's already a full URL, use as-is
-    if (!fullUrl.startsWith("http")) {
-      // If it's a relative path, prepend the base URL
-      const baseUrl =
-        import.meta.env.VITE_API_URL ||
-        (process.env.NODE_ENV === "production"
-          ? "https://pawfectpal-production.up.railway.app"
-          : "http://localhost:8000");
-      fullUrl = baseUrl + (fullUrl.startsWith("/") ? fullUrl : "/" + fullUrl);
-      console.log("📁 Constructed URL:", {
-        baseUrl,
-        originalUrl: attachment.file_url,
-        fullUrl,
-      });
-    } else {
-      console.log("📁 File URL is already full:", fullUrl);
-    }
-
-    console.log("📁 Opening full URL:", fullUrl);
+    const fullUrl = resolveAttachmentUrl(attachment.file_url);
 
     // Try to open the file
     try {
       const newWindow = window.open(fullUrl, "_blank");
       if (!newWindow) {
-        console.error("❌ Failed to open window - popup blocked?");
         // Fallback: try to download the file
         const link = document.createElement("a");
         link.href = fullUrl;
@@ -1014,12 +832,9 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        console.log("📁 Fallback: triggered download");
-      } else {
-        console.log("✅ Successfully opened file in new window");
       }
     } catch (error) {
-      console.error("❌ Error opening file:", error);
+      console.error("Failed to open file:", error);
     }
   };
 
@@ -1046,10 +861,6 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    console.log(
-      "📁 Files selected:",
-      files.map((f) => ({ name: f.name, size: f.size, type: f.type }))
-    );
 
     // Validate files first
     const validationError = validateFiles(files);
@@ -1084,24 +895,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
     // Merge both images and other files
     const validFiles = [...validImageFiles, ...otherFiles];
-
-    console.log(
-      "📁 Valid files:",
-      validFiles.map((f) => ({ name: f.name, size: f.size, type: f.type }))
-    );
-    console.log(
-      "📁 Oversized images:",
-      oversizedImages.map((f) => ({ name: f.name, size: f.size, type: f.type }))
-    );
-
-    setSelectedFiles((prev) => {
-      const newFiles = [...prev, ...validFiles];
-      console.log(
-        "📁 Updated selectedFiles:",
-        newFiles.map((f) => ({ name: f.name, size: f.size, type: f.type }))
-      );
-      return newFiles;
-    });
+    setSelectedFiles((prev) => [...prev, ...validFiles]);
 
     // Clear the input so the same file can be selected again
     if (event.target) {
@@ -1147,7 +941,6 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
   };
 
   const openMediaDialog = (media: MediaAttachment) => {
-    console.log("Opening media dialog with:", media);
     setSelectedMedia(media);
     setMediaDialogOpen(true);
   };
@@ -1156,14 +949,6 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     setMediaDialogOpen(false);
     setSelectedMedia(null);
   };
-
-  // Debug media dialog state
-  useEffect(() => {
-    console.log("Media dialog state changed:", {
-      mediaDialogOpen,
-      selectedMedia,
-    });
-  }, [mediaDialogOpen, selectedMedia]);
 
   const handleQuickReply = async (reply: QuickReply) => {
     const newMessage: ChatMessageCreate = {
@@ -1204,42 +989,10 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
     }
   };
 
-  const testImageUrl = async (url: string) => {
-    try {
-      console.log("🖼️ Testing image URL:", url);
-      const response = await fetch(url, { method: "HEAD" });
-      console.log("🖼️ Image URL test result:", {
-        url,
-        status: response.status,
-        ok: response.ok,
-        contentType: response.headers.get("content-type"),
-        contentLength: response.headers.get("content-length"),
-        lastModified: response.headers.get("last-modified"),
-      });
-      return response.ok;
-    } catch (error) {
-      console.error("🖼️ Image URL test failed:", url, error);
-      return false;
-    }
-  };
-
   const renderMessageAttachments = (attachments: MediaAttachment[]) => {
-    console.log("🖼️ Rendering attachments:", attachments);
-
     if (attachments.length === 0) {
-      console.log("🖼️ No attachments to render");
       return null;
     }
-
-    console.log("🖼️ EnhancedChatWindow: Rendering attachments:", {
-      attachmentsCount: attachments.length,
-      attachments: attachments.map((att) => ({
-        id: att.id,
-        fileName: att.file_name,
-        fileUrl: att.file_url,
-        fileType: att.file_type,
-      })),
-    });
 
     return (
       <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 1 }}>
@@ -1961,15 +1714,6 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             {messages
               .filter((msg) => msg)
               .map((msg, index) => {
-                console.log("💬 Rendering message:", {
-                  id: msg.id,
-                  message: msg.message,
-                  message_type: msg.message_type,
-                  created_at: msg.created_at,
-                  attachments: msg.attachments,
-                  sender_id: msg.sender_id,
-                });
-
                 // Properly identify own messages - only check user ID
                 const isOwn = msg.sender_id === user?.id;
                 const isSystem = msg.message_type === "system";
@@ -2477,8 +2221,6 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
               })}
             <div ref={messagesEndRef} />
 
-            {/* Typing Indicator */}
-            {otherUserTyping && <TypingIndicator username="Provider" />}
           </List>
         )}
         {/* Quick Replies */}
@@ -3062,44 +2804,12 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           {selectedMedia && (
             <Box sx={{ textAlign: "center" }}>
               <img
-                src={
-                  selectedMedia.file_url.startsWith("http")
-                    ? selectedMedia.file_url
-                    : process.env.NODE_ENV === "production"
-                      ? "https://pawfectpal-production.up.railway.app" +
-                        (selectedMedia.file_url.startsWith("/")
-                          ? selectedMedia.file_url
-                          : "/" + selectedMedia.file_url)
-                      : "http://localhost:8000" +
-                        (selectedMedia.file_url.startsWith("/")
-                          ? selectedMedia.file_url
-                          : "/" + selectedMedia.file_url)
-                }
+                src={resolveAttachmentUrl(selectedMedia.file_url)}
                 alt={selectedMedia.file_name}
                 style={{
                   maxWidth: "100%",
                   maxHeight: "70vh",
                   objectFit: "contain",
-                }}
-                onError={(e) => {
-                  console.error(
-                    "❌ Image failed to load:",
-                    selectedMedia.file_url
-                  );
-                  console.error(
-                    "❌ Constructed URL:",
-                    selectedMedia.file_url.startsWith("http")
-                      ? selectedMedia.file_url
-                      : process.env.NODE_ENV === "production"
-                        ? "https://pawfectpal-production.up.railway.app" +
-                          (selectedMedia.file_url.startsWith("/")
-                            ? selectedMedia.file_url
-                            : "/" + selectedMedia.file_url)
-                        : "http://localhost:8000" +
-                          (selectedMedia.file_url.startsWith("/")
-                            ? selectedMedia.file_url
-                            : "/" + selectedMedia.file_url)
-                  );
                 }}
               />
             </Box>
@@ -3111,7 +2821,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             onClick={() => {
               if (selectedMedia) {
                 const link = document.createElement("a");
-                link.href = selectedMedia.file_url;
+                link.href = resolveAttachmentUrl(selectedMedia.file_url);
                 link.download = selectedMedia.file_name;
                 link.click();
               }
@@ -3122,45 +2832,6 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           <Button onClick={closeMediaDialog}>Close</Button>
         </DialogActions>
       </Dialog>
-
-      {/* Demo Typing Indicator Button - Remove in production */}
-      <Box
-        sx={{
-          p: 1.5,
-          borderTop: 1,
-          borderColor: "divider",
-          backgroundColor: (theme) =>
-            theme.palette.mode === "dark" ? "grey.900" : "grey.100",
-          display: "flex",
-          justifyContent: "center",
-        }}
-      >
-        <Button
-          variant="text"
-          size="small"
-          onClick={() => {
-            if (otherUserTyping) {
-              setOtherUserTyping(false);
-            } else {
-              setOtherUserTyping(true);
-              // Auto-hide after 3 seconds
-              setTimeout(() => setOtherUserTyping(false), 3000);
-            }
-          }}
-          sx={{
-            fontSize: "0.7rem",
-            textTransform: "none",
-            color: "text.secondary",
-            opacity: 0.7,
-            "&:hover": {
-              backgroundColor: "transparent",
-              opacity: 1,
-            },
-          }}
-        >
-          {otherUserTyping ? "Stop Typing Demo" : "Start Typing Demo"}
-        </Button>
-      </Box>
 
       {/* Snackbar for notifications */}
       <Snackbar

@@ -92,8 +92,6 @@ export class WeightService {
         throw new Error('No authentication token found');
       }
 
-      console.log('🔄 Fetching all weight records from API');
-
       const response = await fetch(`${getBaseUrl()}/api/weight-records/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -101,17 +99,13 @@ export class WeightService {
         },
       });
 
-      console.log('📡 GET response status:', response.status);
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ GET failed:', errorText);
+        console.error('Failed to fetch all weight records:', errorText);
         throw new Error(`Failed to fetch weight records: ${response.statusText}`);
       }
 
       const data = await response.json();
-      console.log('✅ GET response data:', data);
-      console.log('📋 Records in response:', data.map((r: any) => ({ id: r.id, notes: r.notes, pet_name: r.pet_name })));
 
       return data.map((record: WeightRecordResponse) => ({
         id: record.id,
@@ -123,7 +117,7 @@ export class WeightService {
         source: record.source,
       }));
     } catch (error) {
-      console.error('❌ Error fetching all weight records:', error);
+      console.error('Error fetching all weight records:', error);
       return [];
     }
   }
@@ -137,15 +131,6 @@ export class WeightService {
       if (!token) {
         throw new Error('No authentication token found');
       }
-
-      console.log('🔄 Creating weight record:', {
-        petId: request.petId,
-        weight: request.weight,
-        weightUnit: request.weightUnit,
-        date: request.date,
-        notes: request.notes,
-        source: request.source,
-      });
 
       const response = await fetch(`${getBaseUrl()}/api/weight-records/`, {
         method: 'POST',
@@ -163,16 +148,13 @@ export class WeightService {
         }),
       });
 
-      console.log('📡 Create response status:', response.status);
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Create failed:', errorText);
+        console.error('Failed to create weight record:', errorText);
         throw new Error(`Failed to create weight record: ${response.statusText}`);
       }
 
       const data: WeightRecordResponse = await response.json();
-      console.log('✅ Create response data:', data);
 
       return {
         id: data.id,
@@ -184,7 +166,7 @@ export class WeightService {
         source: data.source,
       };
     } catch (error) {
-      console.error('❌ Error creating weight record:', error);
+      console.error('Error creating weight record:', error);
       return null;
     }
   }
@@ -198,16 +180,6 @@ export class WeightService {
       if (!token) {
         throw new Error('No authentication token found');
       }
-
-      console.log('🔄 Updating weight record:', {
-        id,
-        petId: request.petId,
-        weight: request.weight,
-        weightUnit: request.weightUnit,
-        date: request.date,
-        notes: request.notes,
-        source: request.source,
-      });
 
       const response = await fetch(`${getBaseUrl()}/api/weight-records/${id}/`, {
         method: 'PUT',
@@ -225,16 +197,13 @@ export class WeightService {
         }),
       });
 
-      console.log('📡 Update response status:', response.status);
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Update failed:', errorText);
+        console.error('Failed to update weight record:', errorText);
         throw new Error(`Failed to update weight record: ${response.statusText}`);
       }
 
       const data: WeightRecordResponse = await response.json();
-      console.log('✅ Update response data:', data);
 
       return {
         id: data.id,
@@ -246,7 +215,7 @@ export class WeightService {
         source: data.source,
       };
     } catch (error) {
-      console.error('❌ Error updating weight record:', error);
+      console.error('Error updating weight record:', error);
       return null;
     }
   }

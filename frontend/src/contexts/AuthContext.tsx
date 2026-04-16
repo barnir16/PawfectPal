@@ -1,18 +1,15 @@
 import React, {
   createContext,
   useContext,
-  useState,
   useEffect,
+  useState,
   ReactNode,
 } from "react";
-import { StorageHelper } from "../utils/StorageHelper";
-import {
-  login as loginApi,
-  logout as logoutApi,
-  signInWithGoogle,
-} from "../services/auth/authService";
+
+import { login as loginApi, logout as logoutApi, signInWithGoogle } from "../services/auth/authService";
 import { getBaseUrl } from "../services/api";
-import type { User, LoginResponse } from "../types/auth";
+import type { LoginResponse, User } from "../types/auth";
+import { StorageHelper } from "../utils/StorageHelper";
 
 const API_BASE_URL = getBaseUrl();
 
@@ -48,47 +45,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      console.log("Checking authentication...");
       setIsLoading(true);
       const token = await StorageHelper.getItem("authToken");
-      console.log("Token found:", !!token);
 
-      if (token) {
-        // Try to validate token with backend
-        try {
-          const response = await fetch(`${API_BASE_URL}/users/me`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          });
+      if (!token) {
+        setUser(null);
+        return;
+      }
 
-          if (response.ok) {
-            const userData = await response.json();
-            setUser(userData);
-            console.log("User authenticated:", userData.username);
-          } else {
-            // Token is invalid, clear it
-            console.log("Token invalid, clearing...");
-            await StorageHelper.removeItem("authToken");
-            setUser(null);
-          }
-        } catch (error) {
-          console.log("Token validation failed, clearing...");
+      try {
+        const response = await fetch(`${API_BASE_URL}/users/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
           await StorageHelper.removeItem("authToken");
           setUser(null);
+          return;
         }
-      } else {
-        // No token found, user is not authenticated
+
+        const userData = await response.json();
+        setUser(userData);
+      } catch {
+        await StorageHelper.removeItem("authToken");
         setUser(null);
-        console.log("No token found, user not authenticated");
       }
     } catch (error) {
       console.error("Auth check failed:", error);
       await StorageHelper.removeItem("authToken");
       setUser(null);
     } finally {
-      console.log("Setting isLoading to false");
       setIsLoading(false);
     }
   };
@@ -96,11 +85,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (username: string, password: string) => {
     try {
       const response: LoginResponse = await loginApi(username, password);
-
-      // Store the token
       await StorageHelper.setItem("authToken", response.access_token);
 
-      // Fetch full user info from backend
       const userRes = await fetch(`${API_BASE_URL}/users/me`, {
         headers: {
           Authorization: `Bearer ${response.access_token}`,
@@ -108,7 +94,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         },
       });
 
-      if (!userRes.ok) throw new Error("Failed to fetch user data");
+      if (!userRes.ok) {
+        throw new Error("Failed to fetch user data");
+      }
 
       const fullUser: User = await userRes.json();
       setUser(fullUser);
@@ -121,15 +109,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const loginWithGoogle = async () => {
     try {
       const response: LoginResponse = await signInWithGoogle();
-
-      // Store the token
       await StorageHelper.setItem("authToken", response.access_token);
-      console.log('✅ Google login token stored:', response.access_token.substring(0, 20) + '...');
 
-      // Create a minimal user object from the login data
-      const user: User = {
-        id: 1, // We'll get this from the backend later
-        username: response.user?.username || 'google_user',
+      const googleUser: User = {
+        id: 1,
+        username: response.user?.username || "google_user",
         is_active: true,
         is_provider: false,
         is_email_verified: false,
@@ -137,8 +121,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         date_joined: new Date().toISOString(),
       };
 
-      setUser(user);
-      console.log('✅ Google login successful, user set:', user.username);
+      setUser(googleUser);
     } catch (error) {
       console.error("Google login failed:", error);
       throw error;
@@ -151,39 +134,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error("Logout API call failed:", error);
     } finally {
-      // Always clear local state even if API call fails
       await StorageHelper.removeItem("authToken");
       setUser(null);
     }
   };
 
-  const forceLogout = async (reason: string) => {
-    console.log(`Force logout: ${reason}`);
+  const forceLogout = async (_reason: string) => {
     await StorageHelper.removeItem("authToken");
     setUser(null);
-    
-    // Show user-friendly notification instead of alert
-    console.log(`🔔 ${reason}`);
-    
-    // Optionally redirect to login page
-    if (window.location.pathname !== '/login') {
-      window.location.href = '/login';
+
+    if (window.location.pathname !== "/login") {
+      window.location.href = "/login";
     }
   };
 
   useEffect(() => {
-    checkAuth();
-    
-    // Listen for token expiry events from API service
+    void checkAuth();
+
     const handleTokenExpiry = (event: CustomEvent) => {
-      console.log('🔔 Token expiry event received:', event.detail);
-      forceLogout(event.detail.reason);
+      void forceLogout(event.detail.reason);
     };
-    
-    window.addEventListener('auth:token-expired', handleTokenExpiry as EventListener);
-    
+
+    window.addEventListener("auth:token-expired", handleTokenExpiry as EventListener);
+
     return () => {
-      window.removeEventListener('auth:token-expired', handleTokenExpiry as EventListener);
+      window.removeEventListener("auth:token-expired", handleTokenExpiry as EventListener);
     };
   }, []);
 

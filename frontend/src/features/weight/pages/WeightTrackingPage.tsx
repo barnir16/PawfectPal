@@ -73,6 +73,8 @@ interface LocalWeightRecord {
   updated_at?: string;
 }
 
+const CHART_COLORS = ['#2D6A4F', '#1D3557', '#E76F51', '#6D597A', '#3A86FF', '#F4A261'];
+
 export const WeightTrackingPage = () => {
   const { t } = useLocalization();
   const theme = useTheme();
@@ -107,6 +109,14 @@ export const WeightTrackingPage = () => {
     isActive: true
   });
 
+  const getChartColor = (petId: number | string | undefined, index: number) => {
+    const numericId = typeof petId === 'number' ? petId : Number(petId);
+    const paletteIndex = Number.isFinite(numericId)
+      ? Math.abs(numericId) % CHART_COLORS.length
+      : index % CHART_COLORS.length;
+    return CHART_COLORS[paletteIndex];
+  };
+
   const loadData = async () => {
     try {
       setLoading(true);
@@ -118,9 +128,7 @@ export const WeightTrackingPage = () => {
 
       try {
         realWeightData = await WeightService.getAllWeightRecords();
-        console.log('📊 Loaded weight records:', realWeightData.length);
       } catch (error) {
-        console.log('No real weight data available, will show empty chart');
       }
 
       // Ensure all weight records have pet names and convert to LocalWeightRecord format
@@ -148,13 +156,26 @@ export const WeightTrackingPage = () => {
 
       setWeightData(localWeightData);
 
+      if (realWeightData.length === 0) {
+        const fallbackWeightData: LocalWeightRecord[] = petsData
+          .filter((pet) => pet.weightKg)
+          .map((pet) => ({
+            date: new Date().toISOString().split('T')[0],
+            weight: pet.weightKg,
+            petId: pet.id || 0,
+            petName: pet.name,
+            weightUnit: pet.weightUnit === 'lb' ? 'lbs' : pet.weightUnit || 'kg',
+            source: 'manual',
+          }));
+
+        setWeightData(fallbackWeightData);
+      }
+
       // Load weight goals
       try {
         const goals = await WeightGoalService.getAllWeightGoals();
         setWeightGoals(goals);
-        console.log('🎯 Loaded weight goals:', goals.length);
       } catch (error) {
-        console.log('No weight goals available');
       }
     } catch (err) {
       console.error('Error loading weight data:', err);
@@ -171,15 +192,6 @@ export const WeightTrackingPage = () => {
   const handleAddWeightRecord = async () => {
     if (!newWeightRecord.petId || !newWeightRecord.weight) return;
 
-    console.log('🚀 Adding weight record:', {
-      petId: newWeightRecord.petId,
-      weight: newWeightRecord.weight,
-      weightUnit: newWeightRecord.weightUnit,
-      date: newWeightRecord.date,
-      notes: newWeightRecord.notes,
-      source: 'manual'
-    });
-
     try {
       const record = await WeightService.createWeightRecord({
         petId: parseInt(newWeightRecord.petId),
@@ -190,17 +202,7 @@ export const WeightTrackingPage = () => {
         source: 'manual'
       });
 
-      console.log('✅ Create response:', record);
-
       if (record) {
-        console.log('💾 Adding to local state:', {
-          date: record.date.toISOString().split('T')[0],
-          weight: record.weight,
-          petId: record.petId,
-          petName: pets.find(p => p.id === record.petId)?.name || 'Unknown Pet',
-          notes: record.notes
-        });
-
         // Add the new record to the local state
         setWeightData(prev => [...prev, {
           date: record.date.toISOString().split('T')[0],
@@ -224,7 +226,6 @@ export const WeightTrackingPage = () => {
       }
     } catch (error) {
       console.error('❌ Error adding weight record:', error);
-      console.log('Failed to add weight record. Please try again later.');
     }
   };
 
@@ -260,7 +261,6 @@ export const WeightTrackingPage = () => {
       }
     } catch (error) {
       console.error('Error adding weight goal:', error);
-      console.log('Failed to add weight goal. Please try again later.');
     }
   };
 
@@ -301,16 +301,6 @@ export const WeightTrackingPage = () => {
   const handleUpdateWeightRecord = async () => {
     if (!editWeightRecord) return;
 
-    console.log('🚀 Updating weight record:', {
-      id: editWeightRecord.id,
-      petId: editWeightRecord.petId,
-      weight: editWeightRecord.weight,
-      weightUnit: editWeightRecord.weightUnit,
-      date: editWeightRecord.date,
-      notes: editWeightRecord.notes,
-      source: 'manual'
-    });
-
     try {
       const updatedRecord = {
         petId: editWeightRecord.petId,
@@ -321,13 +311,8 @@ export const WeightTrackingPage = () => {
         source: 'manual' as const
       };
 
-      console.log('📤 Sending update request:', updatedRecord);
-
       if (editWeightRecord.id) {
-        const result = await WeightService.updateWeightRecord(editWeightRecord.id, updatedRecord);
-        console.log('📥 Update result:', result);
-      } else {
-        console.log('📥 Adding new record (no ID):', updatedRecord);
+        await WeightService.updateWeightRecord(editWeightRecord.id, updatedRecord);
       }
 
       setEditWeightDialogOpen(false);
@@ -368,9 +353,23 @@ export const WeightTrackingPage = () => {
     }
   };
 
+  const handleDeleteWeightGoal = async (goalId: number) => {
+    try {
+      await WeightGoalService.deleteWeightGoal(goalId);
+      setWeightGoals(prev => prev.filter(goal => goal.id !== goalId));
+    } catch (error) {
+      console.error('Error deleting weight goal:', error);
+      setError(t('weight.goalUpdateError'));
+    }
+  };
+
   const filteredData = selectedPet === 'all'
     ? weightData
     : weightData.filter(record => record.petId.toString() === selectedPet);
+
+  const chartPets = selectedPet === 'all'
+    ? pets
+    : pets.filter(pet => pet.id?.toString() === selectedPet);
 
   // Process chart data properly
   const chartData = filteredData.reduce((acc: any[], record) => {
@@ -559,17 +558,20 @@ export const WeightTrackingPage = () => {
                   }}
                 />
                 <Legend />
-                {pets.map((pet) => (
-                  <Line
-                    key={pet.id}
-                    type="monotone"
-                    dataKey={pet.name}
-                    stroke={`hsl(${Math.random() * 360}, 70%, 50%)`}
-                    strokeWidth={3}
-                    dot={{ r: 5, fill: `hsl(${Math.random() * 360}, 70%, 50%)` }}
-                    connectNulls
-                  />
-                ))}
+                {chartPets.map((pet, index) => {
+                  const lineColor = getChartColor(pet.id, index);
+                  return (
+                    <Line
+                      key={pet.id}
+                      type="monotone"
+                      dataKey={pet.name}
+                      stroke={lineColor}
+                      strokeWidth={3}
+                      dot={{ r: 5, fill: lineColor }}
+                      connectNulls
+                    />
+                  );
+                })}
               </LineChart>
             </ResponsiveContainer>
           </Box>

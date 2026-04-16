@@ -1,8 +1,11 @@
+import { getBaseUrl, getToken } from "../../services/api";
+
 export const getMyConversations = async () => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/conversations/my`, {
+  const token = await getToken();
+  const res = await fetch(`${getBaseUrl()}/chat/my-conversations`, {
     method: "GET",
-    credentials: "include", // send cookies if using cookie auth
     headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       "Content-Type": "application/json",
     },
   });

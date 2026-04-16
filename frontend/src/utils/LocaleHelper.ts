@@ -52,10 +52,8 @@ export class LocaleHelper {
   }
 
   static applyDarkMode(enabled: boolean): void {
-    console.log(`Dark mode ${enabled ? 'enabled' : 'disabled'}`);
     this.setDarkModeSetting(enabled);
 
-    // For web, you might add/remove a CSS class on <body> or update a context/provider here:
     if (enabled) {
       document.body.classList.add('dark-mode');
     } else {
@@ -69,11 +67,6 @@ export class LocaleHelper {
 
   static setNewLocale(language: string): void {
     this.setLanguage(language);
-    console.log(`Language changed to: ${language}`);
-
-    // In web apps, you may trigger UI rerender by state/context change,
-    // or reload page if necessary:
-    // window.location.reload();
   }
 
   static getSupportedLanguages(): string[] {

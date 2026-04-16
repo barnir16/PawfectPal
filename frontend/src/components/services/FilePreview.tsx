@@ -8,7 +8,6 @@ import {
   IconButton,
   Chip,
   Stack,
-  LinearProgress,
   Tooltip,
   Dialog,
   DialogContent,
@@ -31,6 +30,7 @@ import {
 } from '@mui/icons-material';
 import { useLocalization } from '../../contexts/LocalizationContext';
 import type { MediaAttachment } from '../../types/services/chat';
+import { getBaseUrl } from '../../services/api';
 
 interface FilePreviewProps {
   attachment: MediaAttachment;
@@ -38,6 +38,19 @@ interface FilePreviewProps {
   onOpen?: (attachment: MediaAttachment) => void;
   compact?: boolean;
 }
+
+const resolveAttachmentUrl = (url: string) => {
+  if (!url) {
+    return '';
+  }
+
+  if (url.startsWith('http')) {
+    return url;
+  }
+
+  const baseUrl = getBaseUrl();
+  return `${baseUrl}${url.startsWith('/') ? url : `/${url}`}`;
+};
 
 export const FilePreview: React.FC<FilePreviewProps> = ({
   attachment,
@@ -78,54 +91,22 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
 
   const isImage = attachment.file_type.startsWith('image/');
   const isVideo = attachment.file_type.startsWith('video/');
-  const isAudio = attachment.file_type.startsWith('audio/');
 
   const handlePreview = () => {
-    console.log('🖼️ FilePreview clicked:', {
-      fileName: attachment.file_name,
-      fileType: attachment.file_type,
-      fileUrl: attachment.file_url,
-      isImage,
-      isVideo,
-      fullUrl: getFullImageUrl(attachment.file_url),
-      onOpen: !!onOpen,
-      previewOpen: previewOpen
-    });
-    
     if (isImage || isVideo) {
-      console.log('🖼️ Opening image/video preview');
       setPreviewOpen(true);
-    } else {
-      console.log('🖼️ Calling onOpen handler');
-      onOpen?.(attachment);
+      return;
     }
-  };
 
-  // Helper function to get full URL for images
-  const getFullImageUrl = (url: string) => {
-    if (!url) return '';
-    
-    // If it's already a full URL, return as-is
-    if (url.startsWith('http')) {
-      console.log('🖼️ Image URL is already full:', url);
-      return url;
-    }
-    
-    // If it's a relative path, prepend the base URL
-    const baseUrl = import.meta.env.VITE_API_URL || 
-      (process.env.NODE_ENV === 'production' 
-        ? 'https://pawfectpal-production.up.railway.app' 
-        : 'http://localhost:8000');
-    
-    const fullUrl = baseUrl + (url.startsWith('/') ? url : '/' + url);
-    console.log('🖼️ Image URL constructed:', { original: url, full: fullUrl, baseUrl });
-    return fullUrl;
+    onOpen?.(attachment);
   };
 
   const handleDownload = (e: React.MouseEvent) => {
     e.stopPropagation();
     onDownload?.(attachment);
   };
+
+  const attachmentUrl = resolveAttachmentUrl(attachment.file_url);
 
   if (compact) {
     return (
@@ -145,7 +126,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
           <CardMedia
             component="img"
             height="120"
-            image={getFullImageUrl(attachment.file_url)}
+            image={attachmentUrl}
             alt={attachment.file_name}
             onError={() => setImageError(true)}
             sx={{ objectFit: 'cover' }}
@@ -163,7 +144,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
             {getFileIcon(attachment.file_type)}
           </Box>
         )}
-        
+
         <CardContent sx={{ p: 1.5 }}>
           <Typography
             variant="caption"
@@ -177,7 +158,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
           >
             {attachment.file_name}
           </Typography>
-          
+
           <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 0.5 }}>
             <Chip
               label={attachment.file_type.split('/')[1]?.toUpperCase() || 'FILE'}
@@ -212,7 +193,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
           <CardMedia
             component="img"
             height="200"
-            image={getFullImageUrl(attachment.file_url)}
+            image={attachmentUrl}
             alt={attachment.file_name}
             onError={() => setImageError(true)}
             sx={{ objectFit: 'cover' }}
@@ -235,7 +216,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
             </Typography>
           </Box>
         )}
-        
+
         <CardContent>
           <Typography
             variant="subtitle2"
@@ -249,7 +230,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
           >
             {attachment.file_name}
           </Typography>
-          
+
           <Stack direction="row" alignItems="center" justifyContent="space-between">
             <Chip
               label={attachment.file_type.split('/')[1]?.toUpperCase() || 'FILE'}
@@ -260,7 +241,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
               {formatFileSize(attachment.file_size)}
             </Typography>
           </Stack>
-          
+
           <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
             <Tooltip title={t('chat.download') || 'Download'}>
               <IconButton
@@ -277,7 +258,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
                 <Download fontSize="small" />
               </IconButton>
             </Tooltip>
-            
+
             <Tooltip title={t('chat.open') || 'Open'}>
               <IconButton
                 size="small"
@@ -297,7 +278,6 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
         </CardContent>
       </Card>
 
-      {/* Full Preview Dialog */}
       <Dialog
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
@@ -321,11 +301,11 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
           >
             <Close />
           </IconButton>
-          
+
           {isImage && (
             <Box
               component="img"
-              src={getFullImageUrl(attachment.file_url)}
+              src={attachmentUrl}
               alt={attachment.file_name}
               sx={{
                 width: '100%',
@@ -333,32 +313,24 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
                 maxHeight: '80vh',
                 objectFit: 'contain',
               }}
-              onError={(e) => {
-                console.error('❌ Image failed to load in preview dialog:', attachment.file_url);
-                console.error('❌ Constructed URL:', getFullImageUrl(attachment.file_url));
-                setImageError(true);
-              }}
+              onError={() => setImageError(true)}
             />
           )}
-          
+
           {isVideo && (
             <Box
               component="video"
-              src={getFullImageUrl(attachment.file_url)}
+              src={attachmentUrl}
               controls
               sx={{
                 width: '100%',
                 height: 'auto',
                 maxHeight: '80vh',
               }}
-              onError={(e) => {
-                console.error('❌ Video failed to load in preview dialog:', attachment.file_url);
-                console.error('❌ Constructed URL:', getFullImageUrl(attachment.file_url));
-              }}
             />
           )}
         </DialogContent>
-        
+
         <DialogActions>
           <Button onClick={() => setPreviewOpen(false)}>
             {t('chat.close') || 'Close'}

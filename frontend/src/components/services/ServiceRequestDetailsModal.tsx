@@ -21,15 +21,13 @@ import {
   LocationOn,
   AttachMoney,
   Schedule,
-  Person,
-  Pets,
   Phone,
-  Email,
   Message,
 } from '@mui/icons-material';
 import { useLocalization } from '../../contexts/LocalizationContext';
 import type { ServiceRequestSummary } from '../../types/services/serviceRequest';
 import { formatServiceTime } from '../../utils/timeUtils';
+import { formatPetAge } from '../../utils/petAge';
 
 interface ServiceRequestDetailsModalProps {
   open: boolean;
@@ -44,59 +42,35 @@ export const ServiceRequestDetailsModal: React.FC<ServiceRequestDetailsModalProp
   onClose,
   request,
   onContactUser,
-  onStartChat
+  onStartChat,
 }) => {
   const { t } = useLocalization();
 
-  const calculateAge = (birthDate: string) => {
-    const birth = new Date(birthDate);
-    const today = new Date();
-    
-    // Calculate age in months first for more accuracy
-    const yearDiff = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    const dayDiff = today.getDate() - birth.getDate();
-    
-    let totalMonths = yearDiff * 12 + monthDiff;
-    
-    // Adjust for day difference
-    if (dayDiff < 0) {
-      totalMonths -= 1;
-    }
-    
-    // If less than 12 months, return months
-    if (totalMonths < 12) {
-      return totalMonths === 0 ? t('chat.monthsOld') : `${totalMonths} ${t('chat.monthsOld')}`;
-    }
-    
-    // If 12+ months, return years
-    const years = Math.floor(totalMonths / 12);
-    const remainingMonths = totalMonths % 12;
-    
-    if (remainingMonths === 0) {
-      return `${years} ${t('chat.yearsOld')}`;
-    } else {
-      return `${years} ${t('chat.yearsOld')} ${remainingMonths} ${t('chat.monthsOld')}`;
-    }
-  };
-
-  if (!request) return null;
+  if (!request) {
+    return null;
+  }
 
   const getServiceTypeColor = (serviceType: string) => {
-    const colors: { [key: string]: 'primary' | 'secondary' | 'success' | 'warning' | 'error' } = {
+    const colors: Record<string, 'primary' | 'secondary' | 'success' | 'warning' | 'error'> = {
       walking: 'primary',
       sitting: 'secondary',
       boarding: 'success',
       grooming: 'warning',
       veterinary: 'error',
     };
-    return colors[serviceType] || 'default';
+    return colors[serviceType] || 'primary';
   };
 
   const formatBudget = (min?: number, max?: number) => {
-    if (min && max) return `₪${min} - ₪${max}`;
-    if (min) return `₪${min}+`;
-    if (max) return `Up to ₪${max}`;
+    if (typeof min === 'number' && typeof max === 'number') {
+      return `NIS ${min} - NIS ${max}`;
+    }
+    if (typeof min === 'number') {
+      return `NIS ${min}+`;
+    }
+    if (typeof max === 'number') {
+      return `Up to NIS ${max}`;
+    }
     return 'Budget not specified';
   };
 
@@ -107,7 +81,7 @@ export const ServiceRequestDetailsModal: React.FC<ServiceRequestDetailsModalProp
       maxWidth="md"
       fullWidth
       PaperProps={{
-        sx: { minHeight: '70vh' }
+        sx: { minHeight: '70vh' },
       }}
     >
       <DialogTitle>
@@ -123,7 +97,6 @@ export const ServiceRequestDetailsModal: React.FC<ServiceRequestDetailsModalProp
 
       <DialogContent dividers>
         <Grid container spacing={3}>
-          {/* Service Type and Status */}
           <Grid size={{ xs: 12 }}>
             <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
               <Chip
@@ -131,19 +104,12 @@ export const ServiceRequestDetailsModal: React.FC<ServiceRequestDetailsModalProp
                 color={getServiceTypeColor(request.service_type)}
               />
               {request.is_urgent && (
-                <Chip
-                  label={t('services.isUrgent')}
-                  color="error"
-                />
+                <Chip label={t('services.isUrgent')} color="error" />
               )}
-              <Chip
-                label={formatServiceTime(request.created_at)}
-                variant="outlined"
-              />
+              <Chip label={formatServiceTime(request.created_at)} variant="outlined" />
             </Box>
           </Grid>
 
-          {/* Description */}
           <Grid size={{ xs: 12 }}>
             <Typography variant="h6" gutterBottom>
               {t('services.description')}
@@ -153,7 +119,6 @@ export const ServiceRequestDetailsModal: React.FC<ServiceRequestDetailsModalProp
             </Typography>
           </Grid>
 
-          {/* User Information */}
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6" gutterBottom>
               {t('services.requestedBy')}
@@ -173,7 +138,7 @@ export const ServiceRequestDetailsModal: React.FC<ServiceRequestDetailsModalProp
                     </Typography>
                   </Box>
                 </Box>
-                
+
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   <Button
                     size="small"
@@ -194,7 +159,6 @@ export const ServiceRequestDetailsModal: React.FC<ServiceRequestDetailsModalProp
             </Card>
           </Grid>
 
-          {/* Pet Information */}
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6" gutterBottom>
               {t('services.pets')} ({request.pets.length})
@@ -212,10 +176,10 @@ export const ServiceRequestDetailsModal: React.FC<ServiceRequestDetailsModalProp
                       </Typography>
                     </Box>
                     <Typography variant="body2" color="text.secondary">
-                      {pet.type} • {pet.breed}
+                      {pet.type} - {pet.breed}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {pet.birthDate ? calculateAge(pet.birthDate) : `${pet.age} years old`}
+                      {formatPetAge(pet.birthDate, pet.age)}
                     </Typography>
                   </CardContent>
                 </Card>
@@ -223,7 +187,6 @@ export const ServiceRequestDetailsModal: React.FC<ServiceRequestDetailsModalProp
             </Box>
           </Grid>
 
-          {/* Request Details */}
           <Grid size={{ xs: 12 }}>
             <Typography variant="h6" gutterBottom>
               {t('services.requestDetails')}
@@ -277,12 +240,11 @@ export const ServiceRequestDetailsModal: React.FC<ServiceRequestDetailsModalProp
             </Grid>
           </Grid>
 
-          {/* Stats */}
           <Grid size={{ xs: 12 }}>
             <Divider sx={{ my: 2 }} />
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="body2" color="text.secondary">
-                {request.views_count} {t('services.views')} • {request.responses_count} {t('services.responses')}
+                {request.views_count} {t('services.views')} - {request.responses_count} {t('services.responses')}
               </Typography>
             </Box>
           </Grid>

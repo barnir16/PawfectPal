@@ -33,6 +33,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { railwayConfig } from '../../utils/railwayConfig';
 import type { ServiceRequest } from '../../types/services/serviceRequest';
 import type { Pet } from '../../types/pets/pet';
+import { formatPetAge } from '../../utils/petAge';
 
 interface ServiceContextPanelProps {
   serviceRequest: ServiceRequest;
@@ -45,38 +46,6 @@ export const ServiceContextPanel: React.FC<ServiceContextPanelProps> = ({
 }) => {
   const { t } = useLocalization();
   const { user } = useAuth();
-
-  const calculateAge = (birthDate: string) => {
-    const birth = new Date(birthDate);
-    const today = new Date();
-    
-    // Calculate age in months first for more accuracy
-    const yearDiff = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    const dayDiff = today.getDate() - birth.getDate();
-    
-    let totalMonths = yearDiff * 12 + monthDiff;
-    
-    // Adjust for day difference
-    if (dayDiff < 0) {
-      totalMonths -= 1;
-    }
-    
-    // If less than 12 months, return months
-    if (totalMonths < 12) {
-      return totalMonths === 0 ? t('chat.monthsOld') : `${totalMonths} ${t('chat.monthsOld')}`;
-    }
-    
-    // If 12+ months, return years
-    const years = Math.floor(totalMonths / 12);
-    const remainingMonths = totalMonths % 12;
-    
-    if (remainingMonths === 0) {
-      return `${years} ${t('chat.yearsOld')}`;
-    } else {
-      return `${years} ${t('chat.yearsOld')} ${remainingMonths} ${t('chat.monthsOld')}`;
-    }
-  };
 
   // Determine if current user is the requester or provider
   const isRequester = user?.id === serviceRequest.user_id;
@@ -130,11 +99,11 @@ export const ServiceContextPanel: React.FC<ServiceContextPanelProps> = ({
 
   const formatBudget = () => {
     if (serviceRequest.budget_min && serviceRequest.budget_max) {
-      return `₪${serviceRequest.budget_min} - ₪${serviceRequest.budget_max}`;
+      return `NIS ${serviceRequest.budget_min} - NIS ${serviceRequest.budget_max}`;
     } else if (serviceRequest.budget_min) {
-      return `₪${serviceRequest.budget_min}+`;
+      return `NIS ${serviceRequest.budget_min}+`;
     } else if (serviceRequest.budget_max) {
-      return `Up to ₪${serviceRequest.budget_max}`;
+      return `Up to NIS ${serviceRequest.budget_max}`;
     }
     return 'Budget not specified';
   };
@@ -291,11 +260,16 @@ export const ServiceContextPanel: React.FC<ServiceContextPanelProps> = ({
                         </Typography>
                         
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontWeight: 500 }}>
-                          {pet.type} • {pet.breed}
+                          {pet.type} - {pet.breed}
                         </Typography>
                         
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                          {pet.birthDate ? calculateAge(pet.birthDate) : (pet.age ? `${pet.age} years old` : 'Age unknown')} • {pet.gender || 'Unknown'}
+                          {formatPetAge(pet, {
+                            months: t('pets.months'),
+                            years: t('pets.years'),
+                            unknownAge: t('pets.unknownAge'),
+                            futureBirthdate: t('pets.futureBirthdate'),
+                          })} - {pet.gender || 'Unknown'}
                         </Typography>
                         
                         {pet.weightKg && (

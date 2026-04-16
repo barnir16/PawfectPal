@@ -32,6 +32,7 @@ import {
 import { useLocalization } from '../../contexts/LocalizationContext';
 import { ServiceRequestService } from '../../services/serviceRequests/serviceRequestService';
 import type { ServiceRequest } from '../../types/services/serviceRequest';
+import { formatPetAge } from '../../utils/petAge';
 
 export const ServiceRequestDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -40,38 +41,6 @@ export const ServiceRequestDetails: React.FC = () => {
   const [request, setRequest] = useState<ServiceRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const calculateAge = (birthDate: string) => {
-    const birth = new Date(birthDate);
-    const today = new Date();
-    
-    // Calculate age in months first for more accuracy
-    const yearDiff = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    const dayDiff = today.getDate() - birth.getDate();
-    
-    let totalMonths = yearDiff * 12 + monthDiff;
-    
-    // Adjust for day difference
-    if (dayDiff < 0) {
-      totalMonths -= 1;
-    }
-    
-    // If less than 12 months, return months
-    if (totalMonths < 12) {
-      return totalMonths === 0 ? t('chat.monthsOld') : `${totalMonths} ${t('chat.monthsOld')}`;
-    }
-    
-    // If 12+ months, return years
-    const years = Math.floor(totalMonths / 12);
-    const remainingMonths = totalMonths % 12;
-    
-    if (remainingMonths === 0) {
-      return `${years} ${t('chat.yearsOld')}`;
-    } else {
-      return `${years} ${t('chat.yearsOld')} ${remainingMonths} ${t('chat.monthsOld')}`;
-    }
-  };
 
   useEffect(() => {
     const fetchRequest = async () => {
@@ -232,7 +201,12 @@ export const ServiceRequestDetails: React.FC = () => {
                       </ListItemIcon>
                       <ListItemText
                         primary={pet.name}
-                        secondary={`${pet.breed} - ${pet.birthDate ? calculateAge(pet.birthDate) : `${pet.age} ${t('pets.years')}`}`}
+                        secondary={`${pet.breed} - ${formatPetAge(pet, {
+                          months: t('pets.months'),
+                          years: t('pets.years'),
+                          unknownAge: t('pets.unknownAge'),
+                          futureBirthdate: t('pets.futureBirthdate'),
+                        })}`}
                       />
                     </ListItem>
                   ))}

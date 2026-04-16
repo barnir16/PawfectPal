@@ -90,21 +90,17 @@ export const ChatPage = () => {
       
       try {
         wsInitialized.current = true;
-        console.log('🔌 Initializing WebSocket connection for chat', id);
         
         // Get token and connect to WebSocket
         const token = await getToken();
         if (!token) {
-          console.error('❌ No authentication token available');
+          console.error('No authentication token available');
           return;
         }
         const connected = await webSocketService.connect(Number(id), token);
         if (connected) {
-          console.log('✅ WebSocket connected successfully');
-          
           // Set up message handlers
           webSocketService.onMessage('new_message', (data: WebSocketMessage) => {
-            console.log('📨 New message received via WebSocket:', data);
             if (data.message) {
               setConversation(prev => {
                 if (!prev) return prev;
@@ -123,7 +119,6 @@ export const ChatPage = () => {
           });
           
           webSocketService.onMessage('typing', (data: WebSocketMessage) => {
-            console.log('⌨️ Typing indicator received:', data);
             if (data.user_id !== user?.id) {
               setOtherUserTyping(data.is_typing || false);
               
@@ -135,30 +130,29 @@ export const ChatPage = () => {
           });
           
           webSocketService.onMessage('message_status', (data: WebSocketMessage) => {
-            console.log('📊 Message status received:', data);
+            void data;
             // Handle message status updates if needed
           });
           
           webSocketService.onMessage('connection_established', (data: WebSocketMessage) => {
-            console.log('✅ WebSocket connection established:', data);
+            void data;
             setIsWebSocketConnected(true);
           });
           
           webSocketService.onMessage('error', (data: WebSocketMessage) => {
-            console.error('❌ WebSocket error:', data);
+            console.error('WebSocket error:', data);
           });
           
           // Connection status handler
           webSocketService.onConnectionChange((connected) => {
             setIsWebSocketConnected(connected);
-            console.log('🔌 WebSocket connection status:', connected);
           });
           
         } else {
-          console.warn('⚠️ Failed to connect to WebSocket, falling back to REST API only');
+          console.warn('Failed to connect to WebSocket, falling back to REST API only');
         }
       } catch (error) {
-        console.error('❌ WebSocket initialization error:', error);
+        console.error('WebSocket initialization error:', error);
         wsInitialized.current = false;
       }
     };
@@ -167,7 +161,6 @@ export const ChatPage = () => {
     
     // Cleanup on unmount
     return () => {
-      console.log('🧹 Cleaning up WebSocket connection');
       webSocketService.disconnect();
       wsInitialized.current = false;
     };
@@ -177,31 +170,25 @@ export const ChatPage = () => {
   useEffect(() => {
     const initializeFCM = async () => {
       try {
-        console.log('🔔 Initializing Firebase Cloud Messaging');
         const initialized = await firebaseMessagingService.initialize();
         
         if (initialized) {
-          console.log('✅ FCM initialized successfully');
-          
           // Set up notification handler
           firebaseMessagingService.onMessage((payload) => {
-            console.log('📨 FCM message received in ChatPage:', payload);
-            
             // Handle chat notifications
             if (payload.data?.type === 'new_message' && payload.data?.service_request_id === id) {
               // Refresh conversation if it's for this chat
               if (conversation) {
                 // Trigger a refresh of the conversation
-                console.log('🔄 Refreshing conversation due to FCM notification');
                 // You could implement a refresh mechanism here
               }
             }
           });
         } else {
-          console.warn('⚠️ FCM initialization failed, notifications disabled');
+          console.warn('FCM initialization failed, notifications disabled');
         }
       } catch (error) {
-        console.error('❌ FCM initialization error:', error);
+        console.error('FCM initialization error:', error);
       }
     };
 
@@ -215,7 +202,6 @@ export const ChatPage = () => {
       
       // If we just came online and have queued messages, sync them
       if (status.isOnline && status.queuedMessages > 0) {
-        console.log('🔄 Coming online, syncing queued messages...');
         syncQueuedMessages();
       }
     };
@@ -252,51 +238,35 @@ export const ChatPage = () => {
         setError(null);
         
         // First, verify the service request exists
-        console.log('🔍 ChatPage: Fetching service request', id);
         const serviceRequestData = await ServiceRequestService.getServiceRequest(Number(id));
-        console.log('🔍 ChatPage: Service request fetched', serviceRequestData);
         setServiceRequest(serviceRequestData);
         
         // Use pets from service request (now populated by backend)
         if (serviceRequestData.pets && serviceRequestData.pets.length > 0) {
-          console.log('🐾 Using pets from service request:', serviceRequestData.pets);
-          console.log('🐾 Pets data structure check:', {
-            pets: serviceRequestData.pets,
-            firstPet: serviceRequestData.pets[0],
-            petsCount: serviceRequestData.pets.length,
-            petsType: typeof serviceRequestData.pets,
-            isArray: Array.isArray(serviceRequestData.pets)
-          });
           setPets(serviceRequestData.pets);
         } else {
-          console.log('🐾 No pets found in service request, trying to fetch separately');
           // Fallback: fetch pets separately if not included
           if (serviceRequestData.pet_ids && serviceRequestData.pet_ids.length > 0) {
             try {
-              console.log('🐾 Fetching pets for service request:', serviceRequestData.pet_ids);
               const petsData = await Promise.all(
                 serviceRequestData.pet_ids.map(petId => getPet(petId))
               );
-              console.log('🐾 Pets fetched successfully:', petsData);
               setPets(petsData);
             } catch (petError) {
-              console.warn('⚠️ ChatPage: Failed to fetch pets', petError);
+              console.error('Failed to fetch pets for the chat service request.', petError);
               setPets([]);
             }
           } else {
-            console.log('🐾 No pets found for service request');
             setPets([]);
           }
         }
         
         // Then fetch the conversation
         try {
-          console.log('🔍 ChatPage: Fetching conversation', id);
           const conversationData = await chatService.getConversation(Number(id));
-          console.log('🔍 ChatPage: Conversation fetched', conversationData);
           setConversation(conversationData);
         } catch (conversationError: any) {
-          console.warn("Could not fetch conversation, starting with empty chat:", conversationError);
+          console.error("Could not fetch conversation, starting with an empty chat.", conversationError);
           // Create empty conversation if it doesn't exist
           setConversation({
             service_request_id: Number(id),
@@ -321,8 +291,7 @@ export const ChatPage = () => {
     
     // Check if we're offline
     if (!offlineStatus.isOnline) {
-      console.log('📱 Offline - queuing message for later sending');
-      const queuedId = offlineMessageService.queueMessage(msg);
+      offlineMessageService.queueMessage(msg);
       
       // Optimistically add message to UI with offline indicator
       const optimisticMessage: ChatMessage = {
@@ -354,7 +323,6 @@ export const ChatPage = () => {
       
       // Try WebSocket first if connected
       if (isWebSocketConnected && webSocketService.isConnected()) {
-        console.log('📤 Sending message via WebSocket');
         webSocketService.sendMessage(msg);
         
         // Optimistically add message to UI
@@ -380,7 +348,6 @@ export const ChatPage = () => {
         });
       } else {
         // Fallback to REST API
-        console.log('📤 Sending message via REST API (WebSocket not available)');
         const newMsg: ChatMessage = await chatService.sendMessage(
           conversation.service_request_id,
           msg
@@ -397,7 +364,6 @@ export const ChatPage = () => {
       
       // If sending failed and we're online, queue the message
       if (offlineStatus.isOnline) {
-        console.log('📱 Send failed - queuing message for retry');
         offlineMessageService.queueMessage(msg);
       }
     } finally {
@@ -411,7 +377,6 @@ export const ChatPage = () => {
       setSending(true);
       
       // File uploads always use REST API for now
-      console.log('📤 Sending message with files via REST API');
       const newMsg: ChatMessage = await chatService.sendMessageWithFiles(
         conversation.service_request_id,
         message,
@@ -432,8 +397,6 @@ export const ChatPage = () => {
   };
 
   const handleQuickAction = async (action: string, data?: any) => {
-    console.log("Quick action triggered:", action, data);
-    
     try {
       switch (action) {
         case "schedule_meeting":
@@ -452,7 +415,7 @@ export const ChatPage = () => {
           await handleRequestLocation();
           break;
         default:
-          console.log("Unknown action:", action);
+          return;
       }
     } catch (error) {
       console.error("Error handling quick action:", error);
@@ -477,8 +440,7 @@ export const ChatPage = () => {
 
       // Create task using imported service
       const newTask = await createTask(taskData);
-      
-      console.log('✅ Task created for meeting:', newTask);
+      void newTask;
       
       // Send a message about the scheduled meeting
       const messageData: ChatMessageCreate = {

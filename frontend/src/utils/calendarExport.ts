@@ -168,11 +168,8 @@ export const syncWithGoogleCalendar = async (
   googleApiKey?: string
 ): Promise<boolean> => {
   try {
-    console.log('Syncing tasks with Google Calendar...');
-    
-    // Use the imported Google Calendar service
-    
-    // Check if Google Calendar is configured
+    void googleApiKey;
+
     const isConfigured = await googleCalendarService.isConfigured();
     if (!isConfigured) {
       console.warn('Google Calendar not configured. Please set up Google Calendar integration.');
@@ -188,8 +185,6 @@ export const syncWithGoogleCalendar = async (
 
     // Sync tasks
     const result = await googleCalendarService.syncTasks(tasks);
-    
-    console.log(`Successfully synced ${result.success} tasks with Google Calendar. ${result.failed} failed.`);
     return result.failed === 0;
   } catch (error) {
     console.error('Error syncing with Google Calendar:', error);
@@ -201,10 +196,6 @@ export const syncWithGoogleCalendar = async (
  * Check if Google Calendar sync is available
  */
 export const isGoogleCalendarSyncAvailable = (): boolean => {
-  // This would check if:
-  // 1. Google Calendar API is configured
-  // 2. User is authenticated
-  // 3. Required permissions are granted
   return false; // Placeholder
 };
 
@@ -212,8 +203,6 @@ export const isGoogleCalendarSyncAvailable = (): boolean => {
  * Get Google Calendar authentication URL
  */
 export const getGoogleCalendarAuthUrl = (): string => {
-  // This would return the OAuth 2.0 authorization URL
-  // for Google Calendar API access
   return 'https://accounts.google.com/o/oauth2/auth?client_id=...&scope=...&redirect_uri=...';
 };
 

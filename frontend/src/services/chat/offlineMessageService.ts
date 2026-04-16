@@ -52,8 +52,6 @@ class OfflineMessageService {
     this.queuedMessages.push(queuedMessage);
     this.saveQueuedMessages();
     this.notifyStatusHandlers();
-
-    console.log('📱 Message queued for offline sending:', queuedMessage.id);
     return queuedMessage.id;
   }
 
@@ -67,7 +65,6 @@ class OfflineMessageService {
     if (this.queuedMessages.length < initialLength) {
       this.saveQueuedMessages();
       this.notifyStatusHandlers();
-      console.log('📱 Message removed from queue:', messageId);
       return true;
     }
     
@@ -118,7 +115,6 @@ class OfflineMessageService {
     }
 
     this.syncInProgress = true;
-    console.log('🔄 Syncing queued messages...');
 
     const messagesToSync = [...this.queuedMessages];
     const successfulMessages: string[] = [];
@@ -128,9 +124,8 @@ class OfflineMessageService {
       try {
         await sendMessageFn(queuedMessage.message);
         successfulMessages.push(queuedMessage.id);
-        console.log('✅ Queued message sent successfully:', queuedMessage.id);
       } catch (error) {
-        console.error('❌ Failed to send queued message:', queuedMessage.id, error);
+        console.error('Failed to send queued message:', queuedMessage.id, error);
         
         // Increment retry count
         queuedMessage.retryCount++;
@@ -138,7 +133,7 @@ class OfflineMessageService {
         if (queuedMessage.retryCount < queuedMessage.maxRetries) {
           failedMessages.push(queuedMessage);
         } else {
-          console.warn('⚠️ Message exceeded max retries, removing from queue:', queuedMessage.id);
+          console.warn('Message exceeded max retries and will be removed from the queue:', queuedMessage.id);
         }
       }
     }
@@ -150,7 +145,6 @@ class OfflineMessageService {
     this.notifyStatusHandlers();
 
     this.syncInProgress = false;
-    console.log(`🔄 Sync complete: ${successfulMessages.length} sent, ${failedMessages.length} failed`);
   }
 
   /**
@@ -167,7 +161,6 @@ class OfflineMessageService {
     this.queuedMessages = [];
     this.saveQueuedMessages();
     this.notifyStatusHandlers();
-    console.log('📱 All queued messages cleared');
   }
 
   private generateMessageId(): string {
@@ -179,10 +172,9 @@ class OfflineMessageService {
       const stored = localStorage.getItem('pawfectpal_queued_messages');
       if (stored) {
         this.queuedMessages = JSON.parse(stored);
-        console.log(`📱 Loaded ${this.queuedMessages.length} queued messages`);
       }
     } catch (error) {
-      console.error('❌ Failed to load queued messages:', error);
+      console.error('Failed to load queued messages:', error);
       this.queuedMessages = [];
     }
   }
@@ -191,7 +183,7 @@ class OfflineMessageService {
     try {
       localStorage.setItem('pawfectpal_queued_messages', JSON.stringify(this.queuedMessages));
     } catch (error) {
-      console.error('❌ Failed to save queued messages:', error);
+      console.error('Failed to save queued messages:', error);
     }
   }
 
@@ -200,7 +192,7 @@ class OfflineMessageService {
       const stored = localStorage.getItem('pawfectpal_last_sync');
       return stored ? parseInt(stored, 10) : undefined;
     } catch (error) {
-      console.error('❌ Failed to get last sync time:', error);
+      console.error('Failed to get last sync time:', error);
       return undefined;
     }
   }
@@ -209,20 +201,18 @@ class OfflineMessageService {
     try {
       localStorage.setItem('pawfectpal_last_sync', timestamp.toString());
     } catch (error) {
-      console.error('❌ Failed to set last sync time:', error);
+      console.error('Failed to set last sync time:', error);
     }
   }
 
   private setupOnlineStatusListeners(): void {
     window.addEventListener('online', () => {
       this.isOnline = true;
-      console.log('🌐 Connection restored');
       this.notifyStatusHandlers();
     });
 
     window.addEventListener('offline', () => {
       this.isOnline = false;
-      console.log('📱 Connection lost - going offline');
       this.notifyStatusHandlers();
     });
   }
@@ -233,7 +223,7 @@ class OfflineMessageService {
       try {
         handler(status);
       } catch (error) {
-        console.error('❌ Error in status handler:', error);
+        console.error('Error in offline status handler:', error);
       }
     });
   }

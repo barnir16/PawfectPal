@@ -1,18 +1,23 @@
+import logging
+from datetime import datetime
+from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List, Optional
-from datetime import datetime
+
 from .pet import PetORM
+from app.dependencies.auth import get_current_user
 from app.dependencies.db import get_db
+from app.models.user import UserORM
 from app.models.weight_record import WeightRecordORM
 from app.schemas.weight_record import (
     WeightRecordCreate,
-    WeightRecordUpdate,
     WeightRecordResponse,
+    WeightRecordUpdate,
     WeightRecordWithPet,
 )
-from app.dependencies.auth import get_current_user
-from app.models.user import UserORM
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/weight-records", tags=["Weight Records"])
 
@@ -24,21 +29,14 @@ async def get_all_weight_records(
     limit: Optional[int] = 100,
     offset: Optional[int] = 0,
 ):
-    """Get all weight records for the current user's pets"""
+    """Get all weight records for the current user's pets."""
     try:
-        print(f"🔍 GET REQUEST: limit={limit}, offset={offset}, user_id={current_user.id}")
-
-        # Get all pets owned by the current user
         user_pets = db.query(PetORM).filter(PetORM.user_id == current_user.id).all()
         pet_ids = [pet.id for pet in user_pets]
 
         if not pet_ids:
-            print("❌ No pets found for user")
             return []
 
-        print(f"📋 Found {len(user_pets)} pets: {pet_ids}")
-
-        # Get weight records for user's pets
         weight_records = (
             db.query(WeightRecordORM)
             .filter(WeightRecordORM.pet_id.in_(pet_ids))
@@ -48,14 +46,10 @@ async def get_all_weight_records(
             .all()
         )
 
-        print(f"📊 Found {len(weight_records)} weight records")
-
-        # Convert to response format with pet information
         result = []
         for record in weight_records:
-            pet = next((p for p in user_pets if p.id == record.pet_id), None)
+            pet = next((candidate for candidate in user_pets if candidate.id == record.pet_id), None)
             if pet:
-                print(f"🔄 Processing record {record.id}: weight={record.weight}, notes='{record.notes}'")
                 result.append(
                     WeightRecordWithPet(
                         id=record.id,
@@ -72,13 +66,12 @@ async def get_all_weight_records(
                     )
                 )
 
-        print(f"✅ Returning {len(result)} records")
         return result
-    except Exception as e:
-        print(f"❌ Exception in get_all_weight_records: {e}")
+    except Exception:
+        logger.exception("Failed to fetch weight records for user %s", current_user.id)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch weight records: {str(e)}",
+            detail="Failed to fetch weight records",
         )
 
 
@@ -90,9 +83,8 @@ async def get_weight_records_by_pet(
     limit: Optional[int] = 100,
     offset: Optional[int] = 0,
 ):
-    """Get weight records for a specific pet"""
+    """Get weight records for a specific pet."""
     try:
-        # Verify the pet belongs to the current user
         pet = (
             db.query(PetORM)
             .filter(PetORM.id == pet_id, PetORM.user_id == current_user.id)
@@ -105,8 +97,7 @@ async def get_weight_records_by_pet(
                 detail="Pet not found or access denied",
             )
 
-        # Get weight records for the pet
-        weight_records = (
+        return (
             db.query(WeightRecordORM)
             .filter(WeightRecordORM.pet_id == pet_id)
             .order_by(WeightRecordORM.date.desc())
@@ -114,14 +105,17 @@ async def get_weight_records_by_pet(
             .offset(offset)
             .all()
         )
-
-        return weight_records
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
+        logger.exception(
+            "Failed to fetch weight records for pet %s and user %s",
+            pet_id,
+            current_user.id,
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch weight records: {str(e)}",
+            detail="Failed to fetch weight records",
         )
 
 
@@ -133,9 +127,8 @@ async def get_weight_records_by_date_range(
     db: Session = Depends(get_db),
     current_user: UserORM = Depends(get_current_user),
 ):
-    """Get weight records for a specific pet within a date range"""
+    """Get weight records for a specific pet within a date range."""
     try:
-        # Verify the pet belongs to the current user
         pet = (
             db.query(PetORM)
             .filter(PetORM.id == pet_id, PetORM.user_id == current_user.id)
@@ -148,8 +141,7 @@ async def get_weight_records_by_date_range(
                 detail="Pet not found or access denied",
             )
 
-        # Get weight records within the date range
-        weight_records = (
+        return (
             db.query(WeightRecordORM)
             .filter(
                 WeightRecordORM.pet_id == pet_id,
@@ -159,14 +151,17 @@ async def get_weight_records_by_date_range(
             .order_by(WeightRecordORM.date.asc())
             .all()
         )
-
-        return weight_records
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
+        logger.exception(
+            "Failed to fetch weight records by range for pet %s and user %s",
+            pet_id,
+            current_user.id,
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch weight records: {str(e)}",
+            detail="Failed to fetch weight records",
         )
 
 
@@ -178,13 +173,13 @@ async def create_weight_record(
     db: Session = Depends(get_db),
     current_user: UserORM = Depends(get_current_user),
 ):
-    """Create a new weight record"""
+    """Create a new weight record."""
     try:
-        # Verify the pet belongs to the current user
         pet = (
             db.query(PetORM)
             .filter(
-                PetORM.id == weight_record.pet_id, PetORM.user_id == current_user.id
+                PetORM.id == weight_record.pet_id,
+                PetORM.user_id == current_user.id,
             )
             .first()
         )
@@ -195,7 +190,6 @@ async def create_weight_record(
                 detail="Pet not found or access denied",
             )
 
-        # Create the weight record
         db_weight_record = WeightRecordORM(
             pet_id=weight_record.pet_id,
             weight=weight_record.weight,
@@ -208,15 +202,19 @@ async def create_weight_record(
         db.add(db_weight_record)
         db.commit()
         db.refresh(db_weight_record)
-
         return db_weight_record
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         db.rollback()
+        logger.exception(
+            "Failed to create weight record for pet %s and user %s",
+            weight_record.pet_id,
+            current_user.id,
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create weight record: {str(e)}",
+            detail="Failed to create weight record",
         )
 
 
@@ -227,63 +225,53 @@ async def update_weight_record(
     db: Session = Depends(get_db),
     current_user: UserORM = Depends(get_current_user),
 ):
-    """Update an existing weight record"""
+    """Update an existing weight record."""
     try:
-        print(f"🔄 UPDATE REQUEST: record_id={record_id}, data={weight_record_update.model_dump()}")
-
-        # Get the weight record and verify ownership
         db_weight_record = (
             db.query(WeightRecordORM).filter(WeightRecordORM.id == record_id).first()
         )
 
         if not db_weight_record:
-            print(f"❌ Weight record {record_id} not found")
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Weight record not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Weight record not found",
             )
 
-        print(f"📋 Found record: {db_weight_record.weight}kg, notes='{db_weight_record.notes}'")
-
-        # Verify the pet belongs to the current user
         pet = (
             db.query(PetORM)
             .filter(
-                PetORM.id == db_weight_record.pet_id, PetORM.user_id == current_user.id
+                PetORM.id == db_weight_record.pet_id,
+                PetORM.user_id == current_user.id,
             )
             .first()
         )
 
         if not pet:
-            print(f"❌ Access denied for record {record_id}")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied to this weight record",
             )
 
-        # Update the weight record
         update_data = weight_record_update.model_dump(exclude_unset=True)
-        print(f"📝 Update data: {update_data}")
-
         for field, value in update_data.items():
-            print(f"🔄 Setting {field} = {value}")
-            setattr(db_weight_record, field, value)
+          setattr(db_weight_record, field, value)
 
-        print(f"💾 Before commit - notes: '{db_weight_record.notes}'")
         db_weight_record.updated_at = datetime.utcnow()
         db.commit()
-        print(f"✅ After commit - notes: '{db_weight_record.notes}'")
         db.refresh(db_weight_record)
-        print(f"🔄 After refresh - notes: '{db_weight_record.notes}'")
-
         return db_weight_record
     except HTTPException:
         raise
-    except Exception as e:
-        print(f"❌ Exception in update: {e}")
+    except Exception:
         db.rollback()
+        logger.exception(
+            "Failed to update weight record %s for user %s",
+            record_id,
+            current_user.id,
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update weight record: {str(e)}",
+            detail="Failed to update weight record",
         )
 
 
@@ -293,23 +281,23 @@ async def delete_weight_record(
     db: Session = Depends(get_db),
     current_user: UserORM = Depends(get_current_user),
 ):
-    """Delete a weight record"""
+    """Delete a weight record."""
     try:
-        # Get the weight record and verify ownership
         db_weight_record = (
             db.query(WeightRecordORM).filter(WeightRecordORM.id == record_id).first()
         )
 
         if not db_weight_record:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Weight record not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Weight record not found",
             )
 
-        # Verify the pet belongs to the current user
         pet = (
             db.query(PetORM)
             .filter(
-                PetORM.id == db_weight_record.pet_id, PetORM.user_id == current_user.id
+                PetORM.id == db_weight_record.pet_id,
+                PetORM.user_id == current_user.id,
             )
             .first()
         )
@@ -320,16 +308,19 @@ async def delete_weight_record(
                 detail="Access denied to this weight record",
             )
 
-        # Delete the weight record
         db.delete(db_weight_record)
         db.commit()
-
         return None
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         db.rollback()
+        logger.exception(
+            "Failed to delete weight record %s for user %s",
+            record_id,
+            current_user.id,
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete weight record: {str(e)}",
+            detail="Failed to delete weight record",
         )

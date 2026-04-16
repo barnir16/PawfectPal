@@ -1,3 +1,4 @@
+import logging
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query
 from sqlalchemy.orm import Session
@@ -14,6 +15,7 @@ from datetime import datetime
 from pathlib import Path
 
 router = APIRouter(prefix="/chat", tags=["chat"])
+logger = logging.getLogger(__name__)
 
 # Security constants
 ALLOWED_FILE_TYPES = {
@@ -192,7 +194,11 @@ async def send_message_with_files(
                     }
                 )
 
-                print(f"💬 File uploaded: {safe_filename} -> {file_path}")
+                logger.info(
+                    "Saved chat attachment %s for service request %s",
+                    safe_filename,
+                    service_request_id_int,
+                )
 
     # Create the message with proper metadata
     db_message = ChatMessageORM(
@@ -217,7 +223,7 @@ async def send_message_with_files(
     db.commit()
     db.refresh(db_message)
 
-    print(f"💬 Chat message with files created: {db_message.id}")
+    logger.info("Created chat message with files %s", db_message.id)
     return ChatMessageRead.model_validate(db_message)
 
 
@@ -263,7 +269,6 @@ async def send_message(
 
     # Handle attachments if present
     if message.attachments:
-        print(f"💬 Processing {len(message.attachments)} attachments")
         message_metadata["attachments"] = [
             {
                 "id": str(uuid.uuid4()),
@@ -278,7 +283,6 @@ async def send_message(
 
     # Handle reply context if present
     if message.reply_to:
-        print(f"💬 Processing reply to message {message.reply_to.message_id}")
         message_metadata["reply_to"] = {
             "message_id": message.reply_to.message_id,
             "sender_name": message.reply_to.sender_name,
@@ -304,9 +308,7 @@ async def send_message(
     db.commit()
     db.refresh(db_message)
 
-    print(f"💬 Chat message created: {db_message.id}")
-    print(f"💬 Message timestamp: {db_message.created_at}")
-    print(f"💬 Message timestamp type: {type(db_message.created_at)}")
+    logger.info("Created chat message %s", db_message.id)
 
     # Send push notification to the other user
     await send_push_notification_for_message(
@@ -335,17 +337,6 @@ def _get_conversation_data(
     if not service_request:
         raise HTTPException(status_code=404, detail="Service request not found")
 
-    # Debug logging for access control
-    print(f"🔍 Chat Access Debug:")
-    print(f"  Service Request ID: {service_request_id}")
-    print(f"  Service Request User ID: {service_request.user_id}")
-    print(
-        f"  Service Request Assigned Provider ID: {service_request.assigned_provider_id}"
-    )
-    print(f"  Current User ID: {current_user.id}")
-    print(f"  Current User Username: {current_user.username}")
-    print(f"  Current User Is Provider: {current_user.is_provider}")
-
     # Industry standard access control: Owner OR Assigned Provider OR Provider who has sent messages
     is_owner = service_request.user_id == current_user.id
     is_assigned_provider = service_request.assigned_provider_id == current_user.id
@@ -363,19 +354,13 @@ def _get_conversation_data(
         )
         has_sent_messages = message_count > 0
 
-    print(f"  Is Owner: {is_owner}")
-    print(f"  Is Assigned Provider: {is_assigned_provider}")
-    print(f"  Has Sent Messages: {has_sent_messages}")
-
     if not (is_owner or is_assigned_provider or has_sent_messages):
-        print(
-            f"❌ Access denied for user {current_user.username} (ID: {current_user.id}) to service request {service_request_id}"
+        logger.warning(
+            "Denied chat access for user %s on service request %s",
+            current_user.id,
+            service_request_id,
         )
         raise HTTPException(status_code=403, detail="Access denied")
-
-    print(
-        f"✅ Access granted for user {current_user.username} (ID: {current_user.id}) to service request {service_request_id}"
-    )
 
     # Get total message count for pagination info
     total_messages = (
@@ -413,8 +398,7 @@ def _get_conversation_data(
             serialized_msg = ChatMessageRead.model_validate(msg)
             serialized_messages.append(serialized_msg)
         except Exception as e:
-            print(f"❌ Error serializing message {msg.id}: {e}")
-            print(f"❌ Message data: {msg.__dict__}")
+            logger.exception("Failed to serialize chat message %s", msg.id)
             # Skip this message and continue
             continue
 
@@ -427,12 +411,6 @@ def _get_conversation_data(
         current_offset=offset,
         limit=limit,
     )
-
-    print(f"🔍 Chat Response Debug:")
-    print(f"  Service Request ID: {service_request_id}")
-    print(f"  Messages Count: {len(serialized_messages)}")
-    print(f"  Unread Count: {unread_count}")
-    print(f"  Conversation Object: {conversation}")
 
     return conversation
 
@@ -478,11 +456,6 @@ def get_my_conversations(
         # Combine both lists and remove duplicates
         service_request_ids = list(set(assigned_ids + message_ids))
 
-        print(f"🔍 Provider {current_user.username} conversations:")
-        print(f"  Assigned requests: {assigned_ids}")
-        print(f"  Message requests: {message_ids}")
-        print(f"  Combined: {service_request_ids}")
-
     else:
         # For regular users, get their service requests (regardless of messages)
         service_request_ids = (
@@ -492,9 +465,6 @@ def get_my_conversations(
         )
         service_request_ids = [req_id[0] for req_id in service_request_ids]
 
-        print(f"🔍 User {current_user.username} conversations:")
-        print(f"  Service requests: {service_request_ids}")
-
     # Create conversations for each service request
     for request_id in service_request_ids:
         try:
@@ -503,7 +473,6 @@ def get_my_conversations(
         except HTTPException as e:
             # Skip conversations user doesn't have access to
             if e.status_code == 403:
-                print(f"⚠️ Skipping conversation {request_id} - access denied")
                 continue
             raise e
 
@@ -518,9 +487,6 @@ def get_my_conversations(
 
     conversations.sort(key=get_last_message_time, reverse=True)
 
-    print(
-        f"🔍 Returning {len(conversations)} conversations (sorted by last message time)"
-    )
     return conversations
 
 
@@ -618,7 +584,10 @@ async def send_push_notification_for_message(
             recipient_id = service_request.user_id
 
         if not recipient_id:
-            print("⚠️ No recipient found for push notification")
+            logger.debug(
+                "Skipping push notification because no recipient was resolved for service request %s",
+                service_request.id,
+            )
             return
 
         # Get recipient's FCM tokens
@@ -631,7 +600,7 @@ async def send_push_notification_for_message(
         )
 
         if not fcm_tokens:
-            print(f"⚠️ No FCM tokens found for user {recipient_id}")
+            logger.debug("No active FCM tokens found for user %s", recipient_id)
             return
 
         # Prepare message preview
@@ -650,9 +619,12 @@ async def send_push_notification_for_message(
             )
 
             if success:
-                print(f"✅ Push notification sent to user {recipient_id}")
+                logger.info("Sent chat push notification to user %s", recipient_id)
             else:
-                print(f"❌ Failed to send push notification to user {recipient_id}")
+                logger.warning(
+                    "Failed to send chat push notification to user %s",
+                    recipient_id,
+                )
 
     except Exception as e:
-        print(f"❌ Error sending push notification: {e}")
+        logger.exception("Error sending chat push notification")

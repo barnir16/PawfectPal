@@ -149,11 +149,7 @@ export const ChatListPage = () => {
     }
     setError(null);
     try {
-      console.log('🔍 ChatListPage: Fetching conversations...');
       const data = await chatService.getMyConversations();
-      console.log('🔍 ChatListPage: Received conversations:', data);
-      console.log('🔍 ChatListPage: Conversations count:', data.length);
-      console.log('🔍 ChatListPage: First conversation:', data[0]);
       setConversations(data);
 
       // Fetch service request data for each conversation to create better titles
@@ -162,17 +158,19 @@ export const ChatListPage = () => {
         try {
           const serviceRequest = await ServiceRequestService.getServiceRequest(conversation.service_request_id);
           serviceRequestMap.set(conversation.service_request_id, serviceRequest);
-          console.log('🔍 ChatListPage: Fetched service request for conversation', conversation.service_request_id, serviceRequest.title);
         } catch (error) {
-          console.warn('⚠️ ChatListPage: Failed to fetch service request for conversation', conversation.service_request_id, error);
+          console.error(
+            'Failed to fetch service request for conversation',
+            conversation.service_request_id,
+            error
+          );
         }
       });
 
       await Promise.all(fetchPromises);
       setServiceRequests(serviceRequestMap);
-      console.log('🔍 ChatListPage: Service requests fetched:', serviceRequestMap.size);
     } catch (err: any) {
-      console.error('❌ ChatListPage: Error fetching conversations:', err);
+      console.error('Error fetching conversations:', err);
       setError(err.message || t("chat.somethingWentWrong"));
     } finally {
       setLoading(false);
@@ -260,15 +258,7 @@ export const ChatListPage = () => {
       }
       
       const finalTitle = `${serviceType}: ${title} - ${otherParticipantName}`;
-      
-      console.log('🔍 Service Request Title Debug:', {
-        conversationId: conversation.service_request_id,
-        serviceRequestTitle: serviceRequest.title,
-        serviceType: serviceRequest.service_type,
-        otherParticipantName,
-        finalTitle
-      });
-      
+
       return finalTitle;
     }
     
@@ -308,15 +298,7 @@ export const ChatListPage = () => {
         : messageText;
       
       const title = `${serviceType}: ${messagePreview} - ${otherParticipantName}`;
-      
-      console.log('🔍 Message-based Title Debug:', {
-        conversationId: conversation.service_request_id,
-        firstMessage: firstMessage.message,
-        otherParticipantName,
-        serviceType,
-        finalTitle: title
-      });
-      
+
       return title;
     }
     
