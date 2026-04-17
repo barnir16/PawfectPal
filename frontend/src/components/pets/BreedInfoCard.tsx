@@ -16,20 +16,17 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Button,
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
   Pets as PetsIcon,
   FitnessCenter as FitnessIcon,
-  Restaurant as FoodIcon,
   HealthAndSafety as HealthIcon,
   Info as InfoIcon,
-  Warning as WarningIcon,
 } from '@mui/icons-material';
 import { useLocalization } from '../../contexts/LocalizationContext';
-import { fetchDogBreedInfo, fetchCatBreedInfo, testBreedInfoAPI, checkExternalAPIAccessibility, type BreedInfo } from '../../services/external/externalApiService';
+import { fetchDogBreedInfo, fetchCatBreedInfo, type BreedInfo } from '../../services/external/externalApiService';
 
 interface BreedInfoCardProps {
   petType: string;
@@ -59,27 +56,19 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
   const normalizedPetType = petType?.toLowerCase().trim() || 'unknown';
   const normalizedBreedName = breedName?.trim() || 'Unknown Breed';
   
-  console.log('🔍 BreedInfoCard: Rendering with props:', { petType, breedName, currentWeight, weightUnit });
-  console.log('🔍 Normalized values:', { normalizedPetType, normalizedBreedName });
-
   useEffect(() => {
-    console.log('🔍 useEffect triggered with:', { normalizedPetType, normalizedBreedName });
-    
     const fetchBreedInfo = async () => {
       try {
-        console.log('🔍 Starting to fetch breed info for:', { normalizedPetType, normalizedBreedName });
         setLoading(true);
         setError(null);
         
         let info: BreedInfo | null = null;
         
         if (normalizedPetType === 'dog') {
-          console.log('🐕 Fetching dog breed info for:', normalizedBreedName);
           try {
             info = await fetchDogBreedInfo(normalizedBreedName);
-            console.log('🐕 Dog breed info result:', info);
           } catch (apiError) {
-            console.error('🐕 Dog breed API error:', apiError);
+            console.error('Failed to fetch dog breed info:', apiError);
             // Fallback to basic info
             info = {
               name: normalizedBreedName,
@@ -98,12 +87,10 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
             };
           }
         } else if (normalizedPetType === 'cat') {
-          console.log('🐱 Fetching cat breed info for:', normalizedBreedName);
           try {
             info = await fetchCatBreedInfo(normalizedBreedName);
-            console.log('🐱 Cat breed info result:', info);
           } catch (apiError) {
-            console.error('🐱 Cat breed API error:', apiError);
+            console.error('Failed to fetch cat breed info:', apiError);
             // Fallback to basic info
             info = {
               name: normalizedBreedName,
@@ -122,15 +109,13 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
             };
           }
         } else {
-          console.log('❓ Unknown pet type:', normalizedPetType);
           setLoading(false);
           return;
         }
-        
-        console.log('📋 Breed info result:', info);
+
         setBreedInfo(info);
       } catch (err) {
-        console.error('❌ Error fetching breed info:', err);
+        console.error('Failed to fetch breed info:', err);
         setError(t('pets.failedToFetch'));
       } finally {
         setLoading(false);
@@ -139,10 +124,8 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
 
     // Only fetch if we have valid data
     if (normalizedBreedName && normalizedBreedName !== 'Unknown Breed' && normalizedPetType !== 'unknown') {
-      console.log('🔍 Proceeding with breed info fetch');
       fetchBreedInfo();
     } else {
-      console.log('🔍 Skipping breed info fetch - insufficient data');
       setLoading(false);
     }
   }, [normalizedPetType, normalizedBreedName]);
@@ -178,15 +161,6 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
         <CardHeader title={t('pets.breedInfo')} />
         <CardContent>
           <Typography>{t('pets.loadingBreedInfo', { breed: breedName })}</Typography>
-          {/* Debug info during loading */}
-          <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-            <Typography variant="caption" color="text.secondary">{t('pets.debugProps')}</Typography>
-            <Typography variant="body2">{t('pets.debugPetType')} {petType}</Typography>
-            <Typography variant="body2">{t('pets.debugBreedName')} {breedName}</Typography>
-            <Typography variant="body2">{t('pets.debugCurrentWeight')} {currentWeight} {weightUnit}</Typography>
-            <Typography variant="body2">{t('pets.normalizedPetType')}: {normalizedPetType}</Typography>
-            <Typography variant="body2">{t('pets.normalizedBreedName')}: {normalizedBreedName}</Typography>
-          </Box>
           <Skeleton variant="text" width="60%" />
           <Skeleton variant="text" width="40%" />
           <Skeleton variant="text" width="80%" />
@@ -200,14 +174,6 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
       <Card>
         <CardHeader title={t('pets.breedInfo')} />
         <CardContent>
-          <Typography variant="h6" color="error">{t('pets.debugInfo')}:</Typography>
-          <Typography>{t('pets.petType')}: {petType}</Typography>
-          <Typography>{t('pets.breed')}: {breedName}</Typography>
-          <Typography>{t('pets.normalizedPetType')}: {normalizedPetType}</Typography>
-          <Typography>{t('pets.normalizedBreedName')}: {normalizedBreedName}</Typography>
-          <Typography>{t('pets.error')}: {error || t('pets.noBreedInfoReturned')}</Typography>
-          
-          {/* Show basic breed info even when API fails */}
           <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
             <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
               {t('pets.breedInfo')}
@@ -228,30 +194,6 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
           <Alert severity="info" sx={{ mt: 2 }}>
             {t('pets.noDetailedBreedInfo', { breed: breedName })}.
           </Alert>
-          
-          {/* Test button to manually trigger API call */}
-          <Box sx={{ mt: 2 }}>
-            <Button
-              variant="outlined"
-              onClick={async () => {
-                console.log('🧪 Manual test of breed info API...');
-                await testBreedInfoAPI();
-              }}
-              sx={{ mr: 1 }}
-            >
-              {t('pets.testBreedInfoAPI')}
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={async () => {
-                const accessibility = await checkExternalAPIAccessibility();
-                console.log('🌐 API Accessibility Check:', accessibility);
-                alert(`Network: ${accessibility.network ? '✅' : '❌'}\nDog API: ${accessibility.dogAPI ? '✅' : '❌'}\nCat API: ${accessibility.catAPI ? '✅' : '❌'}`);
-              }}
-            >
-              {t('pets.checkAPIAccessibility')}
-            </Button>
-          </Box>
         </CardContent>
       </Card>
     );

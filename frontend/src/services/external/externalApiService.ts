@@ -274,26 +274,20 @@ export const testBreedInfoAPI = async (): Promise<void> => {
  */
 export const fetchDogBreedInfo = async (breedName: string): Promise<BreedInfo | null> => {
   if (!breedName || typeof breedName !== 'string') {
-    console.warn('🐕 Invalid breed name provided:', breedName);
     return null;
   }
 
-  console.log('🐕 fetchDogBreedInfo called with:', breedName);
   const cacheKey = getBreedCacheKey('dog', breedName);
   
   // Check cache first
   if (breedInfoCache.has(cacheKey)) {
-    console.log('🐕 Using cached dog breed info for:', breedName);
     return breedInfoCache.get(cacheKey)!;
   }
 
   try {
-    console.log('🐕 Fetching dog breed info for:', breedName);
-    
     // Try to get from our enhanced database first with improved matching
     const bestMatch = findBestBreedMatch(breedName, DOG_BREED_DATABASE);
     if (bestMatch) {
-      console.log('🐕 Found enhanced breed info in database for:', breedName, 'matched to:', bestMatch);
       const enhancedInfo = DOG_BREED_DATABASE[bestMatch];
       const completeInfo: BreedInfo = {
         name: breedName, // Keep original breed name
@@ -303,64 +297,54 @@ export const fetchDogBreedInfo = async (breedName: string): Promise<BreedInfo | 
       return completeInfo;
     }
 
-    console.log('🐕 Not found in local database, trying external API...');
-    
     // Try to get detailed info from The Dog API
     try {
-      console.log('🐕 Calling The Dog API for breed info:', breedName);
       const apiKey = ApiKeyManager.getPetsApiKey();
-      const headers: HeadersInit = {};
       if (apiKey) {
-        headers['x-api-key'] = apiKey;
-      }
-      
-      const breedResponse = await fetchWithTimeout(`https://api.thedogapi.com/v1/breeds/search?q=${encodeURIComponent(breedName)}`, {
-        headers
-      }, 5000);
-      
-      if (breedResponse.ok) {
-        const breedData = await breedResponse.json();
-        console.log('🐕 The Dog API response:', breedData);
-        
-        if (breedData && breedData.length > 0) {
-          const breed = breedData[0];
-          console.log('🐕 Found breed data:', breed);
-          
-          // Create enhanced breed info from external API
-          const enhancedInfo: BreedInfo = {
-            name: breedName,
-            averageWeight: parseWeightRange(breed.weight?.metric || '20-30 kg'),
-            lifeExpectancy: parseLifeSpan(breed.life_span || '10-15 years'),
-            characteristics: {
-              energyLevel: getEnergyLevel(breed.energy_level || 3),
-              groomingNeeds: getGroomingNeeds(breed.grooming || 3),
-              trainability: getTrainability(breed.intelligence || 3),
-              goodWithChildren: breed.child_friendly > 3,
-              goodWithOtherPets: breed.other_pets_friendly > 3,
+        const breedResponse = await fetchWithTimeout(
+          `https://api.thedogapi.com/v1/breeds/search?q=${encodeURIComponent(breedName)}`,
+          {
+            headers: {
+              'x-api-key': apiKey,
             },
-            healthConsiderations: breed.health_issues ? [breed.health_issues] : ['General breed health considerations'],
-            exerciseNeeds: getExerciseNeeds(breed.energy_level || 3),
-            dietRecommendations: getDietRecommendations(breed.weight?.metric),
-            origin: breed.origin || 'Various origins',
-            temperament: breed.temperament || 'Friendly and loyal companion',
-          };
-          
-          console.log('🐕 Created enhanced dog breed info from external API for:', breedName);
-          console.log('🐕 Enhanced info:', enhancedInfo);
-          breedInfoCache.set(cacheKey, enhancedInfo);
-          return enhancedInfo;
-        } else {
-          console.log('🐕 No breed data found in API response for:', breedName);
+          },
+          5000
+        );
+
+        if (breedResponse.ok) {
+          const breedData = await breedResponse.json();
+
+          if (breedData && breedData.length > 0) {
+            const breed = breedData[0];
+
+            const enhancedInfo: BreedInfo = {
+              name: breedName,
+              averageWeight: parseWeightRange(breed.weight?.metric || '20-30 kg'),
+              lifeExpectancy: parseLifeSpan(breed.life_span || '10-15 years'),
+              characteristics: {
+                energyLevel: getEnergyLevel(breed.energy_level || 3),
+                groomingNeeds: getGroomingNeeds(breed.grooming || 3),
+                trainability: getTrainability(breed.intelligence || 3),
+                goodWithChildren: breed.child_friendly > 3,
+                goodWithOtherPets: breed.other_pets_friendly > 3,
+              },
+              healthConsiderations: breed.health_issues ? [breed.health_issues] : ['General breed health considerations'],
+              exerciseNeeds: getExerciseNeeds(breed.energy_level || 3),
+              dietRecommendations: getDietRecommendations(breed.weight?.metric),
+              origin: breed.origin || 'Various origins',
+              temperament: breed.temperament || 'Friendly and loyal companion',
+            };
+
+            breedInfoCache.set(cacheKey, enhancedInfo);
+            return enhancedInfo;
+          }
         }
-      } else {
-        console.log('🐕 The Dog API request failed with status:', breedResponse.status);
       }
-    } catch (apiError) {
-      console.log('🐕 External dog API failed:', apiError);
+    } catch {
+      // Fall back to local data below.
     }
     
     // Fallback to enhanced local breed data if external API fails
-    console.log('🐕 Using enhanced local breed data for:', breedName);
     const normalizedBreedName = breedName.toLowerCase().trim();
     const enhancedData = ENHANCED_DOG_BREED_DATA[normalizedBreedName];
     
@@ -369,13 +353,11 @@ export const fetchDogBreedInfo = async (breedName: string): Promise<BreedInfo | 
         name: breedName,
         ...enhancedData
       };
-      console.log('🐕 Created enhanced breed info from local data for:', breedName);
       breedInfoCache.set(cacheKey, enhancedInfo);
       return enhancedInfo;
     }
     
     // Final fallback to basic breed info
-    console.log('🐕 Using basic fallback breed info for:', breedName);
     const basicInfo: BreedInfo = {
       name: breedName,
       averageWeight: { min: 20, max: 30, unit: 'kg' as const },
@@ -392,11 +374,10 @@ export const fetchDogBreedInfo = async (breedName: string): Promise<BreedInfo | 
       temperament: 'Friendly and loyal companion',
     };
     
-    console.log('🐕 Created basic breed info from fallback for:', breedName);
     breedInfoCache.set(cacheKey, basicInfo);
     return basicInfo;
   } catch (error) {
-    console.error('❌ Error fetching dog breed info:', error);
+    console.error('Failed to fetch dog breed info:', error);
     return null;
   }
 };
@@ -406,7 +387,6 @@ export const fetchDogBreedInfo = async (breedName: string): Promise<BreedInfo | 
  */
 export const fetchCatBreedInfo = async (breedName: string): Promise<BreedInfo | null> => {
   if (!breedName || typeof breedName !== 'string') {
-    console.warn('🐱 Invalid breed name provided:', breedName);
     return null;
   }
 
@@ -414,17 +394,13 @@ export const fetchCatBreedInfo = async (breedName: string): Promise<BreedInfo | 
   
   // Check cache first
   if (breedInfoCache.has(cacheKey)) {
-    console.log('🐱 Using cached cat breed info for:', breedName);
     return breedInfoCache.get(cacheKey)!;
   }
 
   try {
-    console.log('🐱 Fetching cat breed info for:', breedName);
-    
     // Try to get from our enhanced database first with improved matching
     const bestMatch = findBestBreedMatch(breedName, CAT_BREED_DATABASE);
     if (bestMatch) {
-      console.log('🐱 Found enhanced breed info in database for:', breedName, 'matched to:', bestMatch);
       const enhancedInfo = CAT_BREED_DATABASE[bestMatch];
       const completeInfo: BreedInfo = {
         name: breedName, // Keep original breed name
@@ -469,14 +445,12 @@ export const fetchCatBreedInfo = async (breedName: string): Promise<BreedInfo | 
           temperament: breedData.temperament || 'Friendly and independent',
         };
         
-        console.log('🐱 Created enhanced breed info from external API for:', breedName);
         breedInfoCache.set(cacheKey, enhancedInfo);
         return enhancedInfo;
       }
     }
     
     // Fallback to enhanced local breed data if external API fails
-    console.log('🐱 Using enhanced local breed data for:', breedName);
     const normalizedBreedName = breedName.toLowerCase().trim();
     const enhancedData = ENHANCED_CAT_BREED_DATA[normalizedBreedName];
     
@@ -485,13 +459,11 @@ export const fetchCatBreedInfo = async (breedName: string): Promise<BreedInfo | 
         name: breedName,
         ...enhancedData
       };
-      console.log('🐱 Created enhanced breed info from local data for:', breedName);
       breedInfoCache.set(cacheKey, enhancedInfo);
       return enhancedInfo;
     }
     
     // Final fallback to basic breed info
-    console.log('🐱 Using basic fallback breed info for:', breedName);
     const basicInfo: BreedInfo = {
       name: breedName,
       averageWeight: { min: 3, max: 5, unit: 'kg' as const },
@@ -508,11 +480,10 @@ export const fetchCatBreedInfo = async (breedName: string): Promise<BreedInfo | 
       temperament: 'Independent and affectionate companion',
     };
     
-    console.log('🐱 Created basic breed info from fallback for:', breedName);
     breedInfoCache.set(cacheKey, basicInfo);
     return basicInfo;
   } catch (error) {
-    console.error('❌ Error fetching cat breed info:', error);
+    console.error('Failed to fetch cat breed info:', error);
     return null;
   }
 };
@@ -755,8 +726,6 @@ const CAT_BREED_DATABASE: Record<string, Partial<BreedInfo>> = {
  * Fetch dog breeds with caching and debouncing
  */
 export const fetchDogBreeds = debounce(async (searchTerm?: string): Promise<string[]> => {
-  console.log('🐕 fetchDogBreeds called with searchTerm:', searchTerm);
-
   // Check cache first
   if (searchTerm) {
     const cacheKey = getBreedSearchCacheKey('dog', searchTerm);
@@ -788,17 +757,18 @@ export const fetchDogBreeds = debounce(async (searchTerm?: string): Promise<stri
     
     // Only fetch from API if we don't have cached data
     const apiKey = ApiKeyManager.getPetsApiKey();
-    const headers: HeadersInit = {};
-    if (apiKey) {
-      headers['x-api-key'] = apiKey;
-    }
-    
-    let response = await fetchWithTimeout('https://api.thedogapi.com/v1/breeds', {
-      headers
-    }, 5000);
+    let response: Response | null = null;
     let data;
-    
-    if (response.ok) {
+
+    if (apiKey) {
+      response = await fetchWithTimeout('https://api.thedogapi.com/v1/breeds', {
+        headers: {
+          'x-api-key': apiKey,
+        }
+      }, 5000);
+    }
+
+    if (response?.ok) {
       data = await response.json();
       if (Array.isArray(data) && data.length > 0) {
         const breeds = data.map((breed: any) => breed.name.toLowerCase());

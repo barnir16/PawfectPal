@@ -185,14 +185,10 @@ export const PetForm = () => {
       try {
         let fetchedBreeds: string[] = [];
         if (selectedPetType === "dog") {
-          console.log("🔍 Searching for dog breeds with:", selectedBreed);
           fetchedBreeds = await fetchDogBreeds(selectedBreed);
         } else if (selectedPetType === "cat") {
-          console.log("🔍 Searching for cat breeds with:", selectedBreed);
           fetchedBreeds = await fetchCatBreeds(selectedBreed);
         }
-
-        console.log("🔍 Search results:", fetchedBreeds);
 
         // Always add "Other" option for manual entry
         fetchedBreeds.push("Other");
@@ -249,7 +245,7 @@ export const PetForm = () => {
             setImagePreview(null);
           }
         } catch (error) {
-          console.error("Error loading pet:", error);
+          console.error("Failed to load pet for editing:", error);
           alert(t("pets.failedToLoad"));
         }
       };
@@ -310,13 +306,9 @@ export const PetForm = () => {
         ownerId: 1, // This should come from auth context
       };
 
-      console.log("Submitting pet:", formattedData);
-
       let petId: number;
       if (isEditing && id) {
-        console.log(`Attempting to update pet ${id} with data:`, formattedData); // <-- New Log
         const updatedPet = await updatePet(parseInt(id), formattedData);
-        console.log("Pet updated successfully:", updatedPet); // <-- New Log
         petId = updatedPet.id;
         alert(t("pets.petUpdated"));
       } else {
@@ -329,11 +321,10 @@ export const PetForm = () => {
       if (imageFile) {
         try {
           setIsUploadingImage(true);
-          const uploadResponse = await uploadPetImage(petId, imageFile);
-          console.log("Image uploaded successfully:", uploadResponse);
+          await uploadPetImage(petId, imageFile);
           // The backend already updates the pet's photo URI, no need to call updatePet again
         } catch (uploadError) {
-          console.error("Error uploading image:", uploadError);
+          console.error("Failed to upload pet image:", uploadError);
           alert(t("pets.imageUploadFailed"));
           // Don't fail the entire operation if image upload fails
         } finally {
@@ -343,7 +334,7 @@ export const PetForm = () => {
 
       navigate("/pets");
     } catch (error: any) {
-      console.error("Error saving pet:", error);
+      console.error("Failed to save pet:", error);
 
       // Handle authentication errors
       if (error?.isAuthError) {
@@ -363,12 +354,11 @@ export const PetForm = () => {
   const handleDelete = () => {
     if (window.confirm(t("pets.deleteConfirmation"))) {
       try {
-        console.log(`Deleting pet with ID: ${id}`);
         // In a real app, you would make an API call here
         // await api.deletePet(id);
         navigate("/pets");
       } catch (error) {
-        console.error("Error deleting pet:", error);
+        console.error("Failed to delete pet:", error);
       }
     }
   };
