@@ -16,6 +16,11 @@ interface AIServiceResponse {
   }>;
 }
 
+interface ConversationHistoryEntry {
+  content: string;
+  isUser: boolean;
+}
+
 class AIService {
   private apiUrl: string;
 
@@ -42,7 +47,8 @@ class AIService {
   async sendMessage(
     userMessage: string,
     pets: Pet[],
-    selectedPet?: Pet[]
+    selectedPet?: Pet[],
+    conversationHistory: ConversationHistoryEntry[] = []
   ): Promise<AIServiceResponse> {
     try {
       const language = this.detectLanguage(userMessage);
@@ -52,7 +58,12 @@ class AIService {
       const requestData = {
         message: userMessage,
         pet_context: petContext,
-        prompt_language: language
+        prompt_language: language,
+        conversation_history: conversationHistory.map((entry) => ({
+          content: entry.content,
+          isUser: String(entry.isUser),
+          role: entry.isUser ? 'user' : 'assistant',
+        })),
       };
 
       const response = await fetch(`${this.apiUrl}/ai/chat`, {

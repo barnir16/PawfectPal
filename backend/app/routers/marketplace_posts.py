@@ -1,4 +1,8 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import inspect
+from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.dependencies.db import get_db
@@ -17,6 +21,21 @@ from app.services.service_matching import ServiceMatchingService
 from datetime import datetime, timedelta
 
 router = APIRouter(prefix="/marketplace-posts", tags=["marketplace-posts"])
+logger = logging.getLogger(__name__)
+
+
+def _marketplace_tables_ready(db: Session) -> bool:
+    inspector = inspect(db.get_bind())
+    required_tables = {"marketplace_posts", "marketplace_post_pets"}
+    return required_tables.issubset(set(inspector.get_table_names()))
+
+
+def _ensure_marketplace_available(db: Session) -> None:
+    if not _marketplace_tables_ready(db):
+        raise HTTPException(
+            status_code=503,
+            detail="Marketplace is temporarily unavailable while setup completes.",
+        )
 
 @router.post("/", response_model=MarketplacePostRead)
 def create_marketplace_post(
@@ -25,6 +44,7 @@ def create_marketplace_post(
     current_user: UserORM = Depends(get_current_user)
 ):
     """Create a new marketplace post"""
+    _ensure_marketplace_available(db)
     
     # Validate that all pet IDs belong to the current user
     user_pets = db.query(PetORM).filter(
@@ -106,25 +126,31 @@ def get_marketplace_posts(
     db: Session = Depends(get_db)
 ):
     """Get all marketplace posts with optional filters"""
-    
-    query = db.query(MarketplacePostORM).filter(MarketplacePostORM.status == "open")
-    
-    if service_type:
-        query = query.filter(MarketplacePostORM.service_type == service_type)
-    
-    if location:
-        query = query.filter(MarketplacePostORM.location.ilike(f"%{location}%"))
-    
-    if is_urgent is not None:
-        query = query.filter(MarketplacePostORM.is_urgent == is_urgent)
-    
-    # Order by urgent first, then by creation date
-    posts = query.order_by(
-        MarketplacePostORM.is_urgent.desc(),
-        MarketplacePostORM.created_at.desc()
-    ).offset(skip).limit(limit).all()
-    
-    return posts
+    if not _marketplace_tables_ready(db):
+        logger.warning("Marketplace tables are not ready; returning an empty post list")
+        return []
+
+    try:
+        query = db.query(MarketplacePostORM).filter(MarketplacePostORM.status == "open")
+
+        if service_type:
+            query = query.filter(MarketplacePostORM.service_type == service_type)
+
+        if location:
+            query = query.filter(MarketplacePostORM.location.ilike(f"%{location}%"))
+
+        if is_urgent is not None:
+            query = query.filter(MarketplacePostORM.is_urgent == is_urgent)
+
+        posts = query.order_by(
+            MarketplacePostORM.is_urgent.desc(),
+            MarketplacePostORM.created_at.desc()
+        ).offset(skip).limit(limit).all()
+
+        return posts
+    except (OperationalError, ProgrammingError):
+        logger.exception("Failed to query marketplace posts")
+        return []
 
 @router.get("/my-posts", response_model=List[MarketplacePostRead])
 def get_my_marketplace_posts(
@@ -132,12 +158,19 @@ def get_my_marketplace_posts(
     current_user: UserORM = Depends(get_current_user)
 ):
     """Get current user's marketplace posts"""
-    
-    posts = db.query(MarketplacePostORM).filter(
-        MarketplacePostORM.user_id == current_user.id
-    ).order_by(MarketplacePostORM.created_at.desc()).all()
-    
-    return posts
+    if not _marketplace_tables_ready(db):
+        logger.warning("Marketplace tables are not ready; returning an empty post list")
+        return []
+
+    try:
+        posts = db.query(MarketplacePostORM).filter(
+            MarketplacePostORM.user_id == current_user.id
+        ).order_by(MarketplacePostORM.created_at.desc()).all()
+
+        return posts
+    except (OperationalError, ProgrammingError):
+        logger.exception("Failed to query current user's marketplace posts")
+        return []
 
 @router.get("/{post_id}", response_model=MarketplacePostRead)
 def get_marketplace_post(
@@ -145,6 +178,7 @@ def get_marketplace_post(
     db: Session = Depends(get_db)
 ):
     """Get a specific marketplace post by ID"""
+    _ensure_marketplace_available(db)
     
     post = db.query(MarketplacePostORM).filter(
         MarketplacePostORM.id == post_id
@@ -167,6 +201,7 @@ def update_marketplace_post(
     current_user: UserORM = Depends(get_current_user)
 ):
     """Update a marketplace post"""
+    _ensure_marketplace_available(db)
     
     post = db.query(MarketplacePostORM).filter(
         MarketplacePostORM.id == post_id,
@@ -224,6 +259,7 @@ def delete_marketplace_post(
     current_user: UserORM = Depends(get_current_user)
 ):
     """Delete a marketplace post"""
+    _ensure_marketplace_available(db)
     
     post = db.query(MarketplacePostORM).filter(
         MarketplacePostORM.id == post_id,
@@ -245,6 +281,7 @@ def respond_to_marketplace_post(
     current_user: UserORM = Depends(get_current_user)
 ):
     """Respond to a marketplace post (increment response count)"""
+    _ensure_marketplace_available(db)
     
     post = db.query(MarketplacePostORM).filter(
         MarketplacePostORM.id == post_id

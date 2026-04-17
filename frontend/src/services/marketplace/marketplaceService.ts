@@ -35,7 +35,7 @@ class MarketplaceService {
       return response;
     } catch (error: any) {
       console.error('Failed to get marketplace posts:', error);
-      throw new Error('Failed to get marketplace posts');
+      return [];
     }
   }
 
@@ -98,7 +98,7 @@ class MarketplaceService {
       return response;
     } catch (error: any) {
       console.error('Failed to get my marketplace posts:', error);
-      throw new Error('Failed to get my marketplace posts');
+      return [];
     }
   }
 
@@ -107,11 +107,11 @@ class MarketplaceService {
    */
   async getServiceTypes(): Promise<Array<{ id: number; name: string; description?: string }>> {
     try {
-      const response = await apiClient.get('/enhanced-provider-profiles/service-types');
+      const response = await apiClient.get('/provider-profiles/types/');
       return response;
     } catch (error: any) {
       console.error('Failed to get service types:', error);
-      throw new Error('Failed to get service types');
+      return [];
     }
   }
 }

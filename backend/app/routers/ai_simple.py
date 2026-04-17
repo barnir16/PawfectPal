@@ -101,7 +101,10 @@ def create_simple_prompt(
     if history:
         conversation_context = "\n\nRecent conversation:\n"
         for msg in history[-6:]:
-            role = "User" if msg.get("isUser") == "true" else "Assistant"
+            explicit_role = str(msg.get("role", "")).lower()
+            is_user_value = msg.get("isUser")
+            is_user = explicit_role == "user" or str(is_user_value).lower() == "true"
+            role = "User" if is_user else "Assistant"
             conversation_context += f"{role}: {msg.get('content', '')}\n"
 
     lang = (prompt_language or "en").lower()

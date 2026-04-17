@@ -59,9 +59,7 @@ export const Pets = () => {
   const fetchPets = async () => {
     try {
       setLoading(true);
-      console.log("🔄 PetsPage: Fetching pets...");
       const fetchedPets = await getPets();
-      console.log("🔄 PetsPage: Fetched pets:", fetchedPets);
       setPets(fetchedPets);
     } catch (error) {
       console.error("Failed to fetch pets:", error);

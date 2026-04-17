@@ -111,7 +111,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
           },
         ]);
       } catch (error) {
-        console.error('Error initializing chat:', error);
+        console.error('Failed to initialize AI chat:', error);
       }
     };
 
@@ -134,10 +134,19 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
     setIsLoading(true);
 
     try {
+      const conversationHistory = messages
+        .filter((message) => message.id !== 'welcome')
+        .slice(-6)
+        .map((message) => ({
+          content: message.content,
+          isUser: message.isUser,
+        }));
+
       const response = await aiService.sendMessage(
         userMessage,
         pets,
         selectedPet ? [selectedPet] : [],
+        conversationHistory,
       );
 
       const userMessageObj: ChatMessage = {
@@ -157,7 +166,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
 
       setMessages((prev) => [...prev, userMessageObj, aiMessageObj]);
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Failed to send AI chat message:', error);
     } finally {
       setIsLoading(false);
     }
@@ -249,7 +258,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
           await handleQuickSuggestion(action.label || action.description || 'Tell me more about this');
       }
     } catch (error) {
-      console.error('Error handling suggested action:', error);
+      console.error('Failed to handle AI suggested action:', error);
       await handleQuickSuggestion(`Tell me more about ${action.label}`);
     }
   };
