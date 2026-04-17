@@ -62,9 +62,6 @@ const ProfilePage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const getInitialFormData = (user: any): ProfileFormData => {
-    // Log the user object to debug
-    console.log("User data in getInitialFormData:", user);
-
     return {
       username: user?.username || "",
       email: user?.email || "",
@@ -116,26 +113,8 @@ const ProfilePage: React.FC = () => {
   useEffect(() => {
     const loadServices = async () => {
       try {
-        const token = getToken();
-        if (!token) {
-          console.warn('No authentication token found');
-          useFallbackServices();
-          return;
-        }
+        const response = await fetch(`${getBaseUrl()}/service_booking/types/`);
 
-        const response = await fetch(`${getBaseUrl()}/service_booking/types/`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        
-        if (response.status === 401) {
-          console.warn('Authentication failed - using fallback services');
-          useFallbackServices();
-          return;
-        }
-        
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -202,6 +181,9 @@ const ProfilePage: React.FC = () => {
     setLoading(true);
     try {
       const token = await getToken();
+      if (!token) {
+        throw new Error("Please log in again to update your profile.");
+      }
       const file = fileInputRef.current?.files?.[0];
       let updatedUserData = { ...user };
       let newImageUrl = user.profile_image;
@@ -240,32 +222,12 @@ const ProfilePage: React.FC = () => {
 
       // Handle provider fields
       if (user.is_provider) {
-        // Convert service names to service IDs for backend compatibility
-        const serviceIds =
-          (formData.provider_services || [])
-            .map(
-              (name) => serviceOptions.find((service) => service.name === name)?.id
-            )
-            .filter((id) => id !== undefined) as number[] || [];
-
-        console.log("Form data provider fields:", {
-          provider_services: formData.provider_services,
-          provider_bio: formData.provider_bio,
-          provider_hourly_rate: formData.provider_hourly_rate,
-          serviceNames: formData.provider_services,
-          serviceIds: serviceIds,
-          serviceOptions: serviceOptions,
-        });
-
-        // Send provider fields at top level instead of nested under provider_info
         updatedPayload.provider_services = formData.provider_services;
         updatedPayload.provider_bio = formData.provider_bio;
         updatedPayload.provider_hourly_rate = parseFloat(
           formData.provider_hourly_rate || "0"
         );
       }
-
-      console.log("Sending update payload:", updatedPayload);
 
       const profileUpdateResponse = await fetch(`${getBaseUrl()}/auth/me`, {
         method: "PATCH",
@@ -278,26 +240,27 @@ const ProfilePage: React.FC = () => {
 
       if (!profileUpdateResponse.ok) {
         const errorData = await profileUpdateResponse.json();
-        console.error("Update error:", errorData);
         throw new Error(errorData.detail || "Failed to update profile.");
       }
 
       const profileData = await profileUpdateResponse.json();
-      console.log("Update successful, response:", profileData);
+      const mergedUser = {
+        ...updatedUserData,
+        ...profileData,
+      };
 
       // Update the user data in context
       setUser((prev) => ({
         ...prev,
-        ...profileData,
+        ...mergedUser,
       }));
 
-      // Re-initialize form data after successful save (same logic as when user changes)
-      if (user) {
-        const data = getInitialFormData(user);
-        setInitialFormData(data);
-        setFormData(data);
-        setPreviewImage(user.profile_image || user.profile_picture_url || null);
-      }
+      const refreshedFormData = getInitialFormData(mergedUser);
+      setInitialFormData(refreshedFormData);
+      setFormData(refreshedFormData);
+      setPreviewImage(
+        mergedUser.profile_image || mergedUser.profile_picture_url || null
+      );
 
       setIsEditing(false);
       setSaveSuccess(true);

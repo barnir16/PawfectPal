@@ -111,7 +111,6 @@ export default function AuthScreen() {
     try {
       // Use the AuthContext's loginWithGoogle function
       await loginWithGoogle();
-      console.log('✅ Google login successful via AuthContext');
       navigate("/dashboard");
     } catch (error) {
       const errorMessage =

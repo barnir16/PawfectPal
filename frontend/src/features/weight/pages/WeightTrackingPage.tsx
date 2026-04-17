@@ -75,6 +75,33 @@ interface LocalWeightRecord {
 
 const CHART_COLORS = ['#2D6A4F', '#1D3557', '#E76F51', '#6D597A', '#3A86FF', '#F4A261'];
 
+const toDateString = (value: string | Date | undefined): string => {
+  if (!value) {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  if (typeof value === 'string') {
+    return value.includes('T') ? value.split('T')[0] : value;
+  }
+
+  return value.toISOString().split('T')[0];
+};
+
+const buildProfileWeightRecord = (pet: any): LocalWeightRecord | null => {
+  if (!pet?.id || !pet.weightKg) {
+    return null;
+  }
+
+  return {
+    petId: pet.id,
+    petName: pet.name,
+    weight: pet.weightKg,
+    weightUnit: pet.weightUnit === 'lb' ? 'lbs' : pet.weightUnit || 'kg',
+    date: toDateString(pet.updatedAt || pet.updated_at),
+    source: 'auto',
+  };
+};
+
 export const WeightTrackingPage = () => {
   const { t } = useLocalization();
   const theme = useTheme();
@@ -138,38 +165,29 @@ export const WeightTrackingPage = () => {
         petName: record.petName || petsData.find(p => p.id === record.petId)?.name || `Pet ${record.petId}`
       }));
 
-      // Add current weights from pets if they exist and no weight records
-      if (realWeightData.length === 0) {
-        petsData.forEach(pet => {
-          if (pet.weightKg) {
-            realWeightData.push({
-              date: new Date(new Date().toISOString().split('T')[0]),
-              weight: pet.weightKg,
-              petId: pet.id || 0,
-              petName: pet.name,
-              weightUnit: pet.weightUnit === 'lb' ? 'lbs' : pet.weightUnit || 'kg',
-              source: 'manual'
-            });
-          }
-        });
-      }
+      const mergedWeightData = [...localWeightData];
 
-      setWeightData(localWeightData);
+      petsData.forEach((pet) => {
+        const profileWeightRecord = buildProfileWeightRecord(pet);
+        if (!profileWeightRecord) {
+          return;
+        }
 
-      if (realWeightData.length === 0) {
-        const fallbackWeightData: LocalWeightRecord[] = petsData
-          .filter((pet) => pet.weightKg)
-          .map((pet) => ({
-            date: new Date().toISOString().split('T')[0],
-            weight: pet.weightKg,
-            petId: pet.id || 0,
-            petName: pet.name,
-            weightUnit: pet.weightUnit === 'lb' ? 'lbs' : pet.weightUnit || 'kg',
-            source: 'manual',
-          }));
+        const latestExistingRecord = mergedWeightData
+          .filter((record) => record.petId === pet.id)
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
 
-        setWeightData(fallbackWeightData);
-      }
+        const needsProfileWeightPoint =
+          !latestExistingRecord ||
+          latestExistingRecord.weight !== profileWeightRecord.weight ||
+          latestExistingRecord.date !== profileWeightRecord.date;
+
+        if (needsProfileWeightPoint) {
+          mergedWeightData.push(profileWeightRecord);
+        }
+      });
+
+      setWeightData(mergedWeightData);
 
       // Load weight goals
       try {
@@ -225,7 +243,7 @@ export const WeightTrackingPage = () => {
         setAddWeightDialogOpen(false);
       }
     } catch (error) {
-      console.error('❌ Error adding weight record:', error);
+      console.error('Error adding weight record:', error);
     }
   };
 
@@ -319,7 +337,7 @@ export const WeightTrackingPage = () => {
       setEditWeightRecord(null);
       loadData();
     } catch (error) {
-      console.error('❌ Error updating weight record:', error);
+      console.error('Error updating weight record:', error);
       setError(t('weight.updateError'));
     }
   };
@@ -823,7 +841,9 @@ export const WeightTrackingPage = () => {
                         }}
                         onClick={() => {
                           // Find the weight record for this pet and open edit dialog
-                          const weightRecord = weightData.find(record => record.petId === pet.id);
+                          const weightRecord = weightData
+                            .filter(record => record.petId === pet.id)
+                            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
                           if (weightRecord) {
                             handleEditWeightRecord(weightRecord);
                           }

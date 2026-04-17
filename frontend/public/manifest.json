@@ -4,14 +4,9 @@
   "description": "Comprehensive pet care management platform",
   "icons": [
     {
-      "src": "/vite.svg",
-      "type": "image/svg+xml",
-      "sizes": "any"
-    },
-    {
       "src": "/favicon.ico",
       "type": "image/x-icon",
-      "sizes": "16x16 32x32"
+      "sizes": "16x16 32x32 48x48"
     }
   ],
   "start_url": "/",
