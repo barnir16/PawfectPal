@@ -41,7 +41,7 @@ export const ServicesPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const realServices = await apiRequest<Service[]>("/service_booking");
+      const realServices = await apiRequest<Service[]>("/service_booking/");
       let fetchedServices =
         tab === 0
           ? realServices.filter(

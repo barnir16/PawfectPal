@@ -66,7 +66,11 @@ const AppContent = () => {
   const { t, isRTL } = useLocalization();
 
   const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+    setMobileOpen((prev) => !prev);
+  };
+
+  const handleMobileDrawerClose = () => {
+    setMobileOpen(false);
   };
 
   // Show loading while checking authentication
@@ -107,7 +111,7 @@ const AppContent = () => {
       <Header onMenuClick={handleDrawerToggle} desktopOpen={desktopOpen} />
       <Sidebar
         mobileOpen={mobileOpen}
-        onClose={handleDrawerToggle}
+        onClose={handleMobileDrawerClose}
         onDesktopToggle={setDesktopOpen}
       />
       <Box

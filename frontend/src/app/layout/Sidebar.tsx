@@ -54,6 +54,21 @@ export const Sidebar = ({
   const { user } = useAuth();
   const isProvider = user?.is_provider;
 
+  const closeMobileDrawerSafely = () => {
+    if (!isMobile) {
+      return;
+    }
+
+    // Prevent focused sidebar elements from staying focused while the modal is hidden.
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
+    requestAnimationFrame(() => {
+      onClose();
+    });
+  };
+
   const menuItems = [
     {
       text: t("navigation.dashboard"),
@@ -98,10 +113,7 @@ export const Sidebar = ({
 
   const handleDrawerToggle = () => {
     if (isMobile) {
-      if (document.activeElement instanceof HTMLElement) {
-        document.activeElement.blur();
-      }
-      onClose();
+      closeMobileDrawerSafely();
     } else {
       const newOpen = !open;
       setOpen(newOpen);
@@ -110,10 +122,7 @@ export const Sidebar = ({
   };
 
   const handleMobileClose = () => {
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
-    onClose();
+    closeMobileDrawerSafely();
   };
 
   const drawer = (
@@ -220,7 +229,7 @@ export const Sidebar = ({
       <Drawer
         variant="temporary"
         open={mobileOpen}
-        onClose={onClose}
+        onClose={handleMobileClose}
         anchor={isRTL ? "right" : "left"}
         ModalProps={{
           keepMounted: true, // Better open performance on mobile.

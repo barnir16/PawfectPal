@@ -8,7 +8,7 @@ export const getServices = async (
   status?: 'active' | 'history'
 ): Promise<Service[]> => {
   try {
-    return await apiRequest<Service[]>('/service_booking', {
+    return await apiRequest<Service[]>('/service_booking/', {
       params: status ? { status } : undefined,
     });
   } catch (error) {
@@ -22,7 +22,7 @@ export const getServices = async (
  */
 export const getService = async (serviceId: number): Promise<Service | null> => {
   try {
-    return await apiRequest<Service>(`/service_booking/${serviceId}`);
+    return await apiRequest<Service>(`/service_booking/${serviceId}/`);
   } catch (error) {
     console.error(`Error fetching service ${serviceId}:`, error);
     return null;
@@ -34,7 +34,7 @@ export const getService = async (serviceId: number): Promise<Service | null> => 
  */
 export const createService = async (service: Omit<Service, 'id'>): Promise<Service | null> => {
   try {
-    return await apiRequest<Service>('/service_booking', {
+    return await apiRequest<Service>('/service_booking/', {
       method: 'POST',
       body: JSON.stringify(service)
     });
@@ -49,7 +49,7 @@ export const createService = async (service: Omit<Service, 'id'>): Promise<Servi
  */
 export const updateService = async (serviceId: number, service: Partial<Service>): Promise<Service | null> => {
   try {
-    return await apiRequest<Service>(`/service_booking/${serviceId}`, {
+    return await apiRequest<Service>(`/service_booking/${serviceId}/`, {
       method: 'PUT',
       body: JSON.stringify(service)
     });
@@ -64,7 +64,7 @@ export const updateService = async (serviceId: number, service: Partial<Service>
  */
 export const deleteService = async (serviceId: number): Promise<boolean> => {
   try {
-    await apiRequest(`/service_booking/${serviceId}`, {
+    await apiRequest(`/service_booking/${serviceId}/`, {
       method: 'DELETE'
     });
     return true;
