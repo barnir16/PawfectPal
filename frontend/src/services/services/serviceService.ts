@@ -4,9 +4,13 @@ import type { Service } from '../../types/services';
 /**
  * Get all services for the current user
  */
-export const getServices = async (): Promise<Service[]> => {
+export const getServices = async (
+  status?: 'active' | 'history'
+): Promise<Service[]> => {
   try {
-    return await apiRequest<Service[]>('/service_booking');
+    return await apiRequest<Service[]>('/service_booking', {
+      params: status ? { status } : undefined,
+    });
   } catch (error) {
     console.error('Error fetching services:', error);
     return [];

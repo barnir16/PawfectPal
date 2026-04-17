@@ -1,3 +1,4 @@
+import { getBaseUrl, getToken } from "../api";
 import type { Service } from "../../types/services";
 
 export class MockServiceService {
@@ -5,41 +6,44 @@ export class MockServiceService {
   private static loaded = false;
 
   /**
-   * Load services from database via API
+   * Load services from the backend first, then fall back to demo data.
    */
   private static async loadServices(
-    forceReload: boolean = false,
+    forceReload: boolean = false
   ): Promise<void> {
-    if (this.loaded && !forceReload) return;
+    if (this.loaded && !forceReload) {
+      return;
+    }
 
     try {
-      const response = await fetch("/api/services/");
+      const token = await getToken();
+      const response = await fetch(`${getBaseUrl()}/service_booking/`, {
+        headers: token
+          ? {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            }
+          : undefined,
+      });
+
       if (response.ok) {
         this.services = await response.json();
         this.loaded = true;
-        console.log(`📊 Loaded ${this.services.length} services from database`);
         return;
       }
-    } catch (error) {
-      console.log("Backend API not available, using fallback data");
+    } catch (_error) {
+      // Keep local fallback data available when backend services are unavailable.
     }
 
     this.services = this.getFallbackServices();
     this.loaded = true;
-    console.log(`📊 Loaded ${this.services.length} fallback services`);
   }
 
-  /**
-   * Force reload services from database
-   */
   static async reloadServices(): Promise<void> {
     this.loaded = false;
     await this.loadServices(true);
   }
 
-  /**
-   * Get fallback/dummy services
-   */
   private static getFallbackServices(): Service[] {
     const now = new Date();
 
@@ -76,10 +80,10 @@ export class MockServiceService {
         pet_id: 103,
         pet_name: "Charlie",
         start_datetime: new Date(
-          now.getTime() - 86400 * 1000 * 5,
+          now.getTime() - 86400 * 1000 * 5
         ).toISOString(),
         end_datetime: new Date(
-          now.getTime() - 86400 * 1000 * 5 + 3600 * 1000,
+          now.getTime() - 86400 * 1000 * 5 + 3600 * 1000
         ).toISOString(),
         status: "completed",
         currency: "USD",
@@ -93,10 +97,10 @@ export class MockServiceService {
         pet_id: 104,
         pet_name: "Bella",
         start_datetime: new Date(
-          now.getTime() - 86400 * 1000 * 2,
+          now.getTime() - 86400 * 1000 * 2
         ).toISOString(),
         end_datetime: new Date(
-          now.getTime() - 86400 * 1000 * 2 + 3600 * 1000,
+          now.getTime() - 86400 * 1000 * 2 + 3600 * 1000
         ).toISOString(),
         status: "cancelled",
         currency: "USD",
@@ -122,10 +126,10 @@ export class MockServiceService {
         pet_id: 106,
         pet_name: "Luna",
         start_datetime: new Date(
-          now.getTime() - 86400 * 1000 * 3,
+          now.getTime() - 86400 * 1000 * 3
         ).toISOString(),
         end_datetime: new Date(
-          now.getTime() - 86400 * 1000 * 3 + 7200 * 1000,
+          now.getTime() - 86400 * 1000 * 3 + 7200 * 1000
         ).toISOString(),
         status: "completed",
         currency: "USD",
@@ -135,63 +139,56 @@ export class MockServiceService {
     ];
   }
 
-  /**
-   * Get all services, optionally filtered by status
-   */
   static async getServices(
-    status?: "in_progress" | "completed" | "cancelled",
+    status?: "in_progress" | "completed" | "cancelled"
   ): Promise<Service[]> {
     await this.loadServices();
-    await new Promise((resolve) => setTimeout(resolve, 400)); // simulate API delay
+    await new Promise((resolve) => setTimeout(resolve, 400));
 
-    if (!status) return this.services;
+    if (!status) {
+      return this.services;
+    }
 
     return this.services.filter((service) => service.status === status);
   }
 
-  /**
-   * Get service by ID
-   */
   static async getServiceById(id: number): Promise<Service | null> {
     await this.loadServices();
     await new Promise((resolve) => setTimeout(resolve, 300));
-    return this.services.find((s) => s.id === id) || null;
+
+    return this.services.find((service) => service.id === id) || null;
   }
 
-  /**
-   * Search services by pet name or service type
-   */
   static async searchServices(query: string): Promise<Service[]> {
     await this.loadServices();
     await new Promise((resolve) => setTimeout(resolve, 300));
 
-    const q = query.toLowerCase();
+    const normalizedQuery = query.toLowerCase();
     return this.services.filter(
-      (s) =>
-        s.pet_name.toLowerCase().includes(q) ||
-        s.service_type.toLowerCase().includes(q),
+      (service) =>
+        service.pet_name.toLowerCase().includes(normalizedQuery) ||
+        service.service_type.toLowerCase().includes(normalizedQuery)
     );
   }
 
-  /**
-   * Get services by date range
-   */
   static async getServicesByDateRange(
     start: Date,
-    end: Date,
+    end: Date
   ): Promise<Service[]> {
     await this.loadServices();
-    return this.services.filter((s) => {
-      const startTime = new Date(s.start_datetime).getTime();
-      const endTime = s.end_datetime
-        ? new Date(s.end_datetime).getTime()
+
+    return this.services.filter((service) => {
+      const startTime = new Date(service.start_datetime).getTime();
+      const endTime = service.end_datetime
+        ? new Date(service.end_datetime).getTime()
         : startTime;
+
       return startTime >= start.getTime() && endTime <= end.getTime();
     });
   }
 
   static async getServicesByStatus(
-    status: "in_progress" | "completed" | "cancelled",
+    status: "in_progress" | "completed" | "cancelled"
   ): Promise<Service[]> {
     return this.getServices(status);
   }

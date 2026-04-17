@@ -1,35 +1,30 @@
 import React, { useState } from 'react';
 import {
-  Card,
-  CardContent,
-  CardActions,
-  Typography,
-  Button,
-  Chip,
-  Box,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Grid,
   Avatar,
+  Box,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
-  Tooltip,
+  Grid,
+  IconButton,
+  Typography,
+  Chip,
 } from '@mui/material';
 import {
-  Visibility,
-  Message,
-  LocationOn,
   AccessTime,
   AttachMoney,
-  Person,
-  Pets,
-  Schedule,
-  Star,
-  MoreVert,
-  Edit,
   Delete,
+  Edit,
+  LocationOn,
+  Message,
+  Person,
+  Visibility,
 } from '@mui/icons-material';
 import { useLocalization } from '../../contexts/LocalizationContext';
 import { marketplaceService } from '../../services/marketplace/marketplaceService';
@@ -54,28 +49,45 @@ export const MarketplacePostCard: React.FC<MarketplacePostCardProps> = ({
   isOwner = false,
   compact = false,
 }) => {
-  const { t } = useLocalization();
+  const { t, currentLanguage } = useLocalization();
   const [loading, setLoading] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
-  };
+  const currencyFormatter = new Intl.NumberFormat(
+    currentLanguage === 'he' ? 'he-IL' : 'en-US',
+    {
+      style: 'currency',
+      currency: 'ILS',
+      maximumFractionDigits: 0,
+    }
+  );
+
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString(
+      currentLanguage === 'he' ? 'he-IL' : 'en-US'
+    );
 
   const formatBudget = () => {
-    if (post.budget_min && post.budget_max) {
-      return `${post.budget_min} - ${post.budget_max}`;
-    } else if (post.budget_min) {
-      return `${post.budget_min}+`;
-    } else if (post.budget_max) {
-      return `Up to ${post.budget_max}`;
+    if (post.budget_min !== undefined && post.budget_max !== undefined) {
+      return `${currencyFormatter.format(post.budget_min)} - ${currencyFormatter.format(post.budget_max)}`;
     }
-    return t('marketplace.budgetNotSpecified') || 'Budget not specified';
+
+    if (post.budget_min !== undefined) {
+      return `${currencyFormatter.format(post.budget_min)}+`;
+    }
+
+    if (post.budget_max !== undefined) {
+      return currencyFormatter.format(post.budget_max);
+    }
+
+    return t('marketplace.budgetNotSpecified');
   };
 
   const handleRespond = async () => {
-    if (isOwner) return;
-    
+    if (isOwner) {
+      return;
+    }
+
     setLoading(true);
     try {
       await marketplaceService.respondToPost(post.id);
@@ -104,41 +116,40 @@ export const MarketplacePostCard: React.FC<MarketplacePostCardProps> = ({
     return (
       <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <CardContent sx={{ flexGrow: 1 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 1 }}>
-            <Typography variant="h6" noWrap sx={{ flexGrow: 1, mr: 1 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 1, gap: 1 }}>
+            <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
               {post.title}
             </Typography>
             {post.is_urgent && (
-              <Chip 
-                label={t('marketplace.urgent') || 'Urgent'} 
-                color="error" 
-                size="small" 
-              />
+              <Chip label={t('marketplace.urgent')} color="error" size="small" />
             )}
           </Box>
 
           <Typography variant="body2" color="text.secondary" paragraph>
-            {post.description.length > 100 
-              ? `${post.description.substring(0, 100)}...`
-              : post.description
-            }
+            {post.description.length > 110
+              ? `${post.description.substring(0, 110)}...`
+              : post.description}
           </Typography>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1, mb: 1 }}>
             <Chip label={post.service_type} size="small" color="primary" />
             {post.location && (
-              <>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <LocationOn sx={{ fontSize: 16, color: 'text.secondary' }} />
                 <Typography variant="caption" color="text.secondary">
                   {post.location}
                 </Typography>
-              </>
+              </Box>
             )}
           </Box>
 
+          <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+            {formatBudget()}
+          </Typography>
+
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Typography variant="caption" color="text.secondary">
-              {post.views_count} {t('marketplace.views') || 'views'} • {post.responses_count} {t('marketplace.responses') || 'responses'}
+              {post.views_count} {t('marketplace.views')} • {post.responses_count} {t('marketplace.responses')}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               {formatDate(post.created_at)}
@@ -147,12 +158,8 @@ export const MarketplacePostCard: React.FC<MarketplacePostCardProps> = ({
         </CardContent>
 
         <CardActions>
-          <Button
-            size="small"
-            startIcon={<Visibility />}
-            onClick={() => onViewDetails?.(post)}
-          >
-            {t('common.view') || 'View'}
+          <Button size="small" startIcon={<Visibility />} onClick={() => onViewDetails?.(post)}>
+            {t('common.view')}
           </Button>
           {!isOwner && (
             <Button
@@ -162,7 +169,7 @@ export const MarketplacePostCard: React.FC<MarketplacePostCardProps> = ({
               onClick={handleRespond}
               disabled={loading}
             >
-              {t('marketplace.contact') || 'Contact'}
+              {t('marketplace.contact')}
             </Button>
           )}
         </CardActions>
@@ -174,20 +181,17 @@ export const MarketplacePostCard: React.FC<MarketplacePostCardProps> = ({
     <>
       <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <CardContent sx={{ flexGrow: 1 }}>
-          {/* Header */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2, gap: 1 }}>
             <Box sx={{ flexGrow: 1 }}>
               <Typography variant="h5" gutterBottom>
                 {post.title}
               </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                 <Chip label={post.service_type} color="primary" />
-                {post.is_urgent && (
-                  <Chip label={t('marketplace.urgent') || 'Urgent'} color="error" />
-                )}
+                {post.is_urgent && <Chip label={t('marketplace.urgent')} color="error" />}
               </Box>
             </Box>
-            
+
             {isOwner && (
               <Box>
                 <IconButton onClick={() => onEdit?.(post)}>
@@ -200,20 +204,16 @@ export const MarketplacePostCard: React.FC<MarketplacePostCardProps> = ({
             )}
           </Box>
 
-          {/* Description */}
           <Typography variant="body1" paragraph>
             {post.description}
           </Typography>
 
-          {/* Details Grid */}
           <Grid container spacing={2} sx={{ mb: 2 }}>
             {post.location && (
               <Grid item xs={12} sm={6}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <LocationOn color="action" />
-                  <Typography variant="body2">
-                    {post.location}
-                  </Typography>
+                  <Typography variant="body2">{post.location}</Typography>
                 </Box>
               </Grid>
             )}
@@ -221,9 +221,7 @@ export const MarketplacePostCard: React.FC<MarketplacePostCardProps> = ({
             <Grid item xs={12} sm={6}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <AttachMoney color="action" />
-                <Typography variant="body2">
-                  {formatBudget()}
-                </Typography>
+                <Typography variant="body2">{formatBudget()}</Typography>
               </Box>
             </Grid>
 
@@ -231,7 +229,7 @@ export const MarketplacePostCard: React.FC<MarketplacePostCardProps> = ({
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <AccessTime color="action" />
                 <Typography variant="body2">
-                  {t('marketplace.posted') || 'Posted'} {formatDate(post.created_at)}
+                  {t('marketplace.posted')} {formatDate(post.created_at)}
                 </Typography>
               </Box>
             </Grid>
@@ -240,13 +238,12 @@ export const MarketplacePostCard: React.FC<MarketplacePostCardProps> = ({
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Visibility color="action" />
                 <Typography variant="body2">
-                  {post.views_count} {t('marketplace.views') || 'views'} • {post.responses_count} {t('marketplace.responses') || 'responses'}
+                  {post.views_count} {t('marketplace.views')} • {post.responses_count} {t('marketplace.responses')}
                 </Typography>
               </Box>
             </Grid>
           </Grid>
 
-          {/* User Info */}
           {post.user && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
               <Avatar sx={{ width: 32, height: 32 }}>
@@ -262,13 +259,10 @@ export const MarketplacePostCard: React.FC<MarketplacePostCardProps> = ({
         <Divider />
 
         <CardActions sx={{ justifyContent: 'space-between', p: 2 }}>
-          <Button
-            startIcon={<Visibility />}
-            onClick={() => onViewDetails?.(post)}
-          >
-            {t('common.viewDetails') || 'View Details'}
+          <Button startIcon={<Visibility />} onClick={() => onViewDetails?.(post)}>
+            {t('common.details')}
           </Button>
-          
+
           {!isOwner && (
             <Button
               variant="contained"
@@ -276,33 +270,28 @@ export const MarketplacePostCard: React.FC<MarketplacePostCardProps> = ({
               onClick={handleRespond}
               disabled={loading}
             >
-              {t('marketplace.contact') || 'Contact User'}
+              {t('marketplace.contact')}
             </Button>
           )}
         </CardActions>
       </Card>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>
-          {t('marketplace.deletePost') || 'Delete Post'}
-        </DialogTitle>
+        <DialogTitle>{t('marketplace.deletePost')}</DialogTitle>
         <DialogContent>
-          <Typography>
-            {t('marketplace.deleteConfirm') || 'Are you sure you want to delete this marketplace post? This action cannot be undone.'}
-          </Typography>
+          <Typography>{t('marketplace.deleteConfirm')}</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>
-            {t('common.cancel') || 'Cancel'}
+            {t('common.cancel')}
           </Button>
-          <Button 
-            onClick={handleDelete} 
-            color="error" 
+          <Button
+            onClick={handleDelete}
+            color="error"
             variant="contained"
             disabled={loading}
           >
-            {t('common.delete') || 'Delete'}
+            {t('common.delete')}
           </Button>
         </DialogActions>
       </Dialog>
