@@ -97,14 +97,23 @@ export const Sidebar = ({
   ];
 
   const handleDrawerToggle = () => {
-    console.log("Drawer toggle clicked", { isMobile, open, isRTL });
     if (isMobile) {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
       onClose();
     } else {
       const newOpen = !open;
       setOpen(newOpen);
       onDesktopToggle?.(newOpen);
     }
+  };
+
+  const handleMobileClose = () => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    onClose();
   };
 
   const drawer = (
@@ -145,7 +154,7 @@ export const Sidebar = ({
               component={RouterLink}
               to={item.path}
               selected={location.pathname === item.path}
-              onClick={onClose}
+              onClick={isMobile ? handleMobileClose : onClose}
               sx={{
                 flexDirection: isRTL ? "row-reverse" : "row",
                 minHeight: 48,

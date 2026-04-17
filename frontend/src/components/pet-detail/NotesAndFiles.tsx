@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { format } from "date-fns";
 import {
   Box,
   Paper,
@@ -27,6 +28,7 @@ import {
   InsertPhoto as ImageIcon,
   Description as DocumentIcon,
 } from "@mui/icons-material";
+import { useLocalization } from "../../contexts/LocalizationContext";
 
 
 // Types
@@ -68,6 +70,7 @@ export const NotesAndFiles = ({
   onDeleteFile,
 }: NotesAndFilesProps) => {
   const theme = useTheme();
+  const { t } = useLocalization();
   const [newNote, setNewNote] = useState("");
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [editingNoteContent, setEditingNoteContent] = useState("");
