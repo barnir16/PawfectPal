@@ -1,4 +1,4 @@
-import { getBaseUrl, getToken } from "../api";
+import { apiRequest } from "../api";
 import type { Service } from "../../types/services";
 
 export class MockServiceService {
@@ -16,21 +16,9 @@ export class MockServiceService {
     }
 
     try {
-      const token = await getToken();
-      const response = await fetch(`${getBaseUrl()}/service_booking/`, {
-        headers: token
-          ? {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            }
-          : undefined,
-      });
-
-      if (response.ok) {
-        this.services = await response.json();
-        this.loaded = true;
-        return;
-      }
+      this.services = await apiRequest<Service[]>("/service_booking/");
+      this.loaded = true;
+      return;
     } catch (_error) {
       // Keep local fallback data available when backend services are unavailable.
     }

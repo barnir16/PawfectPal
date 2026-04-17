@@ -97,7 +97,14 @@ export class WebSocketService {
           this.stopPingInterval();
           this.notifyConnectionHandlers(false);
 
-          if (event.code !== 1000 && this.reconnectAttempts < this.maxReconnectAttempts) {
+          const shouldNotReconnect =
+            event.code === 1000 || // normal closure
+            event.code === 1008 || // policy / auth / permission
+            event.code === 1003 || // unsupported data
+            event.code === 1002 || // protocol error
+            event.code === 1007;   // invalid payload data
+
+          if (!shouldNotReconnect && this.reconnectAttempts < this.maxReconnectAttempts) {
             this.scheduleReconnect(serviceRequestId, token);
           }
         };

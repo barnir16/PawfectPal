@@ -13,27 +13,53 @@ export interface ApiRequestOptions extends RequestInit {
   params?: Record<string, QueryParamValue>;
 }
 
+const DEFAULT_PRODUCTION_API = "https://pawfectpal-production.up.railway.app";
+const DEFAULT_LOCAL_API = "http://localhost:8000";
+
+const sanitizeApiBaseUrl = (url: string): string => {
+  if (!url) {
+    return url;
+  }
+
+  const trimmedUrl = url.trim();
+
+  // Railway should always be accessed over HTTPS in production to avoid mixed-content errors.
+  if (/^http:\/\/.*railway\.app/i.test(trimmedUrl)) {
+    return trimmedUrl.replace(/^http:/i, "https:");
+  }
+
+  return trimmedUrl;
+};
+
 // Get API URL from Firebase config with fallback
 export const getBaseUrl = (): string => {
+  const isBrowser = typeof window !== "undefined";
+  const hostname = isBrowser ? window.location.hostname : "";
+  const protocol = isBrowser ? window.location.protocol : "";
+
   try {
     const apiConfig = configService.getApiConfig();
-    const baseUrl = apiConfig.baseUrl;
-
-    const isProduction = window.location.hostname.includes('railway.app');
-
-    if (isProduction) {
-      return "https://pawfectpal-production.up.railway.app";
+    const baseUrl = sanitizeApiBaseUrl(apiConfig.baseUrl || "");
+    const isRailwayHost = hostname.includes("railway.app");
+    if (isRailwayHost) {
+      return DEFAULT_PRODUCTION_API;
     }
 
-    return baseUrl || "http://localhost:8000";
+    // If we're served over HTTPS, do not allow an HTTP API URL in browser context.
+    if (protocol === "https:" && /^http:\/\//i.test(baseUrl)) {
+      return baseUrl.replace(/^http:/i, "https:");
+    }
+
+    return baseUrl || DEFAULT_LOCAL_API;
   } catch (error) {
-    console.warn('Error getting API config, using local dev backend:', error);
-    return "http://localhost:8000";
+    console.warn("Error getting API config, using fallback backend URL:", error);
+    const isRailwayHost = hostname.includes("railway.app");
+    return isRailwayHost ? DEFAULT_PRODUCTION_API : DEFAULT_LOCAL_API;
   }
 };
 
 // Don't set BASE_URL at module load time - get it dynamically
-export const BASE_URL = "https://pawfectpal-production.up.railway.app";
+export const BASE_URL = DEFAULT_PRODUCTION_API;
 
 const buildApiUrl = (
   endpoint: string,

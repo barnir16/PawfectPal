@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
-import { getBaseUrl, getToken } from "../../../services";
+import { apiRequest, getToken } from "../../../services";
 import {
   Box,
   Grid,
@@ -113,13 +113,7 @@ const ProfilePage: React.FC = () => {
   useEffect(() => {
     const loadServices = async () => {
       try {
-        const response = await fetch(`${getBaseUrl()}/service_booking/types/`);
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
+        const data = await apiRequest<any[]>("/service_booking/types/");
         // Map the response to match the expected format
         const formattedServices = data.map((service: any) => ({
           id: service.id,
@@ -191,16 +185,14 @@ const ProfilePage: React.FC = () => {
       if (file) {
         const formDataToSend = new FormData();
         formDataToSend.append("file", file);
-        const imageUploadResponse = await fetch(
-          `${getBaseUrl()}/image_upload/profile-image`,
+        const imageData = await apiRequest<{ profile_image: string }>(
+          "/image_upload/profile-image",
           {
             method: "POST",
             headers: { Authorization: `Bearer ${token}` },
             body: formDataToSend,
           }
         );
-        if (!imageUploadResponse.ok) throw new Error("Failed to upload image.");
-        const imageData = await imageUploadResponse.json();
         newImageUrl = imageData.profile_image;
         updatedUserData.profile_image = newImageUrl;
       }
@@ -229,21 +221,13 @@ const ProfilePage: React.FC = () => {
         );
       }
 
-      const profileUpdateResponse = await fetch(`${getBaseUrl()}/auth/me`, {
+      const profileData = await apiRequest<any>("/auth/me", {
         method: "PATCH",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(updatedPayload),
       });
-
-      if (!profileUpdateResponse.ok) {
-        const errorData = await profileUpdateResponse.json();
-        throw new Error(errorData.detail || "Failed to update profile.");
-      }
-
-      const profileData = await profileUpdateResponse.json();
       const mergedUser = {
         ...updatedUserData,
         ...profileData,

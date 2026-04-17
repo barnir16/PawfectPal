@@ -193,7 +193,7 @@ export const ChatPage = () => {
     };
 
     initializeFCM();
-  }, [id, conversation]);
+  }, [id]);
 
   // Monitor offline status and sync messages
   useEffect(() => {

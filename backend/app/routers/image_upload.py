@@ -34,6 +34,7 @@ def _relative_upload_path(filename: str) -> str:
 
 
 @router.post("/pet-image/{pet_id}")
+@router.post("/pet-image/{pet_id}/")
 async def upload_pet_image(
     pet_id: int,
     file: UploadFile = File(...),
@@ -101,6 +102,7 @@ async def upload_task_attachment(
 
 
 @router.post("/profile-image")
+@router.post("/profile-image/")
 async def upload_profile_image(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),

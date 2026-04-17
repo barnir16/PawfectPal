@@ -797,6 +797,7 @@ export const he = {
     allPets: 'כל החיות',
     weightChart: 'תרשים משקל',
     addWeightRecord: 'הוסף רשומת משקל',
+    editWeightRecord: 'ערוך רשומת משקל',
     addWeightGoal: 'הוסף יעד משקל',
     weight: 'משקל',
     currentWeights: 'משקלים נוכחיים',
