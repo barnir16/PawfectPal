@@ -1,26 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
+  Autocomplete,
   Box,
+  Button,
   Card,
   CardContent,
   CardHeader,
-  TextField,
-  Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Chip,
-  FormControlLabel,
-  Switch,
-  Grid,
-  Typography,
-  Alert,
   CircularProgress,
-  Autocomplete,
   Divider,
+  FormControl,
+  FormControlLabel,
+  Grid,
+  InputLabel,
+  MenuItem,
+  Select,
+  Switch,
+  TextField,
+  Typography,
 } from '@mui/material';
-import { Add, Remove, Save, Cancel } from '@mui/icons-material';
+import { Cancel, Save } from '@mui/icons-material';
 import { useLocalization } from '../../contexts/LocalizationContext';
 import { marketplaceService } from '../../services/marketplace/marketplaceService';
 import type { MarketplacePostCreate } from '../../types/services/marketplacePost';
@@ -34,6 +33,8 @@ interface MarketplacePostFormProps {
   postId?: number;
 }
 
+const LANGUAGE_SUGGESTIONS = ['Hebrew', 'English', 'Arabic', 'Russian', 'French'];
+
 export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
   pets,
   onSuccess,
@@ -44,7 +45,9 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
   const { t } = useLocalization();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [serviceTypes, setServiceTypes] = useState<Array<{ id: number; name: string; description?: string }>>([]);
+  const [serviceTypes, setServiceTypes] = useState<
+    Array<{ id: number; name: string; description?: string }>
+  >([]);
 
   const [formData, setFormData] = useState<MarketplacePostCreate>({
     title: '',
@@ -62,32 +65,49 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
     ...initialData,
   });
 
-  const [newDate, setNewDate] = useState('');
-  const [newLanguage, setNewLanguage] = useState('');
-
   useEffect(() => {
-    loadServiceTypes();
+    const loadServiceTypes = async () => {
+      try {
+        const types = await marketplaceService.getServiceTypes();
+        setServiceTypes(types);
+      } catch (loadError: any) {
+        setError(loadError.message || 'Failed to load service types');
+      }
+    };
+
+    void loadServiceTypes();
   }, []);
 
-  const loadServiceTypes = async () => {
-    try {
-      const types = await marketplaceService.getServiceTypes();
-      setServiceTypes(types);
-    } catch (error: any) {
-      setError(error.message || 'Failed to load service types');
-    }
-  };
+  const selectedPets = useMemo(
+    () => pets.filter((pet) => formData.pet_ids.includes(pet.id)),
+    [formData.pet_ids, pets]
+  );
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const validationError = useMemo(() => {
     if (!formData.title.trim() || !formData.description.trim() || !formData.service_type) {
-      setError('Please fill in all required fields');
-      return;
+      return 'Please fill in all required fields';
     }
 
     if (formData.pet_ids.length === 0) {
-      setError('Please select at least one pet');
+      return 'Please select at least one pet';
+    }
+
+    if (
+      formData.budget_min !== undefined &&
+      formData.budget_max !== undefined &&
+      formData.budget_min > formData.budget_max
+    ) {
+      return 'Minimum budget cannot be higher than maximum budget';
+    }
+
+    return null;
+  }, [formData]);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
@@ -95,13 +115,22 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
     setError(null);
 
     try {
+      const normalizedData: MarketplacePostCreate = {
+        ...formData,
+        preferred_dates: (formData.preferred_dates || []).filter(Boolean),
+        languages: (formData.languages || []).filter(Boolean),
+        special_requirements: formData.special_requirements?.trim() || undefined,
+        location: formData.location?.trim() || undefined,
+      };
+
       const post = postId
-        ? await marketplaceService.updatePost(postId, formData)
-        : await marketplaceService.createPost(formData);
+        ? await marketplaceService.updatePost(postId, normalizedData)
+        : await marketplaceService.createPost(normalizedData);
+
       onSuccess?.(post);
-    } catch (error: any) {
+    } catch (submitError: any) {
       setError(
-        error.message ||
+        submitError.message ||
           (postId
             ? 'Failed to update marketplace post'
             : 'Failed to create marketplace post')
@@ -111,52 +140,14 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
     }
   };
 
-  const addDate = () => {
-    if (newDate.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        preferred_dates: [...(prev.preferred_dates || []), newDate.trim()]
-      }));
-      setNewDate('');
-    }
-  };
-
-  const removeDate = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      preferred_dates: prev.preferred_dates?.filter((_, i) => i !== index) || []
-    }));
-  };
-
-  const addLanguage = () => {
-    if (newLanguage.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        languages: [...(prev.languages || []), newLanguage.trim()]
-      }));
-      setNewLanguage('');
-    }
-  };
-
-  const removeLanguage = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      languages: prev.languages?.filter((_, i) => i !== index) || []
-    }));
-  };
-
   return (
-    <Card>
-      <CardHeader 
-        title={
-          postId
-            ? t('marketplace.editPost') || 'Edit Marketplace Post'
-            : t('marketplace.createPost') || 'Create Marketplace Post'
-        }
+    <Card sx={{ mt: 3 }}>
+      <CardHeader
+        title={postId ? t('marketplace.editPost') : t('marketplace.createPost')}
         subheader={
           postId
-            ? t('marketplace.editPostSubtitle') || 'Update your marketplace request'
-            : t('marketplace.createPostSubtitle') || 'Share your service needs with all providers'
+            ? t('marketplace.createPostSubtitle')
+            : t('marketplace.createPostSubtitle')
         }
       />
       <CardContent>
@@ -168,21 +159,22 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
           )}
 
           <Grid container spacing={3}>
-            {/* Basic Information */}
             <Grid item xs={12}>
               <Typography variant="h6" gutterBottom>
-                {t('marketplace.basicInfo') || 'Basic Information'}
+                {t('marketplace.basicInfo')}
               </Typography>
             </Grid>
 
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label={t('marketplace.title') || 'Post Title'}
+                label={t('marketplace.title')}
                 value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                onChange={(event) =>
+                  setFormData((previous) => ({ ...previous, title: event.target.value }))
+                }
                 required
-                placeholder={t('marketplace.titlePlaceholder') || 'e.g., Need dog walking for vacation'}
+                placeholder={t('marketplace.titlePlaceholder')}
               />
             </Grid>
 
@@ -191,20 +183,31 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
                 fullWidth
                 multiline
                 rows={4}
-                label={t('marketplace.description') || 'Description'}
+                label={t('marketplace.description')}
                 value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={(event) =>
+                  setFormData((previous) => ({
+                    ...previous,
+                    description: event.target.value,
+                  }))
+                }
                 required
-                placeholder={t('marketplace.descriptionPlaceholder') || 'Describe your needs in detail...'}
+                placeholder={t('marketplace.descriptionPlaceholder')}
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} md={6}>
               <FormControl fullWidth required>
-                <InputLabel>{t('marketplace.serviceType') || 'Service Type'}</InputLabel>
+                <InputLabel>{t('marketplace.serviceType')}</InputLabel>
                 <Select
                   value={formData.service_type}
-                  onChange={(e) => setFormData(prev => ({ ...prev, service_type: e.target.value }))}
+                  label={t('marketplace.serviceType')}
+                  onChange={(event) =>
+                    setFormData((previous) => ({
+                      ...previous,
+                      service_type: event.target.value,
+                    }))
+                  }
                 >
                   {serviceTypes.map((type) => (
                     <MenuItem key={type.id} value={type.name}>
@@ -215,140 +218,130 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label={t('marketplace.location') || 'Location'}
+                label={t('marketplace.location')}
                 value={formData.location || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                placeholder={t('marketplace.locationPlaceholder') || 'City, Neighborhood'}
-              />
-            </Grid>
-
-            {/* Pet Selection */}
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                {t('marketplace.pets') || 'Pets'}
-              </Typography>
-              <FormControl fullWidth required>
-                <InputLabel>{t('marketplace.selectPets') || 'Select Pets'}</InputLabel>
-                <Select
-                  multiple
-                  value={formData.pet_ids}
-                  onChange={(e) => setFormData(prev => ({ ...prev, pet_ids: e.target.value as number[] }))}
-                  renderValue={(selected) => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {selected.map((petId) => {
-                        const pet = pets.find(p => p.id === petId);
-                        return (
-                          <Chip key={petId} label={pet?.name || `Pet ${petId}`} size="small" />
-                        );
-                      })}
-                    </Box>
-                  )}
-                >
-                  {pets.map((pet) => (
-                    <MenuItem key={pet.id} value={pet.id}>
-                      {pet.name} ({pet.type || t('pets.unknownType') || 'pet'})
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            {/* Budget */}
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                {t('marketplace.budget') || 'Budget'}
-              </Typography>
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                type="number"
-                label={t('marketplace.minBudget') || 'Minimum Budget'}
-                value={formData.budget_min || ''}
-                onChange={(e) => setFormData(prev => ({ 
-                  ...prev, 
-                  budget_min: e.target.value ? parseInt(e.target.value) : undefined 
-                }))}
-                placeholder="0"
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                type="number"
-                label={t('marketplace.maxBudget') || 'Maximum Budget'}
-                value={formData.budget_max || ''}
-                onChange={(e) => setFormData(prev => ({ 
-                  ...prev, 
-                  budget_max: e.target.value ? parseInt(e.target.value) : undefined 
-                }))}
-                placeholder="1000"
-              />
-            </Grid>
-
-            {/* Preferred Dates */}
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                {t('marketplace.preferredDates') || 'Preferred Dates'}
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                <TextField
-                  size="small"
-                  placeholder={t('marketplace.datePlaceholder') || 'YYYY-MM-DD'}
-                  value={newDate}
-                  onChange={(e) => setNewDate(e.target.value)}
-                />
-                <Button size="small" onClick={addDate} startIcon={<Add />}>
-                  {t('common.add') || 'Add'}
-                </Button>
-              </Box>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {formData.preferred_dates?.map((date, index) => (
-                  <Chip
-                    key={index}
-                    label={date}
-                    onDelete={() => removeDate(index)}
-                    deleteIcon={<Remove />}
-                  />
-                ))}
-              </Box>
-            </Grid>
-
-            {/* Requirements */}
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                {t('marketplace.requirements') || 'Requirements'}
-              </Typography>
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                type="number"
-                label={t('marketplace.minExperience') || 'Minimum Experience (years)'}
-                value={formData.experience_years_min || ''}
-                onChange={(e) => setFormData(prev => ({ 
-                  ...prev, 
-                  experience_years_min: e.target.value ? parseInt(e.target.value) : undefined 
-                }))}
-                placeholder="0"
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formData.is_urgent}
-                    onChange={(e) => setFormData(prev => ({ ...prev, is_urgent: e.target.checked }))}
-                  />
+                onChange={(event) =>
+                  setFormData((previous) => ({ ...previous, location: event.target.value }))
                 }
-                label={t('marketplace.urgent') || 'Urgent'}
+                placeholder={t('marketplace.locationPlaceholder')}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Autocomplete
+                multiple
+                options={pets}
+                getOptionLabel={(pet) => `${pet.name} (${pet.type || t('pets.pet')})`}
+                value={selectedPets}
+                onChange={(_, nextPets) =>
+                  setFormData((previous) => ({
+                    ...previous,
+                    pet_ids: nextPets.map((pet) => pet.id),
+                  }))
+                }
+                renderInput={(params) => (
+                  <TextField {...params} label={t('marketplace.selectPets')} required />
+                )}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom sx={{ mt: 1 }}>
+                {t('marketplace.budget')}
+              </Typography>
+            </Grid>
+
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                type="number"
+                label={t('marketplace.minBudget')}
+                value={formData.budget_min ?? ''}
+                onChange={(event) =>
+                  setFormData((previous) => ({
+                    ...previous,
+                    budget_min: event.target.value ? Number(event.target.value) : undefined,
+                  }))
+                }
+              />
+            </Grid>
+
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                type="number"
+                label={t('marketplace.maxBudget')}
+                value={formData.budget_max ?? ''}
+                onChange={(event) =>
+                  setFormData((previous) => ({
+                    ...previous,
+                    budget_max: event.target.value ? Number(event.target.value) : undefined,
+                  }))
+                }
+              />
+            </Grid>
+
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                type="number"
+                label={t('marketplace.minExperience')}
+                value={formData.experience_years_min ?? ''}
+                onChange={(event) =>
+                  setFormData((previous) => ({
+                    ...previous,
+                    experience_years_min: event.target.value
+                      ? Number(event.target.value)
+                      : undefined,
+                  }))
+                }
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Autocomplete
+                multiple
+                freeSolo
+                options={LANGUAGE_SUGGESTIONS}
+                value={formData.languages || []}
+                onChange={(_, nextLanguages) =>
+                  setFormData((previous) => ({
+                    ...previous,
+                    languages: nextLanguages.map((language) => language.trim()).filter(Boolean),
+                  }))
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={t('marketplace.languages')}
+                    placeholder={t('marketplace.languagePlaceholder')}
+                  />
+                )}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Autocomplete
+                multiple
+                freeSolo
+                options={[]}
+                value={formData.preferred_dates || []}
+                onChange={(_, nextDates) =>
+                  setFormData((previous) => ({
+                    ...previous,
+                    preferred_dates: nextDates.map((date) => date.trim()).filter(Boolean),
+                  }))
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={t('marketplace.preferredDates')}
+                    placeholder={t('marketplace.datePlaceholder')}
+                  />
+                )}
               />
             </Grid>
 
@@ -357,45 +350,38 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
                 fullWidth
                 multiline
                 rows={3}
-                label={t('marketplace.specialRequirements') || 'Special Requirements'}
+                label={t('marketplace.specialRequirements')}
                 value={formData.special_requirements || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, special_requirements: e.target.value }))}
-                placeholder={t('marketplace.specialRequirementsPlaceholder') || 'Any special requirements or notes...'}
+                onChange={(event) =>
+                  setFormData((previous) => ({
+                    ...previous,
+                    special_requirements: event.target.value,
+                  }))
+                }
+                placeholder={t('marketplace.specialRequirementsPlaceholder')}
               />
             </Grid>
 
-            {/* Languages */}
             <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                {t('marketplace.languages') || 'Required Languages'}
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                <TextField
-                  size="small"
-                  placeholder={t('marketplace.languagePlaceholder') || 'English, Hebrew, etc.'}
-                  value={newLanguage}
-                  onChange={(e) => setNewLanguage(e.target.value)}
-                />
-                <Button size="small" onClick={addLanguage} startIcon={<Add />}>
-                  {t('common.add') || 'Add'}
-                </Button>
-              </Box>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {formData.languages?.map((language, index) => (
-                  <Chip
-                    key={index}
-                    label={language}
-                    onDelete={() => removeLanguage(index)}
-                    deleteIcon={<Remove />}
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData.is_urgent}
+                    onChange={(event) =>
+                      setFormData((previous) => ({
+                        ...previous,
+                        is_urgent: event.target.checked,
+                      }))
+                    }
                   />
-                ))}
-              </Box>
+                }
+                label={t('marketplace.urgent')}
+              />
             </Grid>
           </Grid>
 
           <Divider sx={{ my: 3 }} />
 
-          {/* Actions */}
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
             <Button
               variant="outlined"
@@ -403,21 +389,19 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
               disabled={loading}
               startIcon={<Cancel />}
             >
-              {t('common.cancel') || 'Cancel'}
+              {t('common.cancel')}
             </Button>
             <Button
               type="submit"
               variant="contained"
               disabled={loading}
-              startIcon={loading ? <CircularProgress size={20} /> : <Save />}
+              startIcon={loading ? <CircularProgress size={18} /> : <Save />}
             >
               {loading
-                ? postId
-                  ? (t('common.saving') || 'Saving...')
-                  : (t('common.creating') || 'Creating...')
+                ? t('common.saving')
                 : postId
-                  ? (t('common.save') || 'Save')
-                  : (t('marketplace.createPost') || 'Create Post')}
+                  ? t('common.save')
+                  : t('marketplace.createPost')}
             </Button>
           </Box>
         </form>

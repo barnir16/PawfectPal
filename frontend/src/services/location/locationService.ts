@@ -1,4 +1,5 @@
-import type { Coordinates } from '../../types/location';
+import { apiClient } from '../api';
+import type { Coordinates, LocationHistory } from '../../types/location';
 
 /**
  * Calculate distance between two coordinates in kilometers
@@ -123,4 +124,47 @@ export const clearLocationWatch = (): void => {
     navigator.geolocation.clearWatch(watchId);
     watchId = null;
   }
+};
+
+/**
+ * Persist a pet location update to the backend.
+ */
+export const savePetLocation = async (
+  petId: number,
+  coordinates: Coordinates
+): Promise<LocationHistory> => {
+  return apiClient.post<LocationHistory>(`/gps/pets/${petId}/location`, {
+    latitude: coordinates.latitude,
+    longitude: coordinates.longitude,
+    accuracy: coordinates.accuracy,
+    speed: coordinates.speed,
+    altitude: coordinates.altitude,
+    timestamp: new Date(coordinates.timestamp ?? Date.now()).toISOString(),
+  });
+};
+
+/**
+ * Fetch recent location history entries for a pet.
+ */
+export const getPetLocationHistory = async (
+  petId: number,
+  limit: number = 20
+): Promise<LocationHistory[]> => {
+  return apiClient.get<LocationHistory[]>(`/gps/pets/${petId}/location-history`, {
+    params: { limit },
+  });
+};
+
+/**
+ * Build a Google Maps URL from coordinates.
+ */
+export const createMapsUrl = (
+  coordinates: Coordinates,
+  label?: string
+): string => {
+  const query = label
+    ? `${coordinates.latitude},${coordinates.longitude} (${label})`
+    : `${coordinates.latitude},${coordinates.longitude}`;
+
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 };

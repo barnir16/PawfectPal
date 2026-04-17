@@ -22,6 +22,7 @@ import { CheckCircle, Cancel, Schedule, Search } from "@mui/icons-material";
 import { useLocalization } from "../../../contexts/LocalizationContext";
 import { ServiceErrorBoundary } from "../components/ServiceErrorBoundary";
 import MockService from "../../../services/services/mockServices";
+import { apiRequest } from "../../../services/api";
 import type { Service } from "../../../types/services/service";
 import { Link as RouterLink } from "react-router-dom";
 
@@ -40,22 +41,43 @@ export const ServicesPage = () => {
     setLoading(true);
     setError(null);
     try {
-      let fetchedServices: Service[] = [];
-
-      if (tab === 0) {
-        const allServices = await MockService.getServices();
-        fetchedServices = allServices.filter(
-          (s) => s.status !== "completed" && s.status !== "cancelled"
-        );
-      } else {
-        const completed = await MockService.getServicesByStatus("completed");
-        const cancelled = await MockService.getServicesByStatus("cancelled");
-        fetchedServices = [...completed, ...cancelled];
-      }
+      const realServices = await apiRequest<Service[]>("/service_booking");
+      let fetchedServices =
+        tab === 0
+          ? realServices.filter(
+              (service) =>
+                service.status !== "completed" && service.status !== "cancelled"
+            )
+          : realServices.filter(
+              (service) =>
+                service.status === "completed" || service.status === "cancelled"
+            );
 
       setServices(fetchedServices);
     } catch (err: any) {
-      setError(err.message || t("services.somethingWentWrong"));
+      try {
+        let fallbackServices: Service[] = [];
+
+        if (tab === 0) {
+          const allFallbackServices = await MockService.getServices();
+          fallbackServices = allFallbackServices.filter(
+            (service) =>
+              service.status !== "completed" && service.status !== "cancelled"
+          );
+        } else {
+          const completed = await MockService.getServicesByStatus("completed");
+          const cancelled = await MockService.getServicesByStatus("cancelled");
+          fallbackServices = [...completed, ...cancelled];
+        }
+
+        setServices(fallbackServices);
+      } catch (fallbackError: any) {
+        setError(
+          fallbackError.message ||
+            err.message ||
+            t("services.somethingWentWrong")
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -70,9 +92,10 @@ export const ServicesPage = () => {
 
   const getStatusColor = (
     status: Service["status"]
-  ): "success" | "error" | "warning" => {
+  ): "success" | "error" | "warning" | "primary" => {
     if (status === "completed") return "success";
     if (status === "cancelled") return "error";
+    if (status === "confirmed") return "primary";
     return "warning";
   };
 
@@ -80,6 +103,32 @@ export const ServicesPage = () => {
     if (status === "completed") return <CheckCircle fontSize="small" />;
     if (status === "cancelled") return <Cancel fontSize="small" />;
     return <Schedule fontSize="small" />;
+  };
+
+  const getServiceTypeLabel = (serviceType: Service["service_type"]) => {
+    const keyMap: Record<Service["service_type"], string> = {
+      walking: "services.walking",
+      sitting: "services.sitting",
+      boarding: "services.boarding",
+      grooming: "services.grooming",
+      veterinary: "services.veterinary",
+      training: "services.training",
+    };
+
+    return t(keyMap[serviceType]);
+  };
+
+  const getStatusLabel = (status: Service["status"]) => {
+    const keyMap: Record<Service["status"], string> = {
+      pending: "services.pending",
+      confirmed: "services.confirmed",
+      in_progress: "services.inProgress",
+      completed: "services.completed",
+      cancelled: "services.cancelled",
+      rejected: "services.cancelled",
+    };
+
+    return t(keyMap[status] ?? status);
   };
 
   // apply filters
@@ -115,7 +164,7 @@ export const ServicesPage = () => {
           <TextField
             fullWidth
             size="small"
-            placeholder={t("Search")}
+            placeholder={t("common.search")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             slotProps={{
@@ -136,10 +185,12 @@ export const ServicesPage = () => {
               label={t("filterByStatus")}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
-              <MenuItem value="all">{t("All")}</MenuItem>
-              <MenuItem value="active">{t("In Progress")}</MenuItem>
-              <MenuItem value="completed">{t("Completed")}</MenuItem>
-              <MenuItem value="cancelled">{t("Cancelled")}</MenuItem>
+              <MenuItem value="all">{t("common.all")}</MenuItem>
+              <MenuItem value="pending">{t("services.pending")}</MenuItem>
+              <MenuItem value="confirmed">{t("services.confirmed")}</MenuItem>
+              <MenuItem value="in_progress">{t("services.inProgress")}</MenuItem>
+              <MenuItem value="completed">{t("services.completed")}</MenuItem>
+              <MenuItem value="cancelled">{t("services.cancelled")}</MenuItem>
             </Select>
           </FormControl>
         </Box>
@@ -193,7 +244,7 @@ export const ServicesPage = () => {
                 >
                   <CardContent>
                     <Typography variant="h6" sx={{ mb: 1 }}>
-                      {t(`${service.service_type}`)}
+                      {getServiceTypeLabel(service.service_type)}
                     </Typography>
                     <Typography
                       variant="subtitle1"
@@ -220,7 +271,7 @@ export const ServicesPage = () => {
                     sx={{ justifyContent: "flex-end", gap: 1, mt: "auto" }}
                   >
                     <Chip
-                      label={t(service.status)}
+                      label={getStatusLabel(service.status)}
                       color={getStatusColor(service.status)}
                       size="small"
                       sx={{ fontWeight: 500 }}
@@ -232,7 +283,7 @@ export const ServicesPage = () => {
                       component={RouterLink}
                       to={`/services/${service.id}`}
                     >
-                      {t("Details")}
+                      {t("common.details")}
                     </Button>
                   </CardActions>
                 </Card>
