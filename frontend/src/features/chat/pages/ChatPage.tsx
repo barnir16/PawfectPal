@@ -184,11 +184,9 @@ export const ChatPage = () => {
               }
             }
           });
-        } else {
-          console.warn('FCM initialization failed, notifications disabled');
         }
       } catch (error) {
-        console.error('FCM initialization error:', error);
+        console.warn('Chat notifications are unavailable right now:', error);
       }
     };
 

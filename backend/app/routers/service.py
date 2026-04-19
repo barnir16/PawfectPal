@@ -28,6 +28,7 @@ def get_service_types(
 
 
 @router.get("/{service_id}", response_model=ServiceRead)
+@router.get("/{service_id}/", response_model=ServiceRead)
 def get_service_by_id(
     service_id: int,
     db: Session = Depends(get_db),
@@ -103,6 +104,7 @@ def create_service(
 
 
 @router.put("/{service_id}", response_model=ServiceRead)
+@router.put("/{service_id}/", response_model=ServiceRead)
 def update_service(
     service_id: int,
     service_update: ServiceUpdate,
@@ -131,6 +133,7 @@ def update_service(
 
 
 @router.delete("/{service_id}", status_code=204)
+@router.delete("/{service_id}/", status_code=204)
 def delete_service(
     service_id: int,
     db: Session = Depends(get_db),

@@ -64,11 +64,12 @@ export const ProviderRating: React.FC<ProviderRatingProps> = ({
   const loadReviews = async () => {
     try {
       setLoading(true);
+      const token = await getToken();
       const response = await fetch(
         `${getBaseUrl()}/provider-reviews/provider/${providerId}`,
         {
           headers: {
-            Authorization: `Bearer ${getToken()}`,
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
             "Content-Type": "application/json",
           },
         }
@@ -97,6 +98,7 @@ export const ProviderRating: React.FC<ProviderRatingProps> = ({
     try {
       setLoading(true);
       setError(null);
+      const token = await getToken();
 
       const reviewData = {
         provider_id: providerId,
@@ -109,7 +111,7 @@ export const ProviderRating: React.FC<ProviderRatingProps> = ({
       const response = await fetch(`${getBaseUrl()}/provider-reviews`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${getToken()}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
           "Content-Type": "application/json",
         },
         body: JSON.stringify(reviewData),

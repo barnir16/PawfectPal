@@ -1,3 +1,5 @@
+from urllib.parse import parse_qs
+
 from fastapi import HTTPException, Depends, status, WebSocket
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
@@ -31,7 +33,11 @@ def get_current_user(
     return user
 
 
-def get_current_user_websocket(token: str = None, websocket: WebSocket = None) -> Optional[UserORM]:
+async def get_current_user_websocket(
+    token: str = None,
+    websocket: WebSocket = None,
+    db: Session = None,
+) -> Optional[UserORM]:
     """Get current authenticated user for WebSocket connections
     
     Args:
@@ -40,8 +46,10 @@ def get_current_user_websocket(token: str = None, websocket: WebSocket = None) -
     """
     # Handle case where token is passed as part of WebSocket query params
     if websocket is not None and token is None:
-        query_params = dict(websocket.scope.get("query_string", b"").decode().split("&"))
-        token = query_params.get("token")
+        raw_query_string = websocket.scope.get("query_string", b"").decode()
+        parsed_query_params = parse_qs(raw_query_string)
+        token_values = parsed_query_params.get("token", [])
+        token = token_values[0] if token_values else None
         
     if not token:
         return None
@@ -54,22 +62,15 @@ def get_current_user_websocket(token: str = None, websocket: WebSocket = None) -
     except JWTError:
         return None
     
-    # For WebSocket, we'll need to create a temporary session
-    # This is a simplified version - in production you might want to cache users
-    from sqlalchemy.orm import sessionmaker
-    from sqlalchemy import create_engine
-    from config import DATABASE_URL
-    from fastapi import WebSocket
-    
-    engine = create_engine(DATABASE_URL)
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    db = SessionLocal()
-    
-    try:
-        user = get_user_by_username(db, username=username)
-        return user
-    finally:
-        db.close()
+    if db is None:
+        db_generator = get_db()
+        db = next(db_generator)
+        try:
+            return get_user_by_username(db, username=username)
+        finally:
+            db.close()
+
+    return get_user_by_username(db, username=username)
 
 
 def require_provider(user: UserORM = Depends(get_current_user)) -> UserORM:

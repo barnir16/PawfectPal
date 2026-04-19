@@ -54,8 +54,25 @@ class FirebaseMessagingService {
         return false;
       }
 
+      if (typeof window === 'undefined' || !window.isSecureContext) {
+        return false;
+      }
+
+      if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+        return false;
+      }
+
       const firebaseConfig = SHARED_CONFIG.firebase;
       if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+        return false;
+      }
+
+      const vapidKey = configService.get('firebaseVapidKey');
+      if (!vapidKey || vapidKey === 'YOUR_VAPID_KEY') {
+        return false;
+      }
+
+      if (Notification.permission !== 'granted') {
         return false;
       }
 
@@ -72,10 +89,7 @@ class FirebaseMessagingService {
 
       this.messaging = getMessaging(this.app);
 
-      const permission = await this.requestPermission();
-      if (permission !== 'granted') {
-        return false;
-      }
+      await navigator.serviceWorker.ready;
 
       this.fcmToken = await this.getFCMToken();
       if (!this.fcmToken) {
@@ -86,7 +100,7 @@ class FirebaseMessagingService {
       this.isInitialized = true;
       return true;
     } catch (error) {
-      console.error('Failed to initialize Firebase Cloud Messaging:', error);
+      console.warn('Firebase Cloud Messaging is unavailable in this environment:', error);
       return false;
     }
   }
@@ -94,31 +108,16 @@ class FirebaseMessagingService {
   /**
    * Request notification permission
    */
-  private async requestPermission(): Promise<NotificationPermission> {
-    try {
-      return await Notification.requestPermission();
-    } catch (error) {
-      console.error('Error requesting notification permission:', error);
-      return 'denied';
-    }
-  }
-
-  /**
-   * Get FCM token
-   */
   private async getFCMToken(): Promise<string | null> {
     if (!this.messaging) return null;
 
     try {
       const vapidKey = configService.get('firebaseVapidKey');
-      if (!vapidKey || vapidKey === 'YOUR_VAPID_KEY') {
-        return null;
-      }
 
       const token = await getToken(this.messaging, { vapidKey });
       return token || null;
     } catch (error) {
-      console.error('Error getting FCM token:', error);
+      console.warn('Failed to get FCM token:', error);
       return null;
     }
   }

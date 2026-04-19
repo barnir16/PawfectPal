@@ -122,10 +122,16 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
       }
     };
 
-    // Only fetch if we have valid data
-    if (normalizedBreedName && normalizedBreedName !== 'Unknown Breed' && normalizedPetType !== 'unknown') {
+    // Avoid noisy lookups while the user is still typing short breed fragments.
+    if (
+      normalizedBreedName &&
+      normalizedBreedName !== 'Unknown Breed' &&
+      normalizedPetType !== 'unknown' &&
+      normalizedBreedName.length >= 3
+    ) {
       fetchBreedInfo();
     } else {
+      setBreedInfo(null);
       setLoading(false);
     }
   }, [normalizedPetType, normalizedBreedName]);

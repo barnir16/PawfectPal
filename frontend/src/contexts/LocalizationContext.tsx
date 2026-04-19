@@ -54,20 +54,40 @@ export const LocalizationProvider: React.FC<LocalizationProviderProps> = ({ chil
     }
   };
 
-  const t = (key: string): string => {
+  const resolveTranslation = (locale: Record<string, any>, key: string): string | null => {
     const keys = key.split('.');
-    let value: any = getLocaleData();
-    
+    let value: any = locale;
+
     for (const k of keys) {
       if (value && typeof value === 'object' && k in value) {
         value = value[k];
       } else {
-        console.warn(`Translation key not found: ${key}`);
-        return key; // Return the key if translation not found
+        return null;
       }
     }
-    
-    return typeof value === 'string' ? value : key;
+
+    return typeof value === 'string' ? value : null;
+  };
+
+  const t = (key: string): string => {
+    const localizedValue = resolveTranslation(getLocaleData(), key);
+    if (localizedValue) {
+      return localizedValue;
+    }
+
+    const fallbackValue = resolveTranslation(en, key);
+    if (fallbackValue) {
+      console.warn(`Translation key missing in ${currentLanguage}, using English fallback: ${key}`);
+      return fallbackValue;
+    }
+
+    console.warn(`Translation key not found: ${key}`);
+    const lastSegment = key.split('.').pop();
+    if (lastSegment) {
+      return lastSegment;
+    }
+
+    return key;
   };
 
   const getSupportedLanguages = () => {
