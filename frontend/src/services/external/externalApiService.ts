@@ -40,6 +40,10 @@ export interface BreedInfo {
 // Cache for breed information to avoid repeated API calls
 const breedInfoCache = new Map<string, BreedInfo>();
 const breedSearchCache = new Map<string, string[]>(); // Cache breed search results
+const externalBreedApiAvailability = {
+  dog: true,
+  cat: true,
+};
 
 // Debounce function to limit API calls
 function debounce<T extends (...args: any[]) => Promise<any>>(
@@ -101,6 +105,15 @@ function getBreedCacheKey(petType: string, breedName: string): string {
 // Get cache key for breed search
 function getBreedSearchCacheKey(petType: string, searchTerm: string): string {
   return `${petType.toLowerCase()}_search_${searchTerm.toLowerCase().trim()}`;
+}
+
+function handleExternalBreedApiFailure(
+  petType: 'dog' | 'cat',
+  responseStatus?: number
+): void {
+  if (responseStatus === 401 || responseStatus === 403 || responseStatus === 429) {
+    externalBreedApiAvailability[petType] = false;
+  }
 }
 
 // Normalize breed name for better matching
@@ -300,7 +313,7 @@ export const fetchDogBreedInfo = async (breedName: string): Promise<BreedInfo | 
     // Try to get detailed info from The Dog API
     try {
       const apiKey = ApiKeyManager.getPetsApiKey();
-      if (apiKey) {
+      if (apiKey && externalBreedApiAvailability.dog) {
         const breedResponse = await fetchWithTimeout(
           `https://api.thedogapi.com/v1/breeds/search?q=${encodeURIComponent(breedName)}`,
           {
@@ -338,6 +351,8 @@ export const fetchDogBreedInfo = async (breedName: string): Promise<BreedInfo | 
             breedInfoCache.set(cacheKey, enhancedInfo);
             return enhancedInfo;
           }
+        } else {
+          handleExternalBreedApiFailure('dog', breedResponse.status);
         }
       }
     } catch {
@@ -412,41 +427,42 @@ export const fetchCatBreedInfo = async (breedName: string): Promise<BreedInfo | 
 
     // Fallback to external API if not in our database
     const apiKey = ApiKeyManager.getPetsApiKey();
-    const headers: HeadersInit = {};
-    if (apiKey) {
-      headers['x-api-key'] = apiKey;
-    }
-    
-    const response = await fetchWithTimeout(`https://api.thecatapi.com/v1/breeds/search?q=${encodeURIComponent(breedName)}`, {
-      headers
-    }, 5000);
-    if (response.ok) {
-      const data = await response.json();
-      
-      if (data && data.length > 0) {
-        const breedData = data[0];
+    if (apiKey && externalBreedApiAvailability.cat) {
+      const response = await fetchWithTimeout(`https://api.thecatapi.com/v1/breeds/search?q=${encodeURIComponent(breedName)}`, {
+        headers: {
+          'x-api-key': apiKey,
+        }
+      }, 5000);
+      if (response.ok) {
+        const data = await response.json();
         
-        // Create enhanced breed info from external API
-        const enhancedInfo: BreedInfo = {
-          name: breedName,
-          averageWeight: parseWeightRange(breedData.weight),
-          lifeExpectancy: parseLifeSpan(breedData.life_span),
-          characteristics: {
-            energyLevel: getEnergyLevel(breedData.energy_level),
-            groomingNeeds: getGroomingNeeds(breedData.grooming),
-            trainability: getTrainability(breedData.intelligence),
-            goodWithChildren: breedData.child_friendly > 3,
-            goodWithOtherPets: breedData.dog_friendly > 3,
-          },
-          healthConsiderations: breedData.health_issues ? [breedData.health_issues] : [],
-          exerciseNeeds: getExerciseNeeds(breedData.energy_level),
-          dietRecommendations: getDietRecommendations(breedData.energy_level),
-          origin: breedData.origin || 'Various origins',
-          temperament: breedData.temperament || 'Friendly and independent',
-        };
-        
-        breedInfoCache.set(cacheKey, enhancedInfo);
-        return enhancedInfo;
+        if (data && data.length > 0) {
+          const breedData = data[0];
+          
+          // Create enhanced breed info from external API
+          const enhancedInfo: BreedInfo = {
+            name: breedName,
+            averageWeight: parseWeightRange(breedData.weight),
+            lifeExpectancy: parseLifeSpan(breedData.life_span),
+            characteristics: {
+              energyLevel: getEnergyLevel(breedData.energy_level),
+              groomingNeeds: getGroomingNeeds(breedData.grooming),
+              trainability: getTrainability(breedData.intelligence),
+              goodWithChildren: breedData.child_friendly > 3,
+              goodWithOtherPets: breedData.dog_friendly > 3,
+            },
+            healthConsiderations: breedData.health_issues ? [breedData.health_issues] : [],
+            exerciseNeeds: getExerciseNeeds(breedData.energy_level),
+            dietRecommendations: getDietRecommendations(breedData.energy_level),
+            origin: breedData.origin || 'Various origins',
+            temperament: breedData.temperament || 'Friendly and independent',
+          };
+          
+          breedInfoCache.set(cacheKey, enhancedInfo);
+          return enhancedInfo;
+        }
+      } else {
+        handleExternalBreedApiFailure('cat', response.status);
       }
     }
     
@@ -760,7 +776,7 @@ export const fetchDogBreeds = debounce(async (searchTerm?: string): Promise<stri
     let response: Response | null = null;
     let data;
 
-    if (apiKey) {
+    if (apiKey && externalBreedApiAvailability.dog) {
       response = await fetchWithTimeout('https://api.thedogapi.com/v1/breeds', {
         headers: {
           'x-api-key': apiKey,
@@ -792,6 +808,10 @@ export const fetchDogBreeds = debounce(async (searchTerm?: string): Promise<stri
       }
     }
     
+    if (response && !response.ok) {
+      handleExternalBreedApiFailure('dog', response.status);
+    }
+
     // Fallback to dog.ceo API if The Dog API fails
     response = await fetch('https://dog.ceo/api/breeds/list/all');
     data = await response.json();
@@ -871,40 +891,57 @@ export const fetchCatBreeds = debounce(async (searchTerm?: string): Promise<stri
     
     // Only fetch from API if we don't have cached data
     const apiKey = ApiKeyManager.getPetsApiKey();
-    const headers: HeadersInit = {};
-    if (apiKey) {
-      headers['x-api-key'] = apiKey;
-    }
-    
-    const response = await fetchWithTimeout('https://api.thecatapi.com/v1/breeds', {
-      headers
-    }, 5000);
-    const data = await response.json();
-    
-    if (Array.isArray(data)) {
-      const breeds = data.map((breed: any) => breed.name);
-      
-      // Cache the full list
-      breedSearchCache.set('cat_all', breeds);
-      
-      // Filter breeds if search term provided
-      if (searchTerm) {
-        const lowerSearchTerm = searchTerm.toLowerCase().trim();
-        const filteredBreeds = breeds.filter(breed => 
-          breed.toLowerCase().includes(lowerSearchTerm)
-        );
+    if (apiKey && externalBreedApiAvailability.cat) {
+      const response = await fetchWithTimeout('https://api.thecatapi.com/v1/breeds', {
+        headers: {
+          'x-api-key': apiKey,
+        }
+      }, 5000);
+
+      if (response.ok) {
+        const data = await response.json();
         
-        // Cache the filtered results
-        const cacheKey = getBreedSearchCacheKey('cat', searchTerm);
-        breedSearchCache.set(cacheKey, filteredBreeds);
-        
-        return filteredBreeds;
+        if (Array.isArray(data)) {
+          const breeds = data.map((breed: any) => breed.name);
+          
+          // Cache the full list
+          breedSearchCache.set('cat_all', breeds);
+          
+          // Filter breeds if search term provided
+          if (searchTerm) {
+            const lowerSearchTerm = searchTerm.toLowerCase().trim();
+            const filteredBreeds = breeds.filter(breed => 
+              breed.toLowerCase().includes(lowerSearchTerm)
+            );
+            
+            // Cache the filtered results
+            const cacheKey = getBreedSearchCacheKey('cat', searchTerm);
+            breedSearchCache.set(cacheKey, filteredBreeds);
+            
+            return filteredBreeds;
+          }
+          
+          return breeds;
+        }
+      } else {
+        handleExternalBreedApiFailure('cat', response.status);
       }
-      
-      return breeds;
-    } else {
-      throw new Error('Failed to fetch cat breeds');
     }
+
+    const localCatBreeds = Object.keys(CAT_BREED_DATABASE);
+    breedSearchCache.set('cat_all', localCatBreeds);
+
+    if (searchTerm) {
+      const lowerSearchTerm = searchTerm.toLowerCase().trim();
+      const filteredBreeds = localCatBreeds.filter((breed) =>
+        breed.toLowerCase().includes(lowerSearchTerm)
+      );
+      const cacheKey = getBreedSearchCacheKey('cat', searchTerm);
+      breedSearchCache.set(cacheKey, filteredBreeds);
+      return filteredBreeds;
+    }
+
+    return localCatBreeds;
   } catch (error) {
     console.error('❌ Error fetching cat breeds:', error);
     // Return cached results if available

@@ -35,7 +35,7 @@ async def websocket_chat_endpoint(
             return
             
         # Get current user from token
-        current_user = await get_current_user_websocket(token)
+        current_user = await get_current_user_websocket(token=token, db=db)
         if not current_user:
             await websocket.close(code=1008, reason="Invalid authentication")
             return
