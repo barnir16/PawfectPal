@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import HTTPException, Depends, APIRouter
 from .medical_record import MedicalRecordORM
 from sqlalchemy.orm import Session
@@ -7,6 +9,7 @@ from app.models import (
     UserORM,
     VaccinationORM,
 )
+from app.models.weight_record import WeightRecordORM
 from app.schemas.pet import PetCreate, PetRead, PetUpdate
 from app.dependencies.db import get_db
 from app.dependencies.auth import get_current_user
@@ -109,6 +112,8 @@ def update_pet(
     if not db_pet:
         raise HTTPException(status_code=404, detail="Pet not found")
 
+    previous_weight = db_pet.weight_kg
+
     db_pet.name = pet.name
     db_pet.breed_type = pet.breed_type
     db_pet.breed = pet.breed
@@ -133,6 +138,19 @@ def update_pet(
     db_pet.last_known_longitude = pet.last_known_longitude
     db_pet.last_location_update = pet.last_location_update
     db_pet.is_tracking_enabled = pet.is_tracking_enabled
+
+    # Keep weight tracking history consistent when the pet profile weight changes.
+    if pet.weight_kg is not None and pet.weight_kg != previous_weight:
+        db.add(
+            WeightRecordORM(
+                pet_id=db_pet.id,
+                weight=pet.weight_kg,
+                weight_unit=pet.weight_unit or db_pet.weight_unit or "kg",
+                date=datetime.utcnow(),
+                notes="Auto-recorded from pet profile update",
+                source="auto",
+            )
+        )
 
     db.commit()
     db.refresh(db_pet)

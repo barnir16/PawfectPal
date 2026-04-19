@@ -429,6 +429,14 @@ export const he = {
     live: 'חי',
     addNewNotePlaceholder: 'הוסף הערה חדשה...',
     pet: 'חיית מחמד',
+    overdueVaccines: 'חיסונים באיחור',
+    dueSoonVaccines: 'חיסונים בקרוב',
+    upToDateVaccines: 'חיסונים מעודכנים',
+    allVaccineRecords: 'כל רשומות החיסונים',
+    vaccineName: 'שם החיסון',
+    administeredDate: 'תאריך מתן',
+    updateVaccine: 'עדכן חיסון',
+    confirmDeleteVaccine: 'האם למחוק את רשומת החיסון הזו?',
   },
 
   // Vaccines
@@ -480,6 +488,7 @@ export const he = {
     at: 'ב',
     notes: 'הערות',
     edit: 'ערוך',
+    vaccineName: 'שם החיסון',
     administeredDate: 'תאריך מתן',
     confirmDeleteVaccine: 'האם למחוק את רשומת החיסון הזו?',
     updateVaccine: 'עדכן חיסון',
