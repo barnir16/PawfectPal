@@ -220,7 +220,7 @@ export const uploadPetImage = async (
   const formData = new FormData();
   formData.append('file', file);
 
-  return apiRequest<UploadResponse>(`/image_upload/pet-image/${petId}`, {
+  return apiRequest<UploadResponse>(`/image_upload/pet-image/${petId}/`, {
     method: 'POST',
     body: formData
   });

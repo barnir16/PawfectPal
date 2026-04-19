@@ -59,10 +59,10 @@ async def upload_pet_image(
 
     save_upload_file(file, str(file_path))
 
-    pet.photoUri = _relative_upload_path(filename)
+    pet.photo_uri = _relative_upload_path(filename)
     db.commit()
 
-    return {"message": "Image uploaded successfully", "file_path": pet.photoUri}
+    return {"message": "Image uploaded successfully", "file_path": pet.photo_uri}
 
 
 @router.post("/task-attachment/{task_id}")
