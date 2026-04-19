@@ -11,8 +11,6 @@ import { getBaseUrl } from "../services/api";
 import type { LoginResponse, User } from "../types/auth";
 import { StorageHelper } from "../utils/StorageHelper";
 
-const API_BASE_URL = getBaseUrl();
-
 interface AuthContextType {
   user: User | null;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
@@ -54,7 +52,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       try {
-        const response = await fetch(`${API_BASE_URL}/users/me`, {
+        const response = await fetch(`${getBaseUrl()}/users/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -87,7 +85,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response: LoginResponse = await loginApi(username, password);
       await StorageHelper.setItem("authToken", response.access_token);
 
-      const userRes = await fetch(`${API_BASE_URL}/users/me`, {
+      const userRes = await fetch(`${getBaseUrl()}/users/me`, {
         headers: {
           Authorization: `Bearer ${response.access_token}`,
           "Content-Type": "application/json",

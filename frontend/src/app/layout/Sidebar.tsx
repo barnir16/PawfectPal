@@ -233,6 +233,7 @@ export const Sidebar = ({
         anchor={isRTL ? "right" : "left"}
         ModalProps={{
           keepMounted: true, // Better open performance on mobile.
+          disableRestoreFocus: true,
         }}
         sx={{
           display: { xs: "block", sm: "none" },

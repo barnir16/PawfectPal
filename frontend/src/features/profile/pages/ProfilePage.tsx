@@ -113,7 +113,7 @@ const ProfilePage: React.FC = () => {
   useEffect(() => {
     const loadServices = async () => {
       try {
-        const data = await apiRequest<any[]>("/service_booking/types/");
+        const data = await apiRequest<any[]>("/provider-profiles/types/");
         // Map the response to match the expected format
         const formattedServices = data.map((service: any) => ({
           id: service.id,
@@ -186,7 +186,7 @@ const ProfilePage: React.FC = () => {
         const formDataToSend = new FormData();
         formDataToSend.append("file", file);
         const imageData = await apiRequest<{ profile_image: string }>(
-          "/image_upload/profile-image",
+          "/image_upload/profile-image/",
           {
             method: "POST",
             headers: { Authorization: `Bearer ${token}` },
