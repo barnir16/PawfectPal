@@ -18,7 +18,6 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { LanguageSwitcher } from "../../components/common/LanguageSwitcher";
 import { useLocalization } from "../../contexts/LocalizationContext";
-import { getBaseUrl, getToken } from "../../services/api";
 
 type HeaderProps = {
   onMenuClick: () => void;
@@ -26,10 +25,13 @@ type HeaderProps = {
 };
 
 export const Header = ({ onMenuClick, desktopOpen = true }: HeaderProps) => {
-  const { user, setUser, logout, forceLogout } = useAuth();
+  const { user, logout, forceLogout } = useAuth();
   const navigate = useNavigate();
   const { t, isRTL } = useLocalization();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const displayName = user?.full_name?.trim() || user?.username || "User";
+  const avatarSource = user?.profile_image || user?.profile_picture_url || undefined;
+  const avatarFallback = displayName.charAt(0).toUpperCase() || "U";
 
   const handleAccountClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -106,7 +108,7 @@ export const Header = ({ onMenuClick, desktopOpen = true }: HeaderProps) => {
               textAlign: isRTL ? "right" : "left",
             }}
           >
-            {user?.username || "User"}
+            {displayName}
           </Typography>
 
           {/* Debug info */}
@@ -144,8 +146,11 @@ export const Header = ({ onMenuClick, desktopOpen = true }: HeaderProps) => {
             color="inherit"
             onClick={handleAccountClick}
           >
-            <Avatar sx={{ width: 32, height: 32, bgcolor: "primary.dark" }}>
-              {user?.username?.charAt(0)?.toUpperCase() || "U"}
+            <Avatar
+              src={avatarSource}
+              sx={{ width: 32, height: 32, bgcolor: "primary.dark" }}
+            >
+              {avatarFallback}
             </Avatar>
           </IconButton>
 

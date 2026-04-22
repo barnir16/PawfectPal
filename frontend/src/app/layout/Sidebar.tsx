@@ -77,14 +77,18 @@ export const Sidebar = ({
     },
     { text: t("navigation.pets"), icon: <PetsIcon />, path: "/pets" },
     { text: t("navigation.tasks"), icon: <TasksIcon />, path: "/tasks" },
-    { text: t("services.title"), icon: <ServicesIcon />, path: "/services" }, // Everyone
     {
-      text: t("services.bookService"),
+      text: t("services.manageBookings"),
+      icon: <ServicesIcon />,
+      path: "/services",
+    },
+    {
+      text: t("services.findProviders"),
       icon: <BookIcon />,
       path: "/bookservice",
     },
     {
-      text: t("marketplace.title") || "Marketplace",
+      text: t("marketplace.requestBoard") || "Request Board",
       icon: <MarketplaceIcon />,
       path: "/marketplace",
     },
@@ -92,14 +96,14 @@ export const Sidebar = ({
     ...(isProvider
       ? [
           {
-            text: t("services.browseRequests"),
+            text: t("services.providerRequestInbox"),
             icon: <ServiceRequestsIcon />,
             path: "/service-requests",
           },
         ]
       : []),
     {
-      text: t("services.myRequests"),
+      text: t("services.myPostedRequests"),
       icon: <ServiceRequestsIcon />,
       path: "/my-service-requests",
     },

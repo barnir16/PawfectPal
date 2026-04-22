@@ -25,6 +25,7 @@ import MockService from "../../../services/services/mockServices";
 import { apiRequest } from "../../../services/api";
 import type { Service } from "../../../types/services/service";
 import { Link as RouterLink } from "react-router-dom";
+import { SHARED_CONFIG } from "../../../config/shared";
 
 export const ServicesPage = () => {
   const { t } = useLocalization();
@@ -40,6 +41,13 @@ export const ServicesPage = () => {
   const fetchServices = useCallback(async () => {
     setLoading(true);
     setError(null);
+    const isLocalDevelopment =
+      typeof window !== "undefined" &&
+      (window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1");
+    const shouldUseMockFallback =
+      SHARED_CONFIG.development.enableMockData && isLocalDevelopment;
+
     try {
       const realServices = await apiRequest<Service[]>("/service_booking/");
       let fetchedServices =
@@ -55,6 +63,13 @@ export const ServicesPage = () => {
 
       setServices(fetchedServices);
     } catch (err: any) {
+      if (!shouldUseMockFallback) {
+        setError(err.message || t("services.somethingWentWrong"));
+        setServices([]);
+        setLoading(false);
+        return;
+      }
+
       try {
         let fallbackServices: Service[] = [];
 
@@ -144,8 +159,28 @@ export const ServicesPage = () => {
     <ServiceErrorBoundary>
       <Box sx={{ p: 3 }}>
         <Typography variant="h4" gutterBottom>
-          {t("services.title")}
+          {t("services.manageBookings")}
         </Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+          {t("services.manageBookingsSubtitle")}
+        </Typography>
+
+        <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", mb: 2 }}>
+          <Button
+            variant="contained"
+            component={RouterLink}
+            to="/bookservice"
+          >
+            {t("services.findProviders")}
+          </Button>
+          <Button
+            variant="outlined"
+            component={RouterLink}
+            to="/marketplace"
+          >
+            {t("marketplace.requestBoard")}
+          </Button>
+        </Box>
 
         <Tabs value={tab} onChange={handleChange}>
           <Tab label={t("services.activeUpcoming")} />
@@ -210,11 +245,27 @@ export const ServicesPage = () => {
           )}
 
           {!loading && !error && filteredServices.length === 0 && (
-            <Typography
-              sx={{ textAlign: "center", p: 3, color: "text.secondary" }}
-            >
-              {t("services.noServicesFound")}
-            </Typography>
+            <Box sx={{ textAlign: "center", p: 4 }}>
+              <Typography sx={{ color: "text.secondary", mb: 2 }}>
+                {t("services.noServicesFound")}
+              </Typography>
+              <Box sx={{ display: "flex", justifyContent: "center", gap: 1.5, flexWrap: "wrap" }}>
+                <Button
+                  variant="contained"
+                  component={RouterLink}
+                  to="/bookservice"
+                >
+                  {t("services.findProviders")}
+                </Button>
+                <Button
+                  variant="outlined"
+                  component={RouterLink}
+                  to="/marketplace"
+                >
+                  {t("marketplace.createPost")}
+                </Button>
+              </Box>
+            </Box>
           )}
 
           {!loading && !error && filteredServices.length > 0 && (

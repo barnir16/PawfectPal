@@ -12,7 +12,11 @@ import { useNotifications } from "../../../contexts/NotificationContext";
 import { ProviderDashboard } from "../../provider/pages/ProviderDashboard";
 import { getPets } from "../../../services/pets/petService";
 import { getTasks, deleteTask, completeTask } from "../../../services/tasks/taskService";
-import { getOverdueVaccinations, getVaccinationsDueSoon } from "../../../services/vaccines/vaccineService";
+import {
+  getAllVaccinations,
+  getOverdueVaccinations,
+  getVaccinationsDueSoon,
+} from "../../../services/vaccines/vaccineService";
 import { SmartVaccineService } from "../../../services/vaccines/smartVaccineService";
 import { WeightMonitoringService } from "../../../services/weight/weightMonitoringService";
 import { WeightService } from "../../../services/weight/weightService";
@@ -64,6 +68,7 @@ export const Dashboard = () => {
   const [recentTasks, setRecentTasks] = useState<TaskListTask[]>([]);
   const [overdueVaccinations, setOverdueVaccinations] = useState<any[]>([]);
   const [upcomingVaccinations, setUpcomingVaccinations] = useState<any[]>([]);
+  const [vaccinationHistoryByPet, setVaccinationHistoryByPet] = useState<Record<number, any[]>>({});
   const [weightAlerts, setWeightAlerts] = useState<any[]>([]);
   const [weightHealthData, setWeightHealthData] = useState<DashboardWeightHealth[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -97,12 +102,21 @@ export const Dashboard = () => {
 
         if (petsData.length > 0) {
           try {
-            const [overdueData, upcomingData] = await Promise.all([
+            const [overdueData, upcomingData, allVaccinationRecords] = await Promise.all([
               getOverdueVaccinations().catch(() => []),
               getVaccinationsDueSoon(30).catch(() => []),
+              getAllVaccinations().catch(() => []),
             ]);
             setOverdueVaccinations(overdueData || []);
             setUpcomingVaccinations(upcomingData || []);
+            const historyMap = (allVaccinationRecords || []).reduce<Record<number, any[]>>((acc, record) => {
+              if (!acc[record.pet_id]) {
+                acc[record.pet_id] = [];
+              }
+              acc[record.pet_id].push(record);
+              return acc;
+            }, {});
+            setVaccinationHistoryByPet(historyMap);
           } catch (vaccinationError) {
             console.warn("Could not fetch vaccination data:", vaccinationError);
           }
@@ -440,7 +454,10 @@ export const Dashboard = () => {
           </Typography>
 
           {pets.slice(0, 2).map((pet) => {
-            const smartSchedule = SmartVaccineService.getVaccineSchedule(pet);
+            const smartSchedule = SmartVaccineService.getVaccineSchedule(
+              pet,
+              vaccinationHistoryByPet[pet.id] || []
+            );
             return (
               <Box
                 key={pet.id}
