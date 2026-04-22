@@ -2,18 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
-  Card,
-  CardContent,
-  Avatar,
   Typography,
   CircularProgress,
-  Rating,
   Paper,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  SelectChangeEvent,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { getProviders } from "../servicesApi";
@@ -22,11 +13,8 @@ import { useLocalization } from "../../../contexts/LocalizationContext";
 import { ServiceProviderCard } from "../../../components/services/ServiceProviderCard";
 import { ServiceErrorBoundary } from "../components/ServiceErrorBoundary";
 import { ServiceTypeDropdown } from "../../../components/services/ServiceTypeDropdown";
-import { getFullImageUrl } from "../../../utils/image";
-import { CardMedia, CardActions, Button } from "@mui/material";
 
 export const BookService = () => {
-
   const { t } = useLocalization();
   const navigate = useNavigate();
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
@@ -125,13 +113,16 @@ return (
     <ServiceErrorBoundary>
       <Box sx={{ p: 3 }}>
         <Typography variant="h4" gutterBottom>
-          {t("services.providers")}
+          {t("services.findProviders")}
+        </Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+          {t("services.findProvidersSubtitle")}
         </Typography>
 
         {/* Service Type Filter */}
         <Paper sx={{ p: 2, mb: 3 }}>
           <Typography variant="h6" gutterBottom>
-            {t("services.filterByType")}
+            {t("services.filterProvidersByType")}
           </Typography>
           <Box sx={{ maxWidth: 300 }}>
             <ServiceTypeDropdown

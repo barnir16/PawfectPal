@@ -189,10 +189,10 @@ export const MarketplacePostsPage: React.FC = () => {
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" gutterBottom>
-          {t('marketplace.title') || 'Marketplace'}
+          {t('marketplace.requestBoard') || 'Request Board'}
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          {t('marketplace.subtitle') || 'Find service providers or post your needs'}
+          {t('marketplace.subtitle') || 'Post what you need so providers can discover and respond to it'}
         </Typography>
       </Box>
 

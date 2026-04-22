@@ -1,32 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  Alert,
   Box,
+  Button,
   Card,
   CardContent,
-  Typography,
-  Button,
   Chip,
-  Grid,
   CircularProgress,
-  Alert,
-  Paper,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  IconButton,
   Fab,
+  Grid,
+  IconButton,
+  Paper,
+  Typography,
 } from '@mui/material';
 import {
-  Add,
-  Edit,
-  Delete,
-  Visibility,
-  Message,
-  LocationOn,
   AccessTime,
+  Add,
   AttachMoney,
+  Delete,
+  LocationOn,
+  Message,
+  Visibility,
 } from '@mui/icons-material';
 import { useLocalization } from '../../contexts/LocalizationContext';
 import { ServiceRequestService } from '../../services/serviceRequests/serviceRequestService';
@@ -40,7 +35,7 @@ export const MyServiceRequests: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchMyRequests();
+    void fetchMyRequests();
   }, []);
 
   const fetchMyRequests = async () => {
@@ -59,7 +54,7 @@ export const MyServiceRequests: React.FC = () => {
     if (window.confirm(t('common.confirmDelete'))) {
       try {
         await ServiceRequestService.deleteServiceRequest(id);
-        setRequests(requests.filter(req => req.id !== id));
+        setRequests((current) => current.filter((req) => req.id !== id));
       } catch (err: any) {
         setError(err.message || t('common.error'));
       }
@@ -68,11 +63,16 @@ export const MyServiceRequests: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'open': return 'success';
-      case 'in_progress': return 'warning';
-      case 'completed': return 'info';
-      case 'closed': return 'default';
-      default: return 'default';
+      case 'open':
+        return 'success';
+      case 'in_progress':
+        return 'warning';
+      case 'completed':
+        return 'info';
+      case 'closed':
+        return 'default';
+      default:
+        return 'default';
     }
   };
 
@@ -87,9 +87,7 @@ export const MyServiceRequests: React.FC = () => {
   if (error) {
     return (
       <Box p={3}>
-        <Alert severity="error">
-          {error}
-        </Alert>
+        <Alert severity="error">{error}</Alert>
       </Box>
     );
   }
@@ -97,9 +95,12 @@ export const MyServiceRequests: React.FC = () => {
   return (
     <Box p={3}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">
-          {t('services.myRequests')}
-        </Typography>
+        <Box>
+          <Typography variant="h4">{t('services.myPostedRequests')}</Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>
+            {t('services.myPostedRequestsSubtitle')}
+          </Typography>
+        </Box>
         <Button
           variant="contained"
           startIcon={<Add />}
@@ -143,10 +144,9 @@ export const MyServiceRequests: React.FC = () => {
                   </Box>
 
                   <Typography variant="body2" color="text.secondary" paragraph>
-                    {request.description.length > 100 
+                    {request.description.length > 100
                       ? `${request.description.substring(0, 100)}...`
-                      : request.description
-                    }
+                      : request.description}
                   </Typography>
 
                   <Box display="flex" alignItems="center" mb={1}>
@@ -173,11 +173,9 @@ export const MyServiceRequests: React.FC = () => {
                   )}
 
                   <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        {request.views_count} {t('services.views')} • {request.responses_count} {t('services.responses')}
-                      </Typography>
-                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      {request.views_count} {t('services.views')} - {request.responses_count} {t('services.responses')}
+                    </Typography>
                     <Box>
                       <IconButton
                         size="small"
@@ -211,7 +209,7 @@ export const MyServiceRequests: React.FC = () => {
         color="primary"
         aria-label="add"
         sx={{ position: 'fixed', bottom: 16, right: 16 }}
-        onClick={() => navigate('/marketplace')}
+        onClick={() => navigate('/service-request-form')}
       >
         <Add />
       </Fab>

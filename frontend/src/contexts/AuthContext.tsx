@@ -41,6 +41,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchCurrentUser = async (token: string): Promise<User> => {
+    const response = await fetch(`${getBaseUrl()}/users/me`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch user data");
+    }
+
+    return response.json();
+  };
+
   const checkAuth = async () => {
     try {
       setIsLoading(true);
@@ -52,20 +67,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       try {
-        const response = await fetch(`${getBaseUrl()}/users/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          await StorageHelper.removeItem("authToken");
-          setUser(null);
-          return;
-        }
-
-        const userData = await response.json();
+        const userData = await fetchCurrentUser(token);
         setUser(userData);
       } catch {
         await StorageHelper.removeItem("authToken");
@@ -84,19 +86,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response: LoginResponse = await loginApi(username, password);
       await StorageHelper.setItem("authToken", response.access_token);
-
-      const userRes = await fetch(`${getBaseUrl()}/users/me`, {
-        headers: {
-          Authorization: `Bearer ${response.access_token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!userRes.ok) {
-        throw new Error("Failed to fetch user data");
-      }
-
-      const fullUser: User = await userRes.json();
+      const fullUser = await fetchCurrentUser(response.access_token);
       setUser(fullUser);
     } catch (error) {
       console.error("Login failed:", error);
@@ -108,18 +98,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response: LoginResponse = await signInWithGoogle();
       await StorageHelper.setItem("authToken", response.access_token);
-
-      const googleUser: User = {
-        id: 1,
-        username: response.user?.username || "google_user",
-        is_active: true,
-        is_provider: false,
-        is_email_verified: false,
-        is_phone_verified: false,
-        date_joined: new Date().toISOString(),
-      };
-
-      setUser(googleUser);
+      const fullUser = await fetchCurrentUser(response.access_token);
+      setUser(fullUser);
     } catch (error) {
       console.error("Google login failed:", error);
       throw error;

@@ -1,6 +1,7 @@
 import { apiRequest } from "../../services/api";
 import type { Service, ServiceProvider, ServiceType } from "../../types/services";
 import { MockProviderService } from "../../services/providers/mockProviderService";
+import { SHARED_CONFIG } from "../../config/shared";
 
 // Backend UserRead type that includes provider information
 interface BackendUserRead {
@@ -104,7 +105,6 @@ function transformUserToServiceProvider(user: BackendUserRead): ServiceProvider 
 }
 
 // [HYBRID_PROVIDER_FETCH - START]
-// New system: fetch providers from backend and mock simultaneously, merge results.
 async function fetchBackendProviders(filter?: string[]): Promise<ServiceProvider[]> {
   const data = await apiRequest<BackendUserRead[]>("/providers/", {
     params: filter && filter.length ? { filter } : undefined,
@@ -113,36 +113,26 @@ async function fetchBackendProviders(filter?: string[]): Promise<ServiceProvider
 }
 
 export async function getProviders(filter?: string[]): Promise<ServiceProvider[]> {
-  // Old mock-only implementation preserved for future reference:
-  // console.log('Using mock provider data');
-  // try {
-  //   const serviceType = filter && filter.length > 0 ? filter[0] : undefined;
-  //   const providers = await MockProviderService.getProviders(serviceType);
-  //   return providers;
-  // } catch (mockError) {
-  //   console.error('Error loading mock providers:', mockError);
-  //   return [];
-  // }
-
   const serviceType = filter && filter.length > 0 ? filter[0] : undefined;
-  const mockPromise = MockProviderService.getProviders(serviceType).catch((e) => {
-    console.warn("Mock providers failed:", e);
-    return [] as ServiceProvider[];
-  });
-  const backendPromise = fetchBackendProviders(filter).catch((e) => {
-    console.warn("Backend providers failed:", e);
-    return [] as ServiceProvider[];
-  });
+  const isLocalDevelopment =
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+  const shouldUseMockFallback =
+    SHARED_CONFIG.development.enableMockData && isLocalDevelopment;
 
-  const [mockProviders, backendProviders] = await Promise.all([mockPromise, backendPromise]);
+  try {
+    const backendProviders = await fetchBackendProviders(filter);
+    if (backendProviders.length > 0 || !shouldUseMockFallback) {
+      return backendProviders;
+    }
+  } catch (error) {
+    if (!shouldUseMockFallback) {
+      throw error;
+    }
+    console.warn("Backend providers unavailable, falling back to mock data locally:", error);
+  }
 
-  // Merge by provider id; prefer backend data when duplicate ids exist
-  const byId = new Map<number, ServiceProvider>();
-  for (const p of mockProviders) byId.set(p.id, p);
-  for (const p of backendProviders) byId.set(p.id, p); // backend overrides
-
-  const merged = Array.from(byId.values());
-  return merged;
+  return MockProviderService.getProviders(serviceType);
 }
 // [HYBRID_PROVIDER_FETCH - END]
 

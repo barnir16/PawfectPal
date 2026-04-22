@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -59,13 +59,12 @@ import {
   Sync as SyncIcon,
 } from '@mui/icons-material';
 import { getPets } from '../../services/pets/petService';
-import { getAllVaccinations, getVaccinationsDueSoon, getOverdueVaccinations, updateVaccination, deleteVaccination } from '../../services/vaccines/vaccineService';
+import { getAllVaccinations, updateVaccination, deleteVaccination } from '../../services/vaccines/vaccineService';
 import { downloadTasksAsICal, syncTasksWithGoogleCalendar } from '../../services/tasks/taskService';
 import { israeliVaccineSchemas, vaccineNameTranslations } from '../../data/vaccines/israeliVaccines';
 import { useLocalization } from '../../contexts/LocalizationContext';
 import type { Pet } from '../../types/pets/pet';
-import type { VaccinationRecord } from '../../services/vaccines/vaccineService';
-import type { Vaccine, VaccineSchema } from '../../data/vaccines/israeliVaccines';
+import type { VaccineSchema } from '../../data/vaccines/israeliVaccines';
 
 interface VaccineDisplayRecord {
   id: string;
@@ -203,90 +202,80 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
     return suggestions;
   };
 
-  // Load pets and vaccine data
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        
-        const [petsData, vaccinationsData] = await Promise.all([
-          getPets(),
-          getAllVaccinations()
-        ]);
-        
-        
-        setPets(petsData);
-        
-        // Convert vaccination records to display format
-        const today = new Date();
-        const vaccineRecords: VaccineDisplayRecord[] = vaccinationsData.map(vaccination => {
-          const pet = petsData.find(p => p.id === vaccination.pet_id);
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [petsData, vaccinationsData] = await Promise.all([
+        getPets(),
+        getAllVaccinations()
+      ]);
+
+      setPets(petsData);
+
+      const today = new Date();
+      const vaccineRecords: VaccineDisplayRecord[] = vaccinationsData.map((vaccination) => {
+        const pet = petsData.find((currentPet) => currentPet.id === vaccination.pet_id);
         const dueDate = new Date(vaccination.next_due_date);
-        // Set time to start of day for accurate date comparison
         const dueDateStart = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
         const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
         const soonDate = new Date(todayStart.getTime() + 30 * 24 * 60 * 60 * 1000);
-        
+
         const isOverdue = dueDateStart < todayStart && !vaccination.is_completed;
         const isDueSoon = dueDateStart >= todayStart && dueDateStart <= soonDate;
-        
-          
-          return {
-            id: vaccination.id.toString(),
-            petId: vaccination.pet_id,
-            petName: pet?.name || 'Unknown Pet',
-            vaccineName: getTranslatedVaccineName(vaccination.vaccine_name),
-            type: vaccination.vaccine_type || 'Vaccination',
-            administeredDate: vaccination.date_administered,
-            nextDueDate: vaccination.next_due_date,
-            veterinarian: vaccination.veterinarian,
-            clinic: vaccination.clinic,
-            notes: vaccination.notes || '',
-            isOverdue,
-            isDueSoon,
-            isCompleted: vaccination.is_completed,
-            priority: 'recommended', // Default, can be enhanced
-            category: 'vaccination',
-          };
-        });
-        
-        // Generate suggestions for all pets
-        const allSuggestions: VaccineSuggestion[] = [];
-        petsData.forEach(pet => {
-          const petSuggestions = generateVaccineSuggestions(pet);
-          allSuggestions.push(...petSuggestions.map(suggestion => ({
-            ...suggestion,
-            petId: pet.id,
-            petName: pet.name,
-          })));
-        });
-        
-        // Sort vaccines by due date (overdue first, then by date)
-        const sortedVaccines = vaccineRecords.sort((a, b) => {
-          // Overdue vaccines first
-          if (a.isOverdue && !b.isOverdue) return -1;
-          if (!a.isOverdue && b.isOverdue) return 1;
-          
-          // Then by due date
-          const dateA = new Date(a.nextDueDate || 0);
-          const dateB = new Date(b.nextDueDate || 0);
-          return dateA.getTime() - dateB.getTime();
-        });
-        
-        setVaccines(sortedVaccines);
-        setSuggestions(allSuggestions);
-      } catch (err) {
-        console.error('Error loading vaccine data:', err);
-        setError('Failed to load vaccine data');
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    loadData();
-  }, [region]);
+        return {
+          id: vaccination.id.toString(),
+          petId: vaccination.pet_id,
+          petName: pet?.name || 'Unknown Pet',
+          vaccineName: getTranslatedVaccineName(vaccination.vaccine_name),
+          type: vaccination.vaccine_type || 'Vaccination',
+          administeredDate: vaccination.date_administered,
+          nextDueDate: vaccination.next_due_date,
+          veterinarian: vaccination.veterinarian,
+          clinic: vaccination.clinic,
+          notes: vaccination.notes || '',
+          isOverdue,
+          isDueSoon,
+          isCompleted: vaccination.is_completed,
+          priority: 'recommended',
+          category: 'vaccination',
+        };
+      });
+
+      const allSuggestions: VaccineSuggestion[] = [];
+      petsData.forEach((pet) => {
+        const petSuggestions = generateVaccineSuggestions(pet);
+        allSuggestions.push(...petSuggestions.map((suggestion) => ({
+          ...suggestion,
+          petId: pet.id,
+          petName: pet.name,
+        })));
+      });
+
+      const sortedVaccines = vaccineRecords.sort((a, b) => {
+        if (a.isOverdue && !b.isOverdue) return -1;
+        if (!a.isOverdue && b.isOverdue) return 1;
+
+        const dateA = new Date(a.nextDueDate || 0);
+        const dateB = new Date(b.nextDueDate || 0);
+        return dateA.getTime() - dateB.getTime();
+      });
+
+      setVaccines(sortedVaccines);
+      setSuggestions(allSuggestions);
+    } catch (err) {
+      console.error('Error loading vaccine data:', err);
+      setError('Failed to load vaccine data');
+    } finally {
+      setLoading(false);
+    }
+  }, [region, currentLanguage]);
+
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -330,48 +319,7 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
       setSuccessMessage(t('vaccines.vaccineUpdated') || 'Vaccine updated successfully!');
       setIsEditDialogOpen(false);
       setSelectedVaccine(null);
-
-      // Refresh vaccine data
-      const vaccinationsData = await getAllVaccinations();
-      const vaccineRecords: VaccineDisplayRecord[] = vaccinationsData.map(vaccination => {
-        const pet = pets.find(p => p.id === vaccination.pet_id);
-        const dueDate = new Date(vaccination.next_due_date);
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
-        const soonDate = new Date(todayStart.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-        const isOverdue = dueDate < todayStart && !vaccination.is_completed;
-        const isDueSoon = dueDate >= todayStart && dueDate <= soonDate;
-
-        return {
-          id: vaccination.id.toString(),
-          petId: vaccination.pet_id,
-          petName: pet?.name || 'Unknown Pet',
-          vaccineName: getTranslatedVaccineName(vaccination.vaccine_name),
-          type: vaccination.vaccine_type || 'Vaccination',
-          administeredDate: vaccination.date_administered,
-          nextDueDate: vaccination.next_due_date,
-          veterinarian: vaccination.veterinarian,
-          clinic: vaccination.clinic,
-          notes: vaccination.notes || '',
-          isOverdue,
-          isDueSoon,
-          isCompleted: vaccination.is_completed,
-          priority: 'recommended',
-          category: 'vaccination',
-        };
-      });
-
-      const sortedVaccines = vaccineRecords.sort((a, b) => {
-        if (a.isOverdue && !b.isOverdue) return -1;
-        if (!a.isOverdue && b.isOverdue) return 1;
-
-        const dateA = new Date(a.nextDueDate || 0);
-        const dateB = new Date(b.nextDueDate || 0);
-        return dateA.getTime() - dateB.getTime();
-      });
-
-      setVaccines(sortedVaccines);
+      await loadData();
     } catch (err) {
       console.error('❌ Error updating vaccine:', err);
       setError(t('vaccines.failedToUpdateVaccine') || 'Failed to update vaccine');
@@ -390,48 +338,7 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
       setSuccessMessage(t('vaccines.vaccineDeleted') || 'Vaccine deleted successfully!');
       setIsDeleteDialogOpen(false);
       setSelectedVaccine(null);
-
-      // Refresh vaccine data
-      const vaccinationsData = await getAllVaccinations();
-      const vaccineRecords: VaccineDisplayRecord[] = vaccinationsData.map(vaccination => {
-        const pet = pets.find(p => p.id === vaccination.pet_id);
-        const dueDate = new Date(vaccination.next_due_date);
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
-        const soonDate = new Date(todayStart.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-        const isOverdue = dueDate < todayStart && !vaccination.is_completed;
-        const isDueSoon = dueDate >= todayStart && dueDate <= soonDate;
-
-        return {
-          id: vaccination.id.toString(),
-          petId: vaccination.pet_id,
-          petName: pet?.name || 'Unknown Pet',
-          vaccineName: getTranslatedVaccineName(vaccination.vaccine_name),
-          type: vaccination.vaccine_type || 'Vaccination',
-          administeredDate: vaccination.date_administered,
-          nextDueDate: vaccination.next_due_date,
-          veterinarian: vaccination.veterinarian,
-          clinic: vaccination.clinic,
-          notes: vaccination.notes || '',
-          isOverdue,
-          isDueSoon,
-          isCompleted: vaccination.is_completed,
-          priority: 'recommended',
-          category: 'vaccination',
-        };
-      });
-
-      const sortedVaccines = vaccineRecords.sort((a, b) => {
-        if (a.isOverdue && !b.isOverdue) return -1;
-        if (!a.isOverdue && b.isOverdue) return 1;
-
-        const dateA = new Date(a.nextDueDate || 0);
-        const dateB = new Date(b.nextDueDate || 0);
-        return dateA.getTime() - dateB.getTime();
-      });
-
-      setVaccines(sortedVaccines);
+      await loadData();
     } catch (err) {
       console.error('❌ Error deleting vaccine:', err);
       setError(t('vaccines.failedToDeleteVaccine') || 'Failed to delete vaccine');
@@ -503,7 +410,7 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
         ownerId: 1
       }));
       
-      await syncTasksWithGoogleCalendar(vaccineTasks);
+      await syncTasksWithGoogleCalendar(vaccineTasks, 'vaccines');
       setSuccessMessage(t('vaccineTracking.vaccinesSynced') || 'Vaccines synced with Google Calendar!');
     } catch (err) {
       console.error('❌ Error syncing vaccines:', err);
@@ -566,10 +473,10 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
     <Box>
              {/* Header */}
              <Card sx={{ mb: 3 }}>
-               <CardHeader
+             <CardHeader
                  avatar={<Avatar sx={{ bgcolor: 'primary.main' }}><VaccinesIcon /></Avatar>}
                  title={t('vaccines.title') || 'Vaccines'}
-                 subheader={t('vaccineTracking.manageYourVaccines') || 'Track and manage your pet vaccinations'}
+                 subheader={t('vaccineTracking.manageYourVaccines') || 'Track recorded vaccines, upcoming boosters, and region-based suggestions'}
                  action={
                    <Box display="flex" gap={1}>
                      {onBack && (
@@ -588,7 +495,7 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
                        </IconButton>
                      </Tooltip>
                      <Tooltip title={t('vaccines.refresh')}>
-                       <IconButton onClick={() => window.location.reload()}>
+                       <IconButton onClick={() => void loadData()}>
                          <RefreshIcon />
                        </IconButton>
                      </Tooltip>
@@ -604,8 +511,12 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
                      )}
                    </Box>
                  }
-               />
+             />
              </Card>
+
+      <Alert severity="info" sx={{ mb: 3 }}>
+        {t('vaccines.vaccineTrackerNotice') || 'Suggestions are guidance only and should be confirmed against your veterinarian, your pet records, and local requirements.'}
+      </Alert>
 
       {/* Pet Filter */}
       <Card sx={{ mb: 3 }}>
@@ -1047,7 +958,7 @@ const VaccineSuggestionsList: React.FC<VaccineSuggestionsListProps> = ({ suggest
     <Stack spacing={2}>
       <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <FlagIcon color="primary" />
-        {title} - {t('vaccines.israeliStandards')}
+        {title}
       </Typography>
       
       {suggestions.map((suggestion, index) => {

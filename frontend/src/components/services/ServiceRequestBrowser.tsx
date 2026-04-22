@@ -400,7 +400,12 @@ export const ServiceRequestBrowser: React.FC = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">{t("services.browseRequests")}</Typography>
+        <Box>
+          <Typography variant="h4">{t("services.providerRequestInbox")}</Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>
+            {t("services.providerRequestInboxSubtitle")}
+          </Typography>
+        </Box>
         <Button
           variant="contained"
           startIcon={<Add />}
@@ -412,8 +417,8 @@ export const ServiceRequestBrowser: React.FC = () => {
 
       <Paper sx={{ mb: 3 }}>
         <Tabs value={activeTab} onChange={(_, value) => setActiveTab(value)}>
-          <Tab label={t("services.browseRequests")} icon={<Person />} iconPosition="start" />
-          <Tab label={t("marketplace.title")} icon={<Visibility />} iconPosition="start" />
+          <Tab label={t("services.clientRequests")} icon={<Person />} iconPosition="start" />
+          <Tab label={t("marketplace.requestBoard")} icon={<Visibility />} iconPosition="start" />
         </Tabs>
       </Paper>
 

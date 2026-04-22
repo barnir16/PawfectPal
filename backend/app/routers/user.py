@@ -144,7 +144,16 @@ def google_auth(request: GoogleAuthRequest, db: Session = Depends(get_db)):
         else:
             if not db_user.google_id:
                 db_user.google_id = google_id
-            if picture and not db_user.profile_picture_url:
+            if name and (
+                not db_user.full_name
+                or db_user.full_name == db_user.username
+                or db_user.full_name == email
+            ):
+                db_user.full_name = name
+            if picture and (
+                not db_user.profile_picture_url
+                or db_user.profile_picture_url != picture
+            ):
                 db_user.profile_picture_url = picture
             db.commit()
 

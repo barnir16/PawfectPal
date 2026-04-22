@@ -1,5 +1,6 @@
 import { apiRequest } from '../api';
 import type { Task, TaskCreateData, TaskUpdateData, TaskFilters } from '../../types/tasks/task';
+import { googleCalendarService } from '../calendar/googleCalendarService';
 
 /**
  * Transform backend task data to frontend Task format
@@ -181,89 +182,25 @@ export const downloadTasksAsICal = (tasks: Task[], filename: string = 'pawfectpa
 /**
  * Add task to Google Calendar
  */
-export const addTaskToGoogleCalendar = async (task: Task): Promise<void> => {
-  const taskDate = new Date(task.dateTime);
-  const endDate = new Date(taskDate.getTime() + 60 * 60 * 1000); // 1 hour duration
-  
-  // Build recurrence rules for Google Calendar
-  const recurrence: string[] = [];
-  if (task.repeatUnit && task.repeatInterval) {
-    const interval = task.repeatInterval || 1;
-    let rule = `RRULE:FREQ=${task.repeatUnit.toUpperCase()}`;
-    
-    if (interval > 1) {
-      rule += `;INTERVAL=${interval}`;
-    }
-    
-    if (task.repeatEndDate) {
-      const endDate = new Date(task.repeatEndDate);
-      rule += `;UNTIL=${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z`;
-    }
-    
-    recurrence.push(rule);
-  }
-  
-  const event = {
-    summary: task.title,
-    description: task.description || 'Pet care task from PawfectPal',
-    start: {
-      dateTime: taskDate.toISOString(),
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-    },
-    end: {
-      dateTime: endDate.toISOString(),
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-    },
-    recurrence: recurrence.length > 0 ? recurrence : undefined,
-    reminders: {
-      useDefault: false,
-      overrides: [
-        { method: 'email', minutes: 24 * 60 }, // 1 day before
-        { method: 'popup', minutes: 30 } // 30 minutes before
-      ]
-    }
-  };
-
-  // Check if Google Calendar API is available
-  if (window.gapi?.client?.calendar?.events) {
-    try {
-      await window.gapi.client.calendar.events.insert({
-        calendarId: 'primary',
-        resource: event
-      });
-      console.log('Task added to Google Calendar successfully');
-    } catch (error) {
-      console.error('Failed to add task to Google Calendar:', error);
-      throw new Error('Failed to add task to Google Calendar');
-    }
-  } else {
-    // Fallback: open Google Calendar in new tab with pre-filled event
-    const calendarUrl = new URL('https://calendar.google.com/calendar/render');
-    calendarUrl.searchParams.set('action', 'TEMPLATE');
-    calendarUrl.searchParams.set('text', task.title);
-    calendarUrl.searchParams.set('dates', 
-      `${taskDate.toISOString().replace(/[-:]/g, '').split('.')[0]}/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}`
-    );
-    calendarUrl.searchParams.set('details', task.description || 'Pet care task from PawfectPal');
-    
-    window.open(calendarUrl.toString(), '_blank');
-  }
+export const addTaskToGoogleCalendar = async (
+  task: Task,
+  namespace: 'tasks' | 'vaccines' = 'tasks'
+): Promise<void> => {
+  await googleCalendarService.upsertTaskEvent(task, namespace);
 };
 
 /**
  * Sync all tasks with Google Calendar
  */
-export const syncTasksWithGoogleCalendar = async (tasks: Task[]): Promise<void> => {
+export const syncTasksWithGoogleCalendar = async (
+  tasks: Task[],
+  namespace: 'tasks' | 'vaccines' = 'tasks'
+): Promise<void> => {
   try {
-    // Filter out completed tasks
-    const activeTasks = tasks.filter(task => !task.isCompleted);
-    
-    // Add each active task to Google Calendar
-    for (const task of activeTasks) {
-      await addTaskToGoogleCalendar(task);
+    const result = await googleCalendarService.syncTasks(tasks, namespace);
+    if (result.failed > 0) {
+      throw new Error(`Synced ${result.success} items, but ${result.failed} failed.`);
     }
-    
-    console.log(`Successfully synced ${activeTasks.length} tasks with Google Calendar`);
   } catch (error) {
     console.error('Failed to sync tasks with Google Calendar:', error);
     throw error;

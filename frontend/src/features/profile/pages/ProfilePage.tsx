@@ -3,7 +3,6 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { apiRequest, getToken } from "../../../services";
 import {
   Box,
-  Grid,
   Card,
   CardHeader,
   CardContent,
@@ -12,7 +11,7 @@ import {
   Button,
   Avatar,
   CircularProgress,
-  IconButton,
+  Chip,
   Select,
   MenuItem,
   InputLabel,
@@ -20,15 +19,15 @@ import {
   Checkbox,
   ListItemText,
   Snackbar,
+  Stack,
+  Divider,
 } from "@mui/material";
-import { styled } from "@mui/material/styles";
 import {
   Edit as EditIcon,
   Save as SaveIcon,
-  Email as EmailIcon,
-  Phone as PhoneIcon,
   LocationOn as LocationIcon,
   Pets as PetsIcon,
+  Verified as VerifiedIcon,
 } from "@mui/icons-material";
 import { getFullImageUrl } from "../../../utils/image";
 
@@ -160,6 +159,11 @@ const ProfilePage: React.FC = () => {
     return <Typography>Please log in to view your profile.</Typography>;
   }
 
+  const displayName = formData.full_name || formData.username || "User";
+  const accountEmail = formData.email || user.email || "";
+  const isGoogleAccount = Boolean(user.google_id);
+  const usernameLocked = isGoogleAccount && Boolean(user.username);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -270,7 +274,8 @@ const ProfilePage: React.FC = () => {
   const renderTextField = (
     label: string,
     key: keyof ProfileFormData,
-    disabled = false
+    disabled = false,
+    helperText?: string
   ) => (
     <TextField
       fullWidth
@@ -281,6 +286,7 @@ const ProfilePage: React.FC = () => {
       variant="outlined"
       sx={{ mb: 2 }}
       disabled={!isEditing || disabled}
+      helperText={helperText}
     />
   );
 
@@ -308,63 +314,76 @@ const ProfilePage: React.FC = () => {
       </Box>
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {/* Avatar */}
-        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-          <Card
-            sx={{
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-              minWidth: 250, // Set a minimum width
-              width: "100%", // Take full width of the grid item
-              maxWidth: 300, // Set a maximum width
-            }}
-          >
-            <CardContent
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                flexGrow: 1,
-                gap: 2,
-                p: 3,
-                width: "100%", // Ensure content takes full width
-                boxSizing: "border-box", // Include padding in width calculation
-              }}
+        <Card>
+          <CardContent>
+            <Stack
+              direction={{ xs: "column", md: "row" }}
+              spacing={3}
+              alignItems={{ xs: "center", md: "flex-start" }}
             >
-              <Avatar
-                src={getAvatarSrc()}
-                sx={{
-                  width: 150, // Slightly larger avatar
-                  height: 150, // Slightly larger avatar
-                  mb: 2,
-                  fontSize: "3rem", // Larger font for initials
-                }}
-              />
-              {isEditing && (
-                <>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    ref={fileInputRef}
-                    onChange={handleImageChange}
-                    style={{ display: "none" }}
-                  />
-                  <Button
-                    variant="outlined"
-                    onClick={() => fileInputRef.current?.click()}
-                    startIcon={<EditIcon />}
-                    disabled={!isEditing}
-                    fullWidth
-                  >
-                    Change Photo
-                  </Button>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </Box>
+              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                <Avatar
+                  src={getAvatarSrc()}
+                  sx={{
+                    width: 132,
+                    height: 132,
+                    fontSize: "2.5rem",
+                  }}
+                >
+                  {displayName.charAt(0).toUpperCase()}
+                </Avatar>
+                {isEditing && (
+                  <>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      ref={fileInputRef}
+                      onChange={handleImageChange}
+                      style={{ display: "none" }}
+                    />
+                    <Button
+                      variant="outlined"
+                      onClick={() => fileInputRef.current?.click()}
+                      startIcon={<EditIcon />}
+                      fullWidth
+                    >
+                      Change Photo
+                    </Button>
+                  </>
+                )}
+              </Box>
+
+              <Box sx={{ flex: 1, width: "100%" }}>
+                <Typography variant="h4" gutterBottom>
+                  {displayName}
+                </Typography>
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                  {accountEmail}
+                </Typography>
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  <Chip label={user.username} variant="outlined" />
+                  {isGoogleAccount && (
+                    <Chip
+                      icon={<VerifiedIcon />}
+                      label="Google account connected"
+                      color="success"
+                      variant="outlined"
+                    />
+                  )}
+                  {user.is_provider && (
+                    <Chip label="Provider profile enabled" color="primary" variant="outlined" />
+                  )}
+                </Stack>
+
+                <Divider sx={{ my: 2.5 }} />
+
+                <Typography variant="body2" color="text.secondary">
+                  Keep your contact details current so providers, reminders, and booking flows stay accurate.
+                </Typography>
+              </Box>
+            </Stack>
+          </CardContent>
+        </Card>
 
         {/* Basic Info */}
         <Card>
@@ -376,9 +395,19 @@ const ProfilePage: React.FC = () => {
             }
           />
           <CardContent>
-            {renderTextField("Username", "username")}
+            {renderTextField(
+              "Username",
+              "username",
+              usernameLocked,
+              usernameLocked ? "Username is linked to your signed-in account." : undefined
+            )}
             {renderTextField("Full Name", "full_name")}
-            {renderTextField("Email", "email")}
+            {renderTextField(
+              "Email",
+              "email",
+              isGoogleAccount,
+              isGoogleAccount ? "Email comes from your Google account." : undefined
+            )}
             {renderTextField("Phone", "phone")}
           </CardContent>
         </Card>
