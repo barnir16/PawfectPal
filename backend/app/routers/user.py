@@ -1,10 +1,14 @@
 import base64
 import json
 import logging
+import os
 from datetime import timedelta
 
 import jwt
+import requests
 from fastapi import APIRouter, Depends, HTTPException, status
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -18,10 +22,15 @@ from app.auth.utils import (
 from app.dependencies.auth import get_current_user
 from app.dependencies.db import get_db
 from app.models import ServiceTypeORM, UserORM
-from app.models.provider import ProviderORM
 from app.models.provider_profile import ProviderProfileORM
 from app.schemas import UserCreate, UserRead, UserUpdate
-from config import ACCESS_TOKEN_EXPIRE_MINUTES
+from config import (
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    ALLOW_INSECURE_GOOGLE_AUTH,
+    ENVIRONMENT,
+    GOOGLE_CLIENT_ID,
+    IS_TEST_ENV,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +52,7 @@ def _resolve_service_objects(db: Session, service_names: list[str]):
     return db.query(ServiceTypeORM).filter(ServiceTypeORM.name.in_(service_names)).all()
 
 
-def _decode_google_credential(credential: str) -> dict:
+def _decode_unsigned_google_credential(credential: str) -> dict:
     try:
         decoded_data = base64.b64decode(credential).decode("utf-8")
         return json.loads(decoded_data)
@@ -54,6 +63,55 @@ def _decode_google_credential(credential: str) -> dict:
         return jwt.decode(credential, options={"verify_signature": False})
     except Exception as exc:
         raise HTTPException(status_code=400, detail="Invalid credential format") from exc
+
+
+def _verify_google_access_token(access_token: str) -> dict:
+    try:
+        tokeninfo_response = requests.get(
+            "https://oauth2.googleapis.com/tokeninfo",
+            params={"access_token": access_token},
+            timeout=5,
+        )
+        tokeninfo_response.raise_for_status()
+        tokeninfo = tokeninfo_response.json()
+
+        audience = tokeninfo.get("aud")
+        if GOOGLE_CLIENT_ID and audience and audience != GOOGLE_CLIENT_ID:
+            raise HTTPException(status_code=401, detail="Google token audience mismatch")
+        requires_client_id = os.getenv("RAILWAY_ENVIRONMENT") or ENVIRONMENT == "production"
+        if requires_client_id and not GOOGLE_CLIENT_ID:
+            raise HTTPException(status_code=500, detail="GOOGLE_CLIENT_ID is required")
+
+        userinfo_response = requests.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            headers={"Authorization": f"Bearer {access_token}"},
+            timeout=5,
+        )
+        userinfo_response.raise_for_status()
+        return userinfo_response.json()
+    except HTTPException:
+        raise
+    except requests.RequestException as exc:
+        raise HTTPException(status_code=401, detail="Invalid Google access token") from exc
+
+
+def _verify_google_credential(credential: str) -> dict:
+    if IS_TEST_ENV or ALLOW_INSECURE_GOOGLE_AUTH:
+        return _decode_unsigned_google_credential(credential)
+
+    if credential.count(".") == 2:
+        if not GOOGLE_CLIENT_ID:
+            raise HTTPException(status_code=500, detail="GOOGLE_CLIENT_ID is required")
+        try:
+            return id_token.verify_oauth2_token(
+                credential,
+                google_requests.Request(),
+                GOOGLE_CLIENT_ID,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=401, detail="Invalid Google ID token") from exc
+
+    return _verify_google_access_token(credential)
 
 
 @router.post("/register", response_model=UserRead, status_code=201)
@@ -106,7 +164,7 @@ def login(
 def google_auth(request: GoogleAuthRequest, db: Session = Depends(get_db)):
     """Authenticate a user with Google OAuth credential payloads."""
     try:
-        decoded_token = _decode_google_credential(request.credential)
+        decoded_token = _verify_google_credential(request.credential)
 
         google_id = decoded_token.get("sub")
         email = decoded_token.get("email")
@@ -195,25 +253,17 @@ def update_user(
         if value is not None and not field.startswith("provider_"):
             setattr(current_user, field, value)
 
+    # provider_rating maps to average_rating on the profile - it's computed from
+    # reviews everywhere else, but this endpoint has always let it through if sent,
+    # so keep that behavior rather than silently dropping the field.
     provider_map = {
         "provider_services": "services",
         "provider_bio": "bio",
         "provider_hourly_rate": "hourly_rate",
-        "provider_rating": "rating",
+        "provider_rating": "average_rating",
     }
 
     if current_user.is_provider:
-        profile = current_user.provider_profile
-        if profile:
-            for schema_field, orm_field in provider_map.items():
-                value = getattr(update, schema_field, None)
-                if value is None:
-                    continue
-                if schema_field == "provider_services":
-                    setattr(profile, orm_field, _resolve_service_objects(db, value))
-                else:
-                    setattr(profile, orm_field, value)
-
         enhanced_profile = current_user.enhanced_provider_profile
         if enhanced_profile:
             for schema_field, orm_field in provider_map.items():
@@ -244,14 +294,6 @@ def toggle_provider_status(
         current_user.is_provider = not current_user.is_provider
 
         if current_user.is_provider:
-            existing_provider = (
-                db.query(ProviderORM)
-                .filter(ProviderORM.user_id == current_user.id)
-                .first()
-            )
-            if not existing_provider:
-                db.add(ProviderORM(user_id=current_user.id))
-
             existing_enhanced_profile = (
                 db.query(ProviderProfileORM)
                 .filter(ProviderProfileORM.user_id == current_user.id)
@@ -274,17 +316,10 @@ def toggle_provider_status(
                     )
                 )
         else:
-            existing_provider = (
-                db.query(ProviderORM)
-                .filter(ProviderORM.user_id == current_user.id)
-                .first()
-            )
-            if existing_provider:
-                db.delete(existing_provider)
-                current_user.provider_bio = None
-                current_user.provider_hourly_rate = None
-                current_user.provider_rating = None
-                current_user.provider_services = None
+            current_user.provider_bio = None
+            current_user.provider_hourly_rate = None
+            current_user.provider_rating = None
+            current_user.provider_services = None
 
             existing_enhanced_profile = (
                 db.query(ProviderProfileORM)

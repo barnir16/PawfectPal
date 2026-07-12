@@ -56,37 +56,22 @@ class UserRead(ProviderExtras, UserContact, UserBase):
     def model_validate(cls, obj, **kwargs):
         data = obj.__dict__.copy()
 
-        provider_profile = getattr(obj, "provider_profile", None)
+        # provider_profiles (enhanced_provider_profile) is the only profile
+        # table now - there used to be a second legacy one here too, which is
+        # exactly why this used to need a merge step.
         enhanced_provider_profile = getattr(obj, "enhanced_provider_profile", None)
 
-        provider_services = cls._service_names(provider_profile)
-        enhanced_services = cls._service_names(enhanced_provider_profile)
-        if provider_services and enhanced_services:
-            provider_services = list(dict.fromkeys(provider_services + enhanced_services))
-        elif enhanced_services:
-            provider_services = enhanced_services
-
-        data["provider_services"] = provider_services
+        data["provider_services"] = cls._service_names(enhanced_provider_profile)
         data["provider_bio"] = None
         data["provider_hourly_rate"] = None
         data["provider_rating"] = None
         data["provider_rating_count"] = None
 
-        if provider_profile:
-            data["provider_bio"] = provider_profile.bio
-            data["provider_hourly_rate"] = provider_profile.hourly_rate
-            data["provider_rating"] = provider_profile.rating
-            data["provider_rating_count"] = provider_profile.rating_count
-
         if enhanced_provider_profile:
-            if enhanced_provider_profile.bio:
-                data["provider_bio"] = enhanced_provider_profile.bio
-            if enhanced_provider_profile.hourly_rate is not None:
-                data["provider_hourly_rate"] = enhanced_provider_profile.hourly_rate
-            if enhanced_provider_profile.average_rating is not None:
-                data["provider_rating"] = enhanced_provider_profile.average_rating
-            if enhanced_provider_profile.total_reviews is not None:
-                data["provider_rating_count"] = enhanced_provider_profile.total_reviews
+            data["provider_bio"] = enhanced_provider_profile.bio
+            data["provider_hourly_rate"] = enhanced_provider_profile.hourly_rate
+            data["provider_rating"] = enhanced_provider_profile.average_rating
+            data["provider_rating_count"] = enhanced_provider_profile.total_reviews
 
         return super().model_validate(data, **kwargs)
 

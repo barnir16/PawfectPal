@@ -6,7 +6,7 @@ from .base import Base
 
 if TYPE_CHECKING:
     from .service import ServiceORM
-    from .provider import ProviderORM
+    from .provider_profile import ProviderProfileORM
 
 
 class ServiceTypeORM(Base):
@@ -20,10 +20,6 @@ class ServiceTypeORM(Base):
 
     # Note: No direct relationship with ServiceORM since we use string service_type instead of foreign key
 
-    # Many-to-many relationship with providers
-    providers: Mapped[List["ProviderORM"]] = relationship(
-        "ProviderORM", secondary="provider_services_link", back_populates="services"
-    )
     enhanced_providers: Mapped[List["ProviderProfileORM"]] = relationship(
         "ProviderProfileORM", secondary="provider_profile_services", back_populates="services"
     )

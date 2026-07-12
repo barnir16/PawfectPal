@@ -16,7 +16,6 @@ from app.routers import (
     medical_record,
     pet,
     provider,
-    provider_reviews,
     references,
     service,
     service_requests,
@@ -26,6 +25,7 @@ from app.routers import (
     weight_goal,
     weight_record,
 )
+from config import CORS_ORIGINS
 
 logger = logging.getLogger(__name__)
 
@@ -92,13 +92,7 @@ def railway_test():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://pawfectpal-production-2f07.up.railway.app",
-        "https://pawfectpal-production.up.railway.app",
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "https://pawfectpal.vercel.app",
-    ],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
@@ -114,6 +108,7 @@ app.include_router(medical_record.router)
 app.include_router(vaccination.router)
 app.include_router(references.vaccines_router)
 app.include_router(references.age_router)
+app.include_router(references.breeds_router)
 app.include_router(location.router)
 app.include_router(image_upload.router)
 app.include_router(service.router)
@@ -134,7 +129,6 @@ except Exception as exc:
     logger.warning("AI conversations router not available: %s", exc)
 
 app.include_router(provider.router)
-app.include_router(provider_reviews.router)
 app.include_router(service_requests.router)
 app.include_router(chat.router)
 

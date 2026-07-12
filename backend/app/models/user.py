@@ -8,7 +8,6 @@ if TYPE_CHECKING:
     from .pet import PetORM
     from .task import TaskORM
     from .service import ServiceORM
-    from .provider import ProviderORM
     from .service_request import ServiceRequestORM
     from .chat_message import ChatMessageORM
     from .ai_conversation import AIConversationORM
@@ -45,9 +44,6 @@ class UserORM(Base):
     provider_rating: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     provider_bio: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     provider_hourly_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    provider_profile: Mapped[Optional["ProviderORM"]] = relationship(
-        "ProviderORM", back_populates="user", uselist=False
-    )
     enhanced_provider_profile: Mapped[Optional["ProviderProfileORM"]] = relationship(
         "ProviderProfileORM", back_populates="user", uselist=False
     )
