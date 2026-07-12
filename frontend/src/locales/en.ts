@@ -249,6 +249,8 @@ export const en = {
     selectAgeType: 'Select age type',
     exactBirthday: 'Exact Birthday',
     approximateAge: 'Approximate Age',
+    unknownAge: 'Unknown age',
+    futureBirthdate: 'Future birthdate',
     male: 'Male',
     female: 'Female',
 
@@ -767,6 +769,7 @@ export const en = {
     failedToSyncCalendar: 'Failed to sync with Google Calendar. Check console for details.',
     noDescription: 'No description',
     unknownPet: 'Unknown Pet',
+    allPets: 'All Pets',
     uncategorized: 'Uncategorized',
     networkError: 'Network error. Please check your connection.',
     authError: 'Authentication failed. Please login again.',
@@ -1041,7 +1044,7 @@ export const en = {
 
   // Config
   config: {
-    firebaseRemoteConfigDemo: 'Firebase Remote Config Demo',
+    firebaseRemoteConfigDemo: 'Public Config Demo',
     description: 'This component demonstrates the new Firebase-based configuration system. Configuration updates are applied automatically without requiring app restart.',
     configurationStatus: 'Configuration Status',
     refreshConfig: 'Refresh Configuration',
