@@ -189,9 +189,13 @@ def get_pet_vaccination_summary(
     ]
     next_due_date = min(future_due_dates) if future_due_dates else None
 
-    # Count overdue vaccinations
+    # Count overdue vaccinations — completed records are excluded even if
+    # next_due_date is in the past, since the series is considered done.
     overdue_count = len(
-        [v for v in vaccinations if v.next_due_date and v.next_due_date < today]
+        [
+            v for v in vaccinations
+            if v.next_due_date and v.next_due_date < today and not v.is_completed
+        ]
     )
 
     # Check if up to date (no overdue vaccinations)
@@ -266,11 +270,17 @@ def get_overdue_vaccinations(
     """Get overdue vaccinations for all user's pets"""
     today = date.today()
 
-    # Get all overdue vaccinations for user's pets
+    # Get all overdue vaccinations for user's pets, excluding completed records.
+    # is_completed=True means the series is done and shouldn't count as overdue
+    # even if next_due_date is in the past.
     vaccinations = (
         db.query(VaccinationORM)
         .join(PetORM)
-        .filter(PetORM.user_id == current_user.id, VaccinationORM.next_due_date < today)
+        .filter(
+            PetORM.user_id == current_user.id,
+            VaccinationORM.next_due_date < today,
+            VaccinationORM.is_completed == False,
+        )
         .all()
     )
 
