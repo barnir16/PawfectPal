@@ -9,14 +9,17 @@ from app.dependencies.db import get_db
 from app.dependencies.auth import get_current_user
 from app.models.user import UserORM
 from app.models.marketplace_post import MarketplacePostORM
+from app.models.service_request import ServiceRequestORM
 from app.models.pet import PetORM
 from app.models.service_type import ServiceTypeORM
 from app.schemas.marketplace_post import (
-    MarketplacePostCreate, 
-    MarketplacePostUpdate, 
+    MarketplacePostCreate,
+    MarketplacePostUpdate,
     MarketplacePostRead,
-    MarketplacePostSummary
+    MarketplacePostSummary,
 )
+from app.schemas.user import UserRead
+from app.schemas.pet import PetRead
 from app.services.service_matching import ServiceMatchingService
 from datetime import datetime, timedelta
 
@@ -123,53 +126,102 @@ def get_marketplace_posts(
     service_type: Optional[str] = Query(None),
     location: Optional[str] = Query(None),
     is_urgent: Optional[bool] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
-    """Get all marketplace posts with optional filters"""
-    if not _marketplace_tables_ready(db):
-        logger.warning("Marketplace tables are not ready; returning an empty post list")
-        return []
+    """Browse open service requests posted by pet owners.
 
+    Reads from service_requests — the single source of truth for all
+    owner-posted requests — and returns them in the marketplace summary
+    shape so the provider browse page works without any frontend changes.
+    The marketplace_posts table still accepts writes from older clients
+    but is no longer the browseable feed.
+    """
     try:
-        query = db.query(MarketplacePostORM).filter(MarketplacePostORM.status == "open")
+        query = db.query(ServiceRequestORM).filter(ServiceRequestORM.status == "open")
 
         if service_type:
-            query = query.filter(MarketplacePostORM.service_type == service_type)
-
+            query = query.filter(ServiceRequestORM.service_type == service_type)
         if location:
-            query = query.filter(MarketplacePostORM.location.ilike(f"%{location}%"))
-
+            query = query.filter(ServiceRequestORM.location.ilike(f"%{location}%"))
         if is_urgent is not None:
-            query = query.filter(MarketplacePostORM.is_urgent == is_urgent)
+            query = query.filter(ServiceRequestORM.is_urgent == is_urgent)
 
-        posts = query.order_by(
-            MarketplacePostORM.is_urgent.desc(),
-            MarketplacePostORM.created_at.desc()
+        requests = query.order_by(
+            ServiceRequestORM.is_urgent.desc(),
+            ServiceRequestORM.created_at.desc(),
         ).offset(skip).limit(limit).all()
 
-        return posts
-    except (OperationalError, ProgrammingError):
-        logger.exception("Failed to query marketplace posts")
+        result = []
+        for req in requests:
+            pets = (
+                db.query(PetORM).filter(PetORM.id.in_(req.pet_ids)).all()
+                if req.pet_ids
+                else []
+            )
+            result.append(
+                MarketplacePostSummary(
+                    id=req.id,
+                    title=req.title,
+                    description=req.description,
+                    service_type=req.service_type,
+                    location=req.location,
+                    budget_min=req.budget_min,
+                    budget_max=req.budget_max,
+                    is_urgent=req.is_urgent,
+                    created_at=req.created_at,
+                    views_count=req.views_count,
+                    responses_count=req.responses_count,
+                    user=UserRead.model_validate(req.user),
+                    pets=[PetRead.model_validate(pet) for pet in pets],
+                )
+            )
+        return result
+    except Exception:
+        logger.exception("Failed to query service requests for marketplace feed")
         return []
 
-@router.get("/my-posts", response_model=List[MarketplacePostRead])
+
+@router.get("/my-posts", response_model=List[MarketplacePostSummary])
 def get_my_marketplace_posts(
     db: Session = Depends(get_db),
-    current_user: UserORM = Depends(get_current_user)
+    current_user: UserORM = Depends(get_current_user),
 ):
-    """Get current user's marketplace posts"""
-    if not _marketplace_tables_ready(db):
-        logger.warning("Marketplace tables are not ready; returning an empty post list")
-        return []
-
+    """Get the current user's own service requests in marketplace summary form."""
     try:
-        posts = db.query(MarketplacePostORM).filter(
-            MarketplacePostORM.user_id == current_user.id
-        ).order_by(MarketplacePostORM.created_at.desc()).all()
+        requests = (
+            db.query(ServiceRequestORM)
+            .filter(ServiceRequestORM.user_id == current_user.id)
+            .order_by(ServiceRequestORM.created_at.desc())
+            .all()
+        )
 
-        return posts
-    except (OperationalError, ProgrammingError):
-        logger.exception("Failed to query current user's marketplace posts")
+        result = []
+        for req in requests:
+            pets = (
+                db.query(PetORM).filter(PetORM.id.in_(req.pet_ids)).all()
+                if req.pet_ids
+                else []
+            )
+            result.append(
+                MarketplacePostSummary(
+                    id=req.id,
+                    title=req.title,
+                    description=req.description,
+                    service_type=req.service_type,
+                    location=req.location,
+                    budget_min=req.budget_min,
+                    budget_max=req.budget_max,
+                    is_urgent=req.is_urgent,
+                    created_at=req.created_at,
+                    views_count=req.views_count,
+                    responses_count=req.responses_count,
+                    user=UserRead.model_validate(req.user),
+                    pets=[PetRead.model_validate(pet) for pet in pets],
+                )
+            )
+        return result
+    except Exception:
+        logger.exception("Failed to query user service requests for my-posts feed")
         return []
 
 @router.get("/{post_id}", response_model=MarketplacePostRead)

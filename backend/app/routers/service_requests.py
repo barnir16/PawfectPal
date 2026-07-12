@@ -268,6 +268,12 @@ def assign_provider(
             status_code=403, detail="Only the request owner can assign providers"
         )
 
+    if request.status != "open":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot assign a provider to a request that is already '{request.status}'",
+        )
+
     provider = db.query(UserORM).filter(UserORM.id == provider_id).first()
     if not provider:
         raise HTTPException(status_code=404, detail="Provider not found")
