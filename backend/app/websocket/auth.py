@@ -8,29 +8,26 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from app.models import UserORM
 from app.dependencies.db import get_db
-import os
 import logging
+from config import ALGORITHM, SECRET_KEY
 
 logger = logging.getLogger(__name__)
-
-# Get secret key from environment
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here")
 
 async def get_current_user_websocket(token: str, db: Session) -> Optional[UserORM]:
     """Get current user from WebSocket token"""
     try:
         # Decode JWT token
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        user_id: int = payload.get("sub")
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        subject = payload.get("sub")
         
-        if user_id is None:
-            logger.warning("Token missing user ID")
+        if subject is None:
+            logger.warning("Token missing subject")
             return None
             
         # Get user from database
-        user = db.query(UserORM).filter(UserORM.id == user_id).first()
+        user = db.query(UserORM).filter(UserORM.username == subject).first()
         if user is None:
-            logger.warning(f"User {user_id} not found")
+            logger.warning("Token subject does not match a user")
             return None
             
         return user
@@ -38,7 +35,7 @@ async def get_current_user_websocket(token: str, db: Session) -> Optional[UserOR
     except jwt.ExpiredSignatureError:
         logger.warning("Token expired")
         return None
-    except jwt.JWTError as e:
+    except jwt.InvalidTokenError as e:
         logger.warning(f"JWT error: {e}")
         return None
     except Exception as e:

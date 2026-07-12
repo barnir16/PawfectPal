@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { configService, type AppConfig } from '../services/config/firebaseConfigService';
 
 /**
- * React hook for accessing Firebase Remote Config
+ * React hook for accessing public frontend configuration
  * Provides reactive updates when configuration changes
  */
 export const useConfig = () => {

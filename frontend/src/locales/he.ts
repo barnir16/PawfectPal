@@ -859,7 +859,7 @@ export const he = {
 
   // Config
   config: {
-    firebaseRemoteConfigDemo: 'דמו Firebase Remote Config',
+    firebaseRemoteConfigDemo: 'דמו הגדרות ציבוריות',
     description: 'רכיב זה מדגים את מערכת התצורה החדשה מבוססת Firebase. עדכוני תצורה מתעדכנים אוטומטית ללא צורך בהפעלה מחדש של האפליקציה.',
     configurationStatus: 'סטטוס תצורה',
     refreshConfig: 'רענן תצורה',

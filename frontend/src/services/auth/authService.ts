@@ -107,8 +107,7 @@ export const initializeGoogleAuth = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     const oauthConfig = configService.getOAuthConfig();
 
-    // Fallback to hardcoded values if config service fails
-    const googleClientId = oauthConfig.googleClientId || '204752166323-r69volulegreitj2nflcoag0eae3iggk.apps.googleusercontent.com';
+    const googleClientId = oauthConfig.googleClientId;
     const isGoogleAuthEnabled = oauthConfig.isGoogleAuthEnabled !== false; // Default to true
 
     if (!googleClientId || !isGoogleAuthEnabled) {
@@ -153,12 +152,11 @@ export const signInWithGoogle = (): Promise<LoginResponse> => {
   return new Promise((resolve, reject) => {
     const oauthConfig = configService.getOAuthConfig();
     
-    // Fallback to hardcoded values if config service fails
-    const googleClientId = oauthConfig.googleClientId || '204752166323-r69volulegreitj2nflcoag0eae3iggk.apps.googleusercontent.com';
+    const googleClientId = oauthConfig.googleClientId;
     const isGoogleAuthEnabled = oauthConfig.isGoogleAuthEnabled !== false; // Default to true
     
     if (!googleClientId || !isGoogleAuthEnabled) {
-      reject(new Error('Google Sign-In is not available. Please configure Google OAuth in Firebase Remote Config.'));
+      reject(new Error('Google Sign-In is not available. Please configure VITE_GOOGLE_CLIENT_ID.'));
       return;
     }
     
@@ -182,32 +180,9 @@ export const signInWithGoogle = (): Promise<LoginResponse> => {
           }
 
           try {
-            // Get user info using the access token
-            const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-              headers: {
-                'Authorization': `Bearer ${response.access_token}`
-              }
-            });
-            
-            if (!userInfoResponse.ok) {
-              throw new Error('Failed to get user info from Google');
-            }
-            
-            const userInfo = await userInfoResponse.json();
-            
-            // Create a JWT-like credential for the backend
-            const credential = btoa(JSON.stringify({
-              email: userInfo.email,
-              name: userInfo.name,
-              picture: userInfo.picture,
-              sub: userInfo.id,
-              access_token: response.access_token
-            }));
-
-            // Send to backend
             const loginResponse = await apiRequest<LoginResponse>('/auth/google', {
               method: 'POST',
-              body: JSON.stringify({ credential })
+              body: JSON.stringify({ credential: response.access_token })
             });
             
             resolve(loginResponse);

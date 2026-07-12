@@ -1,9 +1,8 @@
 """
 AI chat route — Gemini-backed, with offline fallbacks.
 
-Model name: set Railway env GEMINI_MODEL (e.g. gemini-2.5-flash). If unset, a
-sensible default is used. API key: GEMINI_API_KEY on Railway, or Remote Config
-when that fetch works.
+Model name: set GEMINI_MODEL (e.g. gemini-2.5-flash). If unset, a sensible
+default is used. API key: GEMINI_API_KEY from the backend environment only.
 """
 
 from __future__ import annotations
@@ -205,7 +204,7 @@ def _build_unavailable_response(
 
 
 def _get_safe_config_values(configs: Dict[str, str]) -> Dict[str, str]:
-    """Return only Firebase Remote Config values that are safe to expose."""
+    """Return only public config values that are safe to expose."""
     return {
         key: value for key, value in configs.items() if key in _SAFE_FIREBASE_CONFIG_KEYS
     }
@@ -444,21 +443,8 @@ async def test_ai():
     try:
         init_res = firebase_admin.initialize()
         diagnostic["initialize_called"] = str(init_res)
-        diagnostic["access_token_exists"] = bool(firebase_admin.access_token)
     except Exception as e:
         diagnostic["initialize_error"] = str(e)
-
-    try:
-        cfg = firebase_admin.get_remote_config()
-        diagnostic["config_keys"] = list(cfg.keys()) if cfg else []
-    except Exception as e:
-        diagnostic["fetch_config_error"] = str(e)
-
-    try:
-        gemini_val = firebase_admin.get_config_value("gemini_api_key")
-        diagnostic["gemini_config_val_exists"] = bool(gemini_val)
-    except Exception as e:
-        diagnostic["gemini_val_error"] = str(e)
 
     try:
         final_key = firebase_admin.get_gemini_api_key()

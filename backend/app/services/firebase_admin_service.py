@@ -20,23 +20,15 @@ class FirebaseAdminService:
         self.is_initialized = False
         
     def initialize(self) -> bool:
-        """Initialize Firebase Admin SDK using Remote Config"""
+        """Initialize Firebase Admin SDK from backend environment variables."""
         if self.is_initialized:
             return True
             
         try:
-            # Import Firebase admin service to get Remote Config
-            from app.services.firebase_admin import firebase_admin
-            
-            # Initialize Firebase admin (for Remote Config access)
-            if not firebase_admin.initialized:
-                firebase_admin.initialize()
-            
-            # Get Firebase credentials from Remote Config
-            firebase_credentials = firebase_admin.get_config_value('firebase_service_account_json')
+            firebase_credentials = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
             
             if not firebase_credentials:
-                logger.warning("Firebase credentials not found in Remote Config, push notifications disabled")
+                logger.warning("FIREBASE_SERVICE_ACCOUNT_JSON is not configured, push notifications disabled")
                 return False
                 
             # Parse credentials
@@ -44,14 +36,14 @@ class FirebaseAdminService:
                 cred_dict = json.loads(firebase_credentials)
                 cred = credentials.Certificate(cred_dict)
             except json.JSONDecodeError:
-                logger.error("Invalid Firebase credentials format in Remote Config")
+                logger.error("Invalid FIREBASE_SERVICE_ACCOUNT_JSON format")
                 return False
                 
             # Initialize Firebase Admin
             self.app = initialize_app(cred, name='pawfectpal-messaging')
             self.is_initialized = True
             
-            logger.info("Firebase Admin SDK initialized successfully from Remote Config")
+            logger.info("Firebase Admin SDK initialized successfully")
             return True
             
         except Exception as e:

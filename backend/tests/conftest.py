@@ -15,7 +15,7 @@ from sqlalchemy.orm import sessionmaker
 BACKEND_DIR = Path(__file__).parent.parent
 load_dotenv(BACKEND_DIR / ".env")
 print("Loaded TEST_DB_URL:", os.getenv("TEST_DB_URL"))
-TEST_DATABASE_URL = REDACTED_DATABASE_URL"TEST_DB_URL", "sqlite:///./test.db")
+TEST_DATABASE_URL = os.getenv("TEST_DB_URL", "sqlite:///./test.db")
 print("Using TEST_DATABASE_URL:", TEST_DATABASE_URL)
 
 # Now import the app and Base (they may read DATABASE_URL on import)

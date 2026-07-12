@@ -114,38 +114,23 @@ def update_pet(
 
     previous_weight = db_pet.weight_kg
 
-    db_pet.name = pet.name
-    db_pet.breed_type = pet.breed_type
-    db_pet.breed = pet.breed
-    db_pet.birth_date = pet.birth_date
-    db_pet.age = pet.age
-    db_pet.is_birthday_given = pet.is_birthday_given
-    db_pet.weight_kg = pet.weight_kg
-    db_pet.photo_uri = pet.photo_uri
-    db_pet.health_issues = pet.health_issues
-    db_pet.behavior_issues = pet.behavior_issues
-    # Additional fields
-    db_pet.gender = pet.gender
-    db_pet.weight_unit = pet.weight_unit
-    db_pet.color = pet.color
-    db_pet.microchip_number = pet.microchip_number
-    db_pet.is_neutered = pet.is_neutered
-    db_pet.is_vaccinated = pet.is_vaccinated
-    db_pet.is_microchipped = pet.is_microchipped
-    db_pet.notes = pet.notes
-    # GPS tracking
-    db_pet.last_known_latitude = pet.last_known_latitude
-    db_pet.last_known_longitude = pet.last_known_longitude
-    db_pet.last_location_update = pet.last_location_update
-    db_pet.is_tracking_enabled = pet.is_tracking_enabled
+    # Only touch fields the client actually sent - PetUpdate has everything
+    # Optional so a partial PUT shouldn't be able to null out the rest of
+    # the pet (matches how update_service_request / update_marketplace_post
+    # already do this).
+    update_data = pet.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_pet, field, value)
+
+    new_weight = update_data.get("weight_kg", previous_weight)
 
     # Keep weight tracking history consistent when the pet profile weight changes.
-    if pet.weight_kg is not None and pet.weight_kg != previous_weight:
+    if "weight_kg" in update_data and new_weight is not None and new_weight != previous_weight:
         db.add(
             WeightRecordORM(
                 pet_id=db_pet.id,
-                weight=pet.weight_kg,
-                weight_unit=pet.weight_unit or db_pet.weight_unit or "kg",
+                weight=new_weight,
+                weight_unit=update_data.get("weight_unit") or db_pet.weight_unit or "kg",
                 date=datetime.utcnow(),
                 notes="Auto-recorded from pet profile update",
                 source="auto",

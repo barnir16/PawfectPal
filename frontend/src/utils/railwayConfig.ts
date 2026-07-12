@@ -1,4 +1,12 @@
 // Railway-specific configuration for web deployment
+const getConfiguredApiBaseUrl = (): string => {
+  const configuredUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
+  if (configuredUrl) {
+    return configuredUrl;
+  }
+  return 'http://localhost:8000';
+};
+
 export const railwayConfig = {
   // Check if we're running on Railway
   isRailway: () => {
@@ -23,12 +31,7 @@ export const railwayConfig = {
 
   // Get environment-specific API base URL
   getApiBaseUrl: () => {
-    if (railwayConfig.isRailway()) {
-      // Railway production URL
-      return 'https://pawfectpal-production.up.railway.app';
-    }
-    // Local development
-    return 'http://localhost:8000';
+    return getConfiguredApiBaseUrl();
   },
 
   // Get feature availability based on environment

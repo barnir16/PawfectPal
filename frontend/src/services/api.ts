@@ -13,7 +13,6 @@ export interface ApiRequestOptions extends RequestInit {
   params?: Record<string, QueryParamValue>;
 }
 
-const DEFAULT_PRODUCTION_API = "https://pawfectpal-production.up.railway.app";
 const DEFAULT_LOCAL_API = "http://localhost:8000";
 
 const sanitizeApiBaseUrl = (url: string): string => {
@@ -31,19 +30,14 @@ const sanitizeApiBaseUrl = (url: string): string => {
   return trimmedUrl;
 };
 
-// Get API URL from Firebase config with fallback
+// Get API URL from public Vite config with local fallback.
 export const getBaseUrl = (): string => {
   const isBrowser = typeof window !== "undefined";
-  const hostname = isBrowser ? window.location.hostname : "";
   const protocol = isBrowser ? window.location.protocol : "";
 
   try {
     const apiConfig = configService.getApiConfig();
     const baseUrl = sanitizeApiBaseUrl(apiConfig.baseUrl || "");
-    const isRailwayHost = hostname.includes("railway.app");
-    if (isRailwayHost) {
-      return DEFAULT_PRODUCTION_API;
-    }
 
     // If we're served over HTTPS, do not allow an HTTP API URL in browser context.
     if (protocol === "https:" && /^http:\/\//i.test(baseUrl)) {
@@ -53,13 +47,12 @@ export const getBaseUrl = (): string => {
     return baseUrl || DEFAULT_LOCAL_API;
   } catch (error) {
     console.warn("Error getting API config, using fallback backend URL:", error);
-    const isRailwayHost = hostname.includes("railway.app");
-    return isRailwayHost ? DEFAULT_PRODUCTION_API : DEFAULT_LOCAL_API;
+    return DEFAULT_LOCAL_API;
   }
 };
 
 // Don't set BASE_URL at module load time - get it dynamically
-export const BASE_URL = DEFAULT_PRODUCTION_API;
+export const BASE_URL = DEFAULT_LOCAL_API;
 
 const buildApiUrl = (
   endpoint: string,
@@ -109,73 +102,110 @@ export const getAuthHeaders = async (): Promise<HeadersInit> => {
 };
 
 /**
- * Handle API errors consistently
+ * Build a human-readable message for a single FastAPI/Pydantic validation
+ * error entry, e.g. {loc: ["body", "weight_kg"], msg: "..."} -> "weight kg: ...".
+ */
+const describeValidationError = (err: any): string => {
+  const path = Array.isArray(err?.loc)
+    ? err.loc.filter((segment: unknown) => segment !== 'body' && segment !== 'query')
+    : [];
+  const field = path.length ? path.join('.') : 'value';
+  const message = err?.msg || 'is invalid';
+  return `${field}: ${message}`;
+};
+
+/**
+ * Handle API errors consistently. Every branch produces a message that
+ * tells the user what happened and, where possible, what to do about it -
+ * never a bare "couldn't fetch" / "error" string.
  */
 export const handleApiError = async (response: Response): Promise<never> => {
-  let errorData;
+  let errorData: any = {};
+  let bodyWasParsed = true;
+
   try {
     const errorText = await response.text();
     errorData = errorText ? JSON.parse(errorText) : {};
   } catch (e) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    bodyWasParsed = false;
   }
 
-  if (response.status === 401) {
-    let authError = "Authentication failed";
-    if (errorData?.detail) {
-      if (errorData.detail === "Could not validate credentials") {
-        authError = "Your login session has expired. Please log in again.";
-      } else {
-        authError = errorData.detail;
-      }
-    }
-    const error = new Error(authError);
+  const fail = (message: string, extra?: Record<string, unknown>): never => {
+    const error = new Error(message);
     (error as any).status = response.status;
-    (error as any).isAuthError = true;
     (error as any).data = errorData;
+    if (extra) {
+      Object.assign(error, extra);
+    }
     throw error;
-  }
+  };
 
-  if (response.status === 422 && errorData?.detail) {
-    if (Array.isArray(errorData.detail)) {
-      const fieldErrors = errorData.detail
-        .map((err: any) => `${err.loc?.join('.')}: ${err.msg}`)
-        .join(', ');
-      const error = new Error(`Please check the following fields:\n${fieldErrors}`);
-      (error as any).status = response.status;
-      (error as any).data = errorData;
-      throw error;
-    } else {
-      const error = new Error(`Please check your input: ${errorData.detail}`);
-      (error as any).status = response.status;
-      (error as any).data = errorData;
-      throw error;
+  const detail = typeof errorData?.detail === 'string' ? errorData.detail : undefined;
+
+  switch (response.status) {
+    case 401: {
+      const message =
+        !detail || detail === 'Could not validate credentials'
+          ? 'Your login session has expired. Please log in again.'
+          : detail;
+      return fail(message, { isAuthError: true });
     }
-  }
 
-  let errorMessage = "Something went wrong";
-  if (errorData?.detail) {
-    if (response.status === 403) {
-      errorMessage = "You don't have permission to perform this action";
-    } else if (response.status === 404) {
-      errorMessage = "The requested resource was not found";
-    } else if (response.status === 500) {
-      errorMessage = "Server error. Please try again later";
-    } else {
-      errorMessage = errorData.detail;
+    case 403:
+      return fail(
+        detail || "You don't have permission to do that with this account."
+      );
+
+    case 404:
+      return fail(
+        detail ||
+          "We couldn't find what you were looking for. It may have been moved, deleted, or never existed."
+      );
+
+    case 409:
+      return fail(
+        detail ||
+          'This conflicts with existing data - it may already exist or have been changed by someone else. Please refresh and try again.'
+      );
+
+    case 422: {
+      if (Array.isArray(errorData?.detail)) {
+        const fieldErrors = errorData.detail.map(describeValidationError).join('; ');
+        return fail(`Please check the following and try again: ${fieldErrors}`);
+      }
+      return fail(`Please check your input: ${detail || 'one or more fields are invalid.'}`);
     }
-  } else if (response.status === 403) {
-    errorMessage = "Access denied. Please check your permissions.";
-  } else if (response.status === 404) {
-    errorMessage = "Resource not found. Please check the URL.";
-  } else if (response.status === 500) {
-    errorMessage = "Server error. Please try again later.";
+
+    case 429:
+      return fail("You're doing that a bit too quickly. Please wait a moment and try again.");
+
+    case 400:
+      return fail(
+        detail ||
+          "That request couldn't be processed - please check the information you entered and try again."
+      );
+
+    case 502:
+    case 503:
+    case 504:
+      return fail('The server is temporarily unavailable. Please try again in a few moments.');
   }
 
-  const error = new Error(errorMessage);
-  (error as any).status = response.status;
-  (error as any).data = errorData;
-  throw error;
+  if (response.status >= 500) {
+    return fail(
+      "Something went wrong on our end, not yours. Please try again in a moment - if this keeps happening, let us know."
+    );
+  }
+
+  if (!bodyWasParsed) {
+    return fail(
+      `The server returned an unexpected response (status ${response.status}${
+        response.statusText ? ` ${response.statusText}` : ''
+      }). Please try again.`
+    );
+  }
+
+  return fail(detail || `Something went wrong (status ${response.status}). Please try again.`);
 };
 
 /**
@@ -213,15 +243,50 @@ export const apiRequest = async <T>(
 
   const fullUrl = buildApiUrl(endpoint, params);
 
+  // Without an explicit timeout, a hung connection (bad wifi, server not
+  // responding) would leave the caller waiting forever with no feedback at
+  // all - worse than a vague error message. Abort and surface a clear
+  // "timed out" error instead.
+  let timeoutMs = 15000;
+  try {
+    const configuredTimeout = configService.getApiConfig().timeout;
+    if (typeof configuredTimeout === 'number' && configuredTimeout > 0) {
+      timeoutMs = configuredTimeout;
+    }
+  } catch {
+    // fall back to the default above
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
   let response;
   try {
     response = await fetch(fullUrl, {
       ...requestOptions,
-      headers
+      headers,
+      signal: controller.signal,
     });
   } catch (error) {
     console.error('API request failed:', error);
-    throw error;
+
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new Error(
+        'That request took too long and timed out. Please check your connection and try again.'
+      );
+    }
+
+    const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+    const networkError = new Error(
+      isOffline
+        ? "You appear to be offline. Please check your internet connection and try again."
+        : "We couldn't reach the server. Please check your connection and try again in a moment."
+    );
+    (networkError as any).isNetworkError = true;
+    (networkError as any).cause = error;
+    throw networkError;
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   if (!response.ok) {
@@ -242,7 +307,12 @@ export const apiRequest = async <T>(
     return undefined as unknown as T;
   }
 
-  return await response.json();
+  try {
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to parse API response as JSON:', error);
+    throw new Error("The server's response couldn't be read. Please try again.");
+  }
 };
 
 /**

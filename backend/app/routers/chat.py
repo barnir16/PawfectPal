@@ -182,12 +182,17 @@ async def send_message_with_files(
                 with open(file_path, "wb") as buffer:
                     buffer.write(content)
 
+                public_backend_url = os.getenv("PUBLIC_BACKEND_URL", "").rstrip("/")
+                attachment_url = f"/uploads/chat/{unique_filename}"
+                if public_backend_url:
+                    attachment_url = f"{public_backend_url}{attachment_url}"
+
                 # Store attachment info
                 attachments_info.append(
                     {
                         "id": str(uuid.uuid4()),
                         "file_name": safe_filename,
-                        "file_url": f"https://pawfectpal-production.up.railway.app/uploads/chat/{unique_filename}",
+                        "file_url": attachment_url,
                         "file_type": file.content_type or "application/octet-stream",
                         "file_size": len(content),
                         "created_at": datetime.now().isoformat(),

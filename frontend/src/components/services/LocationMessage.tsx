@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Box, Typography, Card, CardContent, Button, Stack } from '@mui/material';
 import { LocationOn, OpenInNew, Directions } from '@mui/icons-material';
 import { useLocalization } from '../../contexts/LocalizationContext';
@@ -8,15 +8,8 @@ interface LocationMessageProps {
   compact?: boolean;
 }
 
-const GOOGLE_MAPS_KEY =
-  import.meta.env.VITE_GOOGLE_MAPS_API_KEY ||
-  import.meta.env.VITE_SHARED_GOOGLE_MAPS_API_KEY ||
-  import.meta.env.RAILWAY_GOOGLE_MAPS_API_KEY ||
-  '';
-
 export const LocationMessage: React.FC<LocationMessageProps> = ({ message, compact = false }) => {
   const { t } = useLocalization();
-  const [mapError, setMapError] = useState(false);
 
   const latMatch = message.match(/Lat:\s*([0-9.-]+)|latitude[:\s]*([0-9.-]+)|lat[:\s]*([0-9.-]+)/i);
   const lngMatch = message.match(/Lng:\s*([0-9.-]+)|longitude[:\s]*([0-9.-]+)|lng[:\s]*([0-9.-]+)|lon[:\s]*([0-9.-]+)/i);
@@ -25,11 +18,18 @@ export const LocationMessage: React.FC<LocationMessageProps> = ({ message, compa
   const longitude = lngMatch ? parseFloat(lngMatch[1] || lngMatch[2] || lngMatch[3] || lngMatch[4]) : null;
 
   const mapPreviewUrl = useMemo(() => {
-    if (!latitude || !longitude || !GOOGLE_MAPS_KEY) {
+    if (!latitude || !longitude) {
       return null;
     }
 
-    return `https://maps.googleapis.com/maps/api/staticmap?center=${latitude},${longitude}&zoom=15&size=300x120&markers=color:red%7C${latitude},${longitude}&key=${GOOGLE_MAPS_KEY}`;
+    const delta = 0.01;
+    const bbox = [
+      longitude - delta,
+      latitude - delta,
+      longitude + delta,
+      latitude + delta,
+    ].join(',');
+    return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${latitude},${longitude}`;
   }, [latitude, longitude]);
 
   if (!latitude || !longitude) {
@@ -102,17 +102,18 @@ export const LocationMessage: React.FC<LocationMessageProps> = ({ message, compa
                 border: (theme) => `1px solid ${theme.palette.divider}`,
               }}
             >
-              {!mapError && mapPreviewUrl ? (
+              {mapPreviewUrl ? (
                 <Box
-                  component="img"
+                  component="iframe"
                   src={mapPreviewUrl}
-                  alt="Map preview"
+                  title="Map preview"
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
                   sx={{
                     width: '100%',
                     height: '100%',
-                    objectFit: 'cover',
+                    border: 0,
                   }}
-                  onError={() => setMapError(true)}
                 />
               ) : (
                 <Box

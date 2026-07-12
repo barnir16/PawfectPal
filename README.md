@@ -1,178 +1,178 @@
-# PawfectPal 
+# PawfectPal
 
-> A comprehensive pet care management platform that helps pet owners track their pets' health, schedule vet visits, and connect with pet care services.
+PawfectPal is a full-stack pet-care platform built with a React/Vite frontend, a FastAPI backend, and a PostgreSQL-ready data layer. It combines pet profiles, vaccination and weight tracking, service marketplace features, real-time chat, Google sign-in, and a Gemini-backed pet-care assistant.
 
-## Features
+This repository is being prepared as a clean portfolio version of an active development project. The strongest DevOps story is the production configuration work: separating frontend/backend/database concerns, moving secrets into environment variables, externalizing CORS and runtime config, and validating the app with CI before deployment.
 
-- **Pet Profiles**: Create and manage detailed profiles for all your pets
-- **Health Tracking**: Monitor vaccinations, medications, and vet visits
-- **Vet Connect**: Find and book appointments with local veterinarians
-- **AI Assistant**: Get personalized pet care advice powered by Google's Gemini AI
-- **Mobile-Friendly**: Responsive design works on all devices
-- **Secure Authentication**: JWT-based auth with Google OAuth support
-- **Real-time Chat**: Message your vet or pet service providers directly
-- **Health Analytics**: Track weight and health metrics over time
+## Project Status
+
+Stable or mostly stable:
+
+- User registration and JWT login
+- Google sign-in through Google Identity Services
+- Pet profile management
+- Vaccination, task, and weight tracking flows
+- Gemini assistant through the backend
+- Railway-oriented backend deployment
+- PostgreSQL-compatible SQLAlchemy models and Alembic migrations
+- Real-time service-request chat
+
+Still being refined:
+
+- Provider marketplace UX
+- Booking/provider-side edge cases
+- Push notification polish
+- Demo video and screenshots for the public portfolio page
 
 ## Tech Stack
 
-### Backend
-- **FastAPI** - Modern, fast web framework
-- **PostgreSQL** - Relational database
-- **SQLAlchemy** - ORM for database operations
-- **Alembic** - Database migrations
-- **Google Gemini AI** - For AI-powered pet care advice
-- **JWT** - Secure authentication
+Frontend:
 
-### Frontend
-- **React** (Vite) - Frontend framework
-- **TypeScript** - Type-safe JavaScript
-- **Material-UI (MUI)** - UI component library
-- **React Query** - Data fetching and state management
-- **React Hook Form** - Form handling
-- **Date-fns** - Date utilities
+- React 18
+- Vite
+- TypeScript
+- Material UI
+- React Router
+- Vitest
 
-## Screenshots
+Backend:
 
-*Screenshots will be added here*
+- Python 3.11
+- FastAPI
+- SQLAlchemy
+- Alembic
+- PostgreSQL in production, SQLite-friendly tests/local fallback
+- JWT authentication
+- Google Identity Services verification
+- Google Gemini API
+- Firebase Admin SDK for Firebase-backed services such as messaging/config
 
-## Project Structure
+Infrastructure:
 
-```
-PawfectPal/
-├── backend/
-│   ├── app/
-│   │   ├── api/           # API endpoints
-│   │   ├── core/          # Core configurations
-│   │   ├── crud/          # Database operations
-│   │   ├── models/        # SQLAlchemy models
-│   │   ├── schemas/       # Pydantic models
-│   │   └── services/      # Business logic
-│   ├── tests/             # Backend tests
-│   └── alembic/           # Database migrations
-│
-├── frontend/
-│   ├── public/            # Static files
-│   └── src/
-│       ├── components/    # Reusable components
-│       ├── pages/         # Page components
-│       ├── services/      # API services
-│       ├── types/         # TypeScript types
-│       └── utils/         # Helper functions
-```
+- Railway backend service
+- Railway PostgreSQL
+- Railway environment variables for backend secrets
+- GitHub Actions CI for backend smoke tests and frontend builds
 
-## Getting Started
+## Architecture
 
-### Prerequisites
+```text
+User
+  -> React/Vite frontend
+  -> FastAPI backend on Railway
+  -> PostgreSQL database
 
-- **Node.js** 18+ (LTS version recommended)
-- **Python** 3.11+
-- **PostgreSQL** 14+
-- **Docker** (optional, for containerized development)
+Google sign-in:
+  React frontend requests a Google token
+  FastAPI verifies the token with Google
+  FastAPI maps or creates a local PostgreSQL user
+  FastAPI issues the app JWT
 
-### Environment Setup
-
-1. Clone the repository:
-```bash
-git clone https://github.com/your-username/PawfectPal.git
-cd PawfectPal
+AI assistant:
+  React frontend sends pet context to FastAPI
+  FastAPI calls Gemini with a backend-only API key
+  FastAPI returns the assistant response
 ```
 
-2. Set up backend environment:
+## Security And Configuration
+
+Production secrets are expected to live outside the repository.
+
+Backend-only values:
+
+- `DATABASE_URL`
+- `SECRET_KEY`
+- `GEMINI_API_KEY`
+- `DOG_API_KEY`, `CAT_API_KEY`, or `PETS_API_KEY`
+- `FIREBASE_SERVICE_ACCOUNT_JSON`
+- Private API keys or service credentials
+
+Frontend public values:
+
+- `VITE_API_BASE_URL`
+- Firebase web config values
+- `VITE_GOOGLE_CLIENT_ID`
+- Public feature flags
+
+Breed/provider API calls are proxied through FastAPI so private provider keys never ship in the browser bundle.
+
+Never commit `.env`, database URLs, Firebase service account JSON, private keys, or production JWT secrets. If a key was ever committed to a public repository, treat it as compromised and rotate it.
+
+## Local Setup
+
+Backend:
+
 ```bash
 cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: .\venv\Scripts\activate
+python -m venv .venv
+.\.venv\Scripts\activate
 pip install -r requirements.txt
+copy .env.example .env
+uvicorn app.main:app --reload
 ```
 
-3. Set up frontend:
+Frontend:
+
 ```bash
-cd ../frontend
-npm install
+cd frontend
+npm ci
+copy .env.example .env
+npm run dev
 ```
 
-### Configuration
+Run migrations when using PostgreSQL:
 
-Create `.env` files with the following structure:
-
-**Backend (backend/.env):**
-```
-DATABASE_URL=REDACTED_DATABASE_URL
-SECRET_KEY=your-secret-key
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=REDACTED_GOOGLE_CLIENT_SECRET
-GEMINI_API_KEY=REDACTED_GEMINI_API_KEY
-ENVIRONMENT=development
-```
-
-**Frontend (frontend/.env):**
-```
-VITE_API_URL=http://localhost:8000
-VITE_GOOGLE_CLIENT_ID=your-google-client-id
-```
-
-### Running Locally
-
-1. Start the database:
-```bash
-docker-compose up -d db
-```
-
-2. Run database migrations:
 ```bash
 cd backend
 alembic upgrade head
 ```
 
-3. Start the backend:
-```bash
-uvicorn app.main:app --reload
-```
-
-4. In a new terminal, start the frontend:
-```bash
-cd frontend
-npm run dev
-```
-
-## Deployment
-
-The application is deployed on Railway. To deploy your own instance:
-
-1. Fork this repository
-2. Create a new Railway project
-3. Connect your GitHub repository
-4. Add the required environment variables
-5. Deploy!
-
 ## Testing
 
-### Backend Tests
+Backend smoke tests:
+
 ```bash
 cd backend
-pytest
+pytest --no-cov tests/test_ai.py tests/test_ai_chat.py tests/test_user_router.py tests/test_users.py
 ```
 
-### Frontend Tests
+Frontend:
+
 ```bash
 cd frontend
-npm test
+npm run build
+npm run test:run
 ```
 
-## License
+## Deployment Notes
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Railway handles deployment for the backend service and managed PostgreSQL. GitHub Actions is used for pre-deployment validation: backend smoke tests must pass and the frontend production build must succeed.
 
-## Contributing
+Recommended Railway backend variables:
 
-Contributions are welcome! Please read our [contributing guidelines](CONTRIBUTING.md) to get started.
+- `DATABASE_URL`
+- `SECRET_KEY`
+- `CORS_ORIGINS`
+- `GOOGLE_CLIENT_ID`
+- `GEMINI_API_KEY`
+- `GEMINI_MODEL`
+- `DOG_API_KEY`
+- `CAT_API_KEY`
+- `PETS_API_KEY`
+- `FIREBASE_SERVICE_ACCOUNT_JSON`
+- `PUBLIC_BACKEND_URL`
+- `ENVIRONMENT=production`
 
-## Contact
+Example `CORS_ORIGINS`:
 
-For questions or support, please open an issue on GitHub or contact us at [your-email@example.com](mailto:your-email@example.com).
+```text
+https://your-frontend-domain.com,http://localhost:5173
+```
 
----
+## Known Limitations
 
-> Made with by [Your Name] | [GitHub](https://github.com/your-username)
-**PawfectPal** - Making pet care easier, one paw at a time! 🐾
+PawfectPal is a portfolio project, not a finished commercial marketplace. The core pet profile, auth, deployment, database, and AI assistant flows are the main showcase. The provider marketplace and booking flows are still being refined.
 
+## Portfolio Framing
+
+PawfectPal began as an experimental full-stack pet-care project and evolved into a deployed multi-service app. The most relevant junior DevOps takeaways were configuring Railway services, separating public frontend configuration from backend secrets, handling CORS and production API URLs, integrating a managed database, and adding CI checks around an existing application.

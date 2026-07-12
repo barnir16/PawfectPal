@@ -9,7 +9,6 @@ PORT=${PORT:-8080}
 # Check if we're in Railway environment
 if [ -n "$RAILWAY_ENVIRONMENT" ]; then
     echo "Running in Railway environment: $RAILWAY_ENVIRONMENT"
-    echo "Database URL: $DATABASE_URL"
 else
     echo "Not in Railway environment"
 fi

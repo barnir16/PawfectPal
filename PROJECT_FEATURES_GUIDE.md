@@ -62,7 +62,7 @@ The weight UI combines stored weight records with pet metadata so the user can c
 - Chat state hook: `frontend/src/hooks/useAIChat.ts`
 - Frontend AI request builder: `frontend/src/services/ai/aiService.ts`
 - Backend AI route: `backend/app/routers/ai_simple.py`
-- Firebase-backed config helpers: `backend/app/services/firebase_admin.py` and `backend/app/services/firebase_user_service.py`
+- Backend Gemini config helpers: `backend/app/services/firebase_admin.py` and `backend/app/services/firebase_user_service.py`
 
 ### Chatbot request flow
 
@@ -73,12 +73,11 @@ The weight UI combines stored weight records with pet metadata so the user can c
 
 ### Gemini key and model flow
 
-- Primary Gemini key source: Railway backend environment variable `GEMINI_API_KEY`
-- Fallback Gemini key source: Firebase Remote Config key `gemini_api_key`
+- Gemini key source: backend environment variable `GEMINI_API_KEY`
 - Model name source: Railway backend environment variable `GEMINI_MODEL`
 - Default model if `GEMINI_MODEL` is missing: `gemini-2.5-flash-lite`
 
-The current backend architecture is Railway-first for the Gemini key. Firebase Remote Config is only the backup source if Railway does not provide a valid Gemini key.
+The Gemini key is backend-only and should not be stored in frontend code or Firebase Remote Config.
 
 ### Chatbot fallback behavior
 
@@ -136,13 +135,13 @@ The chat stack mixes REST for history/loading and WebSocket for live events. Att
 
 Uploaded pet images, profile images, task attachments, and chat attachments are stored under the backend uploads directory and served back through relative `/uploads/...` paths.
 
-## Firebase and Remote Config
+## Firebase And Public Config
 
 - Backend Firebase Admin wrapper: `backend/app/services/firebase_admin.py`
 - User-facing Firebase helper: `backend/app/services/firebase_user_service.py`
-- Frontend Remote Config support: `frontend/src/services/config`
+- Frontend public config support: `frontend/src/services/config`
 
-Firebase Remote Config is currently used as a secondary configuration source for non-secret operational values and as a backup location for Gemini-related settings when Railway env values are missing.
+Browser Firebase Remote Config is not used as an application config source. Backend secrets should stay in Railway/backend environment variables.
 
 ## Deployment Notes
 

@@ -36,7 +36,7 @@ import {
 } from '../services';
 
 // Or import specific services directly
-import { getDogBreedInfo } from '../services/external/externalApiService';
+import { fetchDogBreedInfo } from '../services/external/externalApiService';
 ```
 
 ## API Request Pattern
@@ -76,4 +76,4 @@ The location services provide wrappers around the browser's Geolocation API with
 
 ## External APIs
 
-External API integrations are isolated in the `external` directory. These services handle communication with third-party APIs and should be the only place where these integrations occur.
+External API integrations are isolated in the `external` directory. Frontend services call PawfectPal backend proxy endpoints for private providers; private API keys must stay server-side.

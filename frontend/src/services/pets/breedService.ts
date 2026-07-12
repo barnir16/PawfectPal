@@ -1,4 +1,9 @@
 
+import {
+  fetchCatBreeds,
+  fetchDogBreeds,
+} from '../external/externalApiService';
+
 
 /**
  * Comprehensive breed information interface
@@ -28,7 +33,7 @@ export interface BreedInfo {
 }
 
 /**
- * Get breed suggestions based on search term (local data only for now)
+ * Get breed suggestions based on search term through the backend breed API.
  */
 export const searchBreeds = async (
   query: string,
@@ -36,26 +41,46 @@ export const searchBreeds = async (
   limit: number = 10
 ): Promise<BreedInfo[]> => {
   try {
-    // For now, we'll use local data since the backend doesn't have breed search endpoints
-    return getLocalBreedSuggestions(query, type, limit);
+    const names =
+      type === 'dog'
+        ? await fetchDogBreeds(query)
+        : type === 'cat'
+          ? await fetchCatBreeds(query)
+          : [
+              ...(await fetchDogBreeds(query)),
+              ...(await fetchCatBreeds(query)),
+            ];
+
+    return names.slice(0, limit).map((breed) => ({
+      id: breed.toLowerCase().replace(/\s+/g, '-'),
+      name: breed,
+      type: type === 'all' ? inferBreedType(breed) : type,
+      description: `Information about ${breed} breed`,
+    }));
   } catch (error) {
     console.error('Error searching breeds:', error);
-    return [];
+    return getLocalBreedSuggestions(query, type, limit);
   }
 };
 
 /**
- * Get popular breeds for a specific pet type (local data only for now)
+ * Get popular breeds for a specific pet type through the backend breed API.
  */
 export const getPopularBreeds = async (
   type: 'dog' | 'cat',
   limit: number = 20
 ): Promise<BreedInfo[]> => {
   try {
-    return getLocalPopularBreeds(type, limit);
+    const names = type === 'dog' ? await fetchDogBreeds() : await fetchCatBreeds();
+    return names.slice(0, limit).map((breed) => ({
+      id: breed.toLowerCase().replace(/\s+/g, '-'),
+      name: breed,
+      type,
+      description: `Popular ${breed} breed`,
+    }));
   } catch (error) {
     console.error('Error fetching popular breeds:', error);
-    return [];
+    return getLocalPopularBreeds(type, limit);
   }
 };
 
@@ -137,7 +162,17 @@ const getLocalBreedRecommendations = (preferences: any): BreedInfo[] => {
   }));
 };
 
-// Local breed data as fallback - these match what's available in the backend
+const inferBreedType = (breed: string): 'dog' | 'cat' | 'other' => {
+  if (dogBreeds.includes(breed)) {
+    return 'dog';
+  }
+  if (catBreeds.includes(breed)) {
+    return 'cat';
+  }
+  return 'other';
+};
+
+// Small offline fallback only; normal search/popular flows use the backend.
 const dogBreeds = [
   "Labrador Retriever", "German Shepherd", "Golden Retriever", "French Bulldog",
   "Bulldog", "Poodle", "Beagle", "Rottweiler", "Yorkshire Terrier", "Boxer",

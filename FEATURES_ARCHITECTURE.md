@@ -7,8 +7,8 @@ This document explains how the major app features work today, which files own th
 - Frontend: React + Vite in `frontend/src`
 - Backend: FastAPI in `backend/app`
 - Database: PostgreSQL via Railway
-- Auth: Firebase Authentication on the client, JWT validation on the backend
-- Runtime config: Railway environment variables first, with Firebase Remote Config used as a limited backup/feature-flag source
+- Auth: Google Identity Services or username/password on the client, app JWT validation on the backend
+- Runtime config: Railway environment variables for backend secrets, Vite env/public config for browser-safe values
 - Deployment: Railway runs the backend from `backend` and the frontend from `frontend`
 
 ## Authentication
@@ -162,7 +162,7 @@ Flow:
 3. The frontend sends `message`, `pet_context`, and `prompt_language` to `POST /ai/chat`.
 4. `ai_simple.py` asks `firebase_user_service` for the Gemini key.
 5. `firebase_user_service` resolves the key through `firebase_admin`.
-6. `firebase_admin` resolves the Gemini key from Railway `GEMINI_API_KEY` first. Firebase Remote Config `gemini_api_key` is only the backup path if Railway does not provide the key.
+6. `firebase_admin` resolves the Gemini key from backend environment variable `GEMINI_API_KEY`.
 7. The backend chooses the model from Railway `GEMINI_MODEL`, otherwise it falls back to `gemini-2.5-flash-lite`.
 8. Gemini generates the response and the backend returns it with suggested actions.
 9. If Gemini is unavailable or rate-limited, the backend now returns a clear retry/unavailable response instead of pretending a weak fallback is a real AI answer.
@@ -236,13 +236,13 @@ Backend:
 
 Flow:
 1. Public client-safe config comes from `shared.ts`.
-2. Browser Firebase Remote Config is optional and only initializes if a browser-safe Firebase API key is present.
+2. Browser Firebase Remote Config is not used as an app configuration source.
 3. Backend secrets should come from Railway environment variables by default.
-4. Backend Firebase Remote Config access uses service-account OAuth2 and serves as a fallback path, not the primary secret store.
+4. Backend Firebase access uses service-account credentials for server-side Firebase APIs when configured.
 
 Recommended deployment posture:
 - Keep real secrets in Railway and treat Railway as the source of truth for production backend credentials.
-- Treat Firebase Remote Config as a fallback or feature-flag source, not the only place that a critical production key exists.
+- Do not use Firebase Remote Config for backend secrets or private API keys.
 - Rebuild the frontend after config changes that affect bundled public assets.
 
 ## Recommended Cleanup Direction

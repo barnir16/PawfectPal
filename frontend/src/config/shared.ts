@@ -7,12 +7,12 @@
 export const SHARED_CONFIG = {
   // Firebase Configuration (Safe to expose - security handled by Firebase Rules)
   firebase: {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "", // Use environment variable to prevent leaks
-    authDomain: "pawfectpal-ac5d7.firebaseapp.com",
-    projectId: "pawfectpal-ac5d7",
-    storageBucket: "pawfectpal-ac5d7.firebasestorage.app",
-    messagingSenderId: "204752166323",
-    appId: "1:204752166323:web:4efd89fff62af150343fc6",
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "",
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "",
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
+    appId: import.meta.env.VITE_FIREBASE_APP_ID || "",
   },
 
   // App Configuration
@@ -24,7 +24,10 @@ export const SHARED_CONFIG = {
 
   // Development Settings
   development: {
-    apiBaseUrl: import.meta.env.VITE_API_URL || "https://pawfectpal-production.up.railway.app",
+    apiBaseUrl:
+      import.meta.env.VITE_API_BASE_URL ||
+      import.meta.env.VITE_API_URL ||
+      "http://localhost:8000",
     enableDebugMode: true,
     enableMockData: false,
   },
@@ -36,15 +39,6 @@ export const SHARED_CONFIG = {
     enableAiChatbot: true,
     enableNotifications: true,
     enableOfflineMode: false,
-  },
-
-  // External API Keys (These should be stored in Firebase Remote Config)
-  externalApis: {
-    googleMapsApiKey: "", // Set via Firebase Remote Config
-    weatherApiKey: "",    // Set via Firebase Remote Config
-    openAiApiKey: "",     // Set via Firebase Remote Config
-    petsApiKey: "",       // Set via Firebase Remote Config
-    geminiApiKey: "",     // Set via Firebase Remote Config
   },
 
   // Emergency Contacts
@@ -69,7 +63,6 @@ export const getConfig = (environment: 'development' | 'staging' | 'production' 
   const baseConfig = { ...SHARED_CONFIG };
   
   if (environment === 'production') {
-    baseConfig.development.apiBaseUrl = "https://api.pawfectpal.com"; // Replace with actual production URL
     baseConfig.development.enableDebugMode = false;
     baseConfig.development.enableMockData = false;
   }

@@ -8,7 +8,6 @@ import { getServices, createService, updateServiceStatus } from '../services/ser
 import { getAllVaccinations } from '../services/vaccines/vaccineService';
 import { getAgeRestrictions } from '../services/references/referencesService';
 import { StorageHelper } from './StorageHelper';
-import { ApiKeyManager } from './ApiKeyManager';
 
 /**
  * Comprehensive test helper for PawfectPal features - React Web version
@@ -25,7 +24,6 @@ export class TestHelper {
     this.testResults = [];
 
     await this.testStorage();
-    await this.testApiKeyManagement();
     await this.testAuthentication();
     await this.testPetManagement();
     await this.testTaskManagement();
@@ -60,35 +58,6 @@ export class TestHelper {
       await StorageHelper.removeItem('test_object');
     } catch (error) {
       this.addTestResult('Storage', 'FAIL', `Storage error: ${(error as Error).message}`);
-    }
-  }
-
-  private static async testApiKeyManagement(): Promise<void> {
-    try {
-      ApiKeyManager.setPetsApiKey('test_pets_key');
-      ApiKeyManager.setGeminiApiKey('test_gemini_key');
-
-      const petsKey = ApiKeyManager.getPetsApiKey();
-      const geminiKey = ApiKeyManager.getGeminiApiKey();
-
-      if (petsKey === 'test_pets_key' && geminiKey === 'test_gemini_key') {
-        this.addTestResult('API Key Management', 'PASS', 'API key management working correctly');
-      } else {
-        this.addTestResult('API Key Management', 'FAIL', 'API key retrieval failed');
-      }
-
-      const hasPetsKey = ApiKeyManager.hasPetsApiKey();
-      const hasGeminiKey = ApiKeyManager.hasGeminiApiKey();
-
-      if (hasPetsKey && hasGeminiKey) {
-        this.addTestResult('API Key Checks', 'PASS', 'API key existence checks working');
-      } else {
-        this.addTestResult('API Key Checks', 'FAIL', 'API key existence checks failed');
-      }
-
-      ApiKeyManager.clearAllKeys();
-    } catch (error) {
-      this.addTestResult('API Key Management', 'FAIL', `API key error: ${(error as Error).message}`);
     }
   }
 

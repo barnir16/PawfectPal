@@ -7,7 +7,10 @@ from config import DATABASE_URL
 if DATABASE_URL.startswith("sqlite"):
     engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 else:
-    engine = create_engine(DATABASE_URL)
+    # pool_pre_ping checks each connection before use and transparently replaces
+    # dead ones (Railway's public DB proxy can silently drop idle connections).
+    # pool_recycle forces connections to be replaced before they go stale.
+    engine = create_engine(DATABASE_URL, pool_pre_ping=True, pool_recycle=300)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

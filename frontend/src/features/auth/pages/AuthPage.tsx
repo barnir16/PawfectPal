@@ -282,7 +282,7 @@ export default function AuthScreen() {
             borderRadius: 4,
             border: '1px solid #e9ecef'
           }}>
-            💡 <strong>Tip:</strong> Google Sign-In can be enabled via Firebase Remote Config.
+            <strong>Tip:</strong> Google Sign-In requires VITE_GOOGLE_CLIENT_ID.
             <br />See FIREBASE_CONFIG_SETUP.md for details.
           </div>
         )}
