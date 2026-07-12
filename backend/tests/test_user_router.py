@@ -6,7 +6,7 @@ from fastapi import status
 
 from app.main import app
 from app.models import UserORM
-from app.models.provider import ProviderORM
+from app.models.provider_profile import ProviderProfileORM
 
 from app.dependencies.auth import get_current_user
 from app.dependencies.auth import get_current_user as rel_get_current_user
@@ -77,7 +77,11 @@ async def test_toggle_provider_status(client, db_session, user, override_auth):
     data1 = r1.json()
     assert data1["is_provider"] is True
     # Provider profile should exist
-    prov = db_session.query(ProviderORM).filter(ProviderORM.user_id == user.id).first()
+    prov = (
+        db_session.query(ProviderProfileORM)
+        .filter(ProviderProfileORM.user_id == user.id)
+        .first()
+    )
     assert prov is not None
 
     # Disable provider
@@ -85,7 +89,11 @@ async def test_toggle_provider_status(client, db_session, user, override_auth):
     assert r2.status_code == status.HTTP_200_OK
     data2 = r2.json()
     assert data2["is_provider"] is False
-    prov2 = db_session.query(ProviderORM).filter(ProviderORM.user_id == user.id).first()
+    prov2 = (
+        db_session.query(ProviderProfileORM)
+        .filter(ProviderProfileORM.user_id == user.id)
+        .first()
+    )
     assert prov2 is None
 
 

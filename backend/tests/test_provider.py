@@ -3,7 +3,7 @@ import pytest
 from fastapi import status
 
 from app.models import UserORM
-from app.models.provider import ProviderORM
+from app.models.provider_profile import ProviderProfileORM
 
 BASE = "/providers"
 
@@ -29,7 +29,9 @@ def provider_user(db_session):
     db_session.commit()
     db_session.refresh(u)
 
-    prof = ProviderORM(user_id=u.id, bio="Loves pets", hourly_rate=25.0, rating=4.7)
+    prof = ProviderProfileORM(
+        user_id=u.id, bio="Loves pets", hourly_rate=25.0, average_rating=4.7, total_reviews=1
+    )
     db_session.add(prof)
     db_session.commit()
     db_session.refresh(prof)
