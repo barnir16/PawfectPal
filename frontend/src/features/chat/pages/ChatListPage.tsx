@@ -244,20 +244,26 @@ export const ChatListPage = () => {
       const serviceType = serviceTypeMap[serviceRequest.service_type] || t("petCare");
       const title = serviceRequest.title;
       
-      // Find the OTHER participant (provider or client)
-      let otherParticipantName = t("provider");
+      // Resolve the other party's display name based on who the current user is.
+      // Prefer full_name, fall back to username. If the request hasn't been
+      // assigned to a provider yet, omit the participant segment entirely rather
+      // than showing the literal fallback string "Provider".
       const currentUserId = user?.id;
-      
-      // If current user is the service request owner, show provider name
-      if (serviceRequest.user?.id === currentUserId && serviceRequest.assigned_provider) {
-        otherParticipantName = serviceRequest.assigned_provider.username || t("provider");
+      let otherParticipantName: string | null = null;
+
+      if (serviceRequest.user?.id === currentUserId) {
+        // Current user is the request owner — other party is the assigned provider
+        const p = serviceRequest.assigned_provider;
+        otherParticipantName = p ? (p.full_name || p.username || null) : null;
+      } else if (serviceRequest.assigned_provider?.id === currentUserId) {
+        // Current user is the assigned provider — other party is the request owner
+        const u = serviceRequest.user;
+        otherParticipantName = u ? (u.full_name || u.username || null) : null;
       }
-      // If current user is the provider, show client name
-      else if (serviceRequest.assigned_provider?.id === currentUserId && serviceRequest.user) {
-        otherParticipantName = serviceRequest.user.username || t("client");
-      }
-      
-      const finalTitle = `${serviceType}: ${title} - ${otherParticipantName}`;
+
+      const finalTitle = otherParticipantName
+        ? `${serviceType}: ${title} - ${otherParticipantName}`
+        : `${serviceType}: ${title}`;
 
       return finalTitle;
     }
