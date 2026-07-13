@@ -17,28 +17,42 @@ declare module "@mui/material/Button" {
 
 export const theme = createTheme({
   palette: {
+    // Warm amber as primary — inviting, energetic, pet-friendly
     primary: {
-      main: "#1976d2",
-      light: "#42a5f5",
-      dark: "#1565c0",
+      main: "#F4A261",
+      light: "#F7BC8A",
+      dark: "#E07B3A",
       contrastText: "#fff",
     },
+    // Deep teal as secondary — trustworthy, calm, professional
     secondary: {
-      main: "#9c27b0",
-      light: "#ba68c8",
-      dark: "#7b1fa2",
+      main: "#2A9D8F",
+      light: "#4FBFB2",
+      dark: "#1D7A6E",
       contrastText: "#fff",
     },
     error: {
-      main: "#d32f2f",
+      main: "#E76F51", // warm coral instead of cold red
+    },
+    success: {
+      main: "#52B788", // sage green
+      light: "#74C69D",
+      dark: "#2D6A4F",
+    },
+    warning: {
+      main: "#E9C46A", // warm yellow
     },
     background: {
-      default: "#f5f5f5",
+      default: "#FFFBF5", // warm off-white — not cold gray
       paper: "#ffffff",
+    },
+    text: {
+      primary: "#2D2D2D",
+      secondary: "#6B6B6B",
     },
     white: {
       main: "#ffffff",
-      contrastText: "#000000", // black text for contrast
+      contrastText: "#000000",
     },
   },
   typography: {
@@ -56,34 +70,10 @@ export const theme = createTheme({
     ].join(","),
     h1: {
       fontSize: "2.5rem",
-      fontWeight: 600,
+      fontWeight: 700,
+      letterSpacing: "-0.02em",
     },
     h2: {
       fontSize: "2rem",
-      fontWeight: 500,
-    },
-    h3: {
-      fontSize: "1.75rem",
-      fontWeight: 500,
-    },
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: "none",
-          borderRadius: 8,
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          boxShadow:
-            "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
-        },
-      },
-    },
-  },
-});
+      fontWeight: 700,
+      letterSpacing: "-

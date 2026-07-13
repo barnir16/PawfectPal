@@ -7,7 +7,6 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Divider,
   Box,
   Typography,
   useTheme,
@@ -19,14 +18,11 @@ import {
   Dashboard as DashboardIcon,
   Pets as PetsIcon,
   Assignment as TasksIcon,
-  Settings as SettingsIcon,
-  Person as PersonIcon,
-  ChevronLeft as ChevronLeftIcon,
-  ChevronRight as ChevronRightIcon,
   EventAvailable as ServicesIcon,
-  PostAdd as BookIcon,
+  Search as FindIcon,
   ListAlt as ServiceRequestsIcon,
   Chat as ChatIcon,
+  MonitorWeight as WeightIcon,
   Menu as MenuIcon,
   Store as MarketplaceIcon,
 } from "@mui/icons-material";
@@ -39,7 +35,26 @@ type SidebarProps = {
 };
 
 const drawerWidth = 240;
-const minimizedWidth = 64;
+const minimizedWidth = 68;
+
+// Sidebar uses a warm charcoal — premium, grounding, high contrast
+const SIDEBAR_BG = "#1C1917";
+const SIDEBAR_TEXT = "rgba(255,255,255,0.82)";
+const SIDEBAR_TEXT_MUTED = "rgba(255,255,255,0.38)";
+const SIDEBAR_ACTIVE_BG = "rgba(244,162,97,0.18)";
+const SIDEBAR_ACTIVE_COLOR = "#F4A261";
+const SIDEBAR_HOVER_BG = "rgba(255,255,255,0.06)";
+
+type NavItem = {
+  text: string;
+  icon: React.ReactNode;
+  path: string;
+};
+
+type NavGroup = {
+  label?: string;
+  items: NavItem[];
+};
 
 export const Sidebar = ({
   mobileOpen,
@@ -55,64 +70,71 @@ export const Sidebar = ({
   const isProvider = user?.is_provider;
 
   const closeMobileDrawerSafely = () => {
-    if (!isMobile) {
-      return;
-    }
-
-    // Prevent focused sidebar elements from staying focused while the modal is hidden.
+    if (!isMobile) return;
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
-
     requestAnimationFrame(() => {
       onClose();
     });
   };
 
-  const menuItems = [
+  const navGroups: NavGroup[] = [
     {
-      text: t("navigation.dashboard"),
-      icon: <DashboardIcon />,
-      path: "/dashboard",
-    },
-    { text: t("navigation.pets"), icon: <PetsIcon />, path: "/pets" },
-    { text: t("navigation.tasks"), icon: <TasksIcon />, path: "/tasks" },
-    {
-      text: t("services.manageBookings"),
-      icon: <ServicesIcon />,
-      path: "/services",
+      items: [
+        {
+          text: t("navigation.dashboard"),
+          icon: <DashboardIcon fontSize="small" />,
+          path: "/dashboard",
+        },
+      ],
     },
     {
-      text: t("services.findProviders"),
-      icon: <BookIcon />,
-      path: "/bookservice",
+      label: "Care",
+      items: [
+        { text: t("navigation.pets"), icon: <PetsIcon fontSize="small" />, path: "/pets" },
+        { text: t("navigation.tasks"), icon: <TasksIcon fontSize="small" />, path: "/tasks" },
+        {
+          text: t("navigation.weightTracking"),
+          icon: <WeightIcon fontSize="small" />,
+          path: "/weight-tracking",
+        },
+      ],
     },
     {
-      text: t("marketplace.requestBoard") || "Request Board",
-      icon: <MarketplaceIcon />,
-      path: "/marketplace",
+      label: "Services",
+      items: [
+        {
+          text: t("services.findProviders"),
+          icon: <FindIcon fontSize="small" />,
+          path: "/bookservice",
+        },
+        {
+          text: t("services.manageBookings"),
+          icon: <ServicesIcon fontSize="small" />,
+          path: "/services",
+        },
+        {
+          text: t("marketplace.requestBoard") || "Request Board",
+          icon: <MarketplaceIcon fontSize="small" />,
+          path: "/marketplace",
+        },
+        ...(isProvider
+          ? [
+              {
+                text: t("services.providerRequestInbox"),
+                icon: <ServiceRequestsIcon fontSize="small" />,
+                path: "/service-requests",
+              },
+            ]
+          : []),
+      ],
     },
-    // Provider-only
-    ...(isProvider
-      ? [
-          {
-            text: t("services.providerRequestInbox"),
-            icon: <ServiceRequestsIcon />,
-            path: "/service-requests",
-          },
-        ]
-      : []),
     {
-      text: t("services.myPostedRequests"),
-      icon: <ServiceRequestsIcon />,
-      path: "/my-service-requests",
+      items: [
+        { text: t("navigation.chat"), icon: <ChatIcon fontSize="small" />, path: "/chat-list" },
+      ],
     },
-    {
-      text: t("navigation.weightTracking"),
-      icon: <PersonIcon />,
-      path: "/weight-tracking",
-    },
-    { text: t("navigation.chat"), icon: <ChatIcon />, path: "/chat-list" },
   ];
 
   const handleDrawerToggle = () => {
@@ -129,144 +151,130 @@ export const Sidebar = ({
     closeMobileDrawerSafely();
   };
 
+  const isActive = (path: string) => location.pathname === path;
+
+  const renderNavItem = (item: NavItem) => (
+    <ListItem key={item.path} disablePadding sx={{ display: "block", px: 1, py: "1px" }}>
+      <ListItemButton
+        component={RouterLink}
+        to={item.path}
+        selected={isActive(item.path)}
+        onClick={isMobile ? handleMobileClose : undefined}
+        title={!(open || isMobile) ? item.text : undefined}
+        sx={{
+          flexDirection: isRTL ? "row-reverse" : "row",
+          minHeight: 40,
+          borderRadius: "10px",
+          px: (open || isMobile) ? 1.5 : 1,
+          justifyContent: (open || isMobile) ? "flex-start" : "center",
+          color: isActive(item.path) ? SIDEBAR_ACTIVE_COLOR : SIDEBAR_TEXT,
+          backgroundColor: isActive(item.path) ? SIDEBAR_ACTIVE_BG : "transparent",
+          "&:hover": {
+            backgroundColor: isActive(item.path) ? SIDEBAR_ACTIVE_BG : SIDEBAR_HOVER_BG,
+          },
+          "&.Mui-selected": {
+            backgroundColor: SIDEBAR_ACTIVE_BG,
+            "&:hover": { backgroundColor: SIDEBAR_ACTIVE_BG },
+          },
+          transition: "background-color 0.15s ease, color 0.15s ease",
+        }}
+      >
+        <ListItemIcon
+          sx={{
+            minWidth: (open || isMobile) ? 34 : "auto",
+            justifyContent: "center",
+            color: isActive(item.path) ? SIDEBAR_ACTIVE_COLOR : SIDEBAR_TEXT,
+          }}
+        >
+          {item.icon}
+        </ListItemIcon>
+        {(open || isMobile) && (
+          <ListItemText
+            primary={item.text}
+            primaryTypographyProps={{
+              fontSize: "0.85rem",
+              fontWeight: isActive(item.path) ? 600 : 400,
+              noWrap: true,
+            }}
+          />
+        )}
+        {isActive(item.path) && (open || isMobile) && (
+          <Box
+            sx={{
+              width: 3,
+              height: 20,
+              borderRadius: 2,
+              bgcolor: SIDEBAR_ACTIVE_COLOR,
+              flexShrink: 0,
+            }}
+          />
+        )}
+      </ListItemButton>
+    </ListItem>
+  );
+
   const drawer = (
-    <div>
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        bgcolor: SIDEBAR_BG,
+      }}
+    >
+      {/* Logo / toggle */}
       <Box
         sx={{
-          p: 2,
+          px: 2,
+          py: 1.5,
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
+          justifyContent: (open || isMobile) ? "space-between" : "center",
+          minHeight: 56,
         }}
       >
         {(open || isMobile) && (
-          <Typography variant="h6" noWrap component="div">
-            PawfectPal
-          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box
+              sx={{
+                width: 28,
+                height: 28,
+                borderRadius: "50%",
+                bgcolor: "primary.main",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "0.9rem",
+                flexShrink: 0,
+              }}
+            >
+              🐾
+            </Box>
+            <Typography
+              variant="h6"
+              sx={{
+                color: "#fff",
+                fontWeight: 700,
+                fontSize: "1rem",
+                letterSpacing: "-0.01em",
+              }}
+            >
+              PawfectPal
+            </Typography>
+          </Box>
         )}
         <IconButton
           onClick={handleDrawerToggle}
+          size="small"
           sx={{
-            color: "text.primary",
-            backgroundColor: "transparent",
-            "&:hover": {
-              backgroundColor: "rgba(0,0,0,0.05)",
-            },
+            color: SIDEBAR_TEXT_MUTED,
             ml: (open || isMobile) ? 0 : "auto",
             mr: (open || isMobile) ? 0 : "auto",
+            "&:hover": { color: SIDEBAR_TEXT, bgcolor: SIDEBAR_HOVER_BG },
           }}
         >
           <MenuIcon fontSize="small" />
         </IconButton>
       </Box>
-      <Divider />
-      <List>
-        {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <ListItemButton
-              component={RouterLink}
-              to={item.path}
-              selected={location.pathname === item.path}
-              onClick={isMobile ? handleMobileClose : onClose}
-              sx={{
-                flexDirection: isRTL ? "row-reverse" : "row",
-                minHeight: 48,
-                px: (open || isMobile) ? 2 : 1.5,
-                justifyContent: (open || isMobile) ? "flex-start" : "center",
-                "&.Mui-selected": {
-                  backgroundColor: "rgba(255,255,255,0.1)",
-                  "&:hover": {
-                    backgroundColor: "rgba(255,255,255,0.15)",
-                  },
-                },
-                "&:hover": {
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                },
-              }}
-              title={!(open || isMobile) ? item.text : undefined} // Show tooltip when minimized
-            >
-              <ListItemIcon
-                sx={{
-                  minWidth: (open || isMobile) ? 40 : "auto",
-                  justifyContent: "center",
-                  color:
-                    location.pathname === item.path
-                      ? "primary.main"
-                      : "inherit",
-                }}
-              >
-                {item.icon}
-              </ListItemIcon>
-              {(open || isMobile) && (
-                <ListItemText
-                  primary={item.text}
-                  sx={{
-                    textAlign: isRTL ? "right" : "left",
-                    "& .MuiListItemText-primary": {
-                      textAlign: isRTL ? "right" : "left",
-                      color:
-                        location.pathname === item.path
-                          ? "primary.main"
-                          : "inherit",
-                    },
-                  }}
-                />
-              )}
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-    </div>
-  );
 
-  return (
-    <Box
-      component="nav"
-      sx={{
-        width: { sm: open ? drawerWidth : minimizedWidth },
-        flexShrink: { sm: 0 },
-        transition: "width 0.3s ease",
-      }}
-      aria-label="mailbox folders"
-    >
-      {/* Mobile drawer */}
-      <Drawer
-        variant="temporary"
-        open={mobileOpen}
-        onClose={handleMobileClose}
-        anchor={isRTL ? "right" : "left"}
-        ModalProps={{
-          keepMounted: true, // Better open performance on mobile.
-          disableRestoreFocus: true,
-        }}
-        sx={{
-          display: { xs: "block", sm: "none" },
-          "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
-        }}
-      >
-        {drawer}
-      </Drawer>
-
-      {/* Desktop drawer */}
-      <Drawer
-        variant="persistent"
-        anchor={isRTL ? "right" : "left"}
-        open={true}
-        sx={{
-          display: { xs: "none", sm: "block" },
-          "& .MuiDrawer-paper": {
-            boxSizing: "border-box",
-            width: open ? drawerWidth : minimizedWidth,
-            transition: theme.transitions.create("width", {
-              easing: theme.transitions.easing.sharp,
-              duration: theme.transitions.duration.enteringScreen,
-            }),
-            overflow: "visible",
-          },
-        }}
-      >
-        {drawer}
-      </Drawer>
-    </Box>
-  );
-};
+      {/* Nav groups */

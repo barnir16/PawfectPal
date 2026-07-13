@@ -236,22 +236,49 @@ export const Dashboard = () => {
     );
   }
 
-  return (
-    <Box sx={{ flexGrow: 1 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        {t("dashboard.title")}
-      </Typography>
+  // Friendly time-of-day greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  };
 
-      <Paper sx={{ p: 3, mb: 4 }}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 3,
-          }}
-        >
-          <Typography variant="h6" component="h2">
+  const firstName = user?.full_name?.trim().split(" ")[0] || user?.username || "";
+
+  // How many urgent items exist in total (for summary line)
+  const totalUrgent = overdueVaccinations.length + weightAlerts.filter((a: any) => a.severity === "critical" || a.severity === "high").length;
+
+  // Section card style — replaces flat Paper with something warmer
+  const sectionCard = {
+    p: 3,
+    mb: 3,
+    borderRadius: "20px",
+    boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+    border: "1px solid rgba(0,0,0,0.05)",
+  };
+
+  return (
+    <Box sx={{ flexGrow: 1, maxWidth: 1100 }}>
+
+      {/* ── Greeting ────────────────────────────────────────────── */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 700, color: "text.primary", mb: 0.5 }}>
+          {getGreeting()}{firstName ? `, ${firstName}` : ""}! 👋
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          {totalUrgent > 0
+            ? `You have ${totalUrgent} item${totalUrgent > 1 ? "s" : ""} that need${totalUrgent === 1 ? "s" : ""} attention today.`
+            : pets.length > 0
+              ? `Your ${pets.length} pet${pets.length > 1 ? "s are" : " is"} all caught up. Great job! 🐾`
+              : "Welcome to PawfectPal — add your first pet to get started."}
+        </Typography>
+      </Box>
+
+      {/* ── Recent Tasks ─────────────────────────────────────────── */}
+      <Paper sx={sectionCard}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+          <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
             {t("dashboard.recentTasks")}
           </Typography>
           <Button
@@ -265,7 +292,7 @@ export const Dashboard = () => {
         </Box>
 
         {recentTasks.length === 0 ? (
-          <Typography color="text.secondary" sx={{ fontStyle: "italic", textAlign: "center", py: 3 }}>
+          <Typography color="text.secondary" sx={{ textAlign: "center", py: 3, fontSize: "0.9rem" }}>
             {t("dashboard.noPendingTasks")}
           </Typography>
         ) : (
@@ -294,22 +321,30 @@ export const Dashboard = () => {
         )}
       </Paper>
 
+      {/* ── Vaccine Reminders ────────────────────────────────────── */}
       {(overdueVaccinations.length > 0 || upcomingVaccinations.length > 0) && (
-        <Paper sx={{ p: 3, mb: 4 }}>
-          <Typography variant="h6" component="h2" gutterBottom>
+        <Paper sx={sectionCard}>
+          <Typography variant="h6" component="h2" sx={{ fontWeight: 600, mb: 2 }}>
             {t("dashboard.vaccineReminders")}
           </Typography>
 
           {overdueVaccinations.length > 0 && (
             <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle1" color="error" sx={{ mb: 2, fontWeight: "bold" }}>
-                {t("dashboard.overdueVaccinationsTitle")} ({overdueVaccinations.length})
-              </Typography>
-              <Grid container spacing={2}>
-                {overdueVaccinations.slice(0, 4).map((vaccine: any) => (
-                  <Grid key={vaccine.id} size={{ xs: 12, sm: 6, md: 3 }}>
-                    <Alert severity="error" sx={{ height: "100%" }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+                <Typography variant="subtitle2" color="error.main" sx={{ fontWeight: 700 }}>
+                  {t("dashboard.overdueVaccinationsTitle")} ({overdueVaccinations.length})
+                </Typography>
+                {overdueVaccinations.length > 3 && (
+                  <Button size="small" variant="text" color="error" onClick={() => navigate("/tasks")}>
+                    +{overdueVaccinations.length - 3} more
+                  </Button>
+                )}
+              </Box>
+              <Grid container spacing={1.5}>
+                {overdueVaccinations.slice(0, 3).map((vaccine: any) => (
+                  <Grid key={vaccine.id} size={{ xs: 12, sm: 6, md: 4 }}>
+                    <Alert severity="error" sx={{ borderRadius: "12px" }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                         {vaccine.pet_name}
                       </Typography>
                       <Typography variant="body2">
@@ -317,9 +352,7 @@ export const Dashboard = () => {
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         {t("dashboard.due")}:{" "}
-                        {vaccine.due_date
-                          ? new Date(vaccine.due_date).toLocaleDateString()
-                          : t("dashboard.noDateSet")}
+                        {vaccine.due_date ? new Date(vaccine.due_date).toLocaleDateString() : t("dashboard.noDateSet")}
                       </Typography>
                     </Alert>
                   </Grid>
@@ -330,14 +363,21 @@ export const Dashboard = () => {
 
           {upcomingVaccinations.length > 0 && (
             <Box>
-              <Typography variant="subtitle1" color="warning.main" sx={{ mb: 2, fontWeight: "bold" }}>
-                {t("dashboard.upcomingVaccinationsTitle")} ({upcomingVaccinations.length})
-              </Typography>
-              <Grid container spacing={2}>
-                {upcomingVaccinations.slice(0, 4).map((vaccine: any) => (
-                  <Grid key={vaccine.id} size={{ xs: 12, sm: 6, md: 3 }}>
-                    <Alert severity="warning" sx={{ height: "100%" }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+                <Typography variant="subtitle2" color="warning.dark" sx={{ fontWeight: 700 }}>
+                  {t("dashboard.upcomingVaccinationsTitle")} ({upcomingVaccinations.length})
+                </Typography>
+                {upcomingVaccinations.length > 3 && (
+                  <Button size="small" variant="text" color="warning" onClick={() => navigate("/tasks")}>
+                    +{upcomingVaccinations.length - 3} more
+                  </Button>
+                )}
+              </Box>
+              <Grid container spacing={1.5}>
+                {upcomingVaccinations.slice(0, 3).map((vaccine: any) => (
+                  <Grid key={vaccine.id} size={{ xs: 12, sm: 6, md: 4 }}>
+                    <Alert severity="warning" sx={{ borderRadius: "12px" }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                         {vaccine.pet_name}
                       </Typography>
                       <Typography variant="body2">
@@ -345,9 +385,7 @@ export const Dashboard = () => {
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         {t("dashboard.due")}:{" "}
-                        {vaccine.due_date
-                          ? new Date(vaccine.due_date).toLocaleDateString()
-                          : t("dashboard.noDateSet")}
+                        {vaccine.due_date ? new Date(vaccine.due_date).toLocaleDateString() : t("dashboard.noDateSet")}
                       </Typography>
                     </Alert>
                   </Grid>
@@ -358,31 +396,38 @@ export const Dashboard = () => {
         </Paper>
       )}
 
+      {/* ── Weight Tracking ──────────────────────────────────────── */}
       {(weightAlerts.length > 0 || weightHealthData.length > 0) && (
-        <Paper sx={{ p: 3, mb: 4 }}>
-          <Typography variant="h6" component="h2" gutterBottom>
-            {t("weight.weightTracking")}
-          </Typography>
+        <Paper sx={sectionCard}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+            <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
+              {t("weight.weightTracking")}
+            </Typography>
+            <Button variant="text" size="small" onClick={() => navigate("/weight-tracking")}>
+              {t("weight.weightTracking")} →
+            </Button>
+          </Box>
 
           {weightAlerts.length > 0 && (
             <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle1" color="error" sx={{ mb: 2, fontWeight: "bold" }}>
-                {t("weight.weightAlerts")} ({weightAlerts.length})
-              </Typography>
-              <Grid container spacing={2}>
-                {weightAlerts.slice(0, 4).map((alert: any) => (
-                  <Grid key={alert.id || `alert-${alert.petId}-${alert.message}`} size={{ xs: 12, sm: 6, md: 3 }}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+                <Typography variant="subtitle2" color="error.main" sx={{ fontWeight: 700 }}>
+                  {t("weight.weightAlerts")} ({weightAlerts.length})
+                </Typography>
+                {weightAlerts.length > 3 && (
+                  <Button size="small" variant="text" color="error" onClick={() => navigate("/weight-tracking")}>
+                    +{weightAlerts.length - 3} more
+                  </Button>
+                )}
+              </Box>
+              <Grid container spacing={1.5}>
+                {weightAlerts.slice(0, 3).map((alert: any) => (
+                  <Grid key={alert.id || `alert-${alert.petId}-${alert.message}`} size={{ xs: 12, sm: 6, md: 4 }}>
                     <Alert
-                      severity={
-                        alert.severity === "critical"
-                          ? "error"
-                          : alert.severity === "high"
-                            ? "warning"
-                            : "info"
-                      }
-                      sx={{ height: "100%" }}
+                      severity={alert.severity === "critical" ? "error" : alert.severity === "high" ? "warning" : "info"}
+                      sx={{ borderRadius: "12px" }}
                     >
-                      <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                         {alert.petName}
                       </Typography>
                       <Typography variant="body2">{alert.message}</Typography>
@@ -398,105 +443,27 @@ export const Dashboard = () => {
 
           {weightHealthData.length > 0 && (
             <Box>
-              <Typography variant="subtitle1" color="primary" sx={{ mb: 2, fontWeight: "bold" }}>
+              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
                 {t("weight.monitoringHealth")}
               </Typography>
-              <Grid container spacing={2}>
+              <Grid container spacing={1.5}>
                 {weightHealthData.slice(0, 4).map((health) => (
                   <Grid key={health.petId} size={{ xs: 12, sm: 6, md: 3 }}>
-                    <Paper sx={{ p: 2, height: "100%" }}>
-                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
-                          {health.petName}
-                        </Typography>
-                        {health.hasWarnings && (
-                          <Typography variant="caption" color="warning.main" sx={{ fontSize: "0.7rem" }}>
-                            !
-                          </Typography>
-                        )}
-                      </Box>
+                    <Paper
+                      sx={{
+                        p: 2,
+                        borderRadius: "14px",
+                        bgcolor: health.hasWarnings ? "rgba(231,111,81,0.06)" : "rgba(82,183,136,0.06)",
+                        border: "1px solid",
+                        borderColor: health.hasWarnings ? "rgba(231,111,81,0.15)" : "rgba(82,183,136,0.15)",
+                        boxShadow: "none",
+                      }}
+                    >
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5 }}>
+                        {health.petName}
+                      </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {t("weight.currentWeight")}: {health.currentWeight} {t("pets.kg")}
+                        {health.currentWeight} {t("pets.kg")}
                       </Typography>
                       {health.idealRange && (
-                        <Typography variant="caption" color="text.secondary">
-                          {t("weight.idealWeightRange")}: {health.idealRange.minWeight}-{health.idealRange.maxWeight} {t("pets.kg")}
-                        </Typography>
-                      )}
-                      {health.trend && (
-                        <Typography
-                          variant="caption"
-                          color={health.trend.isHealthy ? "success.main" : "warning.main"}
-                        >
-                          {health.trend.direction} trend
-                        </Typography>
-                      )}
-                    </Paper>
-                  </Grid>
-                ))}
-              </Grid>
-            </Box>
-          )}
-
-          <Button variant="outlined" size="small" onClick={() => navigate("/weight-tracking")} sx={{ mt: 2 }}>
-            {t("weight.weightTracking")}
-          </Button>
-        </Paper>
-      )}
-
-      {pets.length > 0 && (
-        <Paper sx={{ p: 3, mb: 4 }}>
-          <Typography variant="h6" component="h2" gutterBottom>
-            {t("dashboard.smartVaccineSuggestions")}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            {t("dashboard.smartVaccineDescription")}
-          </Typography>
-
-          {pets.slice(0, 2).map((pet) => {
-            const smartSchedule = SmartVaccineService.getVaccineSchedule(
-              pet,
-              vaccinationHistoryByPet[pet.id] || []
-            );
-            return (
-              <Box
-                key={pet.id}
-                sx={{ mb: 2, p: 2, border: 1, borderColor: "divider", borderRadius: 1 }}
-              >
-                <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
-                  {pet.name} ({t(`dashboard.${pet.type}`)})
-                </Typography>
-                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                  {smartSchedule.overdueCount > 0 && (
-                    <Chip label={`${smartSchedule.overdueCount} ${t("dashboard.overdue")}`} color="error" size="small" />
-                  )}
-                  {smartSchedule.upcomingCount > 0 && (
-                    <Chip
-                      label={`${smartSchedule.upcomingCount} ${t("dashboard.upcoming")}`}
-                      color="warning"
-                      size="small"
-                    />
-                  )}
-                  {smartSchedule.overdueCount === 0 && smartSchedule.upcomingCount === 0 && (
-                    <Chip label={t("dashboard.upToDate")} color="success" size="small" />
-                  )}
-                </Box>
-                {smartSchedule.nextDueDate && (
-                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
-                    {t("dashboard.nextDue")}: {smartSchedule.nextDueDate.toLocaleDateString()}
-                  </Typography>
-                )}
-              </Box>
-            );
-          })}
-
-          <Button variant="outlined" size="small" onClick={() => navigate("/pets")} sx={{ mt: 2 }}>
-            {t("dashboard.viewAllPets")}
-          </Button>
-        </Paper>
-      )}
-    </Box>
-  );
-};
-
-export default Dashboard;
+                        <Typography variant="caption" col
