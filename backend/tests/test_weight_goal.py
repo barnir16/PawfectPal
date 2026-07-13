@@ -11,6 +11,7 @@ from app.models.weight_goal import WeightGoalORM
 
 from app.dependencies.auth import get_current_user
 from app.dependencies.auth import get_current_user as rel_get_current_user
+from tests.conftest import TEST_PASSWORD, TEST_WRONG_PASSWORD
 
 BASE = "/api/weight-goals"
 
@@ -21,7 +22,7 @@ def test_user(db_session):
         username="wg_user",
         email="wg_user@test.com",
         is_provider=False,
-        hashed_password="StrongPass1",
+        hashed_password=TEST_PASSWORD,
     )
     db_session.add(user)
     db_session.commit()
@@ -35,7 +36,7 @@ def other_user(db_session):
         username="wg_other",
         email="wg_other@test.com",
         is_provider=False,
-        hashed_password="StrongPass1",
+        hashed_password=TEST_PASSWORD,
     )
     db_session.add(user)
     db_session.commit()

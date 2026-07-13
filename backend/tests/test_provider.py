@@ -4,6 +4,7 @@ from fastapi import status
 
 from app.models import UserORM
 from app.models.provider_profile import ProviderProfileORM
+from tests.conftest import TEST_PASSWORD, TEST_WRONG_PASSWORD
 
 BASE = "/providers"
 
@@ -23,7 +24,7 @@ def provider_user(db_session):
         username="prov1",
         email="prov1@test.com",
         is_provider=True,
-        hashed_password="StrongPass1",
+        hashed_password=TEST_PASSWORD,
     )
     db_session.add(u)
     db_session.commit()

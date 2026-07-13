@@ -16,6 +16,7 @@ from app.main import app
 from app.models import UserORM
 from app.dependencies.auth import get_current_user
 from app.dependencies.auth import get_current_user as rel_get_current_user
+from tests.conftest import TEST_PASSWORD, TEST_WRONG_PASSWORD
 
 
 # ---------------------------------------------------------------------------
@@ -26,7 +27,7 @@ from app.dependencies.auth import get_current_user as rel_get_current_user
 async def test_register_duplicate_username_returns_400(client, db_session):
     user_data = {
         "username": "dupe_user",
-        "password": "StrongPass1",
+        "password": TEST_PASSWORD,
         "email": "dupe1@example.com",
         "full_name": "Dupe One",
         "is_active": True,
@@ -69,7 +70,7 @@ async def test_register_weak_password_returns_422(client, password, expected_fra
 async def test_register_invalid_email_returns_422(client):
     user_data = {
         "username": "bademailuser",
-        "password": "StrongPass1",
+        "password": TEST_PASSWORD,
         "email": "not-an-email",
         "full_name": "Bad Email",
         "is_active": True,
@@ -93,7 +94,7 @@ async def test_register_missing_required_fields_returns_422(client):
 async def test_login_nonexistent_username_returns_401(client):
     resp = await client.post(
         "/auth/token",
-        data={"username": "ghost_user_does_not_exist", "password": "whatever1A"},
+        data={"username": "ghost_user_does_not_exist", "password": TEST_WRONG_PASSWORD},
     )
     assert resp.status_code == status.HTTP_401_UNAUTHORIZED
     assert resp.json()["detail"] == "Incorrect username or password"
@@ -103,7 +104,7 @@ async def test_login_nonexistent_username_returns_401(client):
 async def test_login_wrong_password_returns_401(client):
     user_data = {
         "username": "wrongpass_user",
-        "password": "StrongPass1",
+        "password": TEST_PASSWORD,
         "email": "wrongpass@example.com",
         "full_name": "Wrong Pass",
         "is_active": True,
@@ -113,7 +114,7 @@ async def test_login_wrong_password_returns_401(client):
 
     resp = await client.post(
         "/auth/token",
-        data={"username": user_data["username"], "password": "TotallyWrong9"},
+        data={"username": user_data["username"], "password": TEST_WRONG_PASSWORD},
     )
     assert resp.status_code == status.HTTP_401_UNAUTHORIZED
     assert resp.json()["detail"] == "Incorrect username or password"
@@ -152,7 +153,7 @@ async def test_me_with_token_for_deleted_user_returns_401(client, db_session):
     """A token can outlive the user it was issued for (e.g. account removed)."""
     user_data = {
         "username": "soon_deleted",
-        "password": "StrongPass1",
+        "password": TEST_PASSWORD,
         "email": "deleted@example.com",
         "full_name": "Soon Deleted",
         "is_active": True,
@@ -222,7 +223,7 @@ async def test_google_auth_username_collision_appends_counter(client, db_session
     existing = UserORM(
         username="collideuser",
         email="someone-else@example.com",
-        hashed_password="StrongPass1",
+        hashed_password=TEST_PASSWORD,
         is_provider=False,
     )
     db_session.add(existing)
@@ -256,7 +257,7 @@ async def test_google_auth_does_not_overwrite_existing_full_name(client, db_sess
         username="namedalready",
         email="named@example.com",
         full_name="My Custom Name",
-        hashed_password="StrongPass1",
+        hashed_password=TEST_PASSWORD,
         is_provider=False,
     )
     db_session.add(existing)

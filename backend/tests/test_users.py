@@ -1,6 +1,7 @@
 import pytest
 from httpx import AsyncClient
 from fastapi import status
+from tests.conftest import TEST_PASSWORD, TEST_WRONG_PASSWORD
 
 
 @pytest.mark.asyncio
@@ -25,7 +26,7 @@ async def test_register_user(client: AsyncClient):
 async def test_login_user(client: AsyncClient):
     user_data = {
         "username": "loginuser_unique1",  # unique
-        "password": "StrongPass1",
+        "password": TEST_PASSWORD,
         "email": "login@example.com",
         "full_name": "Login User",
         "is_active": True,

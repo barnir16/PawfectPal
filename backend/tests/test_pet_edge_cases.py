@@ -11,6 +11,7 @@ from app.main import app
 from app.models import UserORM
 from app.dependencies.auth import get_current_user
 from app.dependencies.auth import get_current_user as rel_get_current_user
+from tests.conftest import TEST_PASSWORD, TEST_WRONG_PASSWORD
 
 
 @pytest.fixture
@@ -18,7 +19,7 @@ def owner(db_session):
     u = UserORM(
         username="pet_owner",
         email="pet_owner@example.com",
-        hashed_password="StrongPass1",
+        hashed_password=TEST_PASSWORD,
         is_provider=False,
     )
     db_session.add(u)
@@ -32,7 +33,7 @@ def intruder(db_session):
     u = UserORM(
         username="pet_intruder",
         email="pet_intruder@example.com",
-        hashed_password="StrongPass1",
+        hashed_password=TEST_PASSWORD,
         is_provider=False,
     )
     db_session.add(u)

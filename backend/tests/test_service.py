@@ -13,6 +13,7 @@ from app.models.base import ServiceStatus
 
 from app.dependencies.auth import get_current_user
 from app.dependencies.auth import get_current_user as rel_get_current_user
+from tests.conftest import TEST_PASSWORD, TEST_WRONG_PASSWORD
 
 
 @pytest.fixture
@@ -21,7 +22,7 @@ def test_user(db_session):
         username="service_user",
         email="service_user@test.com",
         is_provider=False,
-        hashed_password="StrongPass1",
+        hashed_password=TEST_PASSWORD,
     )
     db_session.add(user)
     db_session.commit()
@@ -35,7 +36,7 @@ def other_user(db_session):
         username="service_other",
         email="service_other@test.com",
         is_provider=False,
-        hashed_password="StrongPass1",
+        hashed_password=TEST_PASSWORD,
     )
     db_session.add(user)
     db_session.commit()

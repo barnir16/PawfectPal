@@ -10,6 +10,7 @@ from app.models.provider_profile import ProviderProfileORM
 
 from app.dependencies.auth import get_current_user
 from app.dependencies.auth import get_current_user as rel_get_current_user
+from tests.conftest import TEST_PASSWORD, TEST_WRONG_PASSWORD
 
 
 @pytest.fixture
@@ -17,7 +18,7 @@ def user(db_session):
     u = UserORM(
         username="user_router_u1",
         email="u1@example.com",
-        hashed_password="StrongPass1",
+        hashed_password=TEST_PASSWORD,
         is_provider=False,
     )
     db_session.add(u)
@@ -124,7 +125,7 @@ async def test_google_auth_existing_user_uses_same_account(client, db_session):
     existing = UserORM(
         username="guser",
         email="existing@example.com",
-        hashed_password="StrongPass1",
+        hashed_password=TEST_PASSWORD,
         is_provider=False,
     )
     db_session.add(existing)

@@ -13,6 +13,7 @@ from app.models.service_request import ServiceRequestORM
 from app.dependencies.auth import get_current_user, require_provider
 from app.dependencies.auth import get_current_user as rel_get_current_user
 from app.dependencies.auth import require_provider as rel_require_provider
+from tests.conftest import TEST_PASSWORD, TEST_WRONG_PASSWORD
 
 BASE = "/service-requests"
 
@@ -23,7 +24,7 @@ def user(db_session):
         username="sr_user",
         email="sr_user@test.com",
         is_provider=False,
-        hashed_password="StrongPass1",
+        hashed_password=TEST_PASSWORD,
     )
     db_session.add(u)
     db_session.commit()
@@ -37,7 +38,7 @@ def provider_user(db_session):
         username="sr_provider",
         email="sr_provider@test.com",
         is_provider=True,
-        hashed_password="StrongPass1",
+        hashed_password=TEST_PASSWORD,
     )
     db_session.add(u)
     db_session.commit()
@@ -51,7 +52,7 @@ def other_user(db_session):
         username="sr_other",
         email="sr_other@test.com",
         is_provider=False,
-        hashed_password="StrongPass1",
+        hashed_password=TEST_PASSWORD,
     )
     db_session.add(u)
     db_session.commit()

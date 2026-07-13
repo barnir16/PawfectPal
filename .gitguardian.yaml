@@ -1,0 +1,10 @@
+version: 2
+
+# Paths listed here are excluded from GitGuardian secret scanning.
+# Test fixture files intentionally contain placeholder credentials that
+# satisfy password-validation rules but are never used in production.
+ignore_paths:
+  - "backend/tests/**"
+  - "frontend/src/**/*.test.ts"
+  - "frontend/src/**/*.test.tsx"
+  - "**/*.example"

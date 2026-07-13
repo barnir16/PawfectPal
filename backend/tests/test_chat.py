@@ -5,6 +5,7 @@ import pytest
 from app.dependencies.auth import get_current_user
 from app.main import app
 from app.models import ChatMessageORM, ServiceRequestORM, UserORM
+from tests.conftest import TEST_PASSWORD, TEST_WRONG_PASSWORD
 
 
 @pytest.fixture
@@ -12,7 +13,7 @@ def owner_user(db_session):
     user = UserORM(
         username="chat_owner",
         email="owner@test.com",
-        hashed_password="StrongPass1",
+        hashed_password=TEST_PASSWORD,
         is_provider=False,
     )
     db_session.add(user)
@@ -26,7 +27,7 @@ def assigned_provider(db_session):
     user = UserORM(
         username="assigned_provider",
         email="provider@test.com",
-        hashed_password="StrongPass1",
+        hashed_password=TEST_PASSWORD,
         is_provider=True,
     )
     db_session.add(user)
@@ -40,7 +41,7 @@ def outside_user(db_session):
     user = UserORM(
         username="outside_user",
         email="outside@test.com",
-        hashed_password="StrongPass1",
+        hashed_password=TEST_PASSWORD,
         is_provider=False,
     )
     db_session.add(user)
@@ -54,7 +55,7 @@ def provider_with_history(db_session):
     user = UserORM(
         username="provider_with_history",
         email="history@test.com",
-        hashed_password="StrongPass1",
+        hashed_password=TEST_PASSWORD,
         is_provider=True,
     )
     db_session.add(user)
