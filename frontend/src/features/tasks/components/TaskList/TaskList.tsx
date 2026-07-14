@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useLocalization } from "../../../../contexts/LocalizationContext";
-
 import {
   Box,
   Button,
   Card,
   CardContent,
-  CardHeader,
   Chip,
   Divider,
   FormControl,
@@ -16,50 +14,27 @@ import {
   MenuItem,
   Select,
   TextField,
-  Toolbar,
   Tooltip,
   Typography,
-  useTheme,
   Avatar,
   AvatarGroup,
+  InputAdornment,
 } from "@mui/material";
 import {
   Add as AddIcon,
-  FilterList as FilterListIcon,
-  Search as SearchIcon,
   CheckCircle as CheckCircleIcon,
   Warning as WarningIcon,
   Error as ErrorIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   CalendarToday as CalendarIcon,
+  Search as SearchIcon,
+  FilterListOff as ClearIcon,
+  Pets as PetsIcon,
 } from "@mui/icons-material";
-import { DataGrid } from "@mui/x-data-grid";
-import type { GridColDef, GridSortModel } from "@mui/x-data-grid";
 
-// Helper functions to replace date-fns
-const isToday = (date: string | Date) => {
-  const today = new Date();
-  const d = new Date(date);
-  return today.toDateString() === d.toDateString();
-};
-
-const isTomorrow = (date: string | Date) => {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const d = new Date(date);
-  return tomorrow.toDateString() === d.toDateString();
-};
-
-const isBefore = (date: string | Date, compareDate: string | Date) => {
-  const d = new Date(date);
-  const compare = new Date(compareDate);
-  return d < compare;
-};
-
-// Types
+// ─── Types ────────────────────────────────────────────────────────────────────
 type Priority = "low" | "medium" | "high" | "urgent";
-
 type TaskStatus = "pending" | "in_progress" | "completed" | "overdue";
 
 interface Task {
@@ -77,448 +52,323 @@ interface Task {
   completedAt?: string;
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const isToday = (d: string | Date) =>
+  new Date().toDateString() === new Date(d).toDateString();
 
-// Priority chip component
-export const PriorityChip = ({ priority }: { priority: Priority }) => {
-  const priorityMap = {
-    low: { label: "Low", color: "success" as const },
-    medium: { label: "Medium", color: "warning" as const },
-    high: { label: "High", color: "error" as const },
-    urgent: { label: "Urgent", color: "error" as const },
-  };
-
-  const { label, color } = priorityMap[priority];
-
-  return <Chip label={label} size="small" color={color} variant="outlined" />;
+const isTomorrow = (d: string | Date) => {
+  const t = new Date(); t.setDate(t.getDate() + 1);
+  return t.toDateString() === new Date(d).toDateString();
 };
 
-// Status chip component
-export const StatusChip = ({ status }: { status: TaskStatus }) => {
-  const statusMap = {
-    pending: {
-      label: "Pending",
-      color: "default" as const,
-      icon: <WarningIcon fontSize="small" />,
-    },
-    in_progress: {
-      label: "In Progress",
-      color: "primary" as const,
-      icon: <WarningIcon fontSize="small" />,
-    },
-    completed: {
-      label: "Completed",
-      color: "success" as const,
-      icon: <CheckCircleIcon fontSize="small" />,
-    },
-    overdue: {
-      label: "Overdue",
-      color: "error" as const,
-      icon: <ErrorIcon fontSize="small" />,
-    },
-  };
+const isPast = (d: string | Date) => new Date(d) < new Date();
 
-  const { label, color, icon } = statusMap[status];
+function formatDueDate(raw: string) {
+  const d = new Date(raw);
+  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  if (isToday(d))     return { label: `Today · ${time}`,     overdue: isPast(d) };
+  if (isTomorrow(d))  return { label: `Tomorrow · ${time}`,  overdue: false };
+  const date = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return { label: `${date} · ${time}`, overdue: isPast(d) };
+}
 
-  return (
-    <Chip
-      icon={icon}
-      label={label}
-      size="small"
-      color={color}
-      variant="outlined"
-      sx={{ minWidth: 110 }}
-    />
-  );
+// ─── Priority config ──────────────────────────────────────────────────────────
+const PRIORITY: Record<Priority, { label: string; color: string; bg: string; border: string }> = {
+  urgent: { label: 'Urgent', color: '#E76F51', bg: 'rgba(231,111,81,0.08)', border: '#E76F51' },
+  high:   { label: 'High',   color: '#E9C46A', bg: 'rgba(233,196,106,0.1)', border: '#E9C46A' },
+  medium: { label: 'Medium', color: '#2A9D8F', bg: 'rgba(42,157,143,0.08)', border: '#2A9D8F' },
+  low:    { label: 'Low',    color: '#aaa',    bg: 'transparent',            border: '#ccc'    },
 };
 
-// Date cell component
-export const DateCell = ({ date }: { date: string }) => {
-  const dueDate = new Date(date);
-  const today = new Date();
-
-  let textColor = "text.primary";
-  let dateText = dueDate.toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric', 
-    year: 'numeric'
-  }) + ' ' + dueDate.toLocaleTimeString('en-US', { 
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  });
-
-  if (isToday(dueDate)) {
-    textColor = "info.main";
-    dateText = `Today, ${dueDate.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      minute: '2-digit', 
-      hour12: true 
-    })}`;
-  } else if (isTomorrow(dueDate)) {
-    textColor = "info.main";
-    dateText = `Tomorrow, ${dueDate.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      minute: '2-digit', 
-      hour12: true 
-    })}`;
-  } else if (isBefore(dueDate, today)) {
-    textColor = "error.main";
-  }
-
-  return (
-    <Box sx={{ display: "flex", alignItems: "center", color: textColor }}>
-      <CalendarIcon fontSize="small" sx={{ mr: 1 }} />
-      <Typography variant="body2">{dateText}</Typography>
-    </Box>
-  );
+const STATUS: Record<TaskStatus, { label: string; icon: React.ReactNode; chipColor: 'default'|'primary'|'success'|'error' }> = {
+  pending:     { label: 'Pending',     icon: <WarningIcon />,     chipColor: 'default'  },
+  in_progress: { label: 'In Progress', icon: <WarningIcon />,     chipColor: 'primary'  },
+  completed:   { label: 'Completed',   icon: <CheckCircleIcon />, chipColor: 'success'  },
+  overdue:     { label: 'Overdue',     icon: <ErrorIcon />,       chipColor: 'error'    },
 };
 
-// Pet avatars component
-export const PetAvatars = ({ petNames }: { petNames?: string[] }) => {
-  const theme = useTheme();
-
-  if (!petNames?.length) {
-    return (
-      <Typography variant="body2" color="text.secondary">
-        No pets
-      </Typography>
-    );
-  }
-
+// ─── Sub-components ───────────────────────────────────────────────────────────
+const PetAvatars = ({ names }: { names?: string[] }) => {
+  if (!names?.length) return <Typography variant="caption" color="text.disabled">—</Typography>;
   return (
-    <AvatarGroup
-      max={3}
-      sx={{
-        "& .MuiAvatar-root": { width: 28, height: 28, fontSize: "0.8rem" },
-      }}
-    >
-      {petNames.map((name) => (
-        <Avatar
-          key={name} // safer unique key than index
-          alt={name}
-          sx={{ bgcolor: theme.palette.primary.main }}
-        >
-          {name.charAt(0).toUpperCase()}
+    <AvatarGroup max={3} sx={{ '& .MuiAvatar-root': { width: 24, height: 24, fontSize: '0.7rem' } }}>
+      {names.map((n) => (
+        <Avatar key={n} alt={n} sx={{ bgcolor: 'primary.light', color: 'primary.contrastText' }}>
+          {n[0].toUpperCase()}
         </Avatar>
       ))}
     </AvatarGroup>
   );
 };
 
-// Main TaskList component
-const TaskList = ({ tasks: propTasks, onDelete }: {
-  tasks: Task[];
-  onDelete: (id: number) => void;
-}) => {
-  const theme = useTheme();
-  const { t } = useLocalization();
-  const [tasks, setTasks] = useState<Task[]>(propTasks);
-  const [filteredTasks, setFilteredTasks] = useState<Task[]>(propTasks);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [priorityFilter, setPriorityFilter] = useState<string>("all");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [sortModel, setSortModel] = useState<GridSortModel>([
-    { field: "dueDate", sort: "asc" },
-  ]);
-  const [paginationModel, setPaginationModel] = useState({
-    pageSize: 10,
-    page: 0,
-  });
-
-  // Update tasks when props change
-  useEffect(() => {
-    setTasks(propTasks);
-    setFilteredTasks(propTasks);
-  }, [propTasks]);
-
-  // Get unique categories for filter
-  const categories = Array.from(
-    new Set(tasks.map((task) => task.category || t('errors.uncategorized')))
-  );
-
-  // Apply filters and search
-  useEffect(() => {
-    let result = [...tasks];
-
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      result = result.filter(
-        (task) =>
-          task.title.toLowerCase().includes(term) ||
-          task.description?.toLowerCase().includes(term) ||
-          task.petNames?.some((name) => name.toLowerCase().includes(term)) ||
-          task.category?.toLowerCase().includes(term)
-      );
-    }
-
-    if (statusFilter !== "all") {
-      result = result.filter((task) => task.status === statusFilter);
-    }
-
-    if (priorityFilter !== "all") {
-      result = result.filter((task) => task.priority === priorityFilter);
-    }
-
-    if (categoryFilter !== "all") {
-      result = result.filter(
-        (task) => (task.category || t('errors.uncategorized')) === categoryFilter
-      );
-    }
-
-    setFilteredTasks(result);
-    // Reset page on filter change
-    setPaginationModel((prev) => ({ ...prev, page: 0 }));
-  }, [tasks, searchTerm, statusFilter, priorityFilter, categoryFilter]);
-
-  const handleSortModelChange = (newModel: GridSortModel) => {
-    setSortModel(newModel);
-  };
-
-  // Delete task
-  const deleteTask = (taskId: string) => {
-    if (window.confirm("Are you sure you want to delete this task?")) {
-      onDelete(Number(taskId));
-    }
-  };
-
-  const columns: GridColDef[] = [
-    {
-      field: "status",
-      headerName: "Status",
-      width: 140,
-      renderCell: (params) => <StatusChip status={params.row.status} />,
-      sortable: false,
-    },
-    {
-      field: "title",
-      headerName: "Title",
-      flex: 1,
-      minWidth: 200,
-      renderCell: (params) => (
-        <Box sx={{ display: "flex", flexDirection: "column" }}>
-          <Typography variant="body2" fontWeight="medium">
-            {params.row.title}
-          </Typography>
-          {params.row.description && (
-            <Typography variant="caption" color="text.secondary" noWrap>
-              {params.row.description}
-            </Typography>
-          )}
-        </Box>
-      ),
-    },
-    {
-      field: "pets",
-      headerName: "Pets",
-      width: 120,
-      renderCell: (params) => <PetAvatars petNames={params.row.petNames} />,
-      sortable: false,
-    },
-    {
-      field: "category",
-      headerName: "Category",
-      width: 140,
-      renderCell: (params) => (
-        <Chip
-          label={params.row.category || "Uncategorized"}
-          size="small"
-          variant="outlined"
-        />
-      ),
-    },
-    {
-      field: "priority",
-      headerName: "Priority",
-      width: 120,
-      renderCell: (params) => <PriorityChip priority={params.row.priority} />,
-    },
-    {
-      field: "dueDate",
-      headerName: "Due Date",
-      width: 200,
-      renderCell: (params) => <DateCell date={params.row.dueDate} />,
-      valueFormatter: (value: string) =>
-        value ? new Date(value).toLocaleString('en-US', { 
-          year: 'numeric', 
-          month: '2-digit', 
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
-        }) : "",
-    },
-    {
-      field: "actions",
-      headerName: "Actions",
-      width: 120,
-      sortable: false,
-      renderCell: (params) => (
-        <Box sx={{ display: "flex", gap: 1 }}>
-          <Tooltip title="Edit">
-            <IconButton
-              size="small"
-              color="primary"
-              component={Link}
-              to={`/tasks/${params.row.id}/edit`}
-            >
-              <EditIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Delete">
-            <IconButton
-              size="small"
-              color="error"
-              onClick={() => deleteTask(params.row.id)}
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      ),
-    },
-  ];
+// ─── Task card ────────────────────────────────────────────────────────────────
+const TaskCard = ({ task, onDelete }: { task: Task; onDelete: (id: string) => void }) => {
+  const p = PRIORITY[task.priority] || PRIORITY.low;
+  const s = STATUS[task.status]   || STATUS.pending;
+  const { label: dateLabel, overdue } = formatDueDate(task.dueDate);
+  const isCompleted = task.status === 'completed';
 
   return (
-    <Box>
-      <Card>
-        <CardHeader
-          title="Tasks"
-          action={
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<AddIcon />}
-              component={Link}
-              to="/tasks/new"
-            >
-              Add Task
-            </Button>
-          }
-        />
-        <Divider />
-        <CardContent>
-                     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(5, 1fr)' }, gap: 2, mb: 3 }}>
-             <Box>
-               <TextField
-                 fullWidth
-                 variant="outlined"
-                 placeholder={t('tasks.searchTasksPlaceholder')}
-                 value={searchTerm}
-                 onChange={(e) => setSearchTerm(e.target.value)}
-                 InputProps={{
-                   startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />,
-                 }}
-               />
-             </Box>
-             <Box>
-               <FormControl fullWidth>
-                 <InputLabel id="status-filter-label">Status</InputLabel>
-                 <Select
-                   labelId="status-filter-label"
-                   value={statusFilter}
-                   label="Status"
-                   onChange={(e) => setStatusFilter(e.target.value)}
-                 >
-                   <MenuItem value="all">All Statuses</MenuItem>
-                   <MenuItem value="pending">Pending</MenuItem>
-                   <MenuItem value="in_progress">In Progress</MenuItem>
-                   <MenuItem value="completed">Completed</MenuItem>
-                   <MenuItem value="overdue">Overdue</MenuItem>
-                 </Select>
-               </FormControl>
-             </Box>
-             <Box>
-               <FormControl fullWidth>
-                 <InputLabel id="priority-filter-label">Priority</InputLabel>
-                 <Select
-                   labelId="priority-filter-label"
-                   value={priorityFilter}
-                   label="Priority"
-                   onChange={(e) => setPriorityFilter(e.target.value)}
-                 >
-                   <MenuItem value="all">All Priorities</MenuItem>
-                   <MenuItem value="high">High</MenuItem>
-                   <MenuItem value="medium">Medium</MenuItem>
-                   <MenuItem value="low">Low</MenuItem>
-                   <MenuItem value="urgent">Urgent</MenuItem>
-                 </Select>
-               </FormControl>
-             </Box>
-             <Box>
-               <FormControl fullWidth>
-                 <InputLabel id="category-filter-label">Category</InputLabel>
-                 <Select
-                   labelId="category-filter-label"
-                   value={categoryFilter}
-                   label="Category"
-                   onChange={(e) => setCategoryFilter(e.target.value)}
-                 >
-                   <MenuItem value="all">All Categories</MenuItem>
-                   {categories.map((category) => (
-                     <MenuItem key={category} value={category}>
-                       {category}
-                     </MenuItem>
-                   ))}
-                 </Select>
-               </FormControl>
-             </Box>
-             <Box>
-               <Button
-                 fullWidth
-                 variant="outlined"
-                 startIcon={<FilterListIcon />}
-                 onClick={() => {
-                   setSearchTerm("");
-                   setStatusFilter("all");
-                   setPriorityFilter("all");
-                   setCategoryFilter("all");
-                 }}
-                 sx={{ height: "56px" }}
-               >
-                 Clear Filters
-               </Button>
-             </Box>
-           </Box>
+    <Box
+      sx={{
+        display: 'flex',
+        gap: 0,
+        borderRadius: 3,
+        overflow: 'hidden',
+        border: '1px solid',
+        borderColor: overdue && !isCompleted ? 'rgba(231,111,81,0.25)' : 'rgba(0,0,0,0.07)',
+        bgcolor: isCompleted
+          ? 'rgba(82,183,136,0.04)'
+          : overdue
+          ? 'rgba(231,111,81,0.04)'
+          : 'background.paper',
+        transition: 'box-shadow 0.15s',
+        '&:hover': { boxShadow: '0 2px 12px rgba(0,0,0,0.08)' },
+      }}
+    >
+      {/* Priority left strip */}
+      <Box sx={{ width: 4, flexShrink: 0, bgcolor: p.border, opacity: isCompleted ? 0.3 : 1 }} />
 
-          <Box sx={{ height: 500, width: "100%" }}>
-            <DataGrid
-              rows={filteredTasks}
-              columns={columns}
-              checkboxSelection
-              disableRowSelectionOnClick
-              sortModel={sortModel}
-              onSortModelChange={handleSortModelChange}
-              paginationModel={paginationModel}
-              onPaginationModelChange={setPaginationModel}
-              slots={{
-                toolbar: () => (
-                  <Toolbar sx={{ p: 0, mb: 1 }}>
-                    <Typography
-                      variant="h6"
-                      component="div"
-                      sx={{ flexGrow: 1 }}
-                    >
-                      {filteredTasks.length}{" "}
-                      {filteredTasks.length === 1 ? "task" : "tasks"}
-                    </Typography>
-                  </Toolbar>
-                ),
-              }}
+      {/* Content */}
+      <Box sx={{ flex: 1, px: 2, py: 1.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+          {/* Left: status + title */}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.4, flexWrap: 'wrap' }}>
+              <Chip
+                icon={s.icon}
+                label={s.label}
+                size="small"
+                color={s.chipColor}
+                variant="outlined"
+                sx={{ height: 22, fontSize: '0.7rem', '& .MuiChip-icon': { fontSize: 14 } }}
+              />
+              <Chip
+                label={p.label}
+                size="small"
+                sx={{
+                  height: 20,
+                  fontSize: '0.68rem',
+                  bgcolor: p.bg,
+                  color: p.color,
+                  border: `1px solid ${p.border}`,
+                  fontWeight: 600,
+                }}
+              />
+              {task.category && (
+                <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.68rem' }}>
+                  {task.category}
+                </Typography>
+              )}
+            </Box>
+
+            <Typography
+              variant="body2"
+              fontWeight={600}
               sx={{
-                "& .MuiDataGrid-columnHeaders": {
-                  backgroundColor: theme.palette.grey[100],
-                },
-                "& .MuiDataGrid-row:hover": {
-                  backgroundColor: theme.palette.action.hover,
-                },
+                textDecoration: isCompleted ? 'line-through' : 'none',
+                opacity: isCompleted ? 0.55 : 1,
+                lineHeight: 1.3,
               }}
-            />
+            >
+              {task.title}
+            </Typography>
+
+            {task.description && (
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{
+                  display: 'block',
+                  mt: 0.3,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  maxWidth: 420,
+                }}
+              >
+                {task.description}
+              </Typography>
+            )}
           </Box>
-        </CardContent>
-      </Card>
+
+          {/* Right: actions */}
+          <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
+            <Tooltip title="Edit">
+              <IconButton size="small" color="primary" component={Link} to={`/tasks/${task.id}/edit`}>
+                <EditIcon sx={{ fontSize: 16 }} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Delete">
+              <IconButton size="small" color="error" onClick={() => onDelete(task.id)}
+                sx={{ opacity: 0.7, '&:hover': { opacity: 1 } }}>
+                <DeleteIcon sx={{ fontSize: 16 }} />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </Box>
+
+        {/* Footer row: date + pets */}
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1, flexWrap: 'wrap', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <CalendarIcon sx={{ fontSize: 13, color: overdue && !isCompleted ? 'error.main' : 'text.disabled' }} />
+            <Typography
+              variant="caption"
+              sx={{ color: overdue && !isCompleted ? 'error.main' : 'text.secondary', fontWeight: overdue && !isCompleted ? 600 : 400 }}
+            >
+              {dateLabel}
+            </Typography>
+          </Box>
+          {task.petNames && task.petNames.length > 0 && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <PetsIcon sx={{ fontSize: 13, color: 'text.disabled' }} />
+              <PetAvatars names={task.petNames} />
+            </Box>
+          )}
+        </Box>
+      </Box>
     </Box>
   );
 };
 
+// ─── Main component ───────────────────────────────────────────────────────────
+const TaskList = ({ tasks: propTasks, onDelete }: { tasks: Task[]; onDelete: (id: number) => void }) => {
+  const { t } = useLocalization();
+  const [tasks, setTasks] = useState<Task[]>(propTasks);
+  const [filtered, setFiltered] = useState<Task[]>(propTasks);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+
+  useEffect(() => { setTasks(propTasks); setFiltered(propTasks); }, [propTasks]);
+
+  const categories = Array.from(new Set(tasks.map((t) => t.category || 'Uncategorized')));
+
+  useEffect(() => {
+    let r = [...tasks];
+    if (search) {
+      const q = search.toLowerCase();
+      r = r.filter((t) =>
+        t.title.toLowerCase().includes(q) ||
+        t.description?.toLowerCase().includes(q) ||
+        t.petNames?.some((n) => n.toLowerCase().includes(q)) ||
+        t.category?.toLowerCase().includes(q)
+      );
+    }
+    if (statusFilter   !== 'all') r = r.filter((t) => t.status   === statusFilter);
+    if (priorityFilter !== 'all') r = r.filter((t) => t.priority === priorityFilter);
+    if (categoryFilter !== 'all') r = r.filter((t) => (t.category || 'Uncategorized') === categoryFilter);
+
+    // Sort: overdue first, then by due date ascending, completed last
+    r.sort((a, b) => {
+      if (a.status === 'completed' && b.status !== 'completed') return 1;
+      if (b.status === 'completed' && a.status !== 'completed') return -1;
+      if (a.status === 'overdue'   && b.status !== 'overdue')   return -1;
+      if (b.status === 'overdue'   && a.status !== 'overdue')   return 1;
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    });
+    setFiltered(r);
+  }, [tasks, search, statusFilter, priorityFilter, categoryFilter]);
+
+  const clearFilters = () => { setSearch(''); setStatusFilter('all'); setPriorityFilter('all'); setCategoryFilter('all'); };
+  const hasFilters = search || statusFilter !== 'all' || priorityFilter !== 'all' || categoryFilter !== 'all';
+
+  const handleDelete = (id: string) => {
+    if (window.confirm('Delete this task?')) onDelete(Number(id));
+  };
+
+  return (
+    <Box>
+      {/* Filter bar */}
+      <Card sx={{ mb: 2.5, border: '1px solid rgba(244,162,97,0.15)', boxShadow: '0 1px 8px rgba(0,0,0,0.04)' }}>
+        <CardContent sx={{ py: 2, '&:last-child': { pb: 2 } }}>
+          <Box sx={{
+            display: 'grid',
+            gap: 1.5,
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: '2fr 1fr 1fr 1fr auto' },
+            alignItems: 'center',
+          }}>
+            <TextField
+              size="small"
+              placeholder={t('tasks.searchTasksPlaceholder')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" color="action" /></InputAdornment> }}
+            />
+            <FormControl size="small" fullWidth>
+              <InputLabel>Status</InputLabel>
+              <Select value={statusFilter} label="Status" onChange={(e) => setStatusFilter(e.target.value)}>
+                <MenuItem value="all">All Statuses</MenuItem>
+                <MenuItem value="pending">Pending</MenuItem>
+                <MenuItem value="in_progress">In Progress</MenuItem>
+                <MenuItem value="completed">Completed</MenuItem>
+                <MenuItem value="overdue">Overdue</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl size="small" fullWidth>
+              <InputLabel>Priority</InputLabel>
+              <Select value={priorityFilter} label="Priority" onChange={(e) => setPriorityFilter(e.target.value)}>
+                <MenuItem value="all">All Priorities</MenuItem>
+                <MenuItem value="urgent">Urgent</MenuItem>
+                <MenuItem value="high">High</MenuItem>
+                <MenuItem value="medium">Medium</MenuItem>
+                <MenuItem value="low">Low</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl size="small" fullWidth>
+              <InputLabel>Category</InputLabel>
+              <Select value={categoryFilter} label="Category" onChange={(e) => setCategoryFilter(e.target.value)}>
+                <MenuItem value="all">All Categories</MenuItem>
+                {categories.map((c) => <MenuItem key={c} value={c}>{c}</MenuItem>)}
+              </Select>
+            </FormControl>
+            <Tooltip title="Clear filters">
+              <span>
+                <IconButton size="small" onClick={clearFilters} disabled={!hasFilters}
+                  sx={{ color: hasFilters ? 'primary.main' : 'text.disabled' }}>
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+          </Box>
+        </CardContent>
+      </Card>
+
+      {/* Header + add button */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+        <Typography variant="body2" color="text.secondary">
+          {filtered.length} {filtered.length === 1 ? 'task' : 'tasks'}
+          {hasFilters && ' (filtered)'}
+        </Typography>
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<AddIcon />}
+          component={Link}
+          to="/tasks/new"
+          sx={{ fontWeight: 700, px: 2.5 }}
+        >
+          Add Task
+        </Button>
+      </Box>
+
+      {/* Task cards */}
+      {filtered.length === 0 ? (
+        <Box sx={{ textAlign: 'center', py: 8, color: 'text.disabled' }}>
+          <PetsIcon sx={{ fontSize: 48, mb: 1, opacity: 0.3 }} />
+          <Typography variant="body2">No tasks found</Typography>
+        </Box>
+      ) : (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          {filtered.map((task) => (
+            <TaskCard key={task.id} task={task} onDelete={handleDelete} />
+          ))}
+        </Box>
+      )}
+    </Box>
+  );
+};
+
+export { PriorityChip, StatusChip, DateCell, PetAvatars };
 export default TaskList;
