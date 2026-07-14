@@ -146,14 +146,12 @@ def _request_breed_api(pet_type: str, path: str, params: Optional[Dict[str, str]
 
 @vaccines_router.get("/", response_model=List[Vaccine])
 def get_vaccines(db: Session = Depends(get_db)):
-    """Get all vaccines"""
     vaccines = db.query(VaccineORM).all()
     return [Vaccine.model_validate(v) for v in vaccines]
 
 
 @age_router.get("/", response_model=List[AgeRestriction])
 def get_age_restrictions(db: Session = Depends(get_db)):
-    """Get all age restrictions"""
     restrictions = db.query(AgeRestrictionORM).all()
     return [AgeRestriction.model_validate(r) for r in restrictions]
 
@@ -163,10 +161,8 @@ def search_breeds(
     pet_type: str,
     q: Optional[str] = Query(default=None, min_length=0, max_length=80),
 ):
-    """Search dog/cat breeds through backend-only external API integration.
-    Returns an empty list when the external breed provider is unavailable
-    so the UI can degrade gracefully (free-text entry still works).
-    """
+    # Returns empty list when the external breed provider is unavailable
+    # so the UI can degrade gracefully (free-text entry still works).
     normalized_type = pet_type.lower().strip()
     query = (q or "").strip()
 
@@ -176,7 +172,6 @@ def search_breeds(
         else:
             data = _request_breed_api(normalized_type, "/breeds")
     except HTTPException:
-        # External breed API is down — return empty list, don't crash the UI
         return []
 
     if not isinstance(data, list):
@@ -191,6 +186,15 @@ def get_breed_info(
     pet_type: str,
     name: str = Query(..., min_length=1, max_length=120),
 ):
-    """Fetch detailed breed information through the backend.
-    Returns 404 when breed is not found, or 503 (not 502) when provider is down
-    so callers can distinguish 'no data' from 'service crash'
+    normalized_type = pet_type.lower().strip()
+    breed_name = name.strip()
+
+    try:
+        data = _request_breed_api(normalized_type, "/breeds/search", {"q": breed_name})
+    except HTTPException:
+        raise HTTPException(status_code=503, detail="Breed provider is temporarily unavailable")
+
+    if not isinstance(data, list) or not data:
+        raise HTTPException(status_code=404, detail="Breed not found")
+
+    return _breed_info_from_api(normalized_type, breed_name, data[0])
