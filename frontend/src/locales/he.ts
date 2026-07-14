@@ -178,6 +178,8 @@ export const he = {
     title: 'חיות מחמד',
     addPet: 'הוסף חיית מחמד',
     editPet: 'ערוך חיית מחמד',
+    updateYourPetsDetails: 'עדכן את פרטי חיית המחמד',
+    fillInYourNewPet: 'מלא את הפרטים עבור חיית המחמד החדשה',
     addPhoto: 'הוסף תמונה',
     changePhoto: 'שנה תמונה',
     uploadPhoto: 'העלה תמונה',

@@ -161,6 +161,8 @@ export const en = {
     title: 'Pets',
     addPet: 'Add Pet',
     editPet: 'Edit Pet',
+    updateYourPetsDetails: 'Update your pet\'s details',
+    fillInYourNewPet: 'Fill in the details for your new pet',
     addPhoto: 'Add Photo',
     changePhoto: 'Change Photo',
     uploadPhoto: 'Upload Photo',
