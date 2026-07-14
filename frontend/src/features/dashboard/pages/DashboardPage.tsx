@@ -466,4 +466,92 @@ export const Dashboard = () => {
                         {health.currentWeight} {t("pets.kg")}
                       </Typography>
                       {health.idealRange && (
-                        <Typography variant="caption" col
+                        <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                          Ideal: {health.idealRange.minWeight}–{health.idealRange.maxWeight} {t("pets.kg")}
+                        </Typography>
+                      )}
+                      {health.trend && (
+                        <Typography
+                          variant="caption"
+                          sx={{ fontWeight: 600, color: health.trend.isHealthy ? "success.main" : "warning.dark" }}
+                        >
+                          {health.trend.direction} trend
+                        </Typography>
+                      )}
+                    </Paper>
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          )}
+        </Paper>
+      )}
+
+      {/* ── Smart Vaccine Suggestions ────────────────────────────── */}
+      {pets.length > 0 && (
+        <Paper sx={sectionCard}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+            <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
+              {t("dashboard.smartVaccineSuggestions")}
+            </Typography>
+            <Button variant="text" size="small" onClick={() => navigate("/pets")}>
+              {t("dashboard.viewAllPets")} →
+            </Button>
+          </Box>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5, fontSize: "0.85rem" }}>
+            {t("dashboard.smartVaccineDescription")}
+          </Typography>
+
+          {pets.slice(0, 3).map((pet) => {
+            const smartSchedule = SmartVaccineService.getVaccineSchedule(
+              pet,
+              vaccinationHistoryByPet[pet.id] || []
+            );
+            return (
+              <Box
+                key={pet.id}
+                sx={{
+                  mb: 1.5,
+                  p: 2,
+                  borderRadius: "12px",
+                  bgcolor: "rgba(0,0,0,0.025)",
+                  border: "1px solid rgba(0,0,0,0.05)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: 1,
+                }}
+              >
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  {pet.name}
+                  <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 0.75 }}>
+                    {t(`dashboard.${pet.type}`)}
+                  </Typography>
+                </Typography>
+                <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", alignItems: "center" }}>
+                  {smartSchedule.overdueCount > 0 && (
+                    <Chip label={`${smartSchedule.overdueCount} ${t("dashboard.overdue")}`} color="error" size="small" />
+                  )}
+                  {smartSchedule.upcomingCount > 0 && (
+                    <Chip label={`${smartSchedule.upcomingCount} ${t("dashboard.upcoming")}`} color="warning" size="small" />
+                  )}
+                  {smartSchedule.overdueCount === 0 && smartSchedule.upcomingCount === 0 && (
+                    <Chip label={t("dashboard.upToDate")} color="success" size="small" />
+                  )}
+                  {smartSchedule.nextDueDate && (
+                    <Typography variant="caption" color="text.secondary">
+                      Next: {smartSchedule.nextDueDate.toLocaleDateString()}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+            );
+          })}
+        </Paper>
+      )}
+    </Box>
+  );
+};
+
+export default Dashboard;

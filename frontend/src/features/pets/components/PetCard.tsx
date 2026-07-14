@@ -157,4 +157,53 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
               fontWeight: 700,
               fontSize: "0.68rem",
               border: "none",
-              mt: 0.25
+              mt: 0.25,
+              flexShrink: 0,
+            }}
+          />
+        </Box>
+
+        {/* Age / Weight row */}
+        <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+          <Box>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>Age</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>{displayAge}</Typography>
+          </Box>
+          {weight && (
+            <Box>
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>Weight</Typography>
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>{weight}</Typography>
+            </Box>
+          )}
+        </Stack>
+
+        {/* Health status badge */}
+        <Box sx={{ mt: "auto" }}>
+          {pet.lastVetVisit ? (
+            <Chip
+              icon={<HealthIcon sx={{ fontSize: "13px !important" }} />}
+              label="Vet visited"
+              size="small"
+              sx={{
+                bgcolor: "rgba(82,183,136,0.1)",
+                color: "success.dark",
+                fontSize: "0.7rem",
+                height: 22,
+                fontWeight: 500,
+                "& .MuiChip-icon": { ml: "6px" },
+              }}
+            />
+          ) : (
+            <Chip
+              label="No vet visit recorded"
+              size="small"
+              sx={{ bgcolor: "rgba(0,0,0,0.05)", color: "text.secondary", fontSize: "0.7rem", height: 22 }}
+            />
+          )}
+        </Box>
+      </Box>
+    </Card>
+  );
+};
+
+export default PetCard;
