@@ -198,7 +198,7 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
           </Box>
           
           <Alert severity="info" sx={{ mt: 2 }}>
-            {t('pets.noDetailedBreedInfo', { breed: breedName })}.
+            {t('pets.noDetailedBreedInfo').replace('{breed}', breedName)}.
           </Alert>
         </CardContent>
       </Card>
@@ -362,9 +362,4 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
                 </Typography>
               </Box>
             )}
-          </Box>
-        </Collapse>
-      </CardContent>
-    </Card>
-  );
-};
+    

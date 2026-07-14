@@ -163,17 +163,24 @@ def search_breeds(
     pet_type: str,
     q: Optional[str] = Query(default=None, min_length=0, max_length=80),
 ):
-    """Search dog/cat breeds through backend-only external API integration."""
+    """Search dog/cat breeds through backend-only external API integration.
+    Returns an empty list when the external breed provider is unavailable
+    so the UI can degrade gracefully (free-text entry still works).
+    """
     normalized_type = pet_type.lower().strip()
     query = (q or "").strip()
 
-    if query:
-        data = _request_breed_api(normalized_type, "/breeds/search", {"q": query})
-    else:
-        data = _request_breed_api(normalized_type, "/breeds")
+    try:
+        if query:
+            data = _request_breed_api(normalized_type, "/breeds/search", {"q": query})
+        else:
+            data = _request_breed_api(normalized_type, "/breeds")
+    except HTTPException:
+        # External breed API is down — return empty list, don't crash the UI
+        return []
 
     if not isinstance(data, list):
-        raise HTTPException(status_code=502, detail="Unexpected breed provider response")
+        return []
 
     names = [item.get("name") for item in data if isinstance(item, dict) and item.get("name")]
     return names[:25]
@@ -184,12 +191,6 @@ def get_breed_info(
     pet_type: str,
     name: str = Query(..., min_length=1, max_length=120),
 ):
-    """Fetch detailed breed information through the backend."""
-    normalized_type = pet_type.lower().strip()
-    breed_name = name.strip()
-    data = _request_breed_api(normalized_type, "/breeds/search", {"q": breed_name})
-
-    if not isinstance(data, list) or not data:
-        raise HTTPException(status_code=404, detail="Breed not found")
-
-    return _breed_info_from_api(normalized_type, breed_name, data[0])
+    """Fetch detailed breed information through the backend.
+    Returns 404 when breed is not found, or 503 (not 502) when provider is down
+    so callers can distinguish 'no data' from 'service crash'
