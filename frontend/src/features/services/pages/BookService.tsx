@@ -10,7 +10,7 @@ import Grid from "@mui/material/Grid";
 import { getProviders } from "../servicesApi";
 import type { ServiceProvider, ServiceType } from "../../../types/services";
 import { useLocalization } from "../../../contexts/LocalizationContext";
-import { ServiceProviderCard } from "../../../components/services/ServiceProviderCard";
+import { ServiceProviderCard } from "../components/ServiceProviderCard";
 import { ServiceErrorBoundary } from "../components/ServiceErrorBoundary";
 import { ServiceTypeDropdown } from "../../../components/services/ServiceTypeDropdown";
 
@@ -96,8 +96,6 @@ return (
           <Grid item key={provider.id} xs={12} sm={6} md={4}>
             <ServiceProviderCard
               provider={provider}
-              onRequestService={(provider) => {
-              }}
               onViewProfile={(provider) => {
                 navigate(`/provider/${provider.id}`);
               }}

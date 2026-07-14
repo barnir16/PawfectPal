@@ -20,6 +20,7 @@ import { useLocalization } from '../../../contexts/LocalizationContext';
 interface ServiceProviderCardProps {
   provider: ServiceProvider;
   onBook?: (provider: ServiceProvider) => void;
+  onViewProfile?: (provider: ServiceProvider) => void;
 }
 
 // Maps service type strings to short readable labels
@@ -29,6 +30,7 @@ const shortLabel = (s: string) =>
 export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
   provider,
   onBook,
+  onViewProfile,
 }) => {
   const { t } = useLocalization();
   const isAvailable = provider.is_available;
@@ -219,20 +221,32 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
           <Box />
         )}
 
-        <Button
-          variant="contained"
-          size="small"
-          onClick={() => onBook?.(provider)}
-          disabled={!isAvailable}
-          sx={{
-            px: 2.5,
-            fontWeight: 700,
-            boxShadow: 'none',
-            '&:hover': { boxShadow: '0 2px 8px rgba(244,162,97,0.4)' },
-          }}
-        >
-          {t('services.bookService')}
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          {onViewProfile && (
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => onViewProfile(provider)}
+              sx={{ px: 1.5, fontWeight: 600, fontSize: '0.75rem' }}
+            >
+              {t('services.viewProfile') || 'Profile'}
+            </Button>
+          )}
+          <Button
+            variant="contained"
+            size="small"
+            onClick={() => onBook?.(provider)}
+            disabled={!isAvailable}
+            sx={{
+              px: 2.5,
+              fontWeight: 700,
+              boxShadow: 'none',
+              '&:hover': { boxShadow: '0 2px 8px rgba(244,162,97,0.4)' },
+            }}
+          >
+            {t('services.bookService')}
+          </Button>
+        </Box>
       </Box>
     </Card>
   );

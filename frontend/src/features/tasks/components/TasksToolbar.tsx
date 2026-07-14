@@ -1,4 +1,4 @@
-import { ToggleButton, ToggleButtonGroup, Button, Tooltip } from "@mui/material";
+import { Box, ToggleButton, ToggleButtonGroup, Button, Tooltip } from "@mui/material";
 import {
   ViewList as ViewListIcon,
   ViewModule as ViewModuleIcon,
@@ -31,17 +31,17 @@ export const TasksToolbar = ({
   const { t } = useLocalization();
   
   return (
-    <div
-      style={{
+    <Box
+      sx={{
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        marginBottom: "1rem",
+        mb: 2,
         flexWrap: "wrap",
-        gap: "1rem",
+        gap: 1.5,
       }}
     >
-      <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+      <Box sx={{ display: "flex", gap: 1, alignItems: "center", flexWrap: "wrap" }}>
         <Button
           variant="contained"
           color="primary"
@@ -76,7 +76,7 @@ export const TasksToolbar = ({
         )}
         
         {children}
-      </div>
+      </Box>
 
       <ToggleButtonGroup
         value={view}
@@ -92,6 +92,6 @@ export const TasksToolbar = ({
           <ViewModuleIcon />
         </ToggleButton>
       </ToggleButtonGroup>
-    </div>
+    </Box>
   );
 };

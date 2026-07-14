@@ -525,7 +525,7 @@ export const ChatListPage = () => {
 
   return (
     <Box sx={{ 
-      height: "100vh", 
+      height: "calc(100vh - 64px)", 
       display: "flex", 
       flexDirection: "column",
       backgroundColor: (theme) => theme.palette.mode === "dark" ? "grey.900" : "grey.50",

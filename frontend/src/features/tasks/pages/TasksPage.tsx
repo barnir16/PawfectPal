@@ -259,7 +259,7 @@ export const Tasks = () => {
           justifyContent="center"
           sx={{ mb: 4 }}
         >
-          <Card sx={{ minWidth: 280, cursor: "pointer" }} onClick={() => setTaskType("vaccines")}>
+          <Card sx={{ width: { xs: "100%", sm: 280 }, cursor: "pointer" }} onClick={() => setTaskType("vaccines")}>
             <CardContent sx={{ textAlign: "center", py: 4 }}>
               <VaccinesIcon sx={{ fontSize: 64, color: "primary.main", mb: 2 }} />
               <Typography variant="h5" component="h2" gutterBottom>
@@ -271,7 +271,7 @@ export const Tasks = () => {
             </CardContent>
           </Card>
 
-          <Card sx={{ minWidth: 280, cursor: "pointer" }} onClick={() => setTaskType("custom")}>
+          <Card sx={{ width: { xs: "100%", sm: 280 }, cursor: "pointer" }} onClick={() => setTaskType("custom")}>
             <CardContent sx={{ textAlign: "center", py: 4 }}>
               <TasksIcon sx={{ fontSize: 64, color: "secondary.main", mb: 2 }} />
               <Typography variant="h5" component="h2" gutterBottom>

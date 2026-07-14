@@ -259,7 +259,7 @@ export const Dashboard = () => {
   };
 
   return (
-    <Box sx={{ flexGrow: 1, maxWidth: 1100 }}>
+    <Box sx={{ flexGrow: 1, maxWidth: 1100, mx: "auto", px: { xs: 1, sm: 2, md: 0 } }}>
 
       {/* ── Greeting ────────────────────────────────────────────── */}
       <Box sx={{ mb: 4 }}>

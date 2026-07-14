@@ -580,7 +580,7 @@ export const ChatPage = () => {
   }
 
   return (
-    <Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+    <Box sx={{ height: "calc(100vh - 64px)", display: "flex", flexDirection: "column" }}>
           {/* Breadcrumb Navigation */}
           <Paper elevation={1} sx={{ p: 2, borderRadius: 0 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>

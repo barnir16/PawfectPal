@@ -49,7 +49,7 @@ export const TaskFilters = ({
   const finalPetOptions = petOptions || defaultPetOptions;
   
   return (
-    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 1.5 }}>
       <TextField
         select
         label={t('tasks.status')}
@@ -57,7 +57,7 @@ export const TaskFilters = ({
         value={filters.status}
         onChange={onFilterChange}
         size="small"
-        sx={{ minWidth: 150 }}
+
       >
         {finalStatusOptions.map((option) => (
           <MenuItem key={option.value} value={option.value}>
@@ -73,7 +73,7 @@ export const TaskFilters = ({
         value={filters.priority}
         onChange={onFilterChange}
         size="small"
-        sx={{ minWidth: 150 }}
+
       >
         {finalPriorityOptions.map((option) => (
           <MenuItem key={option.value} value={option.value}>
@@ -89,7 +89,7 @@ export const TaskFilters = ({
         value={filters.pet}
         onChange={onFilterChange}
         size="small"
-        sx={{ minWidth: 150 }}
+
       >
         {finalPetOptions.map((option) => (
           <MenuItem key={option.value} value={option.value}>
