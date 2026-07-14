@@ -55,21 +55,20 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
   // Normalize and validate props with better fallbacks
   const normalizedPetType = petType?.toLowerCase().trim() || 'unknown';
   const normalizedBreedName = breedName?.trim() || 'Unknown Breed';
-  
+
   useEffect(() => {
     const fetchBreedInfo = async () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         let info: BreedInfo | null = null;
-        
+
         if (normalizedPetType === 'dog') {
           try {
             info = await fetchDogBreedInfo(normalizedBreedName);
           } catch (apiError) {
             console.error('Failed to fetch dog breed info:', apiError);
-            // Fallback to basic info
             info = {
               name: normalizedBreedName,
               averageWeight: { min: 15, max: 35, unit: 'kg' as const },
@@ -91,7 +90,6 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
             info = await fetchCatBreedInfo(normalizedBreedName);
           } catch (apiError) {
             console.error('Failed to fetch cat breed info:', apiError);
-            // Fallback to basic info
             info = {
               name: normalizedBreedName,
               averageWeight: { min: 3, max: 6, unit: 'kg' as const },
@@ -142,14 +140,14 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
 
   const getWeightStatus = () => {
     if (!breedInfo?.averageWeight || !currentWeight) return null;
-    
+
     const { min, max, unit } = breedInfo.averageWeight;
-    const normalizedCurrentWeight = weightUnit === 'lb' && unit === 'kg' 
-      ? currentWeight * 0.453592 
+    const normalizedCurrentWeight = weightUnit === 'lb' && unit === 'kg'
+      ? currentWeight * 0.453592
       : unit === 'lb' && weightUnit === 'kg'
       ? currentWeight * 2.20462
       : currentWeight;
-    
+
     if (normalizedCurrentWeight < min) {
       return { status: 'underweight', severity: 'warning' as const, message: t('pets.weightStatus.underweight') };
     } else if (normalizedCurrentWeight > max) {
@@ -166,7 +164,7 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
       <Card>
         <CardHeader title={t('pets.breedInfo')} />
         <CardContent>
-          <Typography>{t('pets.loadingBreedInfo', { breed: breedName })}</Typography>
+          <Typography>{t('pets.loadingBreedInfo').replace('{breed}', breedName)}</Typography>
           <Skeleton variant="text" width="60%" />
           <Skeleton variant="text" width="40%" />
           <Skeleton variant="text" width="80%" />
@@ -196,7 +194,7 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
               </Typography>
             )}
           </Box>
-          
+
           <Alert severity="info" sx={{ mt: 2 }}>
             {t('pets.noDetailedBreedInfo').replace('{breed}', breedName)}.
           </Alert>
@@ -207,7 +205,7 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
 
   return (
     <Card>
-      <CardHeader 
+      <CardHeader
         title={
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <PetsIcon color="primary" />
@@ -216,7 +214,7 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
         }
         action={
           <IconButton
-            onClick={() => setExpanded(!expanded)}
+            onClick={handleToggleExpanded}
             aria-expanded={expanded}
             aria-label="show more"
           >
@@ -224,8 +222,6 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
           </IconButton>
         }
       />
-      
-
 
       <CardContent>
         {/* Weight Status Alert */}
@@ -247,7 +243,7 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
               </Typography>
             </Grid>
           )}
-          
+
           {breedInfo.lifeExpectancy && (
             <Grid size={{ xs: 12, sm: 6 }}>
               <Typography variant="subtitle2" color="text.secondary">
@@ -314,52 +310,49 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
           </Box>
         )}
 
-        {/* Exercise and Diet */}
+        {/* Exercise and Diet — shown when expanded */}
         <Collapse in={expanded}>
           <Box sx={{ mt: 2 }}>
             <Divider sx={{ mb: 2 }} />
-            
+
             {breedInfo.exerciseNeeds && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
                   {t('pets.exerciseNeeds')}
                 </Typography>
-                <Typography variant="body2">
-                  {breedInfo.exerciseNeeds}
-                </Typography>
+                <Typography variant="body2">{breedInfo.exerciseNeeds}</Typography>
               </Box>
             )}
-            
+
             {breedInfo.dietRecommendations && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
                   {t('pets.dietRecommendations')}
                 </Typography>
-                <Typography variant="body2">
-                  {breedInfo.dietRecommendations}
-                </Typography>
+                <Typography variant="body2">{breedInfo.dietRecommendations}</Typography>
               </Box>
             )}
-            
+
             {breedInfo.temperament && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
                   {t('pets.temperament')}
                 </Typography>
-                <Typography variant="body2">
-                  {breedInfo.temperament}
-                </Typography>
+                <Typography variant="body2">{breedInfo.temperament}</Typography>
               </Box>
             )}
-            
+
             {breedInfo.origin && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
                   {t('pets.origin')}
                 </Typography>
-                <Typography variant="body2">
-                  {breedInfo.origin}
-                </Typography>
+                <Typography variant="body2">{breedInfo.origin}</Typography>
               </Box>
             )}
-    
+          </Box>
+        </Collapse>
+      </CardContent>
+    </Card>
+  );
+};
