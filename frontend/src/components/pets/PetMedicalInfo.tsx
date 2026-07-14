@@ -1,10 +1,5 @@
 import { type FieldErrors, Controller, type Control } from "react-hook-form";
 import { TextField, Grid } from "@mui/material";
-import { 
-  Notes as NotesIcon,
-  MedicalServices as HealthIcon,
-  Psychology as BehaviorIcon
-} from "@mui/icons-material";
 import type { PetFormData } from "./../../features/pets/components/PetForm/PetForm.tsx";
 import { IssuesList } from "./IssuesList";
 import { useLocalization } from "../../contexts/LocalizationContext";
@@ -21,9 +16,9 @@ export const PetMedicalInfo = ({
   isSubmitting = false,
 }: PetMedicalInfoProps) => {
   const { t } = useLocalization();
-  
+
   return (
-    <Grid container spacing={3}>
+    <Grid container spacing={2.5}>
       <Grid size={{ xs: 12, sm: 6 }}>
         <Controller
           name="healthIssues"
@@ -75,25 +70,6 @@ export const PetMedicalInfo = ({
               error={!!errors.notes}
               helperText={errors.notes?.message || t('pets.includeOtherRelevant')}
               disabled={isSubmitting}
-              InputProps={{
-                startAdornment: (
-                  <NotesIcon
-                    color="action"
-                    sx={{
-                      position: "absolute",
-                      left: 14,
-                      top: 14,
-                    }}
-                  />
-                ),
-                sx: {
-                  pl: 6,
-                  pt: 2,
-                  "& textarea": {
-                    pl: 2,
-                  },
-                },
-              }}
             />
           )}
         />
