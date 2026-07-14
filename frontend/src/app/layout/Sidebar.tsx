@@ -12,6 +12,7 @@ import {
   useTheme,
   useMediaQuery,
   IconButton,
+  Avatar,
 } from "@mui/material";
 import { useLocalization } from "../../contexts/LocalizationContext";
 import {
@@ -277,4 +278,111 @@ export const Sidebar = ({
         </IconButton>
       </Box>
 
-      {/* Nav groups */
+      {/* Nav groups */}
+      <List sx={{ flex: 1, overflowY: "auto", overflowX: "hidden", pt: 0.5 }}>
+        {navGroups.map((group, groupIdx) => (
+          <Box key={groupIdx}>
+            {/* Section label — only shown when expanded */}
+            {group.label && (open || isMobile) && (
+              <Typography
+                variant="caption"
+                sx={{
+                  color: SIDEBAR_TEXT_MUTED,
+                  fontWeight: 600,
+                  fontSize: "0.65rem",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  px: 2.5,
+                  pt: groupIdx === 0 ? 1 : 2,
+                  pb: 0.5,
+                  display: "block",
+                }}
+              >
+                {group.label}
+              </Typography>
+            )}
+            {/* Divider between unlabeled groups */}
+            {groupIdx > 0 && !group.label && (
+              <Box sx={{ my: 1, mx: 2, borderTop: "1px solid rgba(255,255,255,0.08)" }} />
+            )}
+            {group.items.map(renderNavItem)}
+          </Box>
+        ))}
+      </List>
+
+      {/* Footer — user identity */}
+      {(open || isMobile) && user && (
+        <Box
+          sx={{
+            px: 2,
+            py: 1.5,
+            borderTop: "1px solid rgba(255,255,255,0.08)",
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+          }}
+        >
+          <Avatar
+            sx={{
+              width: 28,
+              height: 28,
+              bgcolor: "primary.main",
+              fontSize: "0.75rem",
+            }}
+          >
+            {(user.full_name?.charAt(0) || user.username?.charAt(0) || "U").toUpperCase()}
+          </Avatar>
+          <Typography
+            variant="caption"
+            sx={{ color: SIDEBAR_TEXT, fontWeight: 500 }}
+            noWrap
+          >
+            {user.full_name || user.username}
+          </Typography>
+        </Box>
+      )}
+    </Box>
+  );
+
+  return (
+    <>
+      {/* Mobile drawer — temporary, slides in on small screens */}
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={handleMobileClose}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          display: { xs: "block", sm: "none" },
+          "& .MuiDrawer-paper": {
+            width: drawerWidth,
+            boxSizing: "border-box",
+            bgcolor: SIDEBAR_BG,
+            border: "none",
+          },
+        }}
+      >
+        {drawer}
+      </Drawer>
+
+      {/* Desktop drawer — permanent, collapses to icon rail */}
+      <Drawer
+        variant="permanent"
+        sx={{
+          display: { xs: "none", sm: "block" },
+          "& .MuiDrawer-paper": {
+            width: open ? drawerWidth : minimizedWidth,
+            boxSizing: "border-box",
+            bgcolor: SIDEBAR_BG,
+            border: "none",
+            overflowX: "hidden",
+            transition: "width 0.25s ease",
+          },
+        }}
+        open
+      >
+        {drawer}
+      </Drawer>
+    </>
+  );
+};
