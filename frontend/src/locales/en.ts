@@ -274,6 +274,7 @@ export const en = {
     smallAnimal: 'Small Animal',
     saving: 'Saving...',
     saveChanges: 'Save Changes',
+    changesSaved: 'Changes saved',
     chooseLanguage: 'Choose your preferred language for the application',
     currentLanguage: 'Current language:',
     customizeAppearance: 'Customize the appearance of the application',
@@ -1040,6 +1041,14 @@ export const en = {
     primaryVetPlaceholder: 'Dr. Smith - (555) 123-4567',
     emergencyVetPlaceholder: '24/7 Emergency Hospital - (555) 999-0000',
     petSitterPlaceholder: 'Jane Doe - (555) 111-2222',
+    // Notification sub-labels
+    appNotifications: 'In-App Notifications',
+    appNotificationsDesc: 'Show alerts and reminders within the app',
+    emailAlertsDesc: 'Get email reminders for upcoming vet appointments and tasks',
+    reminderFrequencyDesc: 'How often to receive reminders',
+    daily: 'Daily',
+    weekly: 'Weekly',
+    monthly: 'Monthly',
   },
 
   // Config

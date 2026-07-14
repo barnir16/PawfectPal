@@ -280,6 +280,7 @@ export const he = {
     smallAnimal: 'חיה קטנה',
     saving: 'שומר...',
     saveChanges: 'שמור שינויים',
+    changesSaved: 'השינויים נשמרו',
     chooseLanguage: 'בחר את השפה המועדפת שלך ליישום',
     currentLanguage: 'שפה נוכחית:',
     customizeAppearance: 'התאם אישית את המראה של היישום',
@@ -974,6 +975,13 @@ export const he = {
     primaryVetPlaceholder: 'ד"ר סמית - (555) 123-4567',
     emergencyVetPlaceholder: 'בית חולים חירום 24/7 - (555) 999-0000',
     petSitterPlaceholder: 'ג\'יין דו - (555) 111-2222',
+    appNotifications: 'התראות באפליקציה',
+    appNotificationsDesc: 'הצג התראות ותזכורות בתוך האפליקציה',
+    emailAlertsDesc: 'קבל תזכורות במייל לתורי וטרינר ומשימות קרובות',
+    reminderFrequencyDesc: 'כמה פעמים לקבל תזכורות',
+    daily: 'יומי',
+    weekly: 'שבועי',
+    monthly: 'חודשי',
   },
 
   // Dashboard

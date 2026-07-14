@@ -2,6 +2,102 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { createTheme, ThemeProvider as MuiThemeProvider, PaletteMode } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 
+// Warm palette used in both light and dark modes.
+// Dark mode keeps the same amber/teal hues but flips backgrounds to warm charcoal.
+const PALETTE = {
+  primary:   { main: '#F4A261', light: '#F7BC8A', dark: '#E07B3A', contrastText: '#fff' },
+  secondary: { main: '#2A9D8F', light: '#4FBFB2', dark: '#1D7A6E', contrastText: '#fff' },
+  error:     { main: '#E76F51' },
+  success:   { main: '#52B788', light: '#74C69D', dark: '#2D6A4F' },
+  warning:   { main: '#E9C46A' },
+  white:     { main: '#ffffff', contrastText: '#2D2D2D' },
+};
+
+function buildTheme(mode: PaletteMode) {
+  return createTheme({
+    palette: {
+      mode,
+      ...PALETTE,
+      background: {
+        default: mode === 'dark' ? '#1C1917' : '#FFFBF5',
+        paper:   mode === 'dark' ? '#2A2522' : '#ffffff',
+      },
+      text: {
+        primary:   mode === 'dark' ? '#F5EFE8' : '#2D2D2D',
+        secondary: mode === 'dark' ? '#B5AAA0' : '#6B6B6B',
+      },
+    },
+    shape: { borderRadius: 14 },
+    typography: {
+      fontFamily: [
+        '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto',
+        '"Helvetica Neue"', 'Arial', 'sans-serif',
+      ].join(','),
+      h1: { fontSize: '2.5rem', fontWeight: 700 },
+      h2: { fontSize: '2rem',   fontWeight: 600 },
+      h3: { fontSize: '1.75rem', fontWeight: 600 },
+      h4: { fontSize: '1.5rem',  fontWeight: 600 },
+      h5: { fontSize: '1.25rem', fontWeight: 600 },
+      h6: { fontSize: '1rem',    fontWeight: 600 },
+    },
+    components: {
+      MuiButton: {
+        styleOverrides: {
+          root: { textTransform: 'none', borderRadius: 24, fontWeight: 600 },
+          contained: { boxShadow: 'none', '&:hover': { boxShadow: '0 2px 8px rgba(0,0,0,0.15)' } },
+        },
+      },
+      MuiCard: {
+        styleOverrides: {
+          root: {
+            borderRadius: 16,
+            boxShadow: mode === 'dark'
+              ? '0 2px 12px rgba(0,0,0,0.4)'
+              : '0 2px 12px rgba(0,0,0,0.06)',
+            border: mode === 'dark'
+              ? '1px solid rgba(255,255,255,0.06)'
+              : '1px solid rgba(0,0,0,0.05)',
+          },
+        },
+      },
+      MuiPaper: {
+        styleOverrides: {
+          root: { borderRadius: 16 },
+        },
+      },
+      MuiOutlinedInput: {
+        styleOverrides: {
+          root: {
+            borderRadius: 10,
+            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#F4A261',
+            },
+          },
+        },
+      },
+      MuiChip: {
+        styleOverrides: {
+          root: { borderRadius: 8 },
+        },
+      },
+      MuiDataGrid: {
+        styleOverrides: {
+          root: {
+            border: 'none',
+            '& .MuiDataGrid-cell': {
+              borderBottom: mode === 'dark' ? '1px solid rgba(255,255,255,0.06)' : '1px solid #f0e8df',
+            },
+            '& .MuiDataGrid-columnHeaders': {
+              backgroundColor: mode === 'dark' ? '#2A2522' : '#FFF8F2',
+              borderBottom: mode === 'dark' ? '1px solid rgba(255,255,255,0.06)' : '1px solid #f0e8df',
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
 interface ThemeContextType {
   mode: PaletteMode;
   toggleTheme: () => void;
@@ -10,24 +106,21 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-interface ThemeProviderProps {
-  children: ReactNode;
-}
-
-export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
+export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [mode, setMode] = useState<PaletteMode>('light');
 
+  // Read saved preference on first mount
   useEffect(() => {
-    const savedMode = localStorage.getItem('pawfectPal_theme') as PaletteMode;
-    if (savedMode && (savedMode === 'light' || savedMode === 'dark')) {
-      setMode(savedMode);
+    const saved = localStorage.getItem('pawfectPal_theme') as PaletteMode | null;
+    if (saved === 'light' || saved === 'dark') {
+      setMode(saved);
     }
   }, []);
 
   const toggleTheme = () => {
-    const newMode = mode === 'light' ? 'dark' : 'light';
-    setMode(newMode);
-    localStorage.setItem('pawfectPal_theme', newMode);
+    const next = mode === 'light' ? 'dark' : 'light';
+    setMode(next);
+    localStorage.setItem('pawfectPal_theme', next);
   };
 
   const setTheme = (newMode: PaletteMode) => {
@@ -35,104 +128,9 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     localStorage.setItem('pawfectPal_theme', newMode);
   };
 
-  const theme = createTheme({
-    palette: {
-      mode,
-      primary: {
-        main: '#1976d2',
-        light: '#42a5f5',
-        dark: '#1565c0',
-        contrastText: '#fff',
-      },
-      secondary: {
-        main: '#9c27b0',
-        light: '#ba68c8',
-        dark: '#7b1fa2',
-        contrastText: '#fff',
-      },
-      error: {
-        main: '#d32f2f',
-      },
-      background: {
-        default: mode === 'dark' ? '#121212' : '#f5f5f5',
-        paper: mode === 'dark' ? '#1e1e1e' : '#ffffff',
-      },
-    },
-    typography: {
-      fontFamily: [
-        '-apple-system',
-        'BlinkMacSystemFont',
-        '"Segoe UI"',
-        'Roboto',
-        '"Helvetica Neue"',
-        'Arial',
-        'sans-serif',
-        '"Apple Color Emoji"',
-        '"Segoe UI Emoji"',
-        '"Segoe UI Symbol"',
-      ].join(','),
-      h1: {
-        fontSize: '2.5rem',
-        fontWeight: 600,
-      },
-      h2: {
-        fontSize: '2rem',
-        fontWeight: 500,
-      },
-      h3: {
-        fontSize: '1.75rem',
-        fontWeight: 500,
-      },
-    },
-    components: {
-      MuiButton: {
-        styleOverrides: {
-          root: {
-            textTransform: 'none',
-            borderRadius: 8,
-          },
-        },
-      },
-      MuiCard: {
-        styleOverrides: {
-          root: {
-            borderRadius: 12,
-            boxShadow: mode === 'dark' 
-              ? '0 4px 6px -1px rgb(255 255 255 / 0.1), 0 2px 4px -2px rgb(255 255 255 / 0.1)'
-              : '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-          },
-        },
-      },
-      MuiDataGrid: {
-        styleOverrides: {
-          root: {
-            border: 'none',
-            '& .MuiDataGrid-cell': {
-              borderBottom: mode === 'dark' ? '1px solid #333' : '1px solid #e0e0e0',
-            },
-            '& .MuiDataGrid-columnHeaders': {
-              backgroundColor: mode === 'dark' ? '#1e1e1e' : '#fafafa',
-              borderBottom: mode === 'dark' ? '1px solid #333' : '1px solid #e0e0e0',
-            },
-            '& .MuiDataGrid-footerContainer': {
-              backgroundColor: mode === 'dark' ? '#1e1e1e' : '#fafafa',
-              borderTop: mode === 'dark' ? '1px solid #333' : '1px solid #e0e0e0',
-            },
-          },
-        },
-      },
-    },
-  });
-
-  const value: ThemeContextType = {
-    mode,
-    toggleTheme,
-    setTheme,
-  };
-
   return (
-    <ThemeContext.Provider value={value}>
-      <MuiThemeProvider theme={theme}>
+    <ThemeContext.Provider value={{ mode, toggleTheme, setTheme }}>
+      <MuiThemeProvider theme={buildTheme(mode)}>
         <CssBaseline />
         {children}
       </MuiThemeProvider>
@@ -142,9 +140,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 
 export const useTheme = (): ThemeContextType => {
   const context = useContext(ThemeContext);
-  if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
+  if (!context) throw new Error('useTheme must be used within a ThemeProvider');
   return context;
 };
 

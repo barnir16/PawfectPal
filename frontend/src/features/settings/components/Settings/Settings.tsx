@@ -3,7 +3,6 @@ import {
   Box,
   Container,
   Typography,
-  Paper,
   Grid,
   Card,
   CardContent,
@@ -18,7 +17,6 @@ import {
   ListItemSecondaryAction,
   Button,
   Alert,
-  useTheme,
   TextField,
   FormControl,
   InputLabel,
@@ -26,7 +24,7 @@ import {
   MenuItem,
   SelectChangeEvent,
   Snackbar,
-  CircularProgress,
+  Chip,
 } from "@mui/material";
 import {
   Language as LanguageIcon,
@@ -36,22 +34,23 @@ import {
   Info as InfoIcon,
   Pets as PetsIcon,
   Settings as SettingsIcon,
-  Save as SaveIcon,
-  Email as EmailIcon,
   Phone as PhoneIcon,
   LocationOn as LocationIcon,
+  DarkMode as DarkModeIcon,
+  LightMode as LightModeIcon,
 } from "@mui/icons-material";
 import { useLocalization } from "../../../../contexts/LocalizationContext";
 import { LanguageSwitcher } from "../../../../components/common/LanguageSwitcher";
-import { PushNotificationManager } from "../../../../components/notifications/PushNotificationManager";
-import { useAuth } from "../../../../contexts/AuthContext";
-import { useTheme as useCustomTheme } from "../../../../contexts/ThemeContext";
+import { useTheme as useAppTheme } from "../../../../contexts/ThemeContext";
 
-interface UserPreferences {
-  darkMode: boolean;
+/**
+ * Preferences stored in localStorage.
+ * Dark mode is excluded here — it's owned by ThemeContext and persisted
+ * to 'pawfectPal_theme'. Everything else lives in 'pawfectPal_preferences'.
+ */
+interface StoredPreferences {
   notifications: boolean;
   emailAlerts: boolean;
-  pushNotifications: boolean;
   reminderFrequency: "daily" | "weekly" | "monthly";
   emergencyContacts: {
     primaryVet: string;
@@ -60,157 +59,68 @@ interface UserPreferences {
   };
   privacySettings: {
     shareData: boolean;
-    allowNotifications: boolean;
     locationTracking: boolean;
   };
 }
 
+const DEFAULT_PREFS: StoredPreferences = {
+  notifications: true,
+  emailAlerts: true,
+  reminderFrequency: "weekly",
+  emergencyContacts: { primaryVet: "", emergencyVet: "", petSitter: "" },
+  privacySettings: { shareData: false, locationTracking: false },
+};
+
+const PREFS_KEY = "pawfectPal_preferences";
+
 const Settings: React.FC = () => {
-  const muiTheme = useCustomTheme();
+  // Dark mode is owned entirely by ThemeContext — no duplicate state here.
+  const { mode, setTheme } = useAppTheme();
   const { t, currentLanguage } = useLocalization();
-  const { user } = useAuth();
 
-  const [preferences, setPreferences] = useState<UserPreferences>({
-    darkMode: false,
-    notifications: true,
-    emailAlerts: true,
-    pushNotifications: true,
-    reminderFrequency: "weekly",
-    emergencyContacts: {
-      primaryVet: "",
-      emergencyVet: "",
-      petSitter: "",
-    },
-    privacySettings: {
-      shareData: false,
-      allowNotifications: true,
-      locationTracking: false,
-    },
-  });
-
-  const [isLoading, setIsLoading] = useState(false);
+  const [prefs, setPrefs] = useState<StoredPreferences>(DEFAULT_PREFS);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
 
-  // Load user preferences from localStorage or API
+  // Load persisted preferences once on mount
   useEffect(() => {
-    const loadPreferences = () => {
-      try {
-        const saved = localStorage.getItem("pawfectPal_preferences");
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          setPreferences(parsed);
-        }
-      } catch (error) {
-        console.error("Error loading preferences:", error);
+    try {
+      const raw = localStorage.getItem(PREFS_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setPrefs((prev) => ({ ...prev, ...parsed }));
       }
-    };
-
-    loadPreferences();
+    } catch {
+      /* ignore parse errors, keep defaults */
+    }
   }, []);
 
-  // Sync theme with preferences
-  useEffect(() => {
-    const savedMode = localStorage.getItem("pawfectPal_theme") as
-      | "light"
-      | "dark";
-    if (savedMode && savedMode !== (preferences.darkMode ? "dark" : "light")) {
-      setPreferences((prev) => ({
-        ...prev,
-        darkMode: savedMode === "dark",
-      }));
-    }
-  }, [preferences.darkMode]);
-
-  // Check for changes
-  useEffect(() => {
-    const saved = localStorage.getItem("pawfectPal_preferences");
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setHasChanges(JSON.stringify(parsed) !== JSON.stringify(preferences));
-    } else {
-      setHasChanges(true);
-    }
-  }, [preferences]);
-
-  const handlePreferenceChange = (key: keyof UserPreferences, value: any) => {
-    setPreferences((prev) => ({ ...prev, [key]: value }));
+  // Persist preferences to localStorage (synchronous — no fake delay needed)
+  const savePrefs = (next: StoredPreferences) => {
+    setPrefs(next);
+    localStorage.setItem(PREFS_KEY, JSON.stringify(next));
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 2000);
   };
 
-  const handleEmergencyContactChange = (
-    key: keyof UserPreferences["emergencyContacts"],
-    value: string
-  ) => {
-    setPreferences((prev) => ({
-      ...prev,
-      emergencyContacts: { ...prev.emergencyContacts, [key]: value },
-    }));
+  const updatePref = <K extends keyof StoredPreferences>(key: K, value: StoredPreferences[K]) => {
+    savePrefs({ ...prefs, [key]: value });
   };
 
-  const handlePrivacySettingChange = (
-    key: keyof UserPreferences["privacySettings"],
-    value: boolean
-  ) => {
-    setPreferences((prev) => ({
-      ...prev,
-      privacySettings: { ...prev.privacySettings, [key]: value },
-    }));
+  const updateContact = (key: keyof StoredPreferences["emergencyContacts"], value: string) => {
+    savePrefs({ ...prefs, emergencyContacts: { ...prefs.emergencyContacts, [key]: value } });
   };
 
-  const handleSavePreferences = async () => {
-    setIsLoading(true);
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Save to localStorage
-      localStorage.setItem(
-        "pawfectPal_preferences",
-        JSON.stringify(preferences)
-      );
-
-      setSaveSuccess(true);
-      setHasChanges(false);
-
-      // Show success message
-      setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (error) {
-      console.error("Error saving preferences:", error);
-    } finally {
-      setIsLoading(false);
-    }
+  const updatePrivacy = (key: keyof StoredPreferences["privacySettings"], value: boolean) => {
+    savePrefs({ ...prefs, privacySettings: { ...prefs.privacySettings, [key]: value } });
   };
 
-  const handleDarkModeToggle = () => {
-    const newDarkMode = !preferences.darkMode;
-    handlePreferenceChange("darkMode", newDarkMode);
-    muiTheme.setTheme(newDarkMode ? "dark" : "light");
-  };
-
-  const handleNotificationsToggle = () => {
-    handlePreferenceChange("notifications", !preferences.notifications);
-  };
-
-  const handleEmailAlertsToggle = () => {
-    handlePreferenceChange("emailAlerts", !preferences.emailAlerts);
-  };
-
-  const handlePushNotificationsToggle = () => {
-    handlePreferenceChange("pushNotifications", !preferences.pushNotifications);
-  };
-
-  const handleReminderFrequencyChange = (event: SelectChangeEvent) => {
-    handlePreferenceChange(
-      "reminderFrequency",
-      event.target.value as "daily" | "weekly" | "monthly"
-    );
-  };
+  const isDark = mode === "dark";
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom>
-          <SettingsIcon sx={{ mr: 2, verticalAlign: "middle" }} />
+          <SettingsIcon sx={{ mr: 1, verticalAlign: "middle" }} />
           {t("settings.title")}
         </Typography>
         <Typography variant="body1" color="text.secondary">
@@ -218,24 +128,8 @@ const Settings: React.FC = () => {
         </Typography>
       </Box>
 
-      {/* Save Button */}
-      {hasChanges && (
-        <Box sx={{ mb: 3, display: "flex", justifyContent: "flex-end" }}>
-          <Button
-            variant="contained"
-            startIcon={
-              isLoading ? <CircularProgress size={20} /> : <SaveIcon />
-            }
-            onClick={handleSavePreferences}
-            disabled={isLoading}
-          >
-            {isLoading ? t("pets.saving") : t("pets.saveChanges")}
-          </Button>
-        </Box>
-      )}
-
       <Grid container spacing={3}>
-        {/* Language Settings */}
+        {/* Language */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardHeader
@@ -259,7 +153,7 @@ const Settings: React.FC = () => {
           </Card>
         </Grid>
 
-        {/* Theme Settings */}
+        {/* Theme */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardHeader
@@ -274,108 +168,119 @@ const Settings: React.FC = () => {
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 {t("pets.customizeAppearance")}
               </Typography>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={preferences.darkMode}
-                    onChange={handleDarkModeToggle}
-                    color="primary"
-                  />
-                }
-                label={
-                  preferences.darkMode
-                    ? t("settings.darkMode")
-                    : t("settings.lightMode")
-                }
-              />
-              <Typography
-                variant="caption"
-                display="block"
-                sx={{ mt: 1, color: "text.secondary" }}
-              >
-                {preferences.darkMode
-                  ? t("pets.darkThemeBenefits")
-                  : t("pets.lightThemeBenefits")}
+
+              {/* Toggle with icons — reads directly from ThemeContext mode */}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <LightModeIcon color={isDark ? "disabled" : "warning"} />
+                <Switch
+                  checked={isDark}
+                  onChange={() => setTheme(isDark ? "light" : "dark")}
+                  color="primary"
+                />
+                <DarkModeIcon color={isDark ? "primary" : "disabled"} />
+                <Typography variant="body2" color="text.secondary">
+                  {isDark ? t("settings.darkMode") : t("settings.lightMode")}
+                </Typography>
+              </Box>
+
+              <Typography variant="caption" display="block" sx={{ mt: 1, color: "text.secondary" }}>
+                {isDark ? t("pets.darkThemeBenefits") : t("pets.lightThemeBenefits")}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
 
-        {/* Notification Settings */}
-        <Grid size={{ xs: 12 }}>
-          <PushNotificationManager />
-        </Grid>
-
-        {/* Emergency Contacts */}
+        {/* Notification preferences — simple local toggles */}
+        {/* Push notifications require a service worker + VAPID backend not yet set up. */}
+        {/* For now we store the user's intent in localStorage. */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardHeader
               title={
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <PhoneIcon color="primary" />
-                  <Typography variant="h6">
-                    {t("pets.emergencyContacts")}
-                  </Typography>
+                  <NotificationsIcon color="primary" />
+                  <Typography variant="h6">{t("settings.notifications")}</Typography>
                 </Box>
+              }
+              action={
+                <Chip
+                  label="Coming soon"
+                  size="small"
+                  variant="outlined"
+                  color="default"
+                  sx={{ mr: 1 }}
+                />
               }
             />
             <CardContent>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                {t("pets.storeContacts")}
-              </Typography>
+              <List disablePadding>
+                <ListItem disableGutters>
+                  <ListItemIcon>
+                    <NotificationsIcon fontSize="small" color="action" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={t("settings.appNotifications")}
+                    secondary={t("settings.appNotificationsDesc")}
+                  />
+                  <ListItemSecondaryAction>
+                    <Switch
+                      edge="end"
+                      checked={prefs.notifications}
+                      onChange={(e) => updatePref("notifications", e.target.checked)}
+                      color="primary"
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
 
-              <TextField
-                fullWidth
-                label={t("pets.primaryVet")}
-                value={preferences.emergencyContacts.primaryVet}
-                onChange={(e) =>
-                  handleEmergencyContactChange("primaryVet", e.target.value)
-                }
-                placeholder={t("settings.primaryVetPlaceholder")}
-                sx={{ mb: 2 }}
-                InputProps={{
-                  startAdornment: (
-                    <Box sx={{ mr: 1, display: "flex", alignItems: "center" }}>
-                      <PhoneIcon color="action" fontSize="small" />
-                    </Box>
-                  ),
-                }}
-              />
+                <Divider />
 
-              <TextField
-                fullWidth
-                label={t("pets.emergencyVet")}
-                value={preferences.emergencyContacts.emergencyVet}
-                onChange={(e) =>
-                  handleEmergencyContactChange("emergencyVet", e.target.value)
-                }
-                placeholder={t("settings.emergencyVetPlaceholder")}
-                sx={{ mb: 2 }}
-                InputProps={{
-                  startAdornment: (
-                    <Box sx={{ mr: 1, display: "flex", alignItems: "center" }}>
-                      <PhoneIcon color="action" fontSize="small" />
-                    </Box>
-                  ),
-                }}
-              />
+                <ListItem disableGutters>
+                  <ListItemIcon>
+                    <NotificationsIcon fontSize="small" color="action" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={t("settings.emailAlerts")}
+                    secondary={t("settings.emailAlertsDesc")}
+                  />
+                  <ListItemSecondaryAction>
+                    <Switch
+                      edge="end"
+                      checked={prefs.emailAlerts}
+                      onChange={(e) => updatePref("emailAlerts", e.target.checked)}
+                      color="primary"
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
 
-              <TextField
-                fullWidth
-                label={t("pets.petSitter")}
-                value={preferences.emergencyContacts.petSitter}
-                onChange={(e) =>
-                  handleEmergencyContactChange("petSitter", e.target.value)
-                }
-                placeholder={t("settings.petSitterPlaceholder")}
-                InputProps={{
-                  startAdornment: (
-                    <Box sx={{ mr: 1, display: "flex", alignItems: "center" }}>
-                      <PhoneIcon color="action" fontSize="small" />
-                    </Box>
-                  ),
-                }}
-              />
+                <Divider />
+
+                <ListItem disableGutters>
+                  <ListItemIcon>
+                    <PetsIcon fontSize="small" color="action" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={t("settings.reminderFrequency")}
+                    secondary={t("settings.reminderFrequencyDesc")}
+                  />
+                  <ListItemSecondaryAction>
+                    <FormControl size="small" sx={{ minWidth: 110 }}>
+                      <Select
+                        value={prefs.reminderFrequency}
+                        onChange={(e: SelectChangeEvent) =>
+                          updatePref(
+                            "reminderFrequency",
+                            e.target.value as "daily" | "weekly" | "monthly"
+                          )
+                        }
+                      >
+                        <MenuItem value="daily">{t("settings.daily")}</MenuItem>
+                        <MenuItem value="weekly">{t("settings.weekly")}</MenuItem>
+                        <MenuItem value="monthly">{t("settings.monthly")}</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </ListItemSecondaryAction>
+                </ListItem>
+              </List>
             </CardContent>
           </Card>
         </Grid>
@@ -396,10 +301,10 @@ const Settings: React.FC = () => {
                 {t("pets.managePrivacy")}
               </Typography>
 
-              <List>
-                <ListItem>
+              <List disablePadding>
+                <ListItem disableGutters>
                   <ListItemIcon>
-                    <PetsIcon color="primary" />
+                    <PetsIcon color="primary" fontSize="small" />
                   </ListItemIcon>
                   <ListItemText
                     primary={t("pets.sharePetData")}
@@ -408,13 +313,8 @@ const Settings: React.FC = () => {
                   <ListItemSecondaryAction>
                     <Switch
                       edge="end"
-                      checked={preferences.privacySettings.shareData}
-                      onChange={(e) =>
-                        handlePrivacySettingChange(
-                          "shareData",
-                          e.target.checked
-                        )
-                      }
+                      checked={prefs.privacySettings.shareData}
+                      onChange={(e) => updatePrivacy("shareData", e.target.checked)}
                       color="primary"
                     />
                   </ListItemSecondaryAction>
@@ -422,9 +322,9 @@ const Settings: React.FC = () => {
 
                 <Divider />
 
-                <ListItem>
+                <ListItem disableGutters>
                   <ListItemIcon>
-                    <LocationIcon color="primary" />
+                    <LocationIcon color="primary" fontSize="small" />
                   </ListItemIcon>
                   <ListItemText
                     primary={t("pets.locationTracking")}
@@ -433,24 +333,19 @@ const Settings: React.FC = () => {
                   <ListItemSecondaryAction>
                     <Switch
                       edge="end"
-                      checked={preferences.privacySettings.locationTracking}
-                      onChange={(e) =>
-                        handlePrivacySettingChange(
-                          "locationTracking",
-                          e.target.checked
-                        )
-                      }
+                      checked={prefs.privacySettings.locationTracking}
+                      onChange={(e) => updatePrivacy("locationTracking", e.target.checked)}
                       color="primary"
                     />
                   </ListItemSecondaryAction>
                 </ListItem>
               </List>
 
-              <Box sx={{ mt: 2 }}>
-                <Button variant="outlined" color="primary" sx={{ mr: 1 }}>
+              <Box sx={{ mt: 2, display: "flex", gap: 1, flexWrap: "wrap" }}>
+                <Button variant="outlined" size="small">
                   {t("pets.privacyPolicy")}
                 </Button>
-                <Button variant="outlined" color="primary">
+                <Button variant="outlined" size="small">
                   {t("pets.dataExport")}
                 </Button>
               </Box>
@@ -458,7 +353,50 @@ const Settings: React.FC = () => {
           </Card>
         </Grid>
 
-        {/* About & Support */}
+        {/* Emergency Contacts */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Card>
+            <CardHeader
+              title={
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <PhoneIcon color="primary" />
+                  <Typography variant="h6">{t("pets.emergencyContacts")}</Typography>
+                </Box>
+              }
+            />
+            <CardContent>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                {t("pets.storeContacts")}
+              </Typography>
+
+              <TextField
+                fullWidth
+                label={t("pets.primaryVet")}
+                value={prefs.emergencyContacts.primaryVet}
+                onChange={(e) => updateContact("primaryVet", e.target.value)}
+                placeholder={t("settings.primaryVetPlaceholder")}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label={t("pets.emergencyVet")}
+                value={prefs.emergencyContacts.emergencyVet}
+                onChange={(e) => updateContact("emergencyVet", e.target.value)}
+                placeholder={t("settings.emergencyVetPlaceholder")}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label={t("pets.petSitter")}
+                value={prefs.emergencyContacts.petSitter}
+                onChange={(e) => updateContact("petSitter", e.target.value)}
+                placeholder={t("settings.petSitterPlaceholder")}
+              />
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* About */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardHeader
@@ -470,36 +408,34 @@ const Settings: React.FC = () => {
               }
             />
             <CardContent>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                {t("pets.learnMore")}
-              </Typography>
-
               <Box sx={{ mb: 2 }}>
-                <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
                   {t("pets.version")}: 1.0.0
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {t("pets.builtWith")} React and FastAPI
+                  {t("pets.builtWith")} React & FastAPI
                 </Typography>
               </Box>
-
-              <Button variant="outlined" color="primary" sx={{ mr: 1 }}>
-                {t("pets.helpSupport")}
-              </Button>
-              <Button variant="outlined" color="primary">
-                {t("pets.aboutPawfectPal")}
-              </Button>
+              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                <Button variant="outlined" size="small">
+                  {t("pets.helpSupport")}
+                </Button>
+                <Button variant="outlined" size="small">
+                  {t("pets.aboutPawfectPal")}
+                </Button>
+              </Box>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
-      {/* Success Snackbar */}
+      {/* Auto-save toast */}
       <Snackbar
         open={saveSuccess}
-        autoHideDuration={3000}
+        autoHideDuration={2000}
         onClose={() => setSaveSuccess(false)}
-        message={t("pets.saveChanges")}
+        message={t("pets.changesSaved")}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       />
     </Container>
   );
