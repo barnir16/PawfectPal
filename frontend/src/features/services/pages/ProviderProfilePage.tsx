@@ -222,7 +222,7 @@ export const ProviderProfilePage: React.FC = () => {
                   {t('services.services')}
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {provider.provider_services.map((serviceType) => (
+                  {(provider.provider_services || []).map((serviceType) => (
                     <Chip
                       key={serviceType}
                       label={t(`services.${serviceType}`) || serviceType}

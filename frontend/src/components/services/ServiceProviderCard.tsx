@@ -185,7 +185,7 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
             {t("services.services")}:
           </Typography>
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-            {provider.provider_services.map((serviceType) => (
+            {(provider.provider_services || []).map((serviceType) => (
               <Chip
                 key={serviceType}
                 label={t(`services.${serviceType}`)}

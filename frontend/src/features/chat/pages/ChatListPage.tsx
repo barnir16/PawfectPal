@@ -415,8 +415,7 @@ export const ChatListPage = () => {
                   theme.palette.mode === "dark" 
                     ? "rgba(255,255,255,0.1)" 
                     : "rgba(0,0,0,0.08)",
-                backgroundColor: (theme) => 
-                  "background.paper",
+                backgroundColor: "background.paper",
                 "&:hover": { 
                   boxShadow: (theme) => 
                     theme.palette.mode === "dark"
@@ -528,7 +527,7 @@ export const ChatListPage = () => {
       height: "calc(100vh - 64px)", 
       display: "flex", 
       flexDirection: "column",
-      backgroundColor: (theme) => "background.default",
+      backgroundColor: "background.default",
     }}>
       {/* Header Section */}
       <Paper 
@@ -538,7 +537,7 @@ export const ChatListPage = () => {
           borderRadius: 0,
           borderBottom: 1,
           borderColor: "divider",
-          backgroundColor: background.paper,
+          backgroundColor: "background.paper",
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>

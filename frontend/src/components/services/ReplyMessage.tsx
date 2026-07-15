@@ -67,7 +67,7 @@ export const ReplyMessage: React.FC<ReplyMessageProps> = ({
           alignItems: 'center',
           gap: 1,
           p: 1,
-          backgroundColor: (theme) => "background.paper",
+          backgroundColor: "background.paper",
           borderRadius: 1,
           borderLeft: 3,
           borderLeftColor: 'primary.main',
@@ -95,7 +95,7 @@ export const ReplyMessage: React.FC<ReplyMessageProps> = ({
       elevation={0}
       sx={{
         p: 2,
-        backgroundColor: (theme) => "background.default",
+        backgroundColor: "background.default",
         borderRadius: 2,
         borderLeft: 4,
         borderLeftColor: 'primary.main',

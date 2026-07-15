@@ -105,7 +105,7 @@ export const FileUploadProgress: React.FC<FileUploadProgressProps> = ({
         border: 1,
         borderColor: 'divider',
         borderRadius: 2,
-        backgroundColor: (theme) => "background.default",
+        backgroundColor: "background.default",
       }}
     >
       <Stack direction="row" alignItems="center" spacing={2}>
