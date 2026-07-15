@@ -549,28 +549,28 @@ export const WeightTrackingPage = () => {
         {chartData.length > 0 ? (
           <Box sx={{
             p: 3,
-            bgcolor: 'grey.50',
+            bgcolor: 'background.default',
             borderRadius: 2,
             border: '1px solid',
-            borderColor: 'grey.200'
+            borderColor: 'divider'
           }}>
             <ResponsiveContainer width="100%" height={400}>
               <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
                 <XAxis
                   dataKey="date"
-                  stroke="#666"
+                  stroke={theme.palette.text.secondary}
                   fontSize={12}
                 />
                 <YAxis
                   label={{ value: t('weight.weight') + ' (' + t('pets.kg') + ')', angle: -90, position: 'insideLeft' }}
-                  stroke="#666"
+                  stroke={theme.palette.text.secondary}
                   fontSize={12}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'white',
-                    border: '1px solid #ccc',
+                    backgroundColor: theme.palette.background.paper,
+                    border: `1px solid ${theme.palette.divider}`,
                     borderRadius: '8px',
                     boxShadow: theme.shadows[4]
                   }}
@@ -597,12 +597,12 @@ export const WeightTrackingPage = () => {
           <Box sx={{
             textAlign: 'center',
             py: 6,
-            bgcolor: 'grey.50',
+            bgcolor: 'background.default',
             borderRadius: 2,
             border: '2px dashed',
-            borderColor: 'grey.300'
+            borderColor: 'divider'
           }}>
-            <TrendingUpIcon sx={{ fontSize: 64, color: 'grey.400', mb: 2 }} />
+            <TrendingUpIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
             <Typography variant="h6" sx={{ mb: 1, color: 'text.secondary' }}>
               {t('weight.noDataAvailable')}
             </Typography>
@@ -650,7 +650,7 @@ export const WeightTrackingPage = () => {
         </Box>
 
         {/* Summary Stats */}
-        <Box sx={{ mb: 4, p: 3, bgcolor: 'grey.50', borderRadius: 2 }}>
+        <Box sx={{ mb: 4, p: 3, bgcolor: 'background.default', borderRadius: 2 }}>
           <Grid container spacing={3} component="div">
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <Box sx={{ textAlign: 'center' }}>
@@ -713,7 +713,7 @@ export const WeightTrackingPage = () => {
                     background: isGoalAchieved
                       ? 'success.light'
                       : 'background.paper',
-                    border: `2px solid ${isGoalAchieved ? 'success.main' : 'grey.200'}`,
+                    border: `2px solid ${isGoalAchieved ? 'success.main' : 'divider'}`,
                     borderRadius: 3,
                     transition: 'all 0.3s ease',
                     '&:hover': {
@@ -773,7 +773,7 @@ export const WeightTrackingPage = () => {
                           sx={{
                             height: 8,
                             borderRadius: 4,
-                            bgcolor: 'grey.200',
+                            bgcolor: 'action.hover',
                             '& .MuiLinearProgress-bar': {
                               borderRadius: 4,
                               bgcolor: isGoalAchieved ? 'success.main' : 'primary.main'
@@ -795,7 +795,7 @@ export const WeightTrackingPage = () => {
                     {weightData
                       .filter(record => record.petId === pet.id)
                       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]?.notes && (
-                      <Box sx={{ mt: 2, p: 1.5, bgcolor: 'grey.50', borderRadius: 1 }}>
+                      <Box sx={{ mt: 2, p: 1.5, bgcolor: 'background.default', borderRadius: 1 }}>
                         <Typography variant="body2" color="text.secondary">
                           <strong>{t('weight.notes')}:</strong> {
                             weightData
@@ -819,7 +819,7 @@ export const WeightTrackingPage = () => {
                         alignItems: 'center',
                         justifyContent: 'center'
                       }}>
-                        <CheckCircleIcon sx={{ fontSize: 20, color: 'white' }} />
+                        <CheckCircleIcon sx={{ fontSize: 20, color: 'common.white' }} />
                       </Box>
                     )}
 
@@ -912,7 +912,7 @@ export const WeightTrackingPage = () => {
                       background: isAchieved
                         ? 'success.light'
                         : 'background.paper',
-                      border: `2px solid ${isAchieved ? 'success.main' : 'grey.200'}`,
+                      border: `2px solid ${isAchieved ? 'success.main' : 'divider'}`,
                       borderRadius: 3,
                       transition: 'all 0.3s ease',
                       '&:hover': {
@@ -972,7 +972,7 @@ export const WeightTrackingPage = () => {
                           sx={{
                             height: 8,
                             borderRadius: 4,
-                            bgcolor: 'grey.200',
+                            bgcolor: 'action.hover',
                             '& .MuiLinearProgress-bar': {
                               borderRadius: 4,
                               bgcolor: isAchieved ? 'success.main' : 'primary.main'
@@ -1038,7 +1038,7 @@ export const WeightTrackingPage = () => {
                           alignItems: 'center',
                           justifyContent: 'center'
                         }}>
-                          <CheckCircleIcon sx={{ fontSize: 20, color: 'white' }} />
+                          <CheckCircleIcon sx={{ fontSize: 20, color: 'common.white' }} />
                         </Box>
                       )}
 
@@ -1083,12 +1083,12 @@ export const WeightTrackingPage = () => {
           <Box sx={{
             textAlign: 'center',
             py: 6,
-            bgcolor: 'grey.50',
+            bgcolor: 'background.default',
             borderRadius: 2,
             border: '2px dashed',
-            borderColor: 'grey.300'
+            borderColor: 'divider'
           }}>
-            <HeartIcon sx={{ fontSize: 64, color: 'grey.400', mb: 2 }} />
+            <HeartIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
             <Typography variant="h6" sx={{ mb: 1, color: 'text.secondary' }}>
               {t('weight.noGoalsSet')}
             </Typography>

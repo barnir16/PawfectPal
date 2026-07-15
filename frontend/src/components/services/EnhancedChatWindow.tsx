@@ -373,7 +373,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
               backgroundColor: isOwn
                 ? "primary.main"
                 : (theme) =>
-                    theme.palette.mode === "dark" ? "grey.800" : "white",
+                    "background.paper",
               borderRadius: isOwn ? "20px 20px 6px 20px" : "20px 20px 20px 6px",
               boxShadow: isOwn
                 ? "0 2px 8px rgba(0,0,0,0.15)"
@@ -1043,7 +1043,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           borderBottom: 1,
           borderColor: "divider",
           backgroundColor: (theme) =>
-            theme.palette.mode === "dark" ? "grey.800" : "white",
+            "background.paper",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -1078,7 +1078,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                 color: "text.secondary",
                 "&:hover": {
                   backgroundColor: "primary.main",
-                  color: "white",
+                  color: "common.white",
                 },
               }}
             >
@@ -1101,7 +1101,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                   backgroundColor: "transparent",
                   color: "text.secondary",
                   "&:hover": {
-                    backgroundColor: "grey.100",
+                    backgroundColor: "action.hover",
                     color: "primary.main",
                   },
                 }}
@@ -1118,7 +1118,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                 backgroundColor: "transparent",
                 color: "text.secondary",
                 "&:hover": {
-                  backgroundColor: "grey.100",
+                  backgroundColor: "action.hover",
                 },
               }}
             >
@@ -1185,7 +1185,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
               borderBottom: 1,
               borderColor: "divider",
               backgroundColor: (theme) =>
-                theme.palette.mode === "dark" ? "grey.800" : "grey.50",
+                "background.default",
             }}
           >
             <Box sx={{ p: 3 }}>
@@ -1635,7 +1635,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           overflowY: "auto",
           p: { xs: 2, md: 3 },
           backgroundColor: (theme) =>
-            theme.palette.mode === "dark" ? "grey.900" : "grey.50",
+            "background.default",
           fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
           display: "flex",
           flexDirection: "column",
@@ -1760,7 +1760,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                 height: 16,
                                 backgroundColor: (theme) =>
                                   theme.palette.primary.main,
-                                color: "white",
+                                color: "common.white",
                                 "& .MuiChip-label": {
                                   px: 0.5,
                                 },
@@ -1787,13 +1787,9 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                               ? "primary.main"
                               : isSystem
                                 ? (theme) =>
-                                    theme.palette.mode === "dark"
-                                      ? "grey.800"
-                                      : "grey.50"
+                                    "background.default"
                                 : (theme) =>
-                                    theme.palette.mode === "dark"
-                                      ? "grey.800"
-                                      : "white",
+                                    "background.paper",
                             color: isOwn
                               ? "primary.contrastText"
                               : "text.primary",
@@ -1880,7 +1876,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                         height: 16,
                                         backgroundColor: (theme) =>
                                           theme.palette.primary.main,
-                                        color: "white",
+                                        color: "common.white",
                                         "& .MuiChip-label": {
                                           px: 0.5,
                                         },
@@ -2010,7 +2006,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                         }}
                                       >
                                         <CheckCircle
-                                          sx={{ fontSize: 10, color: "white" }}
+                                          sx={{ fontSize: 10, color: "common.white" }}
                                         />
                                       </Box>
                                     </Tooltip>
@@ -2036,7 +2032,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                           <CheckCircle
                                             sx={{
                                               fontSize: 10,
-                                              color: "white",
+                                              color: "common.white",
                                             }}
                                           />
                                         </Box>
@@ -2070,7 +2066,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                           <Visibility
                                             sx={{
                                               fontSize: 10,
-                                              color: "white",
+                                              color: "common.white",
                                             }}
                                           />
                                         </Box>
@@ -2232,7 +2228,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
               p: 3,
               borderRadius: 3,
               backgroundColor: (theme) =>
-                theme.palette.mode === "dark" ? "grey.800" : "grey.50",
+                "background.default",
               border: (theme) =>
                 theme.palette.mode === "dark"
                   ? "1px solid rgba(255,255,255,0.1)"
@@ -2310,7 +2306,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             borderTop: 1,
             borderColor: "divider",
             backgroundColor: (theme) =>
-              theme.palette.mode === "dark" ? "grey.800" : "white",
+              "background.paper",
           }}
         >
           <Box
@@ -2378,7 +2374,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                       alignItems: "center",
                       justifyContent: "center",
                       backgroundColor: (theme) =>
-                        theme.palette.mode === "dark" ? "grey.700" : "grey.100",
+                        "action.hover",
                     }}
                   >
                     <InsertDriveFile fontSize="large" color="action" />
@@ -2415,7 +2411,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                     top: 4,
                     right: 4,
                     backgroundColor: "rgba(0,0,0,0.6)",
-                    color: "white",
+                    color: "common.white",
                     width: 24,
                     height: 24,
                     "&:hover": {
@@ -2457,7 +2453,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             borderTop: 1,
             borderColor: "divider",
             backgroundColor: (theme) =>
-              theme.palette.mode === "dark" ? "grey.800" : "grey.50",
+              "background.default",
             borderRadius: 0,
           }}
         >
@@ -2477,7 +2473,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
           borderTop: 1,
           borderColor: "divider",
           backgroundColor: (theme) =>
-            theme.palette.mode === "dark" ? "grey.800" : "white",
+            "background.paper",
           borderRadius: 0,
           minHeight: { xs: "80px", md: "auto" },
           position: "relative",
@@ -2613,7 +2609,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             sx={{
               "& .MuiOutlinedInput-root": {
                 backgroundColor: (theme) =>
-                  theme.palette.mode === "dark" ? "grey.700" : "grey.50",
+                  "action.hover",
                 borderRadius: 4,
                 boxShadow: (theme) =>
                   theme.palette.mode === "dark"
@@ -2658,7 +2654,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
             aria-describedby="send-button-help"
             sx={{
               backgroundColor: (theme) => theme.palette.primary.main,
-              color: "white",
+              color: "common.white",
               borderRadius: 3,
               width: 48,
               height: 48,
@@ -2686,7 +2682,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
               <CircularProgress
                 size={20}
                 sx={{
-                  color: "white",
+                  color: "common.white",
                   animation: "spin 1s linear infinite",
                   "@keyframes spin": {
                     "0%": { transform: "rotate(0deg)" },

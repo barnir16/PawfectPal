@@ -646,7 +646,7 @@ const VaccineTracker: React.FC<VaccineTrackerProps> = ({ pet }) => {
 
         {/* Quick Summary */}
         {vaccinationSummary && (
-          <Paper elevation={1} sx={{ p: 2, mb: 3, bgcolor: 'grey.50' }}>
+          <Paper elevation={1} sx={{ p: 2, mb: 3, bgcolor: 'background.default' }}>
             <Grid container spacing={2}>
                 <Grid size={{ xs: 12, sm: 3 }}>
                   <Box sx={{ textAlign: 'center' }}>
@@ -841,7 +841,7 @@ const VaccineTracker: React.FC<VaccineTrackerProps> = ({ pet }) => {
 
         {/* No vaccines message */}
         {vaccineRecords.length === 0 && (
-          <Paper elevation={1} sx={{ p: 4, textAlign: 'center', bgcolor: 'grey.50' }}>
+          <Paper elevation={1} sx={{ p: 4, textAlign: 'center', bgcolor: 'background.default' }}>
             <VaccinesIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
             <Typography variant="h6" color="text.secondary" gutterBottom>
               No vaccine records yet

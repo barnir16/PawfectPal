@@ -266,7 +266,7 @@ export const ServiceBookingModal: React.FC<ServiceBookingModalProps> = ({
             </Grid>
 
             {/* Booking Summary */}
-            <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
+            <Box sx={{ mt: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
               <Typography variant="h6" gutterBottom>
                 {t('services.bookingSummary')}
               </Typography>

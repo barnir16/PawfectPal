@@ -344,7 +344,7 @@ export const ProviderDashboard: React.FC = () => {
                 <React.Fragment key={activity.id}>
                   <ListItem sx={{ borderRadius: 1, mb: 1 }}>
                     <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: 'grey.100' }}>
+                      <Avatar sx={{ bgcolor: 'action.hover' }}>
                         {getActivityIcon(activity.type)}
                       </Avatar>
                     </ListItemAvatar>

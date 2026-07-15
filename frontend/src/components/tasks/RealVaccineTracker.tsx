@@ -547,7 +547,7 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
       {/* Summary Cards */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ textAlign: 'center', p: 2, bgcolor: 'success.main', color: 'white' }}>
+          <Card sx={{ textAlign: 'center', p: 2, bgcolor: 'success.main', color: 'common.white' }}>
             <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
               {totalVaccines}
             </Typography>
@@ -557,7 +557,7 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
           </Card>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ textAlign: 'center', p: 2, bgcolor: 'error.main', color: 'white' }}>
+          <Card sx={{ textAlign: 'center', p: 2, bgcolor: 'error.main', color: 'common.white' }}>
             <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
               {overdueCount}
             </Typography>
@@ -567,7 +567,7 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
           </Card>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ textAlign: 'center', p: 2, bgcolor: 'warning.main', color: 'white' }}>
+          <Card sx={{ textAlign: 'center', p: 2, bgcolor: 'warning.main', color: 'common.white' }}>
             <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
               {dueSoonCount}
             </Typography>
@@ -577,7 +577,7 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
           </Card>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ textAlign: 'center', p: 2, bgcolor: 'info.main', color: 'white' }}>
+          <Card sx={{ textAlign: 'center', p: 2, bgcolor: 'info.main', color: 'common.white' }}>
             <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
               {upToDateCount}
             </Typography>
@@ -936,7 +936,7 @@ const VaccineSuggestionsList: React.FC<VaccineSuggestionsListProps> = ({ suggest
       case 'preventative':
         return { color: 'info', icon: <LocalHospitalIcon />, text: t('vaccines.preventative'), bgColor: 'info.light', borderColor: 'info.main' };
       default:
-        return { color: 'default', icon: <ScienceIcon />, text: 'Other', bgColor: 'grey.100', borderColor: 'grey.300' };
+        return { color: 'default', icon: <ScienceIcon />, text: 'Other', bgColor: 'action.hover', borderColor: 'divider' };
     }
   };
 

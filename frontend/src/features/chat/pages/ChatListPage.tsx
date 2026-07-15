@@ -416,7 +416,7 @@ export const ChatListPage = () => {
                     ? "rgba(255,255,255,0.1)" 
                     : "rgba(0,0,0,0.08)",
                 backgroundColor: (theme) => 
-                  theme.palette.mode === "dark" ? "grey.800" : "white",
+                  "background.paper",
                 "&:hover": { 
                   boxShadow: (theme) => 
                     theme.palette.mode === "dark"
@@ -528,7 +528,7 @@ export const ChatListPage = () => {
       height: "calc(100vh - 64px)", 
       display: "flex", 
       flexDirection: "column",
-      backgroundColor: (theme) => theme.palette.mode === "dark" ? "grey.900" : "grey.50",
+      backgroundColor: (theme) => "background.default",
     }}>
       {/* Header Section */}
       <Paper 
@@ -538,7 +538,7 @@ export const ChatListPage = () => {
           borderRadius: 0,
           borderBottom: 1,
           borderColor: "divider",
-          backgroundColor: (theme) => theme.palette.mode === "dark" ? "grey.800" : "white",
+          backgroundColor: background.paper,
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -570,7 +570,7 @@ export const ChatListPage = () => {
               disabled={refreshing}
               sx={{
                 backgroundColor: (theme) => theme.palette.primary.main,
-                color: "white",
+                color: "common.white",
                 "&:hover": {
                   backgroundColor: (theme) => theme.palette.primary.dark,
                 },

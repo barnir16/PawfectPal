@@ -131,15 +131,15 @@ export const PetsTable = ({ pets, onEdit, onDelete }: PetsTableProps) => {
           borderBottom: "1px solid #f0f0f0",
         },
         "& .MuiDataGrid-columnHeaders": {
-          backgroundColor: "#fafafa",
+          backgroundColor: "background.default",
           borderBottom: "2px solid #e0e0e0",
         },
         "& .MuiDataGrid-virtualScroller": {
-          backgroundColor: "#ffffff",
+          backgroundColor: "background.paper",
         },
         "& .MuiDataGrid-footerContainer": {
           borderTop: "2px solid #e0e0e0",
-          backgroundColor: "#fafafa",
+          backgroundColor: "background.default",
         },
       }}
     >

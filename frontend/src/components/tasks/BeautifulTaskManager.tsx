@@ -497,7 +497,7 @@ const BeautifulTaskManager: React.FC = () => {
       {/* Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ textAlign: 'center', p: 2, bgcolor: theme.palette.success.main, color: 'white' }}>
+          <Card sx={{ textAlign: 'center', p: 2, bgcolor: theme.palette.success.main, color: 'common.white' }}>
             <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
               {counts.all}
             </Typography>
@@ -507,7 +507,7 @@ const BeautifulTaskManager: React.FC = () => {
           </Card>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ textAlign: 'center', p: 2, bgcolor: theme.palette.error.main, color: 'white' }}>
+          <Card sx={{ textAlign: 'center', p: 2, bgcolor: theme.palette.error.main, color: 'common.white' }}>
             <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
               {counts.overdue}
             </Typography>
@@ -517,7 +517,7 @@ const BeautifulTaskManager: React.FC = () => {
           </Card>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ textAlign: 'center', p: 2, bgcolor: theme.palette.warning.main, color: 'white' }}>
+          <Card sx={{ textAlign: 'center', p: 2, bgcolor: theme.palette.warning.main, color: 'common.white' }}>
             <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
               {counts.pending}
             </Typography>
@@ -527,7 +527,7 @@ const BeautifulTaskManager: React.FC = () => {
           </Card>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ textAlign: 'center', p: 2, bgcolor: theme.palette.info.main, color: 'white' }}>
+          <Card sx={{ textAlign: 'center', p: 2, bgcolor: theme.palette.info.main, color: 'common.white' }}>
             <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
               {counts.completed}
             </Typography>

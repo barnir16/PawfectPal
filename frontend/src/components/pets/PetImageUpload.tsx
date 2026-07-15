@@ -115,7 +115,7 @@ export const PetImageUpload = ({
                 "&:hover": { opacity: 1 },
               }}
             >
-              <AddPhotoIcon sx={{ color: "white", fontSize: 32 }} />
+              <AddPhotoIcon sx={{ color: "common.white", fontSize: 32 }} />
             </Box>
           )}
         </Box>

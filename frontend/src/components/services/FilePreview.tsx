@@ -138,7 +138,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: 'grey.100',
+              backgroundColor: 'background.default',
             }}
           >
             {getFileIcon(attachment.file_type)}
@@ -205,7 +205,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: 'grey.100',
+              backgroundColor: 'background.default',
               flexDirection: 'column',
               gap: 1,
             }}
@@ -249,7 +249,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
                 onClick={handleDownload}
                 sx={{
                   backgroundColor: 'primary.main',
-                  color: 'white',
+                  color: 'common.white',
                   '&:hover': {
                     backgroundColor: 'primary.dark',
                   },
@@ -265,7 +265,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
                 onClick={handlePreview}
                 sx={{
                   backgroundColor: 'secondary.main',
-                  color: 'white',
+                  color: 'common.white',
                   '&:hover': {
                     backgroundColor: 'secondary.dark',
                   },
@@ -292,7 +292,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
               top: 8,
               right: 8,
               backgroundColor: 'rgba(0,0,0,0.5)',
-              color: 'white',
+              color: 'common.white',
               zIndex: 1,
               '&:hover': {
                 backgroundColor: 'rgba(0,0,0,0.7)',

@@ -78,7 +78,7 @@ export const ReplyButton: React.FC<ReplyButtonProps> = ({
             transition: 'opacity 0.2s ease-in-out',
             '&:hover': {
               backgroundColor: 'primary.main',
-              color: 'white',
+              color: 'common.white',
             },
           }}
         >
@@ -96,7 +96,7 @@ export const ReplyButton: React.FC<ReplyButtonProps> = ({
             transition: 'opacity 0.2s ease-in-out',
             '&:hover': {
               backgroundColor: 'primary.main',
-              color: 'white',
+              color: 'common.white',
             },
           }}
         >

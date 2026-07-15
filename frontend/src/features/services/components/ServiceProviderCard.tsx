@@ -85,7 +85,7 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
               flexShrink: 0,
             }}
           />
-          <Typography variant="caption" sx={{ color: 'white', fontWeight: 600, fontSize: '0.7rem' }}>
+          <Typography variant="caption" sx={{ color: 'common.white', fontWeight: 600, fontSize: '0.7rem' }}>
             {isAvailable ? 'Available' : 'Unavailable'}
           </Typography>
         </Box>
@@ -102,7 +102,7 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
             left: 20,
             border: '3px solid white',
             boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
-            bgcolor: '#F4A261',
+            bgcolor: 'primary.main',
             fontSize: '1.5rem',
             fontWeight: 700,
           }}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTheme } from "@mui/material/styles";
 import { Link } from "react-router-dom";
 import { useLocalization } from "../../../../contexts/LocalizationContext";
 import {
@@ -73,11 +74,15 @@ function formatDueDate(raw: string) {
 }
 
 // ─── Priority config ──────────────────────────────────────────────────────────
-const PRIORITY: Record<Priority, { label: string; color: string; bg: string; border: string }> = {
-  urgent: { label: 'Urgent', color: '#E76F51', bg: 'rgba(231,111,81,0.08)', border: '#E76F51' },
-  high:   { label: 'High',   color: '#E9C46A', bg: 'rgba(233,196,106,0.1)', border: '#E9C46A' },
-  medium: { label: 'Medium', color: '#2A9D8F', bg: 'rgba(42,157,143,0.08)', border: '#2A9D8F' },
-  low:    { label: 'Low',    color: '#aaa',    bg: 'transparent',            border: '#ccc'    },
+// Colors are derived from theme tokens — do not hardcode here.
+const usePriorityConfig = () => {
+  const theme = useTheme();
+  return {
+    urgent: { label: 'Urgent', color: theme.palette.error.main,    bg: `${theme.palette.error.main}14`,    border: theme.palette.error.main    },
+    high:   { label: 'High',   color: theme.palette.warning.main,  bg: `${theme.palette.warning.main}1A`,  border: theme.palette.warning.main  },
+    medium: { label: 'Medium', color: theme.palette.secondary.main, bg: `${theme.palette.secondary.main}14`, border: theme.palette.secondary.main },
+    low:    { label: 'Low',    color: theme.palette.text.disabled,  bg: 'transparent',                     border: theme.palette.divider        },
+  } as Record<Priority, { label: string; color: string; bg: string; border: string }>;
 };
 
 const STATUS: Record<TaskStatus, { label: string; icon: React.ReactNode; chipColor: 'default'|'primary'|'success'|'error' }> = {
@@ -103,6 +108,7 @@ const PetAvatars = ({ names }: { names?: string[] }) => {
 
 // ─── Task card ────────────────────────────────────────────────────────────────
 const TaskCard = ({ task, onDelete }: { task: Task; onDelete: (id: string) => void }) => {
+  const PRIORITY = usePriorityConfig();
   const p = PRIORITY[task.priority] || PRIORITY.low;
   const s = STATUS[task.status]   || STATUS.pending;
   const { label: dateLabel, overdue } = formatDueDate(task.dueDate);
@@ -116,12 +122,13 @@ const TaskCard = ({ task, onDelete }: { task: Task; onDelete: (id: string) => vo
         borderRadius: 3,
         overflow: 'hidden',
         border: '1px solid',
-        borderColor: overdue && !isCompleted ? 'rgba(231,111,81,0.25)' : 'rgba(0,0,0,0.07)',
-        bgcolor: isCompleted
-          ? 'rgba(82,183,136,0.04)'
-          : overdue
-          ? 'rgba(231,111,81,0.04)'
-          : 'background.paper',
+        borderColor: overdue && !isCompleted ? (theme: any) => `${theme.palette.error.main}40` : 'divider',
+        bgcolor: (theme: any) =>
+          isCompleted
+            ? `${theme.palette.success.main}0A`
+            : overdue
+            ? `${theme.palette.error.main}0A`
+            : theme.palette.background.paper,
         transition: 'box-shadow 0.15s',
         '&:hover': { boxShadow: '0 2px 12px rgba(0,0,0,0.08)' },
       }}

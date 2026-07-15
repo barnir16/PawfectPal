@@ -160,7 +160,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
           mb: compact ? 1 : 2, 
           borderRadius: 2,
           background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
-          color: 'white'
+          color: 'common.white'
         }}
       >
         <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -176,7 +176,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
             label={getStatusTranslation(serviceRequest.status)} 
             color={getStatusColor(serviceRequest.status) as any}
             size="small"
-            sx={{ backgroundColor: 'rgba(255,255,255,0.2)', color: 'white' }}
+            sx={{ backgroundColor: 'rgba(255,255,255,0.2)', color: 'common.white' }}
           />
         </Stack>
       </Paper>

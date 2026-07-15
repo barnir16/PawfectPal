@@ -97,7 +97,7 @@ export const LocationMessage: React.FC<LocationMessageProps> = ({ message, compa
                 height: 120,
                 borderRadius: 1,
                 overflow: 'hidden',
-                backgroundColor: '#f5f5f5',
+                backgroundColor: 'background.default',
                 position: 'relative',
                 border: (theme) => `1px solid ${theme.palette.divider}`,
               }}
@@ -126,7 +126,7 @@ export const LocationMessage: React.FC<LocationMessageProps> = ({ message, compa
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    backgroundColor: '#f5f5f5',
+                    backgroundColor: 'background.default',
                     color: 'text.secondary',
                   }}
                 >

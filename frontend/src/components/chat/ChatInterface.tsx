@@ -235,8 +235,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                           backgroundColor: isOwnMessage 
                             ? 'primary.main' 
                             : isSystemMessage 
-                            ? 'grey.100' 
-                            : 'grey.200',
+                            ? 'background.default' 
+                            : 'action.hover',
                           color: isOwnMessage ? 'primary.contrastText' : 'text.primary',
                           borderRadius: 2,
                           borderRadiusTopLeft: isOwnMessage ? 2 : 0,

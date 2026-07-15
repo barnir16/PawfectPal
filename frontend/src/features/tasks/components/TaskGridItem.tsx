@@ -156,7 +156,7 @@ export const TaskGridItem = ({
         </Typography>
       </CardContent>
 
-      <Box display="flex" justifyContent="space-between" p={2} bgcolor="grey.50" sx={{ borderTop: `1px solid ${theme.palette.divider}` }}>
+      <Box display="flex" justifyContent="space-between" p={2} bgcolor="background.default" sx={{ borderTop: `1px solid ${theme.palette.divider}` }}>
         <Box display="flex" gap={1}>
           <IconButton 
             size="small" 
@@ -192,7 +192,7 @@ export const TaskGridItem = ({
             sx={{ 
               bgcolor: theme.palette.primary.light,
               color: theme.palette.primary.main,
-              '&:hover': { bgcolor: theme.palette.primary.main, color: 'white' }
+              '&:hover': { bgcolor: theme.palette.primary.main, color: 'common.white' }
             }}
           >
             <EditIcon fontSize="small" />
@@ -204,7 +204,7 @@ export const TaskGridItem = ({
             sx={{ 
               bgcolor: theme.palette.error.light,
               color: theme.palette.error.main,
-              '&:hover': { bgcolor: theme.palette.error.main, color: 'white' }
+              '&:hover': { bgcolor: theme.palette.error.main, color: 'common.white' }
             }}
           >
             <DeleteIcon fontSize="small" />

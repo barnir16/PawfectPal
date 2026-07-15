@@ -117,7 +117,7 @@ export const Header = ({ onMenuClick, desktopOpen = true }: HeaderProps) => {
                 px: 2,
                 "&:hover": {
                   bgcolor: "primary.main",
-                  color: "#fff",
+                  color: "common.white",
                   borderColor: "primary.main",
                 },
                 transition: "all 0.2s ease",

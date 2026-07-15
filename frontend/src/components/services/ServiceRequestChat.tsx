@@ -246,7 +246,7 @@ export const ServiceRequestChat: React.FC = () => {
       display="flex" 
       flexDirection={{ xs: 'column', md: 'row' }}
       sx={{ 
-        backgroundColor: 'grey.50',
+        backgroundColor: 'background.default',
         overflow: 'hidden'
       }}
     >
@@ -271,7 +271,7 @@ export const ServiceRequestChat: React.FC = () => {
         display="flex" 
         flexDirection="column" 
         sx={{ 
-          backgroundColor: 'white',
+          backgroundColor: 'background.paper',
           borderRadius: { xs: 0, md: 2 },
           m: { xs: 0, md: 2 },
           overflow: 'hidden',
@@ -321,7 +321,7 @@ export const ServiceRequestChat: React.FC = () => {
           p: 1,
           borderBottom: 1,
           borderColor: 'divider',
-          backgroundColor: 'grey.50'
+          backgroundColor: 'background.default'
         }}>
           <Typography variant="body2" color="text.secondary">
             {t('services.requestedBy')}: {request?.user?.username}

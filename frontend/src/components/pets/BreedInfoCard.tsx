@@ -178,7 +178,7 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
       <Card>
         <CardHeader title={t('pets.breedInfo')} />
         <CardContent>
-          <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+          <Box sx={{ mt: 2, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
             <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
               {t('pets.breedInfo')}
             </Typography>

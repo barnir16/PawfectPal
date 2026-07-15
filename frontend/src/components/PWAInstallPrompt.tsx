@@ -81,7 +81,7 @@ export const PWAInstallPrompt: React.FC = () => {
               size="small"
               onClick={handleInstallClick}
               startIcon={<InstallIcon />}
-              sx={{ color: 'white' }}
+              sx={{ color: 'common.white' }}
             >
               Install
             </Button>
@@ -89,16 +89,16 @@ export const PWAInstallPrompt: React.FC = () => {
               color="inherit"
               size="small"
               onClick={handleDismiss}
-              sx={{ color: 'white', minWidth: 'auto', p: 0.5 }}
+              sx={{ color: 'common.white', minWidth: 'auto', p: 0.5 }}
             >
               <CloseIcon fontSize="small" />
             </Button>
           </Box>
         }
         sx={{ 
-          backgroundColor: '#1976d2',
-          color: 'white',
-          '& .MuiAlert-message': { color: 'white' }
+          backgroundColor: 'primary.main',
+          color: 'common.white',
+          '& .MuiAlert-message': { color: 'common.white' }
         }}
       >
         <Typography variant="body2">

@@ -67,13 +67,13 @@ export const ReplyMessage: React.FC<ReplyMessageProps> = ({
           alignItems: 'center',
           gap: 1,
           p: 1,
-          backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'grey.800' : 'grey.100',
+          backgroundColor: (theme) => "background.paper",
           borderRadius: 1,
           borderLeft: 3,
           borderLeftColor: 'primary.main',
           cursor: onReplyClick ? 'pointer' : 'default',
           '&:hover': onReplyClick ? {
-            backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'grey.700' : 'grey.200',
+            backgroundColor: (theme) => "action.hover",
           } : {},
         }}
         onClick={onReplyClick}
@@ -95,13 +95,13 @@ export const ReplyMessage: React.FC<ReplyMessageProps> = ({
       elevation={0}
       sx={{
         p: 2,
-        backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'grey.800' : 'grey.50',
+        backgroundColor: (theme) => "background.default",
         borderRadius: 2,
         borderLeft: 4,
         borderLeftColor: 'primary.main',
         cursor: onReplyClick ? 'pointer' : 'default',
         '&:hover': onReplyClick ? {
-          backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'grey.700' : 'grey.100',
+          backgroundColor: (theme) => "action.hover",
         } : {},
       }}
       onClick={onReplyClick}

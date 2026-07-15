@@ -122,7 +122,7 @@ export const ServiceContextPanel: React.FC<ServiceContextPanelProps> = ({
     <Box sx={{ 
       height: '100%', 
       overflow: 'auto',
-      backgroundColor: 'white',
+      backgroundColor: 'background.paper',
       borderRadius: 2,
       m: 2,
       boxShadow: 3,
@@ -231,8 +231,8 @@ export const ServiceContextPanel: React.FC<ServiceContextPanelProps> = ({
                   borderRadius: 3,
                   boxShadow: 2,
                   border: '1px solid',
-                  borderColor: 'grey.200',
-                  backgroundColor: 'white',
+                  borderColor: 'divider',
+                  backgroundColor: 'background.paper',
                   '&:hover': {
                     boxShadow: 4,
                     borderColor: 'primary.main',

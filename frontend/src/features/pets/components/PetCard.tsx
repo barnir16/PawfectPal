@@ -103,7 +103,7 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
             <IconButton
               size="small"
               onClick={(e) => { e.stopPropagation(); pet.id && onEdit(pet.id); }}
-              sx={{ bgcolor: "rgba(255,255,255,0.9)", color: "text.primary", width: 28, height: 28, "&:hover": { bgcolor: "#fff" } }}
+              sx={{ bgcolor: "rgba(255,255,255,0.9)", color: "text.primary", width: 28, height: 28, "&:hover": { bgcolor: "common.white" } }}
             >
               <EditIcon sx={{ fontSize: 14 }} />
             </IconButton>
@@ -112,7 +112,7 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
             <IconButton
               size="small"
               onClick={(e) => { e.stopPropagation(); pet.id && onDelete(pet.id); }}
-              sx={{ bgcolor: "rgba(255,255,255,0.9)", color: "error.main", width: 28, height: 28, "&:hover": { bgcolor: "#fff" } }}
+              sx={{ bgcolor: "rgba(255,255,255,0.9)", color: "error.main", width: 28, height: 28, "&:hover": { bgcolor: "common.white" } }}
             >
               <DeleteIcon sx={{ fontSize: 14 }} />
             </IconButton>
@@ -132,7 +132,7 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
             boxShadow: "0 4px 14px rgba(0,0,0,0.14)",
           }}
         >
-          <PetsIcon sx={{ color: "#fff", fontSize: 28 }} />
+          <PetsIcon sx={{ color: "common.white", fontSize: 28 }} />
         </Avatar>
       </Box>
 
