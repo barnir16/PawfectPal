@@ -91,7 +91,7 @@ export const Sidebar = ({
       ],
     },
     {
-      label: "Care",
+      label: t("navigation.care"),
       items: [
         { text: t("navigation.pets"), icon: <PetsIcon fontSize="small" />, path: "/pets" },
         { text: t("navigation.tasks"), icon: <TasksIcon fontSize="small" />, path: "/tasks" },
@@ -103,7 +103,7 @@ export const Sidebar = ({
       ],
     },
     {
-      label: "Services",
+      label: t("navigation.services"),
       items: [
         {
           text: t("services.findProviders"),
@@ -163,7 +163,7 @@ export const Sidebar = ({
         onClick={isMobile ? handleMobileClose : undefined}
         title={!(open || isMobile) ? item.text : undefined}
         sx={{
-          flexDirection: isRTL ? "row-reverse" : "row",
+          flexDirection: "row",
           minHeight: 40,
           borderRadius: "10px",
           px: (open || isMobile) ? 1.5 : 1,
@@ -296,6 +296,7 @@ export const Sidebar = ({
                   pt: groupIdx === 0 ? 1 : 2,
                   pb: 0.5,
                   display: "block",
+                  textAlign: isRTL ? "right" : "left",
                 }}
               >
                 {group.label}

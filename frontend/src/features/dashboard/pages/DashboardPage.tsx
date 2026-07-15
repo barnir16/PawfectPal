@@ -239,9 +239,9 @@ export const Dashboard = () => {
   // Friendly time-of-day greeting
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 17) return "Good afternoon";
-    return "Good evening";
+    if (hour < 12) return t('dashboard.goodMorning');
+    if (hour < 17) return t('dashboard.goodAfternoon');
+    return t('dashboard.goodEvening');
   };
 
   const firstName = user?.full_name?.trim().split(" ")[0] || user?.username || "";

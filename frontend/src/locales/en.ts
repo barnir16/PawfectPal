@@ -82,7 +82,9 @@ export const en = {
     settings: 'Settings',
     profile: 'Profile',
     logout: 'Logout',
-    chat: 'Chat'
+    chat: 'Chat',
+    care: 'Care',
+    services: 'Services',
   },
 
   // Auth
@@ -956,6 +958,9 @@ export const en = {
     dog: 'Dog',
     cat: 'Cat',
     tasksNeedAttention: 'tasks need attention',
+    goodMorning: 'Good morning',
+    goodAfternoon: 'Good afternoon',
+    goodEvening: 'Good evening',
     allUpToDate: 'All up to date',
   },
 

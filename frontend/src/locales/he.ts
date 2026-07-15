@@ -99,7 +99,9 @@ export const he = {
     settings: 'הגדרות',
     profile: 'פרופיל',
     logout: 'התנתקות',
-    chat: 'הודעות'
+    chat: 'הודעות',
+    care: 'טיפול',
+    services: 'שירותים',
   },
 
   // Auth
@@ -1036,6 +1038,9 @@ export const he = {
     dog: 'כלב',
     cat: 'חתול',
     tasksNeedAttention: 'משימות דורשות תשומת לב',
+    goodMorning: 'בוקר טוב',
+    goodAfternoon: 'צהריים טובים',
+    goodEvening: 'ערב טוב',
     allUpToDate: 'הכל מעודכן',
   },
 

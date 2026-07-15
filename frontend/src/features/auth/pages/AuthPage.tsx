@@ -14,6 +14,7 @@ import { Pets as PetsIcon } from "@mui/icons-material";
 import { register, initializeGoogleAuth } from "../../../services/auth/authService";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLocalization } from "../../../contexts/LocalizationContext";
+import { LanguageSwitcher } from "../../../components/common/LanguageSwitcher";
 
 // Google logo SVG — brand colours must stay exact per Google brand guidelines
 const GoogleLogo = () => (
@@ -113,6 +114,11 @@ export default function AuthScreen() {
         zIndex: 1000,
       }}
     >
+      {/* Language switcher — top right */}
+      <Box sx={{ position: "absolute", top: 16, right: 16 }}>
+        <LanguageSwitcher variant="compact" />
+      </Box>
+
       <Paper
         component="form"
         onSubmit={handleSubmit}

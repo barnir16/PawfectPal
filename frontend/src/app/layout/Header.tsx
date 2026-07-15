@@ -100,7 +100,7 @@ export const Header = ({ onMenuClick, desktopOpen = true }: HeaderProps) => {
             display: "flex",
             alignItems: "center",
             gap: 1,
-            flexDirection: isRTL ? "row-reverse" : "row",
+            flexDirection: "row",
           }}
         >
           {!user?.is_provider && (
