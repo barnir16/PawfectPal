@@ -669,7 +669,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
 
     // Ensure we have a valid message
     const messageText =
-      input.trim() || (selectedFiles.length > 0 ? "Shared files" : "");
+      input.trim() || (selectedFiles.length > 0 ? t("chat.sharedFiles") : "");
     if (!messageText) {
       return;
     }
@@ -1242,7 +1242,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                     fontWeight={600}
                     sx={{ mb: 1 }}
                   >
-                    Service Details
+                    {t("chat.serviceDetails")}
                   </Typography>
                   <Stack spacing={1}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -1290,7 +1290,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                     fontWeight={600}
                     sx={{ mb: 1 }}
                   >
-                    People & Pets
+                    {t("chat.peopleAndPets")}
                   </Typography>
                   <Stack spacing={1}>
                     {/* Client Info */}
@@ -1300,7 +1300,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                       >
                         <Person fontSize="small" color="action" />
                         <Typography variant="body2">
-                          <strong>Client:</strong>{" "}
+                          <strong>{t("chat.clientLabel")}:</strong>{" "}
                           {serviceRequest.user.full_name ||
                             serviceRequest.user.username}
                         </Typography>
@@ -1362,7 +1362,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                     fontWeight={600}
                     sx={{ mb: 2 }}
                   >
-                    Detailed Pet Information
+                    {t("chat.detailedPetInfo")}
                   </Typography>
                   <Box
                     sx={{
@@ -1949,7 +1949,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                       variant="caption"
                                       color="primary"
                                     >
-                                      📎 Shared files
+                                      📎 {t("chat.sharedFiles")}
                                     </Typography>
                                   </Box>
                                 )}

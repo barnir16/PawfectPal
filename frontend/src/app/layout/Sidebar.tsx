@@ -350,6 +350,7 @@ export const Sidebar = ({
       {/* Mobile drawer — temporary, slides in on small screens */}
       <Drawer
         variant="temporary"
+        anchor={isRTL ? "right" : "left"}
         open={mobileOpen}
         onClose={handleMobileClose}
         ModalProps={{ keepMounted: true }}
@@ -369,6 +370,7 @@ export const Sidebar = ({
       {/* Desktop drawer — permanent, collapses to icon rail */}
       <Drawer
         variant="permanent"
+        anchor={isRTL ? "right" : "left"}
         sx={{
           display: { xs: "none", sm: "block" },
           "& .MuiDrawer-paper": {

@@ -268,10 +268,10 @@ export const Dashboard = () => {
         </Typography>
         <Typography variant="body1" color="text.secondary">
           {totalUrgent > 0
-            ? `You have ${totalUrgent} item${totalUrgent > 1 ? "s" : ""} that need${totalUrgent === 1 ? "s" : ""} attention today.`
+            ? `${t('dashboard.youHave')} ${totalUrgent} ${t('dashboard.urgentItems')}`
             : pets.length > 0
-              ? `Your ${pets.length} pet${pets.length > 1 ? "s are" : " is"} all caught up. Great job! 🐾`
-              : "Welcome to PawfectPal — add your first pet to get started."}
+              ? t('dashboard.allCaughtUp')
+              : t('dashboard.addFirstPet')}
         </Typography>
       </Box>
 

@@ -71,7 +71,8 @@ export const Header = ({ onMenuClick, desktopOpen = true }: HeaderProps) => {
       position="fixed"
       sx={{
         width: { sm: desktopOpen ? `calc(100% - 240px)` : `calc(100% - 68px)` },
-        ml: { sm: desktopOpen ? "240px" : "68px" },
+        ml: isRTL ? 0 : { sm: desktopOpen ? "240px" : "68px" },
+        mr: isRTL ? { sm: desktopOpen ? "240px" : "68px" } : 0,
         boxShadow: "none",
         bgcolor: "background.paper",
         color: "text.primary",

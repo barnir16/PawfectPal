@@ -123,10 +123,14 @@ const AppContent = () => {
             xs: "100%", // Full width on mobile
             sm: desktopOpen ? `calc(100% - 240px)` : `calc(100% - 68px)`,
           },
-          ml: {
+          ml: isRTL ? 0 : {
             xs: "0px",
             sm: desktopOpen ? "240px" : "68px",
           },
+          mr: isRTL ? {
+            xs: "0px",
+            sm: desktopOpen ? "240px" : "68px",
+          } : 0,
           mt: "64px",
           overflow: "auto",
           height: "calc(100vh - 64px)",

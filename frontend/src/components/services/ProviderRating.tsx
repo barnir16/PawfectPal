@@ -74,11 +74,16 @@ export const ProviderRating: React.FC<ProviderRatingProps> = ({
           },
         }
       );
+      if (response.status === 404) {
+        setReviews([]);
+        return;
+      }
       if (!response.ok) throw new Error("Failed to load reviews");
       const data = await response.json();
       setReviews(data);
     } catch (err: any) {
-      console.error("Failed to load reviews:", err);
+      // Silently fail — reviews endpoint may not be available
+      setReviews([]);
     } finally {
       setLoading(false);
     }

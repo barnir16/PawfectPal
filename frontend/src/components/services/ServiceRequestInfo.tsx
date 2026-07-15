@@ -188,7 +188,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
           <Paper elevation={1} sx={{ p: compact ? 1.5 : 2, borderRadius: 2, height: compact ? 'auto' : '100%' }}>
             <Typography variant={compact ? "subtitle1" : "h6"} fontWeight={600} sx={{ mb: compact ? 1 : 2, display: 'flex', alignItems: 'center', gap: 1 }}>
               <Description color="primary" />
-              Service Details
+              {t("chat.serviceDetails")}
             </Typography>
             
             <List dense>
@@ -197,7 +197,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
                   <Pets color="primary" />
                 </ListItemIcon>
                 <ListItemText 
-                  primary="Service Type"
+                  primary={t("services.serviceType")}
                   secondary={getServiceTypeTranslation(serviceRequest.service_type)}
                 />
               </ListItem>
@@ -208,7 +208,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
                     <Description color="primary" />
                   </ListItemIcon>
                   <ListItemText 
-                    primary="Description"
+                    primary={t("services.description") || "Description"}
                     secondary={serviceRequest.description}
                   />
                 </ListItem>
@@ -277,7 +277,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
           <Paper elevation={1} sx={{ p: 2, borderRadius: 2, height: '100%' }}>
             <Typography variant="h6" fontWeight={600} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
               <Person color="primary" />
-              People & Pets
+              {t("chat.peopleAndPets")}
             </Typography>
             
             {/* Client Information */}
@@ -285,7 +285,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
               <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Person color="primary" />
-                  Client
+                  {t("chat.clientLabel")}
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1, backgroundColor: 'action.hover', borderRadius: 1 }}>
                   <Avatar sx={{ width: 40, height: 40 }}>
