@@ -121,15 +121,11 @@ const AppContent = () => {
           p: { xs: 1, sm: 2, md: 3 }, // Responsive padding
           width: {
             xs: "100%", // Full width on mobile
-            sm: desktopOpen ? `calc(100% - 240px)` : `calc(100% - 64px)`,
+            sm: desktopOpen ? `calc(100% - 240px)` : `calc(100% - 68px)`,
           },
-          ml: { 
-            xs: "0px", // No margin on mobile
-            sm: isRTL ? "0px" : desktopOpen ? "240px" : "64px" 
-          },
-          mr: { 
-            xs: "0px", // No margin on mobile
-            sm: isRTL ? (desktopOpen ? "240px" : "64px") : "0px" 
+          ml: {
+            xs: "0px",
+            sm: desktopOpen ? "240px" : "68px",
           },
           mt: "64px",
           overflow: "auto",

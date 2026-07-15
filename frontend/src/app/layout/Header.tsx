@@ -71,12 +71,12 @@ export const Header = ({ onMenuClick, desktopOpen = true }: HeaderProps) => {
       position="fixed"
       sx={{
         width: { sm: desktopOpen ? `calc(100% - 240px)` : `calc(100% - 68px)` },
-        ml: { sm: isRTL ? "0px" : desktopOpen ? "240px" : "68px" },
-        mr: { sm: isRTL ? (desktopOpen ? "240px" : "68px") : "0px" },
+        ml: { sm: desktopOpen ? "240px" : "68px" },
         boxShadow: "none",
-        bgcolor: "#fff",
+        bgcolor: "background.paper",
         color: "text.primary",
-        borderBottom: "1px solid rgba(0,0,0,0.07)",
+        borderBottom: "1px solid",
+        borderColor: "divider",
         transition: "width 0.25s ease, margin 0.25s ease",
       }}
     >
