@@ -260,7 +260,7 @@ export const ServicesPage = () => {
                 <Button
                   variant="outlined"
                   component={RouterLink}
-                  to="/marketplace"
+                  to="/marketplace?create=true"
                 >
                   {t("marketplace.createPost")}
                 </Button>

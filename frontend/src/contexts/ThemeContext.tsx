@@ -10,6 +10,7 @@ const PALETTE = {
   error:     { main: '#E76F51' },
   success:   { main: '#52B788', light: '#74C69D', dark: '#2D6A4F' },
   warning:   { main: '#E9C46A' },
+  info:      { main: '#5FA0B8', light: '#82B9CC', dark: '#3F7C91' },
   white:     { main: '#ffffff', contrastText: '#2D2D2D' },
 };
 

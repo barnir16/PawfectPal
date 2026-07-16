@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Box,
   Container,
@@ -63,6 +64,7 @@ function TabPanel(props: TabPanelProps) {
 
 export const MarketplacePostsPage: React.FC = () => {
   const { t } = useLocalization();
+  const [searchParams] = useSearchParams();
   
   const [posts, setPosts] = useState<MarketplacePostSummary[]>([]);
   const [myPosts, setMyPosts] = useState<MarketplacePostSummary[]>([]);
@@ -83,7 +85,7 @@ export const MarketplacePostsPage: React.FC = () => {
   // UI State
   const [tabValue, setTabValue] = useState(0);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(searchParams.get('create') === 'true');
 
   useEffect(() => {
     loadData();

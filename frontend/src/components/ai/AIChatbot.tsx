@@ -70,7 +70,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
 }) => {
   const theme = useTheme();
   const navigate = useNavigate();
-  const { t } = useLocalization();
+  const { t, isRTL } = useLocalization();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -327,7 +327,8 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
         sx={{
           position: 'fixed',
           bottom: 80,
-          right: 20,
+          right: isRTL ? 'auto' : 20,
+          left: isRTL ? 20 : 'auto',
           width: { xs: 'calc(100vw - 40px)', sm: 400 },
           height: { xs: 'calc(100vh - 120px)', sm: 600 },
           display: 'flex',
@@ -492,6 +493,7 @@ export const ChatToggleButton: React.FC<ChatToggleButtonProps> = ({
   unreadCount = 0,
   t,
 }) => {
+  const { isRTL } = useLocalization();
   return (
     <Fab
       color="primary"
@@ -500,7 +502,8 @@ export const ChatToggleButton: React.FC<ChatToggleButtonProps> = ({
       sx={{
         position: 'fixed',
         bottom: 16,
-        right: 16,
+        right: isRTL ? 'auto' : 16,
+        left: isRTL ? 16 : 'auto',
         zIndex: 1200,
       }}
     >
@@ -510,7 +513,8 @@ export const ChatToggleButton: React.FC<ChatToggleButtonProps> = ({
           sx={{
             position: 'absolute',
             top: -8,
-            right: -8,
+            right: isRTL ? 'auto' : -8,
+            left: isRTL ? -8 : 'auto',
             backgroundColor: 'error.main',
             color: 'error.contrastText',
             borderRadius: '50%',

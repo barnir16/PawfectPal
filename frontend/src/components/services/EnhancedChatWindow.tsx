@@ -1431,16 +1431,17 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                             {pet.age && (
                               <Chip
                                 icon={<Cake fontSize="small" />}
-                                label={`Age: ${pet.age}y`}
+                                label={`${t("chat.petAge")}: ${pet.age}y`}
                                 size="small"
                                 variant="outlined"
+                                color="primary"
                                 sx={{ fontSize: "0.7rem", height: 20 }}
                               />
                             )}
                             {pet.weightKg && (
                               <Chip
                                 icon={<Scale fontSize="small" />}
-                                label={`Weight: ${pet.weightKg}${pet.weightUnit || "kg"}`}
+                                label={`${t("chat.petWeight")}: ${pet.weightKg}${pet.weightUnit || "kg"}`}
                                 size="small"
                                 variant="outlined"
                                 color="secondary"
@@ -1450,7 +1451,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                             {pet.gender && (
                               <Chip
                                 icon={<Pets fontSize="small" />}
-                                label={`Gender: ${pet.gender}`}
+                                label={`${t("chat.petGender")}: ${pet.gender}`}
                                 size="small"
                                 variant="outlined"
                                 color="info"
@@ -1460,7 +1461,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                             {pet.color && (
                               <Chip
                                 icon={<ColorLens fontSize="small" />}
-                                label={`Color: ${pet.color}`}
+                                label={`${t("chat.petColor")}: ${pet.color}`}
                                 size="small"
                                 variant="outlined"
                                 color="warning"
@@ -1479,7 +1480,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                             {pet.isVaccinated && (
                               <Chip
                                 icon={<Vaccines fontSize="small" />}
-                                label="Vaccinated"
+                                label={t("chat.petVaccinated")}
                                 size="small"
                                 color="success"
                                 variant="outlined"
@@ -1489,7 +1490,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                             {pet.isNeutered && (
                               <Chip
                                 icon={<MedicalServices fontSize="small" />}
-                                label="Neutered"
+                                label={t("chat.petNeutered")}
                                 size="small"
                                 color="info"
                                 variant="outlined"
@@ -1499,7 +1500,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                             {pet.isMicrochipped && (
                               <Chip
                                 icon={<CheckCircle fontSize="small" />}
-                                label="Chipped"
+                                label={t("chat.petMicrochipped")}
                                 size="small"
                                 color="primary"
                                 variant="outlined"
@@ -1518,7 +1519,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                   color="warning.main"
                                   sx={{ fontWeight: 600, fontSize: "0.7rem" }}
                                 >
-                                  Health: {pet.healthIssues.join(", ")}
+                                  {t("chat.petHealthIssues")}: {pet.healthIssues.join(", ")}
                                 </Typography>
                               )}
                               {pet.behaviorIssues?.length > 0 && (
@@ -1531,7 +1532,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                     display: "block",
                                   }}
                                 >
-                                  Behavior: {pet.behaviorIssues.join(", ")}
+                                  {t("chat.petBehaviorIssues")}: {pet.behaviorIssues.join(", ")}
                                 </Typography>
                               )}
                             </Box>
@@ -1546,7 +1547,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                   color="text.secondary"
                                   sx={{ fontSize: "0.7rem", fontWeight: 600 }}
                                 >
-                                  Medical:
+                                  {t("chat.petMedicalNotes")}:
                                 </Typography>
                               )}
                               {pet.medicalNotes && (
@@ -1578,7 +1579,7 @@ export const EnhancedChatWindow: React.FC<EnhancedChatWindowProps> = ({
                                     mt: 0.5,
                                   }}
                                 >
-                                  Notes:
+                                  {t("chat.petNotes")}:
                                 </Typography>
                               )}
                               {pet.notes && (

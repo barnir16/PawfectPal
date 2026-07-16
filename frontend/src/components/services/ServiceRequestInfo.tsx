@@ -357,9 +357,10 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
                             {(pet.birthDate || pet.age) && (
                               <Chip
                                 icon={<Cake />}
-                                label={`${calculateAge(pet)} years old`}
+                                label={`${calculateAge(pet)} ${t('chat.yearsOld')}`}
                                 size="small"
                                 variant="outlined"
+                                color="primary"
                               />
                             )}
                             {pet.weightKg && (
@@ -426,7 +427,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
                           {pet.healthIssues && pet.healthIssues.length > 0 && (
                             <Box sx={{ mt: 1 }}>
                               <Typography variant="caption" color="warning.main" sx={{ fontWeight: 600 }}>
-                                Health Issues: {pet.healthIssues.join(', ')}
+                                {t('chat.petHealthIssues')}: {pet.healthIssues.join(', ')}
                               </Typography>
                             </Box>
                           )}
@@ -435,7 +436,7 @@ export const ServiceRequestInfo: React.FC<ServiceRequestInfoProps> = ({
                           {pet.behaviorIssues && pet.behaviorIssues.length > 0 && (
                             <Box sx={{ mt: 1 }}>
                               <Typography variant="caption" color="warning.main" sx={{ fontWeight: 600 }}>
-                                Behavior Issues: {pet.behaviorIssues.join(', ')}
+                                {t('chat.petBehaviorIssues')}: {pet.behaviorIssues.join(', ')}
                               </Typography>
                             </Box>
                           )}
