@@ -19,9 +19,10 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { Cancel, Save } from '@mui/icons-material';
+import { Cancel, Save, AutoAwesome } from '@mui/icons-material';
 import { useLocalization } from '../../contexts/LocalizationContext';
 import { marketplaceService } from '../../services/marketplace/marketplaceService';
+import { draftMarketplacePost } from '../../services/ai/marketplaceDraftService';
 import type { MarketplacePostCreate } from '../../types/services/marketplacePost';
 import type { Pet } from '../../types/pets/pet';
 
@@ -42,12 +43,14 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
   initialData,
   postId,
 }) => {
-  const { t } = useLocalization();
+  const { t, currentLanguage } = useLocalization();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [serviceTypes, setServiceTypes] = useState<
     Array<{ id: number; name: string; description?: string }>
   >([]);
+  const [aiDrafting, setAiDrafting] = useState(false);
+  const [aiDraftNote, setAiDraftNote] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<MarketplacePostCreate>({
     title: '',
@@ -102,6 +105,44 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
 
     return null;
   }, [formData]);
+
+  const canDraftWithAi = Boolean(formData.service_type) && selectedPets.length > 0;
+
+  const handleDraftWithAi = async () => {
+    if (!canDraftWithAi || aiDrafting) return;
+
+    setAiDrafting(true);
+    setAiDraftNote(null);
+    try {
+      const result = await draftMarketplacePost(
+        formData.service_type,
+        selectedPets.map((pet) => ({ name: pet.name, type: pet.type, breed: pet.breed })),
+        {
+          location: formData.location,
+          isUrgent: formData.is_urgent,
+          promptLanguage: currentLanguage,
+        }
+      );
+
+      if (result) {
+        setFormData((previous) => ({
+          ...previous,
+          title: result.title,
+          description: result.description,
+        }));
+        setAiDraftNote(
+          result.aiGenerated
+            ? t('marketplace.aiDraftApplied') || 'AI draft applied — feel free to edit it.'
+            : t('marketplace.aiDraftFallbackApplied') ||
+                'AI was unavailable, so we filled in a quick starter draft instead.'
+        );
+      } else {
+        setAiDraftNote(t('marketplace.aiDraftFailed') || 'Could not generate a draft. Please try again.');
+      }
+    } finally {
+      setAiDrafting(false);
+    }
+  };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -246,6 +287,30 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
                   <TextField {...params} label={t('marketplace.selectPets')} required />
                 )}
               />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={aiDrafting ? <CircularProgress size={16} /> : <AutoAwesome />}
+                  onClick={handleDraftWithAi}
+                  disabled={!canDraftWithAi || aiDrafting}
+                >
+                  {t('marketplace.draftWithAi') || 'Draft with AI'}
+                </Button>
+                {!canDraftWithAi && (
+                  <Typography variant="caption" color="text.secondary">
+                    {t('marketplace.draftWithAiHint') || 'Pick a service type and at least one pet first'}
+                  </Typography>
+                )}
+              </Box>
+              {aiDraftNote && (
+                <Alert severity="info" sx={{ mt: 1.5 }} onClose={() => setAiDraftNote(null)}>
+                  {aiDraftNote}
+                </Alert>
+              )}
             </Grid>
 
             <Grid item xs={12}>
