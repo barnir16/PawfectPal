@@ -48,14 +48,19 @@ import { useTheme as useAppTheme } from "../../../../contexts/ThemeContext";
  * Dark mode is excluded here — it's owned by ThemeContext and persisted
  * to 'pawfectPal_theme'. Everything else lives in 'pawfectPal_preferences'.
  */
+interface EmergencyContactEntry {
+  name: string;
+  phone: string;
+}
+
 interface StoredPreferences {
   notifications: boolean;
   emailAlerts: boolean;
   reminderFrequency: "daily" | "weekly" | "monthly";
   emergencyContacts: {
-    primaryVet: string;
-    emergencyVet: string;
-    petSitter: string;
+    primaryVet: EmergencyContactEntry;
+    emergencyVet: EmergencyContactEntry;
+    petSitter: EmergencyContactEntry;
   };
   privacySettings: {
     shareData: boolean;
@@ -63,11 +68,39 @@ interface StoredPreferences {
   };
 }
 
+const EMPTY_CONTACT: EmergencyContactEntry = { name: "", phone: "" };
+
+/**
+ * Older saved preferences stored each emergency contact as a single free-text
+ * string (e.g. "Dr. Smith - (555) 123-4567"). Migrate those into the
+ * structured {name, phone} shape so existing users don't lose their data.
+ */
+function migrateContact(value: unknown): EmergencyContactEntry {
+  if (value && typeof value === "object" && "name" in (value as object)) {
+    const entry = value as Partial<EmergencyContactEntry>;
+    return { name: entry.name || "", phone: entry.phone || "" };
+  }
+  if (typeof value === "string" && value.trim()) {
+    // Best-effort split on a trailing " - phone" pattern; otherwise keep the
+    // whole legacy string as the name so nothing is silently dropped.
+    const match = value.match(/^(.*?)[\s-]*([\d()+\-\s]{7,})$/);
+    if (match) {
+      return { name: match[1].trim(), phone: match[2].trim() };
+    }
+    return { name: value.trim(), phone: "" };
+  }
+  return { ...EMPTY_CONTACT };
+}
+
 const DEFAULT_PREFS: StoredPreferences = {
   notifications: true,
   emailAlerts: true,
   reminderFrequency: "weekly",
-  emergencyContacts: { primaryVet: "", emergencyVet: "", petSitter: "" },
+  emergencyContacts: {
+    primaryVet: { ...EMPTY_CONTACT },
+    emergencyVet: { ...EMPTY_CONTACT },
+    petSitter: { ...EMPTY_CONTACT },
+  },
   privacySettings: { shareData: false, locationTracking: false },
 };
 
@@ -87,6 +120,13 @@ const Settings: React.FC = () => {
       const raw = localStorage.getItem(PREFS_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
+        if (parsed.emergencyContacts) {
+          parsed.emergencyContacts = {
+            primaryVet: migrateContact(parsed.emergencyContacts.primaryVet),
+            emergencyVet: migrateContact(parsed.emergencyContacts.emergencyVet),
+            petSitter: migrateContact(parsed.emergencyContacts.petSitter),
+          };
+        }
         setPrefs((prev) => ({ ...prev, ...parsed }));
       }
     } catch {
@@ -106,8 +146,18 @@ const Settings: React.FC = () => {
     savePrefs({ ...prefs, [key]: value });
   };
 
-  const updateContact = (key: keyof StoredPreferences["emergencyContacts"], value: string) => {
-    savePrefs({ ...prefs, emergencyContacts: { ...prefs.emergencyContacts, [key]: value } });
+  const updateContact = (
+    key: keyof StoredPreferences["emergencyContacts"],
+    field: keyof EmergencyContactEntry,
+    value: string
+  ) => {
+    savePrefs({
+      ...prefs,
+      emergencyContacts: {
+        ...prefs.emergencyContacts,
+        [key]: { ...prefs.emergencyContacts[key], [field]: value },
+      },
+    });
   };
 
   const updatePrivacy = (key: keyof StoredPreferences["privacySettings"], value: boolean) => {
@@ -373,29 +423,71 @@ const Settings: React.FC = () => {
                 {t("pets.storeContacts")}
               </Typography>
 
-              <TextField
-                fullWidth
-                label={t("pets.primaryVet")}
-                value={prefs.emergencyContacts.primaryVet}
-                onChange={(e) => updateContact("primaryVet", e.target.value)}
-                placeholder={t("settings.primaryVetPlaceholder")}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label={t("pets.emergencyVet")}
-                value={prefs.emergencyContacts.emergencyVet}
-                onChange={(e) => updateContact("emergencyVet", e.target.value)}
-                placeholder={t("settings.emergencyVetPlaceholder")}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label={t("pets.petSitter")}
-                value={prefs.emergencyContacts.petSitter}
-                onChange={(e) => updateContact("petSitter", e.target.value)}
-                placeholder={t("settings.petSitterPlaceholder")}
-              />
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                {t("pets.primaryVet")}
+              </Typography>
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "2fr 1fr" }, gap: 1.5, mb: 2 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label={t("settings.contactName")}
+                  value={prefs.emergencyContacts.primaryVet.name}
+                  onChange={(e) => updateContact("primaryVet", "name", e.target.value)}
+                  placeholder={t("settings.primaryVetNamePlaceholder")}
+                />
+                <TextField
+                  fullWidth
+                  size="small"
+                  label={t("settings.contactPhone")}
+                  value={prefs.emergencyContacts.primaryVet.phone}
+                  onChange={(e) => updateContact("primaryVet", "phone", e.target.value)}
+                  placeholder={t("settings.phonePlaceholder")}
+                />
+              </Box>
+
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                {t("pets.emergencyVet")}
+              </Typography>
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "2fr 1fr" }, gap: 1.5, mb: 2 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label={t("settings.contactName")}
+                  value={prefs.emergencyContacts.emergencyVet.name}
+                  onChange={(e) => updateContact("emergencyVet", "name", e.target.value)}
+                  placeholder={t("settings.emergencyVetNamePlaceholder")}
+                />
+                <TextField
+                  fullWidth
+                  size="small"
+                  label={t("settings.contactPhone")}
+                  value={prefs.emergencyContacts.emergencyVet.phone}
+                  onChange={(e) => updateContact("emergencyVet", "phone", e.target.value)}
+                  placeholder={t("settings.phonePlaceholder")}
+                />
+              </Box>
+
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                {t("pets.petSitter")}
+              </Typography>
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "2fr 1fr" }, gap: 1.5 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label={t("settings.contactName")}
+                  value={prefs.emergencyContacts.petSitter.name}
+                  onChange={(e) => updateContact("petSitter", "name", e.target.value)}
+                  placeholder={t("settings.petSitterNamePlaceholder")}
+                />
+                <TextField
+                  fullWidth
+                  size="small"
+                  label={t("settings.contactPhone")}
+                  value={prefs.emergencyContacts.petSitter.phone}
+                  onChange={(e) => updateContact("petSitter", "phone", e.target.value)}
+                  placeholder={t("settings.phonePlaceholder")}
+                />
+              </Box>
             </CardContent>
           </Card>
         </Grid>
