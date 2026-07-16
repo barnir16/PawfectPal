@@ -239,7 +239,8 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
                 {t('pets.averageWeightRange')}
               </Typography>
               <Typography variant="body1">
-                {breedInfo.averageWeight.min} - {breedInfo.averageWeight.max} {breedInfo.averageWeight.unit}
+                {breedInfo.averageWeight.min} - {breedInfo.averageWeight.max}{' '}
+                {breedInfo.averageWeight.unit === 'lb' ? t('pets.pounds') : t('pets.kg')}
               </Typography>
             </Grid>
           )}
@@ -250,7 +251,7 @@ export const BreedInfoCard: React.FC<BreedInfoCardProps> = ({
                 {t('pets.lifeExpectancy')}
               </Typography>
               <Typography variant="body1">
-                {breedInfo.lifeExpectancy.min} - {breedInfo.lifeExpectancy.max} years
+                {breedInfo.lifeExpectancy.min} - {breedInfo.lifeExpectancy.max} {t('pets.years')}
               </Typography>
             </Grid>
           )}

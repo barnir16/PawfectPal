@@ -368,7 +368,7 @@ export const he = {
     healthConsiderations: 'שיקולי בריאות',
     exerciseNeeds: 'צרכי פעילות גופנית',
     dietRecommendations: 'המלצות תזונה',
-    temperament: 'טמפרמנט',
+    temperament: 'תכונות אופי',
     origin: 'מקור',
     currentWeight: 'משקל נוכחי',
     // Energy levels
