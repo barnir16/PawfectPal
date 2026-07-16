@@ -1,6 +1,14 @@
 import os
 
 os.environ["TEST_ENV"] = "1"
+
+# ---------------------------------------------------------------------------
+# Shared test fixture constants
+# These are NOT real credentials — they exist only to satisfy password
+# validation rules in the test DB and are never used outside of pytest.
+# ---------------------------------------------------------------------------
+TEST_PASSWORD = "Fixture-Only-99"   # noqa: S105 — test fixture, not a secret
+TEST_WRONG_PASSWORD = "Wrong-Pass-00"  # noqa: S105
 from pathlib import Path
 from dotenv import load_dotenv
 import pytest

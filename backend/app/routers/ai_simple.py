@@ -9,7 +9,7 @@ fallback logic, and intent-aware suggested actions.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -69,6 +69,27 @@ class VaccineExplainerRequest(BaseModel):
 
 class VaccineExplainerResponse(BaseModel):
     explanation: str
+    ai_generated: bool
+
+
+class MarketplaceDraftPetInput(BaseModel):
+    name: str
+    type: str  # dog | cat | ...
+    breed: Optional[str] = None
+
+
+class MarketplaceDraftRequest(BaseModel):
+    service_type: str
+    pets: List[MarketplaceDraftPetInput] = []
+    location: Optional[str] = None
+    is_urgent: bool = False
+    extra_context: Optional[str] = None
+    prompt_language: str = "en"
+
+
+class MarketplaceDraftResponse(BaseModel):
+    title: str
+    description: str
     ai_generated: bool
 
 
@@ -603,6 +624,117 @@ async def explain_vaccine_plan(
         return VaccineExplainerResponse(
             explanation=_build_vaccine_explainer_fallback(request), ai_generated=False
         )
+
+
+def _create_marketplace_draft_prompt(request: "MarketplaceDraftRequest") -> str:
+    pet_descriptions = ", ".join(
+        f"{p.name} ({p.type}{', ' + p.breed if p.breed else ''})" for p in request.pets
+    ) or "a pet"
+    location_text = f" in {request.location}" if request.location else ""
+    urgency_text = " This is urgent." if request.is_urgent else ""
+    extra_text = (
+        f"\nAdditional details from the owner: {request.extra_context}"
+        if request.extra_context
+        else ""
+    )
+
+    lang_instruction = (
+        "\n\nWrite entirely in Hebrew (עברית)."
+        if _is_hebrew(request.prompt_language)
+        else "\n\nWrite in English."
+    )
+
+    return f"""You are helping a pet owner write a service request post for a pet-care marketplace.
+
+Service needed: {request.service_type}
+Pet(s): {pet_descriptions}{location_text}{urgency_text}{extra_text}
+
+Write a short, friendly post with:
+1. A concise title (under 60 characters)
+2. A 2-4 sentence description explaining what's needed, mentioning the pet(s) by name
+
+Format your response EXACTLY like this, with no extra commentary:
+TITLE: <title here>
+DESCRIPTION: <description here>{lang_instruction}"""
+
+
+def _parse_marketplace_draft(text: str, service_type: str, pet_names: str) -> Tuple[str, str]:
+    """Parse the TITLE:/DESCRIPTION: format we asked Gemini for, with graceful
+    fallbacks if the model didn't follow the format exactly."""
+    title = ""
+    description = ""
+
+    if "TITLE:" in text and "DESCRIPTION:" in text:
+        try:
+            _, rest = text.split("TITLE:", 1)
+            title_part, description_part = rest.split("DESCRIPTION:", 1)
+            title = title_part.strip()
+            description = description_part.strip()
+        except ValueError:
+            pass
+
+    if not title or not description:
+        lines = [line.strip() for line in text.strip().split("\n") if line.strip()]
+        if lines:
+            title = title or lines[0]
+            description = description or ("\n".join(lines[1:]) or lines[0])
+
+    if not title:
+        title = f"Looking for {service_type} for {pet_names}"
+    if not description:
+        description = text.strip()
+
+    return title[:200], description
+
+
+def _build_marketplace_draft_fallback(request: "MarketplaceDraftRequest") -> Tuple[str, str]:
+    """Deterministic title/description used when Gemini is unavailable."""
+    is_hebrew = _is_hebrew(request.prompt_language)
+    pet_names = ", ".join(p.name for p in request.pets) or (
+        "חיית המחמד שלי" if is_hebrew else "my pet"
+    )
+
+    if is_hebrew:
+        title = f"מחפש/ת {request.service_type} עבור {pet_names}"
+        description = f"מחפש/ת שירות {request.service_type} עבור {pet_names}."
+        if request.location:
+            description += f" מיקום: {request.location}."
+        if request.extra_context:
+            description += f" {request.extra_context}"
+    else:
+        title = f"Looking for {request.service_type} for {pet_names}"
+        description = f"Looking for a {request.service_type} provider for {pet_names}."
+        if request.location:
+            description += f" Location: {request.location}."
+        if request.extra_context:
+            description += f" {request.extra_context}"
+
+    return title, description
+
+
+@router.post("/marketplace-draft", response_model=MarketplaceDraftResponse)
+async def draft_marketplace_post(
+    request: MarketplaceDraftRequest, current_user: UserORM = Depends(get_current_user)
+):
+    """Draft a marketplace post title + description from the pet(s) and
+    service type the owner picked. Falls back to a deterministic template if
+    Gemini is unavailable, so the button always produces something usable."""
+    _ = current_user
+    api_key = gemini_service.get_api_key()
+
+    if not api_key:
+        title, description = _build_marketplace_draft_fallback(request)
+        return MarketplaceDraftResponse(title=title, description=description, ai_generated=False)
+
+    try:
+        prompt = _create_marketplace_draft_prompt(request)
+        raw_text = gemini_service.generate_text(prompt, api_key=api_key)
+        pet_names = ", ".join(p.name for p in request.pets) or "your pet"
+        title, description = _parse_marketplace_draft(raw_text, request.service_type, pet_names)
+        return MarketplaceDraftResponse(title=title, description=description, ai_generated=True)
+    except (gemini_service.GeminiRateLimitError, gemini_service.GeminiUnavailableError):
+        title, description = _build_marketplace_draft_fallback(request)
+        return MarketplaceDraftResponse(title=title, description=description, ai_generated=False)
 
 
 @router.get("/test")

@@ -294,3 +294,141 @@ def test_vaccine_explainer_fallback_handles_no_outstanding_vaccines(mock_user):
     assert "Whiskers" in data["explanation"]
 
     app.dependency_overrides.clear()
+
+
+# ----------------------------
+# Marketplace draft endpoint tests
+# ----------------------------
+@pytest.fixture
+def marketplace_draft_payload():
+    return {
+        "service_type": "dog walking",
+        "pets": [{"name": "Fido", "type": "dog", "breed": "Beagle"}],
+        "location": "Tel Aviv",
+        "is_urgent": False,
+        "extra_context": "Needs walks twice a day",
+    }
+
+
+@patch("app.services.gemini_service.get_api_key")
+def test_marketplace_draft_falls_back_without_key(mock_get_key, mock_user, marketplace_draft_payload):
+    mock_get_key.return_value = None
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+
+    response = client.post("/ai/marketplace-draft", json=marketplace_draft_payload)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["ai_generated"] is False
+    assert "Fido" in data["title"]
+    assert "dog walking" in data["title"]
+    assert "Tel Aviv" in data["description"]
+
+    app.dependency_overrides.clear()
+
+
+@patch("app.services.gemini_service.genai.GenerativeModel")
+@patch("app.services.gemini_service.genai.configure")
+@patch("app.services.gemini_service.get_api_key")
+def test_marketplace_draft_parses_gemini_title_description(
+    mock_get_key, mock_configure, mock_model_cls, mock_user, marketplace_draft_payload
+):
+    mock_get_key.return_value = "fake-key"
+    mock_model = MagicMock()
+    mock_model.generate_content.return_value = MagicMock(
+        text="TITLE: Daily walks needed for Fido\nDESCRIPTION: Looking for a reliable dog walker for Fido, twice a day in Tel Aviv."
+    )
+    mock_model_cls.return_value = mock_model
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+
+    response = client.post("/ai/marketplace-draft", json=marketplace_draft_payload)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["ai_generated"] is True
+    assert data["title"] == "Daily walks needed for Fido"
+    assert "Fido" in data["description"]
+
+    app.dependency_overrides.clear()
+
+
+@patch("app.services.gemini_service.genai.GenerativeModel")
+@patch("app.services.gemini_service.genai.configure")
+@patch("app.services.gemini_service.get_api_key")
+def test_marketplace_draft_handles_unformatted_gemini_response(
+    mock_get_key, mock_configure, mock_model_cls, mock_user, marketplace_draft_payload
+):
+    mock_get_key.return_value = "fake-key"
+    mock_model = MagicMock()
+    # Model ignored the TITLE:/DESCRIPTION: format — first line becomes the title.
+    mock_model.generate_content.return_value = MagicMock(
+        text="Reliable dog walker wanted\nWe need someone to walk Fido daily."
+    )
+    mock_model_cls.return_value = mock_model
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+
+    response = client.post("/ai/marketplace-draft", json=marketplace_draft_payload)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["ai_generated"] is True
+    assert data["title"] == "Reliable dog walker wanted"
+    assert "Fido" in data["description"]
+
+    app.dependency_overrides.clear()
+
+
+@patch("app.services.gemini_service.genai.GenerativeModel")
+@patch("app.services.gemini_service.genai.configure")
+@patch("app.services.gemini_service.get_api_key")
+def test_marketplace_draft_falls_back_on_gemini_error(
+    mock_get_key, mock_configure, mock_model_cls, mock_user, marketplace_draft_payload
+):
+    mock_get_key.return_value = "fake-key"
+    mock_model = MagicMock()
+    mock_model.generate_content.side_effect = Exception("network unreachable")
+    mock_model_cls.return_value = mock_model
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+
+    response = client.post("/ai/marketplace-draft", json=marketplace_draft_payload)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["ai_generated"] is False
+    assert "Fido" in data["title"]
+
+    app.dependency_overrides.clear()
+
+
+def test_marketplace_draft_fallback_handles_no_pets(mock_user):
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+
+    response = client.post(
+        "/ai/marketplace-draft",
+        json={"service_type": "pet sitting", "pets": []},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "pet sitting" in data["title"].lower()
+
+    app.dependency_overrides.clear()
+
+
+def test_marketplace_draft_hebrew_fallback(mock_user):
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+
+    response = client.post(
+        "/ai/marketplace-draft",
+        json={
+            "service_type": "הליכה עם כלבים",
+            "pets": [{"name": "רקס", "type": "dog"}],
+            "prompt_language": "he",
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "רקס" in data["title"]
+
+    app.dependency_overrides.clear()
