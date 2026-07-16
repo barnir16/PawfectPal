@@ -751,6 +751,7 @@ export const en = {
     stayCalm: 'Stay calm and assess the situation',
     emergencyVet: 'If after hours, contact emergency vet',
     transportSafely: 'Transport your pet safely to vet',
+    emergencySymptomsWarning: 'If your pet is bleeding heavily, unconscious, having trouble breathing, or seizing, go to an emergency vet immediately.',
     keepRecords: 'Keep records of what happened',
     followUp: 'Follow up with your regular vet',
     

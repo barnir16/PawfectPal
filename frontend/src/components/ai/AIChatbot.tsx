@@ -197,17 +197,18 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
         case 'emergency_vet':
           alert(
             [
-              'Emergency veterinary care',
+              t('ai.emergencyInstructions') || 'Emergency veterinary care',
               '',
-              '24/7 Emergency Animal Hospital',
-              '(555) 123-PETS',
-              '123 Animal Emergency St, Your City',
+              t('ai.stayCalm') || 'Stay calm and assess the situation.',
+              t('ai.emergencyVet') || 'Search for the nearest 24/7 emergency animal hospital and call ahead.',
+              t('ai.transportSafely') || 'Transport your pet safely to the vet.',
               '',
-              'Animal Poison Control Center',
+              'ASPCA Animal Poison Control Center',
               '(888) 426-4435',
               'aspca.org/pet-care/animal-poison-control',
               '',
-              'If your pet is bleeding, unconscious, or having breathing difficulties, go immediately.',
+              t('ai.emergencySymptomsWarning') ||
+                'If your pet is bleeding heavily, unconscious, having trouble breathing, or seizing, go to an emergency vet immediately.',
             ].join('\n'),
           );
           return;

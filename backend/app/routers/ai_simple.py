@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/ai", tags=["AI"])
 
 # Default model if GEMINI_MODEL is not set (override in Railway when Google deprecates a SKU)
-_DEFAULT_MODEL_NAME = "gemini-2.5-flash-lite"
+_DEFAULT_MODEL_NAME = "gemini-2.5-flash"
 _SAFE_FIREBASE_CONFIG_KEYS = {
     "api_base_url",
     "enable_ai_chatbot",
@@ -132,24 +132,140 @@ Instructions:
 Please provide a helpful response."""
 
 
+_EMERGENCY_KEYWORDS = [
+    "emergency", "bleeding", "unconscious", "seizure", "seizing", "poison",
+    "poisoned", "choking", "can't breathe", "difficulty breathing",
+    "hit by car", "collapsed", "not breathing",
+    "חירום", "מדמם", "מחוסר הכרה", "התקף", "הרעלה", "נחנק", "לא נושם", "התמוטט",
+]
+_SCHEDULE_KEYWORDS = [
+    "appointment", "schedule", "vet visit", "checkup", "check-up", "book a vet",
+    "see a vet", "vet appointment",
+    "תור", "פגישה", "ביקור וטרינר", "לקבוע תור",
+]
+_DIET_KEYWORDS = [
+    "diet", "food", "feeding", "nutrition", "what should i feed", "overweight",
+    "underweight",
+    "תזונה", "אוכל", "האכלה", "משקל עודף", "תת משקל",
+]
+_EXERCISE_KEYWORDS = [
+    "exercise", "walk", "walking", "activity", "play", "playtime",
+    "פעילות", "טיול", "הליכה", "משחק",
+]
+_ADD_PET_KEYWORDS = [
+    "add a pet", "new pet", "register my pet", "add my pet",
+    "הוסף חיה", "חיה חדשה", "רשום חיה",
+]
+
+
+def _matches_any(message_lower: str, keywords: List[str]) -> bool:
+    return any(keyword in message_lower for keyword in keywords)
+
+
 def generate_simple_actions(
-    user_message: str, pet_context: Dict[str, Any]
+    user_message: str,
+    pet_context: Dict[str, Any],
+    prompt_language: str = "en",
 ) -> List[Dict[str, str]]:
-    _ = (user_message, pet_context)
-    return [
+    """Suggest follow-up actions based on detected intent in the user's message.
+
+    The frontend chatbot already understands a rich vocabulary of action types
+    (emergency, schedule_vet, nutrition_tips, exercise_plan, add_pet, view_tips —
+    see AIChatbot.tsx's handleSuggestedAction/getActionIcon switches) but this
+    backend previously always returned the same two generic actions regardless
+    of what was asked. This wires real intent detection into that vocabulary.
+    """
+    is_hebrew = _is_hebrew(prompt_language)
+    message_lower = (user_message or "").lower()
+    actions: List[Dict[str, str]] = []
+
+    if _matches_any(message_lower, _EMERGENCY_KEYWORDS):
+        actions.append(
+            {
+                "id": "emergency_help",
+                "type": "emergency",
+                "label": "מצב חירום" if is_hebrew else "Emergency",
+                "description": (
+                    "קבל הנחיות חירום מיידיות" if is_hebrew else "Get immediate emergency guidance"
+                ),
+            }
+        )
+
+    if _matches_any(message_lower, _SCHEDULE_KEYWORDS):
+        actions.append(
+            {
+                "id": "schedule_vet_visit",
+                "type": "schedule_vet",
+                "label": "קבע ביקור וטרינר" if is_hebrew else "Schedule Vet Visit",
+                "description": (
+                    "צור משימת ביקור וטרינר" if is_hebrew else "Create a vet visit task"
+                ),
+            }
+        )
+
+    if _matches_any(message_lower, _DIET_KEYWORDS):
+        actions.append(
+            {
+                "id": "nutrition_tips",
+                "type": "nutrition_tips",
+                "label": "עצות תזונה" if is_hebrew else "Nutrition Tips",
+                "description": (
+                    "קבל עצות תזונה עבור חיות המחמד שלך" if is_hebrew else "Get nutrition advice for your pets"
+                ),
+            }
+        )
+
+    if _matches_any(message_lower, _EXERCISE_KEYWORDS):
+        actions.append(
+            {
+                "id": "exercise_plan",
+                "type": "exercise_plan",
+                "label": "תוכנית פעילות" if is_hebrew else "Exercise Plan",
+                "description": (
+                    "קבל תוכנית פעילות עבור חיות המחמד שלך" if is_hebrew else "Get an exercise plan for your pets"
+                ),
+            }
+        )
+
+    pets = pet_context.get("pets", []) if isinstance(pet_context, dict) else []
+    if not pets or _matches_any(message_lower, _ADD_PET_KEYWORDS):
+        actions.append(
+            {
+                "id": "add_pet",
+                "type": "add_pet",
+                "label": "הוסף חיית מחמד" if is_hebrew else "Add a Pet",
+                "description": (
+                    "הוסף חיית מחמד כדי לקבל עצות מותאמות אישית"
+                    if is_hebrew
+                    else "Add a pet to get personalized advice"
+                ),
+            }
+        )
+
+    # Always include the two general-purpose actions as a baseline, so the
+    # chat never leaves the user with zero follow-ups.
+    actions.append(
         {
             "id": "health_help",
             "type": "view_tips",
-            "label": "Health Help",
-            "description": "Get health advice for your pets",
-        },
+            "label": "עזרה בריאותית" if is_hebrew else "Health Help",
+            "description": (
+                "קבל עצות בריאות עבור חיות המחמד שלך" if is_hebrew else "Get health advice for your pets"
+            ),
+        }
+    )
+    actions.append(
         {
             "id": "behavior_help",
             "type": "view_tips",
-            "label": "Behavior Help",
-            "description": "Get behavior advice for your pets",
-        },
-    ]
+            "label": "עזרה התנהגותית" if is_hebrew else "Behavior Help",
+            "description": (
+                "קבל עצות התנהגות עבור חיות המחמד שלך" if is_hebrew else "Get behavior advice for your pets"
+            ),
+        }
+    )
+
+    return actions
 
 
 def _is_hebrew(prompt_language: str) -> bool:
@@ -412,7 +528,7 @@ async def chat_with_ai(
         return AIChatResponse(
             message=message,
             suggested_actions=generate_simple_actions(
-                request.message, request.pet_context
+                request.message, request.pet_context, request.prompt_language
             ),
         )
     except Exception as e:

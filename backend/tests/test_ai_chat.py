@@ -70,6 +70,39 @@ def test_generate_simple_actions_returns_expected_keys():
     assert any(a["id"] == "behavior_help" for a in actions)
 
 
+def test_generate_simple_actions_detects_emergency(sample_pet_context):
+    actions = ai.generate_simple_actions("My dog is bleeding and unconscious!", sample_pet_context)
+    assert any(a["id"] == "emergency_help" and a["type"] == "emergency" for a in actions)
+    # Baseline actions should still be present alongside the detected intent.
+    assert any(a["id"] == "health_help" for a in actions)
+
+
+def test_generate_simple_actions_detects_schedule_vet(sample_pet_context):
+    actions = ai.generate_simple_actions("I need to schedule a vet appointment", sample_pet_context)
+    assert any(a["id"] == "schedule_vet_visit" and a["type"] == "schedule_vet" for a in actions)
+
+
+def test_generate_simple_actions_detects_diet(sample_pet_context):
+    actions = ai.generate_simple_actions("What should I feed my dog for his diet?", sample_pet_context)
+    assert any(a["id"] == "nutrition_tips" and a["type"] == "nutrition_tips" for a in actions)
+
+
+def test_generate_simple_actions_detects_exercise(sample_pet_context):
+    actions = ai.generate_simple_actions("How much exercise does he need?", sample_pet_context)
+    assert any(a["id"] == "exercise_plan" and a["type"] == "exercise_plan" for a in actions)
+
+
+def test_generate_simple_actions_suggests_add_pet_when_no_pets():
+    actions = ai.generate_simple_actions("Hello", {"pets": []})
+    assert any(a["id"] == "add_pet" and a["type"] == "add_pet" for a in actions)
+
+
+def test_generate_simple_actions_hebrew_labels(sample_pet_context):
+    actions = ai.generate_simple_actions("שלום", sample_pet_context, "he")
+    health_action = next(a for a in actions if a["id"] == "health_help")
+    assert health_action["label"] == "עזרה בריאותית"
+
+
 def test_handle_simple_fallback_sorting(sample_pet_context):
     request_message = "Can you sort my pets by age?"
     response = ai.handle_simple_fallback(request_message, sample_pet_context)
