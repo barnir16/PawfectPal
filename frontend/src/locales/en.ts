@@ -538,6 +538,8 @@ export const en = {
   // Vaccines
   vaccines: {
     title: 'Vaccines',
+    explainWithAi: 'Explain with AI',
+    aiUnavailableFallback: 'AI explanation unavailable — showing a quick summary instead.',
     overdue: 'Overdue',
     dueSoon: 'Due Soon',
     upToDate: 'Up to Date',

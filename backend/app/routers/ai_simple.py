@@ -1,31 +1,28 @@
 """
 AI chat route — Gemini-backed, with offline fallbacks.
 
-Model name: set GEMINI_MODEL (e.g. gemini-2.5-flash). If unset, a sensible
-default is used. API key: GEMINI_API_KEY from the backend environment only.
+Gemini client config/error handling lives in app.services.gemini_service;
+this router only owns the pet-care-chat-specific prompt building, rule-based
+fallback logic, and intent-aware suggested actions.
 """
 
 from __future__ import annotations
 
 import logging
-import os
-import re
 from typing import Any, Dict, List, Optional
 
-import google.generativeai as genai  # type: ignore
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 from app.dependencies.auth import get_current_user
 from app.models.user import UserORM
+from app.services import gemini_service
 from app.services.firebase_user_service import firebase_user_service
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 
-# Default model if GEMINI_MODEL is not set (override in Railway when Google deprecates a SKU)
-_DEFAULT_MODEL_NAME = "gemini-2.5-flash"
 _SAFE_FIREBASE_CONFIG_KEYS = {
     "api_base_url",
     "enable_ai_chatbot",
@@ -53,24 +50,26 @@ class FirebaseConfigResponse(BaseModel):
     firebase_available: bool
 
 
-def _extract_response_text(response: Any) -> str:
-    """Normalize Gemini response; handle blocks / empty candidates."""
-    try:
-        text = getattr(response, "text", None)
-        if text and str(text).strip():
-            return str(text).strip()
-    except Exception:
-        pass
-    try:
-        cands = getattr(response, "candidates", None) or []
-        if cands and getattr(cands[0], "content", None):
-            parts = getattr(cands[0].content, "parts", None) or []
-            chunks = [getattr(p, "text", "") for p in parts if getattr(p, "text", None)]
-            if chunks:
-                return "".join(chunks).strip()
-    except Exception:
-        pass
-    return ""
+class VaccineSuggestionInput(BaseModel):
+    vaccine_name: str
+    category: str = "recommended"  # mandatory | recommended | preventative
+    priority: str = "medium"  # high | medium | low
+    is_overdue: bool = False
+    due_date: Optional[str] = None
+    reason: Optional[str] = None
+
+
+class VaccineExplainerRequest(BaseModel):
+    pet_name: str
+    pet_type: str  # dog | cat
+    pet_age_weeks: Optional[int] = None
+    suggestions: List[VaccineSuggestionInput]
+    prompt_language: str = "en"
+
+
+class VaccineExplainerResponse(BaseModel):
+    explanation: str
+    ai_generated: bool
 
 
 def create_simple_prompt(
@@ -270,16 +269,6 @@ def generate_simple_actions(
 
 def _is_hebrew(prompt_language: str) -> bool:
     return (prompt_language or "en").lower().startswith("he")
-
-
-def _extract_retry_delay_seconds(error_message: str) -> Optional[int]:
-    match = re.search(r"retry in\s+(\d+(?:\.\d+)?)s", error_message, re.IGNORECASE)
-    if not match:
-        return None
-    try:
-        return max(1, int(float(match.group(1))))
-    except ValueError:
-        return None
 
 
 def _build_unavailable_response(
@@ -502,49 +491,117 @@ async def chat_with_ai(
             return fb
         return _build_unavailable_response(request.prompt_language)
 
-    model_name = (
-        os.getenv("GEMINI_MODEL", _DEFAULT_MODEL_NAME).strip() or _DEFAULT_MODEL_NAME
+    prompt = create_simple_prompt(
+        request.message,
+        request.pet_context,
+        history,
+        request.prompt_language,
     )
 
     try:
-        genai.configure(api_key=api_key)
-        current_model = genai.GenerativeModel(model_name)
-        prompt = create_simple_prompt(
-            request.message,
-            request.pet_context,
-            history,
-            request.prompt_language,
-        )
-        raw = current_model.generate_content(prompt)
-        message = _extract_response_text(raw)
-        if not message:
-            return handle_simple_fallback(
-                request.message,
-                request.pet_context,
-                history,
-                request.prompt_language,
-                False,
-            )
+        message = gemini_service.generate_text(prompt, api_key=api_key)
         return AIChatResponse(
             message=message,
             suggested_actions=generate_simple_actions(
                 request.message, request.pet_context, request.prompt_language
             ),
         )
-    except Exception as e:
-        error_message = str(e)
-        logger.warning("AI chat request failed: %s", error_message)
-        if "429" in error_message or "quota" in error_message.lower():
-            return _build_unavailable_response(
-                request.prompt_language,
-                _extract_retry_delay_seconds(error_message),
-            )
+    except gemini_service.GeminiRateLimitError as e:
+        return _build_unavailable_response(request.prompt_language, e.retry_after_seconds)
+    except gemini_service.GeminiUnavailableError:
         return handle_simple_fallback(
             request.message,
             request.pet_context,
             history,
             request.prompt_language,
             False,
+        )
+
+
+def _create_vaccine_explainer_prompt(request: "VaccineExplainerRequest") -> str:
+    lines = []
+    for s in request.suggestions:
+        status = "OVERDUE" if s.is_overdue else (f"due {s.due_date}" if s.due_date else "upcoming")
+        lines.append(f"- {s.vaccine_name} ({s.category}, {s.priority} priority, {status})")
+    suggestions_text = "\n".join(lines) if lines else "(no outstanding vaccines — fully up to date)"
+
+    age_text = f", about {request.pet_age_weeks} weeks old" if request.pet_age_weeks else ""
+
+    lang_instruction = (
+        "\n\nReply entirely in Hebrew (עברית), in 3-5 short sentences."
+        if _is_hebrew(request.prompt_language)
+        else "\n\nReply in English, in 3-5 short sentences."
+    )
+
+    return f"""You are a friendly pet-care assistant explaining a vaccine schedule to a pet owner.
+
+Pet: {request.pet_name}, a {request.pet_type}{age_text}
+
+Vaccine schedule status:
+{suggestions_text}
+
+Write a brief, warm, plain-language explanation of what this schedule means for
+{request.pet_name} and what the owner should do next. Prioritize anything overdue.
+Do not repeat the raw list verbatim — synthesize it into a short narrative.
+Do not diagnose; recommend a veterinarian for anything urgent.{lang_instruction}"""
+
+
+def _build_vaccine_explainer_fallback(request: "VaccineExplainerRequest") -> str:
+    """Deterministic template used when Gemini is unavailable — still useful,
+    just not a synthesized narrative."""
+    is_hebrew = _is_hebrew(request.prompt_language)
+    overdue = [s for s in request.suggestions if s.is_overdue]
+    upcoming = [s for s in request.suggestions if not s.is_overdue]
+
+    if not request.suggestions:
+        return (
+            f"{request.pet_name} מעודכן/ת בכל החיסונים כרגע. המשך/י לעקוב אחר התאריכים הבאים."
+            if is_hebrew
+            else f"{request.pet_name} is fully up to date on vaccines right now. Keep an eye on upcoming due dates."
+        )
+
+    if is_hebrew:
+        parts = []
+        if overdue:
+            names = ", ".join(s.vaccine_name for s in overdue)
+            parts.append(f"ל-{request.pet_name} יש חיסונים באיחור: {names}. מומלץ לתאם ביקור וטרינר בהקדם.")
+        if upcoming:
+            names = ", ".join(s.vaccine_name for s in upcoming)
+            parts.append(f"בנוסף, החיסונים הבאים מתוכננים: {names}.")
+        return " ".join(parts)
+
+    parts = []
+    if overdue:
+        names = ", ".join(s.vaccine_name for s in overdue)
+        parts.append(f"{request.pet_name} has overdue vaccines: {names}. We recommend scheduling a vet visit soon.")
+    if upcoming:
+        names = ", ".join(s.vaccine_name for s in upcoming)
+        parts.append(f"Upcoming vaccines to plan for: {names}.")
+    return " ".join(parts)
+
+
+@router.post("/vaccine-explainer", response_model=VaccineExplainerResponse)
+async def explain_vaccine_plan(
+    request: VaccineExplainerRequest, current_user: UserORM = Depends(get_current_user)
+):
+    """Turn a pet's rule-based vaccine suggestions into a short, synthesized,
+    plain-language explanation. Falls back to a deterministic template if
+    Gemini is unavailable, so the feature never dead-ends the user."""
+    _ = current_user
+    api_key = gemini_service.get_api_key()
+
+    if not api_key:
+        return VaccineExplainerResponse(
+            explanation=_build_vaccine_explainer_fallback(request), ai_generated=False
+        )
+
+    try:
+        prompt = _create_vaccine_explainer_prompt(request)
+        explanation = gemini_service.generate_text(prompt, api_key=api_key)
+        return VaccineExplainerResponse(explanation=explanation, ai_generated=True)
+    except (gemini_service.GeminiRateLimitError, gemini_service.GeminiUnavailableError):
+        return VaccineExplainerResponse(
+            explanation=_build_vaccine_explainer_fallback(request), ai_generated=False
         )
 
 

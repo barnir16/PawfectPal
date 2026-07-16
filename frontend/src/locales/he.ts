@@ -452,6 +452,8 @@ export const he = {
   // Vaccines
   vaccines: {
     title: 'חיסונים',
+    explainWithAi: 'הסבר עם בינה מלאכותית',
+    aiUnavailableFallback: 'הסבר בינה מלאכותית אינו זמין — מוצג סיכום מהיר במקום.',
     overdue: 'באיחור',
     upcoming: 'בקרוב',
     totalPets: 'סה"כ חיות מחמד',

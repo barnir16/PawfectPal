@@ -188,3 +188,109 @@ def test_firebase_config_endpoint_success(mock_configs, mock_user):
     assert "gemini_api_key" not in data["configs"]
 
     app.dependency_overrides.clear()
+
+
+# ----------------------------
+# Vaccine explainer endpoint tests
+# ----------------------------
+@pytest.fixture
+def vaccine_explainer_payload():
+    return {
+        "pet_name": "Fido",
+        "pet_type": "dog",
+        "pet_age_weeks": 52,
+        "suggestions": [
+            {
+                "vaccine_name": "Rabies",
+                "category": "mandatory",
+                "priority": "high",
+                "is_overdue": True,
+                "due_date": "2026-01-01",
+                "reason": "Required by law",
+            },
+            {
+                "vaccine_name": "Bordetella",
+                "category": "recommended",
+                "priority": "medium",
+                "is_overdue": False,
+                "due_date": "2026-09-01",
+            },
+        ],
+    }
+
+
+@patch("app.services.gemini_service.get_api_key")
+def test_vaccine_explainer_falls_back_without_key(mock_get_key, mock_user, vaccine_explainer_payload):
+    mock_get_key.return_value = None
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+
+    response = client.post("/ai/vaccine-explainer", json=vaccine_explainer_payload)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["ai_generated"] is False
+    assert "Fido" in data["explanation"]
+    assert "Rabies" in data["explanation"]
+
+    app.dependency_overrides.clear()
+
+
+@patch("app.services.gemini_service.genai.GenerativeModel")
+@patch("app.services.gemini_service.genai.configure")
+@patch("app.services.gemini_service.get_api_key")
+def test_vaccine_explainer_uses_gemini_when_available(
+    mock_get_key, mock_configure, mock_model_cls, mock_user, vaccine_explainer_payload
+):
+    mock_get_key.return_value = "fake-key"
+    mock_model = MagicMock()
+    mock_model.generate_content.return_value = MagicMock(
+        text="Fido is overdue for rabies — book a vet visit soon."
+    )
+    mock_model_cls.return_value = mock_model
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+
+    response = client.post("/ai/vaccine-explainer", json=vaccine_explainer_payload)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["ai_generated"] is True
+    assert "rabies" in data["explanation"].lower()
+
+    app.dependency_overrides.clear()
+
+
+@patch("app.services.gemini_service.genai.GenerativeModel")
+@patch("app.services.gemini_service.genai.configure")
+@patch("app.services.gemini_service.get_api_key")
+def test_vaccine_explainer_falls_back_on_gemini_error(
+    mock_get_key, mock_configure, mock_model_cls, mock_user, vaccine_explainer_payload
+):
+    mock_get_key.return_value = "fake-key"
+    mock_model = MagicMock()
+    mock_model.generate_content.side_effect = Exception("network unreachable")
+    mock_model_cls.return_value = mock_model
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+
+    response = client.post("/ai/vaccine-explainer", json=vaccine_explainer_payload)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["ai_generated"] is False
+    assert "Fido" in data["explanation"]
+
+    app.dependency_overrides.clear()
+
+
+def test_vaccine_explainer_fallback_handles_no_outstanding_vaccines(mock_user):
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+
+    response = client.post(
+        "/ai/vaccine-explainer",
+        json={"pet_name": "Whiskers", "pet_type": "cat", "suggestions": []},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "Whiskers" in data["explanation"]
+
+    app.dependency_overrides.clear()

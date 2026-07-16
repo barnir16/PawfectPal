@@ -57,11 +57,13 @@ import {
   LocalHospital as LocalHospitalIcon,
   FileDownload as ExportIcon,
   Sync as SyncIcon,
+  AutoAwesome as AutoAwesomeIcon,
 } from '@mui/icons-material';
 import { getPets } from '../../services/pets/petService';
 import { getAllVaccinations, updateVaccination, deleteVaccination } from '../../services/vaccines/vaccineService';
 import { downloadTasksAsICal, syncTasksWithGoogleCalendar } from '../../services/tasks/taskService';
 import { israeliVaccineSchemas, vaccineNameTranslations } from '../../data/vaccines/israeliVaccines';
+import { explainVaccinePlan } from '../../services/ai/vaccineExplainerService';
 import { useLocalization } from '../../contexts/LocalizationContext';
 import type { Pet } from '../../types/pets/pet';
 import type { VaccineSchema } from '../../data/vaccines/israeliVaccines';
@@ -122,6 +124,8 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
   const [tabValue, setTabValue] = useState(0);
   const [region] = useState<'israel'>('israel'); // Can be expanded for other regions
   const [successMessage, setSuccessMessage] = useState('');
+  const [aiExplanation, setAiExplanation] = useState<{ text: string; aiGenerated: boolean } | null>(null);
+  const [aiExplanationLoading, setAiExplanationLoading] = useState(false);
 
   // Vaccine edit/delete state
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -277,8 +281,45 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
     void loadData();
   }, [loadData]);
 
+  // Clear any AI explanation when the pet selection changes so a stale
+  // explanation for a different pet is never shown.
+  useEffect(() => {
+    setAiExplanation(null);
+  }, [selectedPet]);
+
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+  };
+
+  const handleExplainVaccinePlan = async () => {
+    if (selectedPet === 'all') return;
+    const pet = pets.find((p) => p.id === selectedPet);
+    if (!pet) return;
+
+    setAiExplanationLoading(true);
+    setAiExplanation(null);
+    try {
+      const ageWeeks = pet.birthDate
+        ? Math.floor((Date.now() - new Date(pet.birthDate).getTime()) / (7 * 24 * 60 * 60 * 1000))
+        : undefined;
+
+      const petSuggestions = suggestions.filter((s) => s.petId === selectedPet);
+
+      const result = await explainVaccinePlan(
+        { name: pet.name, type: pet.type, ageWeeks },
+        petSuggestions.map((s) => ({
+          vaccineName: s.name,
+          category: s.category,
+          priority: s.priority,
+          isOverdue: Boolean(s.isOverdue),
+          dueDate: s.nextDueDate,
+        })),
+        currentLanguage
+      );
+      setAiExplanation({ text: result.explanation, aiGenerated: result.aiGenerated });
+    } finally {
+      setAiExplanationLoading(false);
+    }
   };
 
   // Vaccine edit/delete handlers
@@ -634,7 +675,37 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
                    />
                  )}
                  {tabValue === 4 && (
-                   <VaccineSuggestionsList suggestions={filteredSuggestions} title={t('vaccineTracking.regionalVaccineSuggestions')} />
+                   <>
+                     {selectedPet !== 'all' && (
+                       <Box sx={{ mb: 2 }}>
+                         <Button
+                           variant="outlined"
+                           startIcon={aiExplanationLoading ? <CircularProgress size={16} /> : <AutoAwesomeIcon />}
+                           onClick={handleExplainVaccinePlan}
+                           disabled={aiExplanationLoading}
+                           size="small"
+                         >
+                           {t('vaccines.explainWithAi') || 'Explain with AI'}
+                         </Button>
+                         {aiExplanation && (
+                           <Alert
+                             severity="info"
+                             icon={<AutoAwesomeIcon fontSize="inherit" />}
+                             sx={{ mt: 1.5 }}
+                             onClose={() => setAiExplanation(null)}
+                           >
+                             <Typography variant="body2">{aiExplanation.text}</Typography>
+                             {!aiExplanation.aiGenerated && (
+                               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                                 {t('vaccines.aiUnavailableFallback') || 'AI explanation unavailable — showing a quick summary instead.'}
+                               </Typography>
+                             )}
+                           </Alert>
+                         )}
+                       </Box>
+                     )}
+                     <VaccineSuggestionsList suggestions={filteredSuggestions} title={t('vaccineTracking.regionalVaccineSuggestions')} />
+                   </>
                  )}
                </CardContent>
         </Card>
