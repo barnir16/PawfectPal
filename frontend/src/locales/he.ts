@@ -956,6 +956,7 @@ export const he = {
 
   // Settings
   settings: {
+    comingSoon: 'בקרוב',
     title: 'הגדרות',
     language: 'שפה',
     theme: 'ערכת נושא',

@@ -555,12 +555,16 @@ export const WeightTrackingPage = () => {
             borderColor: 'divider'
           }}>
             <ResponsiveContainer width="100%" height={400}>
-              <LineChart data={chartData}>
+              <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 40 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
                 <XAxis
                   dataKey="date"
                   stroke={theme.palette.text.secondary}
                   fontSize={12}
+                  interval="preserveStartEnd"
+                  angle={-35}
+                  textAnchor="end"
+                  height={60}
                 />
                 <YAxis
                   label={{ value: t('weight.weight') + ' (' + t('pets.kg') + ')', angle: -90, position: 'insideLeft' }}

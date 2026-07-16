@@ -1,6 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Box, Typography, Button, Paper } from '@mui/material';
-import { Error as ErrorIcon, Refresh as RefreshIcon } from '@mui/icons-material';
+import { Error as ErrorIcon, Refresh as RefreshIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 
 interface Props {
   children: ReactNode;
@@ -30,6 +30,15 @@ class ErrorBoundary extends Component<Props, State> {
 
   handleRetry = () => {
     this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+  };
+
+  handleGoBack = () => {
+    this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.location.href = '/dashboard';
+    }
   };
 
   render() {
@@ -77,14 +86,22 @@ class ErrorBoundary extends Component<Props, State> {
                 )}
               </Box>
             )}
-            <Button
-              variant="contained"
-              startIcon={<RefreshIcon />}
-              onClick={this.handleRetry}
-              sx={{ mt: 2 }}
-            >
-              Try Again
-            </Button>
+            <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center', mt: 2, flexWrap: 'wrap' }}>
+              <Button
+                variant="outlined"
+                startIcon={<ArrowBackIcon />}
+                onClick={this.handleGoBack}
+              >
+                Go Back
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<RefreshIcon />}
+                onClick={this.handleRetry}
+              >
+                Try Again
+              </Button>
+            </Box>
           </Paper>
         </Box>
       );

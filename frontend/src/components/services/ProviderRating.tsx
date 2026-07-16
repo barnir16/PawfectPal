@@ -212,7 +212,14 @@ export const ProviderRating: React.FC<ProviderRatingProps> = ({
             <Button
               variant="outlined"
               startIcon={<RateReview />}
-              onClick={() => setReviewDialogOpen(true)}
+              onClick={(e) => {
+                // Blur before opening the dialog so focus doesn't remain on
+                // this trigger once the backdrop applies aria-hidden to the
+                // rest of the page (avoids the "aria-hidden on focused
+                // ancestor" console warning).
+                e.currentTarget.blur();
+                setReviewDialogOpen(true);
+              }}
               sx={{ mb: 2 }}
             >
               {t("services.writeReview") || "Write a Review"}

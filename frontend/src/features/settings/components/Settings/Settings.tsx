@@ -76,7 +76,7 @@ const PREFS_KEY = "pawfectPal_preferences";
 const Settings: React.FC = () => {
   // Dark mode is owned entirely by ThemeContext — no duplicate state here.
   const { mode, setTheme } = useAppTheme();
-  const { t, currentLanguage } = useLocalization();
+  const { t, currentLanguage, isRTL } = useLocalization();
 
   const [prefs, setPrefs] = useState<StoredPreferences>(DEFAULT_PREFS);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -202,13 +202,17 @@ const Settings: React.FC = () => {
                   <Typography variant="h6">{t("settings.notifications")}</Typography>
                 </Box>
               }
+              sx={{
+                flexWrap: 'wrap',
+                '& .MuiCardHeader-action': { m: 0, alignSelf: 'center' },
+              }}
               action={
                 <Chip
-                  label="Coming soon"
+                  label={t('settings.comingSoon') || 'Coming soon'}
                   size="small"
                   variant="outlined"
                   color="default"
-                  sx={{ mr: 1 }}
+                  sx={{ ml: isRTL ? 0 : 1, mr: isRTL ? 1 : 0 }}
                 />
               }
             />

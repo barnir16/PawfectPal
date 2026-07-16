@@ -1029,6 +1029,7 @@ export const en = {
 
   // Settings
   settings: {
+    comingSoon: 'Coming soon',
     title: 'Settings',
     language: 'Language',
     theme: 'Theme',

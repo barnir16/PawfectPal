@@ -68,16 +68,21 @@ export const MarketplacePostCard: React.FC<MarketplacePostCardProps> = ({
     );
 
   const formatBudget = () => {
-    if (post.budget_min !== undefined && post.budget_max !== undefined) {
-      return `${currencyFormatter.format(post.budget_min)} - ${currencyFormatter.format(post.budget_max)}`;
+    // Treat 0/0 as "not specified" too — legacy posts stored zeros instead
+    // of leaving the field empty, which rendered as a nonsensical "0 - 0".
+    const hasMin = post.budget_min !== undefined && post.budget_min > 0;
+    const hasMax = post.budget_max !== undefined && post.budget_max > 0;
+
+    if (hasMin && hasMax) {
+      return `${currencyFormatter.format(post.budget_min!)} - ${currencyFormatter.format(post.budget_max!)}`;
     }
 
-    if (post.budget_min !== undefined) {
-      return `${currencyFormatter.format(post.budget_min)}+`;
+    if (hasMin) {
+      return `${currencyFormatter.format(post.budget_min!)}+`;
     }
 
-    if (post.budget_max !== undefined) {
-      return currencyFormatter.format(post.budget_max);
+    if (hasMax) {
+      return currencyFormatter.format(post.budget_max!);
     }
 
     return t('marketplace.budgetNotSpecified');

@@ -1,6 +1,6 @@
 import React, { Component, ReactNode } from 'react';
 import { Box, Typography, Button, Paper } from '@mui/material';
-import { ErrorOutline as ErrorIcon } from '@mui/icons-material';
+import { ErrorOutline as ErrorIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 
 interface Props {
   children: ReactNode;
@@ -29,6 +29,15 @@ export class ServiceErrorBoundary extends Component<Props, State> {
     this.setState({ hasError: false, error: undefined });
   };
 
+  handleGoBack = () => {
+    this.setState({ hasError: false, error: undefined });
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.location.href = '/dashboard';
+    }
+  };
+
   render() {
     if (this.state.hasError) {
       return (
@@ -40,9 +49,14 @@ export class ServiceErrorBoundary extends Component<Props, State> {
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
             Something went wrong while loading the service features.
           </Typography>
-          <Button variant="contained" onClick={this.handleRetry}>
-            Try Again
-          </Button>
+          <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={this.handleGoBack}>
+              Go Back
+            </Button>
+            <Button variant="contained" onClick={this.handleRetry}>
+              Try Again
+            </Button>
+          </Box>
         </Paper>
       );
     }
