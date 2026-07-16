@@ -42,6 +42,7 @@ import {
 import { useLocalization } from "../../../../contexts/LocalizationContext";
 import { LanguageSwitcher } from "../../../../components/common/LanguageSwitcher";
 import { useTheme as useAppTheme } from "../../../../contexts/ThemeContext";
+import { getPets } from "../../../../services/pets/petService";
 
 /**
  * Preferences stored in localStorage.
@@ -113,6 +114,7 @@ const Settings: React.FC = () => {
 
   const [prefs, setPrefs] = useState<StoredPreferences>(DEFAULT_PREFS);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
 
   // Load persisted preferences once on mount
   useEffect(() => {
@@ -165,6 +167,35 @@ const Settings: React.FC = () => {
   };
 
   const isDark = mode === "dark";
+
+  const handleExportData = async () => {
+    try {
+      const pets = await getPets();
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        pets,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `pawfectpal-export-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch {
+      setInfoMessage(t("settings.exportFailed"));
+    }
+  };
+
+  const handleShowComingSoon = () => {
+    setInfoMessage(t("settings.comingSoon"));
+  };
+
+  const handleOpenAbout = () => {
+    window.open("https://github.com/barnir16/PawfectPal", "_blank", "noopener,noreferrer");
+  };
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -396,10 +427,10 @@ const Settings: React.FC = () => {
               </List>
 
               <Box sx={{ mt: 2, display: "flex", gap: 1, flexWrap: "wrap" }}>
-                <Button variant="outlined" size="small">
+                <Button variant="outlined" size="small" onClick={handleShowComingSoon}>
                   {t("pets.privacyPolicy")}
                 </Button>
-                <Button variant="outlined" size="small">
+                <Button variant="outlined" size="small" onClick={handleExportData}>
                   {t("pets.dataExport")}
                 </Button>
               </Box>
@@ -513,10 +544,10 @@ const Settings: React.FC = () => {
                 </Typography>
               </Box>
               <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                <Button variant="outlined" size="small">
+                <Button variant="outlined" size="small" onClick={handleShowComingSoon}>
                   {t("pets.helpSupport")}
                 </Button>
-                <Button variant="outlined" size="small">
+                <Button variant="outlined" size="small" onClick={handleOpenAbout}>
                   {t("pets.aboutPawfectPal")}
                 </Button>
               </Box>
@@ -531,6 +562,15 @@ const Settings: React.FC = () => {
         autoHideDuration={2000}
         onClose={() => setSaveSuccess(false)}
         message={t("pets.changesSaved")}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      />
+
+      {/* Info toast for export/coming-soon actions */}
+      <Snackbar
+        open={Boolean(infoMessage)}
+        autoHideDuration={3000}
+        onClose={() => setInfoMessage(null)}
+        message={infoMessage}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       />
     </Container>

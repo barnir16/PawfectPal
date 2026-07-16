@@ -561,7 +561,7 @@ export const WeightTrackingPage = () => {
                   dataKey="date"
                   stroke={theme.palette.text.secondary}
                   fontSize={12}
-                  interval="preserveStartEnd"
+                  interval={Math.max(0, Math.ceil(chartData.length / 8) - 1)}
                   angle={-35}
                   textAnchor="end"
                   height={60}

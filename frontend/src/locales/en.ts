@@ -192,6 +192,8 @@ export const en = {
     pet: 'Pet',
     additionalNotes: 'Additional Notes',
     lastVetVisit: 'Last Vet Visit',
+    vetVisited: 'Vet visited',
+    noVetVisitRecorded: 'No vet visit recorded',
     nextVetVisit: 'Next Vet Visit',
     myPets: 'My Pets',
     searchPets: 'Search pets...',
@@ -1032,6 +1034,7 @@ export const en = {
   // Settings
   settings: {
     comingSoon: 'Coming soon',
+    exportFailed: 'Could not export your data. Please try again.',
     title: 'Settings',
     language: 'Language',
     theme: 'Theme',

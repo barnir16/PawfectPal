@@ -350,8 +350,17 @@ export const MarketplacePostsPage: React.FC = () => {
         )}
       </TabPanel>
 
-      {/* Create Post Form */}
-      {(showCreateForm || editingPost) && (
+      {/* Create/Edit Post — shown as a modal so it's impossible to miss
+          behind the request board list underneath it */}
+      <Dialog
+        open={Boolean(showCreateForm || editingPost)}
+        onClose={() => {
+          setShowCreateForm(false);
+          setEditingPost(null);
+        }}
+        maxWidth="md"
+        fullWidth
+      >
         <MarketplacePostForm
           pets={userPets}
           postId={editingPost?.id}
@@ -375,7 +384,7 @@ export const MarketplacePostsPage: React.FC = () => {
             setEditingPost(null);
           }}
         />
-      )}
+      </Dialog>
 
       <Dialog
         open={Boolean(selectedPost)}

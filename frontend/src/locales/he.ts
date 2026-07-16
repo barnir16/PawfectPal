@@ -205,6 +205,8 @@ export const he = {
     healthIssues: 'בעיות בריאות',
     behaviorIssues: 'בעיות התנהגות',
     lastVetVisit: 'ביקור וטרינר אחרון',
+    vetVisited: 'ביקור וטרינר בוצע',
+    noVetVisitRecorded: 'לא נרשם ביקור וטרינר',
     nextVetVisit: 'ביקור וטרינר הבא',
     myPets: 'חיות המחמד שלי',
     searchPets: 'חפש חיות מחמד...',
@@ -959,6 +961,7 @@ export const he = {
   // Settings
   settings: {
     comingSoon: 'בקרוב',
+    exportFailed: 'לא ניתן היה לייצא את הנתונים. נסה שוב.',
     title: 'הגדרות',
     language: 'שפה',
     theme: 'ערכת נושא',

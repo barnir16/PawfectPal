@@ -166,12 +166,12 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
         {/* Age / Weight row */}
         <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
           <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>Age</Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>{t("pets.age")}</Typography>
             <Typography variant="body2" sx={{ fontWeight: 600 }}>{displayAge}</Typography>
           </Box>
           {weight && (
             <Box>
-              <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>Weight</Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>{t("pets.weight")}</Typography>
               <Typography variant="body2" sx={{ fontWeight: 600 }}>{weight}</Typography>
             </Box>
           )}
@@ -182,7 +182,7 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
           {pet.lastVetVisit ? (
             <Chip
               icon={<HealthIcon sx={{ fontSize: "13px !important" }} />}
-              label="Vet visited"
+              label={t("pets.vetVisited")}
               size="small"
               sx={{
                 bgcolor: "rgba(82,183,136,0.1)",
@@ -195,7 +195,7 @@ export const PetCard = ({ pet, onEdit, onDelete }: PetCardProps) => {
             />
           ) : (
             <Chip
-              label="No vet visit recorded"
+              label={t("pets.noVetVisitRecorded")}
               size="small"
               sx={{ bgcolor: "rgba(0,0,0,0.05)", color: "text.secondary", fontSize: "0.7rem", height: 22 }}
             />
