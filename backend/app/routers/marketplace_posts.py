@@ -1,15 +1,14 @@
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import inspect
-from sqlalchemy.exc import OperationalError, ProgrammingError
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.dependencies.db import get_db
 from app.dependencies.auth import get_current_user
 from app.models.user import UserORM
-from app.models.marketplace_post import MarketplacePostORM
 from app.models.service_request import ServiceRequestORM
+from app.models.service_request_response import ServiceRequestResponseORM
 from app.models.pet import PetORM
 from app.models.service_type import ServiceTypeORM
 from app.schemas.marketplace_post import (
@@ -27,64 +26,54 @@ router = APIRouter(prefix="/marketplace-posts", tags=["marketplace-posts"])
 logger = logging.getLogger(__name__)
 
 
-def _marketplace_tables_ready(db: Session) -> bool:
-    inspector = inspect(db.get_bind())
-    required_tables = {"marketplace_posts", "marketplace_post_pets"}
-    return required_tables.issubset(set(inspector.get_table_names()))
-
-
-def _ensure_marketplace_available(db: Session) -> None:
-    if not _marketplace_tables_ready(db):
-        raise HTTPException(
-            status_code=503,
-            detail="Marketplace is temporarily unavailable while setup completes.",
-        )
-
 @router.post("/", response_model=MarketplacePostRead)
 def create_marketplace_post(
     post: MarketplacePostCreate,
     db: Session = Depends(get_db),
     current_user: UserORM = Depends(get_current_user)
 ):
-    """Create a new marketplace post"""
-    _ensure_marketplace_available(db)
-    
+    """Create a new marketplace post.
+
+    Stored as a public ServiceRequestORM row — the same table the browse/
+    my-posts/detail endpoints already read from, so a post created here
+    shows up immediately everywhere else.
+    """
     # Validate that all pet IDs belong to the current user
     user_pets = db.query(PetORM).filter(
         PetORM.user_id == current_user.id,
         PetORM.id.in_(post.pet_ids)
     ).all()
-    
+
     if len(user_pets) != len(post.pet_ids):
         raise HTTPException(
-            status_code=400, 
+            status_code=400,
             detail="Some pet IDs do not belong to you"
         )
-    
+
     # Validate service type exists
     service_type_obj = db.query(ServiceTypeORM).filter(
         ServiceTypeORM.name == post.service_type
     ).first()
-    
+
     if not service_type_obj:
         raise HTTPException(
-            status_code=400, 
+            status_code=400,
             detail=f"Service type '{post.service_type}' does not exist. Available services: {', '.join([st.name for st in db.query(ServiceTypeORM).all()])}"
         )
-    
+
     # Check if there are any providers offering this service
     available_providers = ServiceMatchingService.get_providers_for_service(
         db, post.service_type, is_available=True
     )
-    
+
     if not available_providers:
         raise HTTPException(
             status_code=400,
             detail=f"No providers are currently offering '{post.service_type}' service. Please try a different service type."
         )
-    
-    # Create the marketplace post
-    db_post = MarketplacePostORM(
+
+    # Create the marketplace post as a public service request
+    db_post = ServiceRequestORM(
         user_id=current_user.id,
         title=post.title,
         description=post.description,
@@ -99,24 +88,26 @@ def create_marketplace_post(
         special_requirements=post.special_requirements,
         is_urgent=post.is_urgent,
         status="open",
+        request_type="marketplace",
+        is_public=True,
         views_count=0,
         responses_count=0,
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
         expires_at=datetime.utcnow() + timedelta(days=30) if post.is_urgent else datetime.utcnow() + timedelta(days=7)
     )
-    
+
     db.add(db_post)
     db.commit()
     db.refresh(db_post)
-    
+
     # Add pets to the association table
     for pet in user_pets:
         db_post.pets.append(pet)
-    
+
     db.commit()
     db.refresh(db_post)
-    
+
     return db_post
 
 @router.get("/", response_model=List[MarketplacePostSummary])
@@ -131,10 +122,7 @@ def get_marketplace_posts(
     """Browse open service requests posted by pet owners.
 
     Reads from service_requests — the single source of truth for all
-    owner-posted requests — and returns them in the marketplace summary
-    shape so the provider browse page works without any frontend changes.
-    The marketplace_posts table still accepts writes from older clients
-    but is no longer the browseable feed.
+    owner-posted requests.
     """
     try:
         query = db.query(ServiceRequestORM).filter(ServiceRequestORM.status == "open")
@@ -230,19 +218,17 @@ def get_marketplace_post(
     db: Session = Depends(get_db)
 ):
     """Get a specific marketplace post by ID"""
-    _ensure_marketplace_available(db)
-    
-    post = db.query(MarketplacePostORM).filter(
-        MarketplacePostORM.id == post_id
+    post = db.query(ServiceRequestORM).filter(
+        ServiceRequestORM.id == post_id
     ).first()
-    
+
     if not post:
         raise HTTPException(status_code=404, detail="Marketplace post not found")
-    
+
     # Increment view count
     post.views_count += 1
     db.commit()
-    
+
     return post
 
 @router.put("/{post_id}", response_model=MarketplacePostRead)
@@ -253,16 +239,14 @@ def update_marketplace_post(
     current_user: UserORM = Depends(get_current_user)
 ):
     """Update a marketplace post"""
-    _ensure_marketplace_available(db)
-    
-    post = db.query(MarketplacePostORM).filter(
-        MarketplacePostORM.id == post_id,
-        MarketplacePostORM.user_id == current_user.id
+    post = db.query(ServiceRequestORM).filter(
+        ServiceRequestORM.id == post_id,
+        ServiceRequestORM.user_id == current_user.id
     ).first()
-    
+
     if not post:
         raise HTTPException(status_code=404, detail="Marketplace post not found")
-    
+
     # Update fields
     update_data = post_update.dict(exclude_unset=True)
 
@@ -296,12 +280,12 @@ def update_marketplace_post(
         if field == "pet_ids":
             continue
         setattr(post, field, value)
-    
+
     post.updated_at = datetime.utcnow()
-    
+
     db.commit()
     db.refresh(post)
-    
+
     return post
 
 @router.delete("/{post_id}")
@@ -311,19 +295,17 @@ def delete_marketplace_post(
     current_user: UserORM = Depends(get_current_user)
 ):
     """Delete a marketplace post"""
-    _ensure_marketplace_available(db)
-    
-    post = db.query(MarketplacePostORM).filter(
-        MarketplacePostORM.id == post_id,
-        MarketplacePostORM.user_id == current_user.id
+    post = db.query(ServiceRequestORM).filter(
+        ServiceRequestORM.id == post_id,
+        ServiceRequestORM.user_id == current_user.id
     ).first()
-    
+
     if not post:
         raise HTTPException(status_code=404, detail="Marketplace post not found")
-    
+
     db.delete(post)
     db.commit()
-    
+
     return {"message": "Marketplace post deleted successfully"}
 
 @router.post("/{post_id}/respond")
@@ -332,23 +314,43 @@ def respond_to_marketplace_post(
     db: Session = Depends(get_db),
     current_user: UserORM = Depends(get_current_user)
 ):
-    """Respond to a marketplace post (increment response count)"""
-    _ensure_marketplace_available(db)
-    
-    post = db.query(MarketplacePostORM).filter(
-        MarketplacePostORM.id == post_id
+    """Respond to a marketplace post.
+
+    Creates a real per-provider response row (service_request_responses) —
+    not just a counter bump — so a provider can't respond to the same post
+    twice (enforced by the unique_provider_response constraint) and so the
+    app has an actual record of who responded to what.
+    """
+    post = db.query(ServiceRequestORM).filter(
+        ServiceRequestORM.id == post_id
     ).first()
-    
+
     if not post:
         raise HTTPException(status_code=404, detail="Marketplace post not found")
-    
+
     if post.user_id == current_user.id:
         raise HTTPException(
-            status_code=400, 
+            status_code=400,
             detail="You cannot respond to your own post"
         )
-    
+
+    response = ServiceRequestResponseORM(
+        service_request_id=post_id,
+        provider_id=current_user.id,
+        status="pending",
+    )
+    db.add(response)
+
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="You've already responded to this post",
+        )
+
     post.responses_count += 1
     db.commit()
-    
+
     return {"message": "Response recorded successfully"}

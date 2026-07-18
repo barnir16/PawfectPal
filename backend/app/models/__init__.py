@@ -13,6 +13,7 @@ from .references import VaccineORM, AgeRestrictionORM
 from .provider_profile import ProviderProfileORM
 from .provider_review import ProviderReviewORM
 from .service_request import ServiceRequestORM
+from .service_request_response import ServiceRequestResponseORM
 from .marketplace_post import MarketplacePostORM
 from .chat_message import ChatMessageORM
 from .ai_conversation import AIConversationORM, AIConversationMessageORM

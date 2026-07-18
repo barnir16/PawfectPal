@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from .pet import PetORM
     from .user import UserORM
     from .chat_message import ChatMessageORM
+    from .service_request_response import ServiceRequestResponseORM
 
 class ServiceRequestORM(Base):
     """Service request entity - users post requests for services"""
@@ -44,6 +45,15 @@ class ServiceRequestORM(Base):
     is_urgent: Mapped[bool] = mapped_column(Boolean, default=False)
     views_count: Mapped[int] = mapped_column(Integer, default=0)
     responses_count: Mapped[int] = mapped_column(Integer, default=0)
+
+    # Marketplace/response-flow metadata (columns already existed in the DB via
+    # the add_marketplace_functionality migration; the ORM model just hadn't
+    # been kept in sync with them until now)
+    request_type: Mapped[str] = mapped_column(String, default="direct")  # direct, marketplace
+    is_public: Mapped[bool] = mapped_column(Boolean, default=False)
+    max_providers: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    response_deadline: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    auto_assign: Mapped[bool] = mapped_column(Boolean, default=False)
     
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
@@ -55,6 +65,9 @@ class ServiceRequestORM(Base):
     assigned_provider: Mapped[Optional["UserORM"]] = relationship("UserORM", foreign_keys=[assigned_provider_id])
     pets: Mapped[List["PetORM"]] = relationship("PetORM", secondary="service_request_pets")
     chat_messages: Mapped[List["ChatMessageORM"]] = relationship("ChatMessageORM", back_populates="service_request")
+    responses: Mapped[List["ServiceRequestResponseORM"]] = relationship(
+        "ServiceRequestResponseORM", back_populates="service_request", cascade="all, delete-orphan"
+    )
     
     def __repr__(self):
         return f"<ServiceRequest(id={self.id}, title='{self.title}', service_type='{self.service_type}')>"
