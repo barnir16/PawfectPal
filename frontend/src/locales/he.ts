@@ -401,6 +401,7 @@ export const he = {
 
   // Vaccine Tracking
   vaccineTracking: {
+    regionalVaccineSuggestions: 'הצעות חיסונים אזוריות',
     manageYourVaccines: 'נהל את החיסונים שלך',
     noPetsFound: 'לא נמצאו חיות מחמד',
     tryAdjustingSearch: 'נסה להתאים את קריטריוני החיפוש או הסינון שלך.',
@@ -715,6 +716,8 @@ export const he = {
   // Tasks
   tasks: {
     title: 'משימות',
+    pet: 'חיית מחמד',
+    createTask: 'צור משימה',
     addTask: 'הוסף משימה',
     editTask: 'ערוך משימה',
     updateTask: 'עדכן משימה',
@@ -813,6 +816,8 @@ export const he = {
   // Weight Monitoring
   weight: {
     title: 'מעקב משקל',
+    goalInProgress: 'היעד בתהליך',
+    editWeightGoal: 'ערוך יעד משקל',
     weightTracking: 'מעקב משקל',
     currentWeight: 'משקל נוכחי',
     idealWeightRange: 'טווח משקל אידיאלי',
