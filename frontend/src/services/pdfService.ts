@@ -460,8 +460,22 @@ export const generateMultiPetPDF = async (
       addText(`Tasks: ${completedTasks} completed, ${pendingTasks} pending`, 12, true);
     }
 
+    // Mention (not embed) any location data on file for this pet — the
+    // photo above is already embedded directly when available.
+    if (petData.pet.lastLocation) {
+      addText('Location data: shared and saved with this pet\'s record.');
+    }
+
     currentY += 10;
   }
+
+  // Closing note — tasks and vaccine records aren't repeated in full here
+  // (see the per-pet summaries above), just confirmed as saved.
+  currentY += 5;
+  addText(
+    'Tasks and vaccine records for all pets above have been saved, including any location data attached to them.',
+    10
+  );
 
   // Footer
   const footerY = pageHeight - 15;

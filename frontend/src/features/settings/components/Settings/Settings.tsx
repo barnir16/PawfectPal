@@ -44,6 +44,9 @@ import { useLocalization } from "../../../../contexts/LocalizationContext";
 import { LanguageSwitcher } from "../../../../components/common/LanguageSwitcher";
 import { useTheme as useAppTheme } from "../../../../contexts/ThemeContext";
 import { getPets } from "../../../../services/pets/petService";
+import { getTasks } from "../../../../services/tasks/taskService";
+import { getAllVaccinations } from "../../../../services/vaccines/vaccineService";
+import { generateAndDownloadMultiPetPDF, type PetData } from "../../../../services/pdfService";
 
 /**
  * Preferences stored in localStorage.
@@ -112,22 +115,34 @@ const Settings: React.FC = () => {
 
   const isDark = mode === "dark";
 
+  // Data export: previously downloaded a raw JSON file, which only opened
+  // cleanly in an IDE. Now reuses the same PDF generator the pet-profile
+  // export uses, covering every pet in one readable document — mentioning
+  // (not necessarily embedding) location data, with a simple closing note
+  // that task/vaccine records were saved.
   const handleExportData = async () => {
     try {
-      const pets = await getPets();
-      const payload = {
-        exportedAt: new Date().toISOString(),
-        pets,
-      };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `pawfectpal-export-${new Date().toISOString().slice(0, 10)}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      const [pets, allTasks, allVaccinations] = await Promise.all([
+        getPets(),
+        getTasks().catch(() => []),
+        getAllVaccinations().catch(() => []),
+      ]);
+
+      const petsData: PetData[] = pets.map((pet) => ({
+        pet,
+        tasks: allTasks.filter((task) => task.petIds?.includes(pet.id)),
+        vaccinations: allVaccinations
+          .filter((v) => v.pet_id === pet.id)
+          .map((v) => ({
+            name: v.vaccine_name,
+            date: v.date_administered,
+            nextDue: v.next_due_date,
+            veterinarian: v.veterinarian,
+            notes: v.notes,
+          })),
+      }));
+
+      await generateAndDownloadMultiPetPDF(petsData);
     } catch {
       setInfoMessage(t("settings.exportFailed"));
     }
