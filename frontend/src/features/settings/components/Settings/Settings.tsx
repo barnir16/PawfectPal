@@ -110,7 +110,7 @@ const PREFS_KEY = "pawfectPal_preferences";
 const Settings: React.FC = () => {
   // Dark mode is owned entirely by ThemeContext — no duplicate state here.
   const { mode, setTheme } = useAppTheme();
-  const { t, currentLanguage, isRTL } = useLocalization();
+  const { t, currentLanguage } = useLocalization();
 
   const [prefs, setPrefs] = useState<StoredPreferences>(DEFAULT_PREFS);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -293,7 +293,7 @@ const Settings: React.FC = () => {
                   size="small"
                   variant="outlined"
                   color="default"
-                  sx={{ ml: isRTL ? 0 : 1, mr: isRTL ? 1 : 0 }}
+                  sx={{ ml: 1 }}
                 />
               }
             />

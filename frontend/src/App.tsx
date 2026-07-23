@@ -43,17 +43,17 @@ import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 
 const App = () => {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <LocalizationProvider>
+    <LocalizationProvider>
+      <ThemeProvider>
+        <AuthProvider>
           <NotificationProvider>
             <ErrorBoundary>
               <AppContent />
             </ErrorBoundary>
           </NotificationProvider>
-        </LocalizationProvider>
-      </AuthProvider>
-    </ThemeProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </LocalizationProvider>
   );
 };
 
@@ -63,7 +63,7 @@ const AppContent = () => {
   const [desktopOpen, setDesktopOpen] = useState(true);
   const { isChatOpen, selectedPet, openChat, closeChat, toggleChat } =
     useAIChat();
-  const { t, isRTL } = useLocalization();
+  const { t } = useLocalization();
 
   const handleDrawerToggle = () => {
     setMobileOpen((prev) => !prev);
@@ -123,14 +123,14 @@ const AppContent = () => {
             xs: "100%", // Full width on mobile
             sm: desktopOpen ? `calc(100% - 240px)` : `calc(100% - 68px)`,
           },
-          ml: isRTL ? 0 : {
+          // The global RTL setup (theme.direction + emotion RTL cache, see
+          // ThemeContext.tsx) flips this margin-left into margin-right for
+          // Hebrew automatically now, so it no longer needs a manual isRTL
+          // ternary here.
+          ml: {
             xs: "0px",
             sm: desktopOpen ? "240px" : "68px",
           },
-          mr: isRTL ? {
-            xs: "0px",
-            sm: desktopOpen ? "240px" : "68px",
-          } : 0,
           mt: "64px",
           overflow: "auto",
           height: "calc(100vh - 64px)",

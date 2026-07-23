@@ -27,7 +27,7 @@ type HeaderProps = {
 export const Header = ({ onMenuClick, desktopOpen = true }: HeaderProps) => {
   const { user, logout, forceLogout } = useAuth();
   const navigate = useNavigate();
-  const { t, isRTL } = useLocalization();
+  const { t } = useLocalization();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const displayName = user?.full_name?.trim() || user?.username || "User";
   const avatarSource = user?.profile_image || user?.profile_picture_url || undefined;
@@ -71,8 +71,9 @@ export const Header = ({ onMenuClick, desktopOpen = true }: HeaderProps) => {
       position="fixed"
       sx={{
         width: { sm: desktopOpen ? `calc(100% - 240px)` : `calc(100% - 68px)` },
-        ml: isRTL ? 0 : { sm: desktopOpen ? "240px" : "68px" },
-        mr: isRTL ? { sm: desktopOpen ? "240px" : "68px" } : 0,
+        // Global RTL setup (theme.direction + emotion RTL cache) flips this
+        // for Hebrew automatically — no isRTL ternary needed here anymore.
+        ml: { sm: desktopOpen ? "240px" : "68px" },
         boxShadow: "none",
         bgcolor: "background.paper",
         color: "text.primary",
@@ -85,11 +86,10 @@ export const Header = ({ onMenuClick, desktopOpen = true }: HeaderProps) => {
         <IconButton
           color="inherit"
           aria-label="open drawer"
-          edge={isRTL ? "end" : "start"}
+          edge="start"
           onClick={onMenuClick}
           sx={{
-            mr: isRTL ? 0 : 2,
-            ml: isRTL ? 2 : 0,
+            mr: 2,
             display: { sm: "none" },
           }}
         >

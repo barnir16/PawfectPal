@@ -296,7 +296,9 @@ export const Sidebar = ({
                   pt: groupIdx === 0 ? 1 : 2,
                   pb: 0.5,
                   display: "block",
-                  textAlign: isRTL ? "right" : "left",
+                  // CSS logical keyword — resolves to right in RTL, left in
+                  // LTR, natively, no manual ternary needed.
+                  textAlign: "start",
                 }}
               >
                 {group.label}

@@ -1,6 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
 import { createTheme, ThemeProvider as MuiThemeProvider, PaletteMode } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
+import { CacheProvider } from '@emotion/react';
+import createCache from '@emotion/cache';
+import { prefixer } from 'stylis';
+import rtlPlugin from '@mui/stylis-plugin-rtl';
+import { useLocalization } from './LocalizationContext';
 
 // Warm palette used in both light and dark modes.
 // Dark mode keeps the same amber/teal hues but flips backgrounds to warm charcoal.
@@ -14,8 +19,9 @@ const PALETTE = {
   white:     { main: '#ffffff', contrastText: '#2D2D2D' },
 };
 
-function buildTheme(mode: PaletteMode) {
+function buildTheme(mode: PaletteMode, direction: 'ltr' | 'rtl') {
   return createTheme({
+    direction,
     palette: {
       mode,
       ...PALETTE,
@@ -107,8 +113,18 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+// Two emotion caches, created once and reused — swapping which one is
+// active (via CacheProvider) is what makes MUI's own CSS-in-JS output flip
+// margin/padding/border-radius/etc. for RTL, instead of every component
+// having to hand-write isRTL-conditional sx props (which is how the app's
+// RTL bugs kept recurring: PetCard, the Settings paw icon, Auth field
+// cropping, the marketplace modal — all symptoms of the same missing piece).
+const ltrCache = createCache({ key: 'mui' });
+const rtlCache = createCache({ key: 'muirtl', stylisPlugins: [prefixer, rtlPlugin] });
+
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [mode, setMode] = useState<PaletteMode>('light');
+  const { isRTL } = useLocalization();
 
   // Read saved preference on first mount
   useEffect(() => {
@@ -129,12 +145,17 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     localStorage.setItem('pawfectPal_theme', newMode);
   };
 
+  const direction = isRTL ? 'rtl' : 'ltr';
+  const theme = useMemo(() => buildTheme(mode, direction), [mode, direction]);
+
   return (
     <ThemeContext.Provider value={{ mode, toggleTheme, setTheme }}>
-      <MuiThemeProvider theme={buildTheme(mode)}>
-        <CssBaseline />
-        {children}
-      </MuiThemeProvider>
+      <CacheProvider value={isRTL ? rtlCache : ltrCache}>
+        <MuiThemeProvider theme={theme}>
+          <CssBaseline />
+          {children}
+        </MuiThemeProvider>
+      </CacheProvider>
     </ThemeContext.Provider>
   );
 };
