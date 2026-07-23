@@ -113,12 +113,27 @@ export const TaskForm = () => {
     control,
     handleSubmit,
     reset,
+    setValue,
     watch,
     formState: { errors },
   } = useForm<TaskFormData>({
     resolver: zodResolver(schema),
     defaultValues,
   });
+
+  // Pre-fill the vaccine name (and a sensible title) when arriving from a
+  // vaccine suggestion's "+" button, e.g. /tasks/new?type=vaccine&name=Rabies.
+  // Using setValue for just these two fields instead of folding it into
+  // defaultValues/reset, since defaultValues is captured once at mount and
+  // isVaccineForm isn't true yet on that first render.
+  useEffect(() => {
+    const type = searchParams.get('type');
+    const suggestedName = searchParams.get('name');
+    if (type === 'vaccine' && suggestedName) {
+      setValue('vaccineName', suggestedName);
+      setValue('title', `${suggestedName} Vaccination`);
+    }
+  }, [searchParams, setValue]);
 
   // Load data
   useEffect(() => {

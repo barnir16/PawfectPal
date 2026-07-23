@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   CardContent,
@@ -106,6 +107,14 @@ interface VaccineTrackerProps {
 
 const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBack }) => {
   const { t, currentLanguage } = useLocalization();
+  const navigate = useNavigate();
+
+  // "+" on a suggestion takes you to the same vaccine task form the main
+  // "Add Vaccine" button uses, pre-filled with the suggestion's name —
+  // previously this button had no onClick at all.
+  const handleAddSuggestionToSchedule = (suggestion: VaccineSuggestion) => {
+    navigate(`/tasks/new?type=vaccine&name=${encodeURIComponent(suggestion.name)}`);
+  };
   
   // Get translated vaccine name
   const getTranslatedVaccineName = (name: string): string => {
@@ -679,11 +688,11 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
                      {selectedPet !== 'all' && (
                        <Box sx={{ mb: 2 }}>
                          <Button
-                           variant="outlined"
-                           startIcon={aiExplanationLoading ? <CircularProgress size={16} /> : <AutoAwesomeIcon />}
+                           variant="contained"
+                           color="secondary"
+                           startIcon={aiExplanationLoading ? <CircularProgress size={16} color="inherit" /> : <AutoAwesomeIcon />}
                            onClick={handleExplainVaccinePlan}
                            disabled={aiExplanationLoading}
-                           size="small"
                          >
                            {t('vaccines.explainWithAi') || 'Explain with AI'}
                          </Button>
@@ -704,7 +713,11 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
                          )}
                        </Box>
                      )}
-                     <VaccineSuggestionsList suggestions={filteredSuggestions} title={t('vaccineTracking.regionalVaccineSuggestions')} />
+                     <VaccineSuggestionsList
+                      suggestions={filteredSuggestions}
+                      title={t('vaccineTracking.regionalVaccineSuggestions')}
+                      onAddSuggestion={handleAddSuggestionToSchedule}
+                    />
                    </>
                  )}
                </CardContent>
@@ -993,9 +1006,10 @@ const VaccineList: React.FC<VaccineListProps> = ({ vaccines, title, onEditVaccin
 interface VaccineSuggestionsListProps {
   suggestions: VaccineSuggestion[];
   title: string;
+  onAddSuggestion?: (suggestion: VaccineSuggestion) => void;
 }
 
-const VaccineSuggestionsList: React.FC<VaccineSuggestionsListProps> = ({ suggestions, title }) => {
+const VaccineSuggestionsList: React.FC<VaccineSuggestionsListProps> = ({ suggestions, title, onAddSuggestion }) => {
   const { t } = useLocalization();
   
   const getPriorityInfo = (priority: string) => {
@@ -1085,7 +1099,11 @@ const VaccineSuggestionsList: React.FC<VaccineSuggestionsListProps> = ({ suggest
               </Box>
               <Box>
                 <Tooltip title={t('vaccines.addToSchedule')}>
-                  <IconButton size="small" color="primary">
+                  <IconButton
+                    size="small"
+                    color="primary"
+                    onClick={() => onAddSuggestion?.(suggestion)}
+                  >
                     <AddIcon />
                   </IconButton>
                 </Tooltip>
