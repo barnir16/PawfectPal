@@ -64,7 +64,7 @@ export const Sidebar = ({
 }: SidebarProps) => {
   const theme = useTheme();
   const location = useLocation();
-  const { t, isRTL } = useLocalization();
+  const { t } = useLocalization();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [open, setOpen] = useState(!isMobile);
   const { user } = useAuth();
@@ -352,7 +352,14 @@ export const Sidebar = ({
       {/* Mobile drawer — temporary, slides in on small screens */}
       <Drawer
         variant="temporary"
-        anchor={isRTL ? "right" : "left"}
+        // Always "left" here — MUI's Drawer intentionally does NOT flip its
+        // own anchor positioning for RTL (verified in its source: anchor
+        // only affects transition direction under isRtl, not the static
+        // left:0/right:0 CSS). It's designed to rely on the RTL emotion
+        // cache (ThemeContext.tsx) to flip that physical CSS instead. The
+        // previous isRTL ternary here double-flipped against that cache —
+        // right in Hebrew got flipped back to left by the plugin.
+        anchor="left"
         open={mobileOpen}
         onClose={handleMobileClose}
         ModalProps={{ keepMounted: true }}
@@ -372,7 +379,14 @@ export const Sidebar = ({
       {/* Desktop drawer — permanent, collapses to icon rail */}
       <Drawer
         variant="permanent"
-        anchor={isRTL ? "right" : "left"}
+        // Always "left" here — MUI's Drawer intentionally does NOT flip its
+        // own anchor positioning for RTL (verified in its source: anchor
+        // only affects transition direction under isRtl, not the static
+        // left:0/right:0 CSS). It's designed to rely on the RTL emotion
+        // cache (ThemeContext.tsx) to flip that physical CSS instead. The
+        // previous isRTL ternary here double-flipped against that cache —
+        // right in Hebrew got flipped back to left by the plugin.
+        anchor="left"
         sx={{
           display: { xs: "none", sm: "block" },
           "& .MuiDrawer-paper": {
