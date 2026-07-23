@@ -196,13 +196,35 @@ export const MarketplacePostsPage: React.FC = () => {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          {t('marketplace.requestBoard') || 'Request Board'}
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          {t('marketplace.subtitle') || 'Post what you need so providers can discover and respond to it'}
-        </Typography>
+      <Box
+        sx={{
+          mb: 4,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          flexDirection: { xs: 'column', sm: 'row' },
+          gap: 2,
+        }}
+      >
+        <Box>
+          <Typography variant="h4" gutterBottom>
+            {t('marketplace.requestBoard') || 'Request Board'}
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            {t('marketplace.subtitle') || 'Post what you need so providers can discover and respond to it'}
+          </Typography>
+        </Box>
+        {/* A persistent, clearly-labeled entry point in the header — the
+            floating "+" button alone (see below) wasn't visible/obvious
+            enough once the board already had posts in it. */}
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => setShowCreateForm(true)}
+          sx={{ flexShrink: 0 }}
+        >
+          {t('marketplace.createPost') || 'Create Post'}
+        </Button>
       </Box>
 
       {/* Tabs */}
@@ -471,11 +493,13 @@ export const MarketplacePostsPage: React.FC = () => {
         </Alert>
       </Snackbar>
 
-      {/* Floating Action Button */}
+      {/* Floating Action Button — stacked above the global AI chat toggle
+          FAB (bottom: 16, right: 16 in AIChatbot.tsx), which otherwise sits
+          in the exact same corner and makes this one easy to miss/overlap. */}
       <Fab
         color="primary"
         aria-label="add"
-        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        sx={{ position: 'fixed', bottom: 88, right: 16 }}
         onClick={() => setShowCreateForm(true)}
       >
         <Add />
