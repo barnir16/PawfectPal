@@ -85,7 +85,10 @@ class MarketplaceService {
       await apiClient.post(`/marketplace-posts/${postId}/respond`);
     } catch (error: any) {
       console.error('Failed to respond to marketplace post:', error);
-      throw new Error('Failed to respond to marketplace post');
+      // Preserve the original error (status + backend detail message) so
+      // callers can tell a 409 "already responded" apart from a 400
+      // "can't respond to your own post" apart from a real failure.
+      throw error;
     }
   }
 

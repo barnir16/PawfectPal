@@ -38,6 +38,7 @@ import { useLocalization } from "../../contexts/LocalizationContext";
 import { marketplaceService } from "../../services/marketplace/marketplaceService";
 import { ServiceRequestService } from "../../services/serviceRequests/serviceRequestService";
 import { MarketplacePostCard } from "../marketplace/MarketplacePostCard";
+import { getServiceTypeLabel } from "../../utils/serviceTypeLabel";
 import type { MarketplacePostSummary } from "../../types/services/marketplacePost";
 import type {
   ServiceRequestFilters,
@@ -460,7 +461,7 @@ export const ServiceRequestBrowser: React.FC = () => {
                 <MenuItem value="">{t("services.allServices")}</MenuItem>
                 {serviceTypes.map((type) => (
                   <MenuItem key={type.id} value={type.name}>
-                    {type.name}
+                    {getServiceTypeLabel(t, type.name)}
                   </MenuItem>
                 ))}
               </Select>

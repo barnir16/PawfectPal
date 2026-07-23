@@ -419,3 +419,6 @@ firebase-admin*.json
 *.crt
 secrets/
 credentials/
+
+# DB backups (pg_dump snapshots) — contain real user data, never commit
+*.dump

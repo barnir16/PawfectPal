@@ -653,6 +653,11 @@ Write a short, friendly post with:
 1. A concise title (under 60 characters)
 2. A 2-4 sentence description explaining what's needed, mentioning the pet(s) by name
 
+Only use the facts given above. Do not invent the pet's temperament, health
+details, grooming needs, or any other specifics the owner didn't mention.
+Do not add generic requests like "please send quotes and availability"
+unless the owner's own details asked for that.
+
 Format your response EXACTLY like this, with no extra commentary:
 TITLE: <title here>
 DESCRIPTION: <description here>{lang_instruction}"""

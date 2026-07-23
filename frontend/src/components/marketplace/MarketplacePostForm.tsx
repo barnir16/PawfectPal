@@ -23,6 +23,7 @@ import { Cancel, Save, AutoAwesome } from '@mui/icons-material';
 import { useLocalization } from '../../contexts/LocalizationContext';
 import { marketplaceService } from '../../services/marketplace/marketplaceService';
 import { draftMarketplacePost } from '../../services/ai/marketplaceDraftService';
+import { getServiceTypeLabel } from '../../utils/serviceTypeLabel';
 import type { MarketplacePostCreate } from '../../types/services/marketplacePost';
 import type { Pet } from '../../types/pets/pet';
 
@@ -252,7 +253,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
                 >
                   {serviceTypes.map((type) => (
                     <MenuItem key={type.id} value={type.name}>
-                      {type.name}
+                      {getServiceTypeLabel(t, type.name)}
                     </MenuItem>
                   ))}
                 </Select>
@@ -284,7 +285,11 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
                   }))
                 }
                 renderInput={(params) => (
-                  <TextField {...params} label={t('marketplace.selectPets')} required />
+                  <TextField
+                    {...params}
+                    label={t('marketplace.selectPets')}
+                    error={selectedPets.length === 0 && Boolean(error)}
+                  />
                 )}
               />
             </Grid>

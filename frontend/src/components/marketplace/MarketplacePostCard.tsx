@@ -34,6 +34,7 @@ interface MarketplacePostCardProps {
   post: MarketplacePostSummary;
   onViewDetails?: (post: MarketplacePostSummary) => void;
   onContact?: (post: MarketplacePostSummary) => void;
+  onError?: (message: string) => void;
   onEdit?: (post: MarketplacePostSummary) => void;
   onDelete?: (post: MarketplacePostSummary) => void;
   isOwner?: boolean;
@@ -44,6 +45,7 @@ export const MarketplacePostCard: React.FC<MarketplacePostCardProps> = ({
   post,
   onViewDetails,
   onContact,
+  onError,
   onEdit,
   onDelete,
   isOwner = false,
@@ -97,8 +99,16 @@ export const MarketplacePostCard: React.FC<MarketplacePostCardProps> = ({
     try {
       await marketplaceService.respondToPost(post.id);
       onContact?.(post);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to respond to post:', error);
+      const status = error?.status;
+      const message =
+        status === 409
+          ? t('marketplace.alreadyResponded')
+          : status === 400
+            ? t('marketplace.cannotRespondOwnPost')
+            : t('marketplace.respondFailed');
+      onError?.(message);
     } finally {
       setLoading(false);
     }

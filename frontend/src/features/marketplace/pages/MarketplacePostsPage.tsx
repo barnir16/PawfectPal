@@ -75,6 +75,7 @@ export const MarketplacePostsPage: React.FC = () => {
   const [selectedPost, setSelectedPost] = useState<MarketplacePostSummary | null>(null);
   const [editingPost, setEditingPost] = useState<MarketplacePostSummary | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [feedbackSeverity, setFeedbackSeverity] = useState<'success' | 'error'>('success');
   
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -150,10 +151,16 @@ export const MarketplacePostsPage: React.FC = () => {
 
   const handleContact = (post: MarketplacePostSummary) => {
     setSelectedPost(post);
+    setFeedbackSeverity('success');
     setFeedbackMessage(
       t('marketplace.contactRecorded') ||
         'Response recorded. Direct marketplace messaging is still being finalized.'
     );
+  };
+
+  const handleContactError = (message: string) => {
+    setFeedbackSeverity('error');
+    setFeedbackMessage(message);
   };
 
   const handleEdit = (post: MarketplacePostSummary) => {
@@ -307,6 +314,7 @@ export const MarketplacePostsPage: React.FC = () => {
                   post={post}
                   onViewDetails={handleViewDetails}
                   onContact={handleContact}
+                  onError={handleContactError}
                   compact={viewMode === 'list'}
                 />
               </Grid>
@@ -453,8 +461,15 @@ export const MarketplacePostsPage: React.FC = () => {
         open={Boolean(feedbackMessage)}
         autoHideDuration={4000}
         onClose={() => setFeedbackMessage(null)}
-        message={feedbackMessage}
-      />
+      >
+        <Alert
+          onClose={() => setFeedbackMessage(null)}
+          severity={feedbackSeverity}
+          sx={{ width: '100%' }}
+        >
+          {feedbackMessage}
+        </Alert>
+      </Snackbar>
 
       {/* Floating Action Button */}
       <Fab

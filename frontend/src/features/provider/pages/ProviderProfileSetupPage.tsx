@@ -31,6 +31,7 @@ import {
 import { useLocalization } from '../../../contexts/LocalizationContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getBaseUrl, getToken } from '../../../services/api';
+import { getServiceTypeLabel } from '../../../utils/serviceTypeLabel';
 
 interface ServiceType {
   id: number;
@@ -252,14 +253,14 @@ export const ProviderProfileSetupPage: React.FC = () => {
                     renderValue={(selected) => (
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                         {selected.map((value) => (
-                          <Chip key={value} label={value} size="small" />
+                          <Chip key={value} label={getServiceTypeLabel(t, value)} size="small" />
                         ))}
                       </Box>
                     )}
                   >
                     {serviceTypes.map((type) => (
                       <MenuItem key={type.id} value={type.name}>
-                        {type.name}
+                        {getServiceTypeLabel(t, type.name)}
                       </MenuItem>
                     ))}
                   </Select>
@@ -382,7 +383,7 @@ export const ProviderProfileSetupPage: React.FC = () => {
                   </Typography>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
                     {formData.services.map((service) => (
-                      <Chip key={service} label={service} size="small" />
+                      <Chip key={service} label={getServiceTypeLabel(t, service)} size="small" />
                     ))}
                   </Box>
                 </Box>

@@ -23,45 +23,51 @@ def create_provider_review(
     db: Session = Depends(get_db),
     current_user: UserORM = Depends(get_current_user)
 ):
-    """Create a new provider review"""
-    
+    """Create a new provider review.
+
+    review.provider_id is a UserORM id — the same "provider" identity the
+    rest of the consolidated provider API (GET /providers/{id}) uses — not
+    the internal ProviderProfileORM.id. We resolve the profile by user_id
+    here and use its own id only for the provider_reviews FK.
+    """
+
     # Validate provider exists
     provider = db.query(ProviderProfileORM).filter(
-        ProviderProfileORM.id == review.provider_id
+        ProviderProfileORM.user_id == review.provider_id
     ).first()
-    
+
     if not provider:
         raise HTTPException(status_code=404, detail="Provider not found")
-    
+
     # Check if user already reviewed this provider for this service
     existing_review = db.query(ProviderReviewORM).filter(
-        ProviderReviewORM.provider_id == review.provider_id,
+        ProviderReviewORM.provider_id == provider.id,
         ProviderReviewORM.reviewer_id == current_user.id,
         ProviderReviewORM.service_type == review.service_type
     ).first()
-    
+
     if existing_review:
         raise HTTPException(
-            status_code=400, 
+            status_code=400,
             detail="You have already reviewed this provider for this service type"
         )
-    
+
     # Validate service request if provided
     if review.service_request_id:
         service_request = db.query(ServiceRequestORM).filter(
             ServiceRequestORM.id == review.service_request_id,
             ServiceRequestORM.user_id == current_user.id
         ).first()
-        
+
         if not service_request:
             raise HTTPException(
-                status_code=404, 
+                status_code=404,
                 detail="Service request not found or does not belong to you"
             )
-    
+
     # Create the review
     db_review = ProviderReviewORM(
-        provider_id=review.provider_id,
+        provider_id=provider.id,
         reviewer_id=current_user.id,
         service_request_id=review.service_request_id,
         rating=review.rating,
@@ -71,14 +77,14 @@ def create_provider_review(
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow()
     )
-    
+
     db.add(db_review)
     db.commit()
     db.refresh(db_review)
-    
+
     # Update provider's average rating and total reviews
-    update_provider_rating_stats(db, review.provider_id)
-    
+    update_provider_rating_stats(db, provider.id)
+
     return db_review
 
 @router.get("/provider/{provider_id}", response_model=List[ProviderReviewRead])
@@ -89,27 +95,30 @@ def get_provider_reviews(
     service_type: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
-    """Get reviews for a specific provider"""
-    
+    """Get reviews for a specific provider.
+
+    provider_id here is a UserORM id (see create_provider_review docstring).
+    """
+
     # Validate provider exists
     provider = db.query(ProviderProfileORM).filter(
-        ProviderProfileORM.id == provider_id
+        ProviderProfileORM.user_id == provider_id
     ).first()
-    
+
     if not provider:
         raise HTTPException(status_code=404, detail="Provider not found")
-    
+
     query = db.query(ProviderReviewORM).filter(
-        ProviderReviewORM.provider_id == provider_id
+        ProviderReviewORM.provider_id == provider.id
     )
-    
+
     if service_type:
         query = query.filter(ProviderReviewORM.service_type == service_type)
-    
+
     reviews = query.order_by(
         ProviderReviewORM.created_at.desc()
     ).offset(skip).limit(limit).all()
-    
+
     return reviews
 
 @router.get("/my-reviews", response_model=List[ProviderReviewRead])
