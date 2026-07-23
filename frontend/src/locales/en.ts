@@ -1029,6 +1029,14 @@ export const en = {
     emailNotifications: 'Email Notifications',
     taskReminders: 'Task Reminders',
     vaccineReminders: 'Vaccine Reminders',
+    emergencyContacts: 'Emergency Contacts',
+    emergencyContactsSubtitle: 'People to reach in an emergency — add up to 5. These save automatically as you type.',
+    relationship: 'Relationship',
+    relationshipPlaceholder: 'e.g., Veterinarian, Emergency Vet, Family',
+    addContact: 'Add contact',
+    removeContact: 'Remove contact',
+    maxContactsReached: "You've reached the 5-contact limit.",
+    noContactsYet: 'No emergency contacts added yet.',
   },
 
   // Settings

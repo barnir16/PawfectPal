@@ -961,6 +961,14 @@ export const he = {
     emailNotifications: 'התראות אימייל',
     taskReminders: 'תזכורות משימות',
     vaccineReminders: 'תזכורות חיסונים',
+    emergencyContacts: 'אנשי קשר לחירום',
+    emergencyContactsSubtitle: 'אנשים ליצירת קשר במקרה חירום — ניתן להוסיף עד 5. הפרטים נשמרים אוטומטית תוך כדי הקלדה.',
+    relationship: 'קרבה / תפקיד',
+    relationshipPlaceholder: 'למשל: וטרינר, וטרינר חירום, בן משפחה',
+    addContact: 'הוסף איש קשר',
+    removeContact: 'הסר איש קשר',
+    maxContactsReached: 'הגעת למגבלה של 5 אנשי קשר.',
+    noContactsYet: 'עדיין לא נוספו אנשי קשר לחירום.',
   },
 
   // Settings

@@ -30,6 +30,7 @@ import {
   Verified as VerifiedIcon,
 } from "@mui/icons-material";
 import { getFullImageUrl } from "../../../utils/image";
+import { EmergencyContacts } from "../components/EmergencyContacts";
 
 interface ProfileFormData {
   username: string;
@@ -429,6 +430,11 @@ const ProfilePage: React.FC = () => {
             {renderTextField("Postal Code", "postal_code")}
           </CardContent>
         </Card>
+
+        {/* Emergency Contacts — moved here from Settings, now a
+            customizable list instead of 3 fixed slots. Saves to its own
+            localStorage key independently of this page's edit/save flow. */}
+        <EmergencyContacts />
 
         {/* Provider Info (if applicable) */}
         {user.is_provider && (
