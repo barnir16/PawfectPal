@@ -16,7 +16,10 @@ class MarketplaceService {
       return response;
     } catch (error: any) {
       console.error('Failed to create marketplace post:', error);
-      throw new Error('Failed to create marketplace post');
+      // Preserve the backend's actual detail message (e.g. "No providers are
+      // currently offering 'Training' service") instead of masking it with a
+      // generic string — apiClient already extracts a useful message.
+      throw error;
     }
   }
 
@@ -61,7 +64,7 @@ class MarketplaceService {
       return response;
     } catch (error: any) {
       console.error('Failed to update marketplace post:', error);
-      throw new Error('Failed to update marketplace post');
+      throw error;
     }
   }
 

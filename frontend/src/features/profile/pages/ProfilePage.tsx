@@ -432,9 +432,12 @@ const ProfilePage: React.FC = () => {
         </Card>
 
         {/* Emergency Contacts — moved here from Settings, now a
-            customizable list instead of 3 fixed slots. Saves to its own
-            localStorage key independently of this page's edit/save flow. */}
-        <EmergencyContacts />
+            customizable list instead of 3 fixed slots. Fields are gated on
+            this page's isEditing state, same as every other field above;
+            "Add contact" while not editing switches into edit mode instead
+            of silently allowing an edit. Persistence is still immediate
+            (its own localStorage key) rather than tied to Save/Cancel. */}
+        <EmergencyContacts isEditing={isEditing} onRequestEdit={() => setIsEditing(true)} />
 
         {/* Provider Info (if applicable) */}
         {user.is_provider && (

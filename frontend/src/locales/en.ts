@@ -541,6 +541,7 @@ export const en = {
   vaccines: {
     title: 'Vaccines',
     explainWithAi: 'Explain with AI',
+    explainWithAiSelectPetHint: 'Select a specific pet to get an AI explanation',
     aiUnavailableFallback: 'AI explanation unavailable — showing a quick summary instead.',
     overdue: 'Overdue',
     dueSoon: 'Due Soon',

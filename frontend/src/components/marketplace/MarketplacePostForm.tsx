@@ -115,12 +115,21 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
     setAiDrafting(true);
     setAiDraftNote(null);
     try {
+      // If the owner already typed something into Title/Description before
+      // clicking "Draft with AI", pass it along as context so the draft
+      // incorporates what they actually said instead of inventing generic
+      // filler. Without this, the AI only ever saw service type + pet info.
+      const typedContext = [formData.title.trim(), formData.description.trim()]
+        .filter(Boolean)
+        .join('. ');
+
       const result = await draftMarketplacePost(
         formData.service_type,
         selectedPets.map((pet) => ({ name: pet.name, type: pet.type, breed: pet.breed })),
         {
           location: formData.location,
           isUrgent: formData.is_urgent,
+          extraContext: typedContext || undefined,
           promptLanguage: currentLanguage,
         }
       );

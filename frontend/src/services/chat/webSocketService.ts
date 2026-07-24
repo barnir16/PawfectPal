@@ -150,7 +150,14 @@ export class WebSocketService {
     const messageData = {
       type: 'message',
       message: message.message,
-      message_type: message.message_type || 'text'
+      message_type: message.message_type || 'text',
+      // Previously dropped here — the REST send path (chatService.sendMessage)
+      // maps reply_to into message_metadata server-side, but the WebSocket
+      // path (used whenever a live connection is open, which is most of the
+      // time) never included it at all, so replies always landed as plain
+      // messages. Included now; also requires the backend WS handler to
+      // read and persist it (see websocket/chat_router.py).
+      ...(message.reply_to ? { reply_to: message.reply_to } : {}),
     };
 
     this.ws.send(JSON.stringify(messageData));

@@ -685,34 +685,47 @@ const RealVaccineTracker: React.FC<VaccineTrackerProps> = ({ onAddVaccine, onBac
                  )}
                  {tabValue === 4 && (
                    <>
-                     {selectedPet !== 'all' && (
-                       <Box sx={{ mb: 2 }}>
-                         <Button
-                           variant="contained"
-                           color="secondary"
-                           startIcon={aiExplanationLoading ? <CircularProgress size={16} color="inherit" /> : <AutoAwesomeIcon />}
-                           onClick={handleExplainVaccinePlan}
-                           disabled={aiExplanationLoading}
-                         >
-                           {t('vaccines.explainWithAi') || 'Explain with AI'}
-                         </Button>
-                         {aiExplanation && (
-                           <Alert
-                             severity="info"
-                             icon={<AutoAwesomeIcon fontSize="inherit" />}
-                             sx={{ mt: 1.5 }}
-                             onClose={() => setAiExplanation(null)}
+                     <Box sx={{ mb: 2 }}>
+                       {/* Previously hidden entirely when "All Pets" was
+                           selected, which read as "the AI feature is gone" —
+                           now always visible, just disabled with an
+                           explanatory tooltip so the button's existence
+                           isn't a mystery. */}
+                       <Tooltip
+                         title={
+                           selectedPet === 'all'
+                             ? t('vaccines.explainWithAiSelectPetHint') || 'Select a specific pet to get an AI explanation'
+                             : ''
+                         }
+                       >
+                         <span>
+                           <Button
+                             variant="contained"
+                             color="secondary"
+                             startIcon={aiExplanationLoading ? <CircularProgress size={16} color="inherit" /> : <AutoAwesomeIcon />}
+                             onClick={handleExplainVaccinePlan}
+                             disabled={aiExplanationLoading || selectedPet === 'all'}
                            >
-                             <Typography variant="body2">{aiExplanation.text}</Typography>
-                             {!aiExplanation.aiGenerated && (
-                               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                                 {t('vaccines.aiUnavailableFallback') || 'AI explanation unavailable — showing a quick summary instead.'}
-                               </Typography>
-                             )}
-                           </Alert>
-                         )}
-                       </Box>
-                     )}
+                             {t('vaccines.explainWithAi') || 'Explain with AI'}
+                           </Button>
+                         </span>
+                       </Tooltip>
+                       {aiExplanation && (
+                         <Alert
+                           severity="info"
+                           icon={<AutoAwesomeIcon fontSize="inherit" />}
+                           sx={{ mt: 1.5 }}
+                           onClose={() => setAiExplanation(null)}
+                         >
+                           <Typography variant="body2">{aiExplanation.text}</Typography>
+                           {!aiExplanation.aiGenerated && (
+                             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                               {t('vaccines.aiUnavailableFallback') || 'AI explanation unavailable — showing a quick summary instead.'}
+                             </Typography>
+                           )}
+                         </Alert>
+                       )}
+                     </Box>
                      <VaccineSuggestionsList
                       suggestions={filteredSuggestions}
                       title={t('vaccineTracking.regionalVaccineSuggestions')}
@@ -958,18 +971,26 @@ const VaccineList: React.FC<VaccineListProps> = ({ vaccines, title, onEditVaccin
                      />
                    )}
                  </Box>
+                 {/* These cards use a fixed light status color (error.light /
+                     warning.light / success.light) as background in BOTH
+                     light and dark mode — it doesn't adapt with the theme.
+                     Using theme-adaptive 'text.secondary' here made these
+                     lines nearly invisible in dark mode (light gray text on
+                     a light salmon/orange card). Using a fixed dark,
+                     semi-opaque color instead keeps them legible in both
+                     modes, since the card background is always light. */}
                  <Stack spacing={1}>
-                   <Typography variant="body2" color="text.secondary">
+                   <Typography variant="body2" sx={{ color: 'rgba(0, 0, 0, 0.72)' }}>
                      <strong>{t('vaccines.administered')}:</strong> {new Date(vaccine.administeredDate).toLocaleDateString()}
                    </Typography>
-                   <Typography variant="body2" color="text.secondary">
+                   <Typography variant="body2" sx={{ color: 'rgba(0, 0, 0, 0.72)' }}>
                      <strong>{t('vaccines.nextDue')}:</strong> {new Date(vaccine.nextDueDate).toLocaleDateString()}
                    </Typography>
-                   <Typography variant="body2" color="text.secondary">
+                   <Typography variant="body2" sx={{ color: 'rgba(0, 0, 0, 0.72)' }}>
                      <strong>{t('vaccines.veterinarian')}:</strong> {vaccine.veterinarian} {t('vaccines.at')} {vaccine.clinic}
                    </Typography>
                    {vaccine.notes && (
-                     <Typography variant="body2" color="text.secondary">
+                     <Typography variant="body2" sx={{ color: 'rgba(0, 0, 0, 0.72)' }}>
                        <strong>{t('vaccines.notes')}:</strong> {vaccine.notes}
                      </Typography>
                    )}
@@ -1090,10 +1111,13 @@ const VaccineSuggestionsList: React.FC<VaccineSuggestionsListProps> = ({ suggest
                     variant="outlined"
                   />
                 </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                {/* Same fixed-light-background-vs-theme-adaptive-text issue
+                    as the vaccine records list above — forced to a fixed
+                    dark color so it stays legible in dark mode. */}
+                <Typography variant="body2" sx={{ color: 'rgba(0, 0, 0, 0.72)', mb: 1 }}>
                   {suggestion.description}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{ color: 'rgba(0, 0, 0, 0.72)' }}>
                   <strong>{t('vaccines.frequency')}:</strong> {suggestion.frequency}
                 </Typography>
               </Box>

@@ -47,6 +47,7 @@ import { getPets } from "../../../../services/pets/petService";
 import { getTasks } from "../../../../services/tasks/taskService";
 import { getAllVaccinations } from "../../../../services/vaccines/vaccineService";
 import { generateAndDownloadMultiPetPDF, type PetData } from "../../../../services/pdfService";
+import { loadContacts, type EmergencyContact } from "../../../profile/components/EmergencyContacts";
 
 /**
  * Preferences stored in localStorage.
@@ -83,6 +84,7 @@ const Settings: React.FC = () => {
   const [prefs, setPrefs] = useState<StoredPreferences>(DEFAULT_PREFS);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
+  const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>([]);
 
   // Load persisted preferences once on mount
   useEffect(() => {
@@ -95,6 +97,13 @@ const Settings: React.FC = () => {
     } catch {
       /* ignore parse errors, keep defaults */
     }
+  }, []);
+
+  // Read-only summary of contacts saved on the Profile page — re-read every
+  // time Settings mounts (e.g. navigating back here after editing on
+  // Profile) so the list shown here doesn't go stale.
+  useEffect(() => {
+    setEmergencyContacts(loadContacts());
   }, []);
 
   // Persist preferences to localStorage (synchronous — no fake delay needed)
@@ -414,6 +423,24 @@ const Settings: React.FC = () => {
               <Typography variant="body2" color="text.secondary">
                 {t("pets.storeContacts")}
               </Typography>
+
+              {emergencyContacts.length > 0 ? (
+                <List dense sx={{ mt: 1 }}>
+                  {emergencyContacts.map((contact) => (
+                    <ListItem key={contact.id} disableGutters>
+                      <ListItemText
+                        primary={contact.name || t("profile.noContactsYet")}
+                        secondary={[contact.relationship, contact.phone].filter(Boolean).join(" • ")}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              ) : (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: "italic" }}>
+                  {t("profile.noContactsYet")}
+                </Typography>
+              )}
+
               <Button
                 component={RouterLink}
                 to="/profile"

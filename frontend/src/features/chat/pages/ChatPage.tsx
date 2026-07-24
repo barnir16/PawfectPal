@@ -291,7 +291,11 @@ export const ChatPage = () => {
     if (!offlineStatus.isOnline) {
       offlineMessageService.queueMessage(msg);
       
-      // Optimistically add message to UI with offline indicator
+      // Optimistically add message to UI with offline indicator. reply_to
+      // lives at msg.reply_to (ChatMessageCreate shape) but rendering reads
+      // message_metadata.reply_to (ChatMessage shape) — nest it here so a
+      // reply shows its quote immediately instead of looking like a plain
+      // message until the next full reload.
       const optimisticMessage: ChatMessage = {
         ...msg,
         id: Date.now(), // Temporary ID
@@ -301,9 +305,10 @@ export const ChatPage = () => {
         created_at: new Date().toISOString(),
         message_type: msg.message_type || "text",
         delivery_status: "sent", // Will be updated when actually sent
-        attachments: [] // Initialize as empty array, will be populated when message is actually sent
+        attachments: [], // Initialize as empty array, will be populated when message is actually sent
+        message_metadata: msg.reply_to ? { reply_to: msg.reply_to } : undefined,
       };
-      
+
       setConversation(prev => {
         if (!prev) return prev;
         return {
@@ -312,7 +317,7 @@ export const ChatPage = () => {
           unread_count: 0
         };
       });
-      
+
       return;
     }
     
@@ -323,7 +328,8 @@ export const ChatPage = () => {
       if (isWebSocketConnected && webSocketService.isConnected()) {
         webSocketService.sendMessage(msg);
         
-        // Optimistically add message to UI
+        // Optimistically add message to UI. See the offline branch above for
+        // why reply_to needs to be nested into message_metadata here.
         const optimisticMessage: ChatMessage = {
           ...msg,
           id: Date.now(), // Temporary ID
@@ -333,7 +339,8 @@ export const ChatPage = () => {
           created_at: new Date().toISOString(),
           message_type: msg.message_type || "text",
           delivery_status: "sent",
-          attachments: [] // Initialize as empty array, will be populated when message is actually sent
+          attachments: [], // Initialize as empty array, will be populated when message is actually sent
+          message_metadata: msg.reply_to ? { reply_to: msg.reply_to } : undefined,
         };
         
         setConversation(prev => {

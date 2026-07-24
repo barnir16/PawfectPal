@@ -13,7 +13,7 @@ import {
 import { Phone as PhoneIcon, Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { useLocalization } from "../../../contexts/LocalizationContext";
 
-interface EmergencyContact {
+export interface EmergencyContact {
   id: string;
   name: string;
   phone: string;
@@ -32,7 +32,9 @@ function makeId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function loadContacts(): EmergencyContact[] {
+// Exported so Settings.tsx can render a read-only summary of saved contacts
+// without duplicating the storage/migration logic.
+export function loadContacts(): EmergencyContact[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
@@ -73,7 +75,20 @@ function loadContacts(): EmergencyContact[] {
   return [];
 }
 
-export const EmergencyContacts: React.FC = () => {
+interface EmergencyContactsProps {
+  /** Whether the parent (ProfilePage) is currently in edit mode. When false,
+   * all fields are read-only and "Add contact" requests edit mode instead
+   * of adding a row directly — mirrors the rest of the profile page instead
+   * of being independently always-editable. */
+  isEditing: boolean;
+  /** Called when the user tries to add a contact while not in edit mode. */
+  onRequestEdit?: () => void;
+}
+
+export const EmergencyContacts: React.FC<EmergencyContactsProps> = ({
+  isEditing,
+  onRequestEdit,
+}) => {
   const { t } = useLocalization();
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
 
@@ -91,6 +106,10 @@ export const EmergencyContacts: React.FC = () => {
   };
 
   const addContact = () => {
+    if (!isEditing) {
+      onRequestEdit?.();
+      return;
+    }
     if (contacts.length >= MAX_CONTACTS) return;
     persist([...contacts, { id: makeId(), name: "", phone: "", relationship: "" }]);
   };
@@ -138,6 +157,7 @@ export const EmergencyContacts: React.FC = () => {
                 value={contact.relationship}
                 onChange={(e) => updateField(contact.id, "relationship", e.target.value)}
                 placeholder={t("profile.relationshipPlaceholder")}
+                disabled={!isEditing}
               />
               <TextField
                 fullWidth
@@ -145,6 +165,7 @@ export const EmergencyContacts: React.FC = () => {
                 label={t("settings.contactName")}
                 value={contact.name}
                 onChange={(e) => updateField(contact.id, "name", e.target.value)}
+                disabled={!isEditing}
               />
               <TextField
                 fullWidth
@@ -153,11 +174,13 @@ export const EmergencyContacts: React.FC = () => {
                 value={contact.phone}
                 onChange={(e) => updateField(contact.id, "phone", e.target.value)}
                 placeholder={t("settings.phonePlaceholder")}
+                disabled={!isEditing}
               />
               <IconButton
                 aria-label={t("profile.removeContact")}
                 color="error"
                 onClick={() => removeContact(contact.id)}
+                disabled={!isEditing}
               >
                 <DeleteIcon />
               </IconButton>
@@ -170,11 +193,11 @@ export const EmergencyContacts: React.FC = () => {
             variant="outlined"
             startIcon={<AddIcon />}
             onClick={addContact}
-            disabled={contacts.length >= MAX_CONTACTS}
+            disabled={isEditing && contacts.length >= MAX_CONTACTS}
           >
             {t("profile.addContact")}
           </Button>
-          {contacts.length >= MAX_CONTACTS && (
+          {isEditing && contacts.length >= MAX_CONTACTS && (
             <Typography variant="caption" color="text.secondary" sx={{ ml: 1.5 }}>
               {t("profile.maxContactsReached")}
             </Typography>

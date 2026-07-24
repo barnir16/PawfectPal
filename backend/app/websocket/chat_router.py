@@ -135,9 +135,10 @@ async def handle_chat_message(message_data: dict, current_user: UserORM, service
         message_create = ChatMessageCreate(
             service_request_id=service_request_id,
             message=message_data.get("message", ""),
-            message_type=message_data.get("message_type", "text")
+            message_type=message_data.get("message_type", "text"),
+            reply_to=message_data.get("reply_to")
         )
-        
+
         # Validate message
         if not message_create.message.strip():
             await manager.send_personal_message(json.dumps({
@@ -145,16 +146,32 @@ async def handle_chat_message(message_data: dict, current_user: UserORM, service
                 "message": "Message cannot be empty"
             }), current_user.id)
             return
-            
+
+        # Mirror the REST send_message endpoint's handling of reply_to —
+        # this was previously ignored here entirely, so replies sent while
+        # a live WebSocket connection was open (the default path whenever
+        # connected) always landed as plain messages with no thread context.
+        message_metadata = None
+        if message_create.reply_to:
+            message_metadata = {
+                "reply_to": {
+                    "message_id": message_create.reply_to.message_id,
+                    "sender_name": message_create.reply_to.sender_name,
+                    "message_preview": message_create.reply_to.message_preview,
+                    "message_type": message_create.reply_to.message_type,
+                }
+            }
+
         # Create message in database
         db_message = ChatMessageORM(
             service_request_id=service_request_id,
             sender_id=current_user.id,
             message=message_create.message,
             message_type=message_create.message_type,
+            message_metadata=message_metadata,
             is_read=False
         )
-        
+
         db.add(db_message)
         db.commit()
         db.refresh(db_message)
