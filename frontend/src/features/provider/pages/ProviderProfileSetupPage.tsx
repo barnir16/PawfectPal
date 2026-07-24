@@ -216,7 +216,7 @@ export const ProviderProfileSetupPage: React.FC = () => {
             </Typography>
 
             <Grid container spacing={3}>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   multiline
@@ -241,7 +241,7 @@ export const ProviderProfileSetupPage: React.FC = () => {
             </Typography>
 
             <Grid container spacing={3}>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <FormControl fullWidth>
                   <InputLabel>Services You Offer</InputLabel>
                   <Select
@@ -267,7 +267,7 @@ export const ProviderProfileSetupPage: React.FC = () => {
                 </FormControl>
               </Grid>
 
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   label={t('services.hourlyRate') || 'Hourly Rate (₪)'}
@@ -279,7 +279,7 @@ export const ProviderProfileSetupPage: React.FC = () => {
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   label="Service Radius (km)"
@@ -303,7 +303,7 @@ export const ProviderProfileSetupPage: React.FC = () => {
             </Typography>
 
             <Grid container spacing={3}>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   label="Years of Experience"
@@ -317,7 +317,7 @@ export const ProviderProfileSetupPage: React.FC = () => {
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Typography variant="subtitle2" gutterBottom>
                   Languages You Speak
                 </Typography>

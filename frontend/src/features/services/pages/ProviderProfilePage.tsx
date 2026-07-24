@@ -148,7 +148,7 @@ export const ProviderProfilePage: React.FC = () => {
 
       <Grid container spacing={3}>
         {/* Left Column - Main Profile */}
-        <Grid item xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <Card sx={{ mb: 3 }}>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 3 }}>
@@ -275,7 +275,7 @@ export const ProviderProfilePage: React.FC = () => {
         </Grid>
 
         {/* Right Column - Details */}
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           {/* Contact Information */}
           <Card sx={{ mb: 3 }}>
             <CardContent>

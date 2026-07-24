@@ -93,7 +93,7 @@ export const BookService = () => {
 return (
       <Grid container spacing={3}>
         {filteredProviders.map((provider) => (
-          <Grid item key={provider.id} xs={12} sm={6} md={4}>
+          <Grid key={provider.id} size={{ xs: 12, sm: 6, md: 4 }}>
             <ServiceProviderCard
               provider={provider}
               onViewProfile={(provider) => {

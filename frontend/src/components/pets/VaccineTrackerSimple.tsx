@@ -232,25 +232,25 @@ const VaccineTrackerSimple: React.FC<VaccineTrackerProps> = ({ pet }) => {
 
       {/* Summary Cards */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={3}>
+        <Grid size={{ xs: 12, sm: 3 }}>
           <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'primary.light', color: 'common.white' }}>
             <Typography variant="h4">{vaccines.length}</Typography>
             <Typography variant="body2">Total Vaccines</Typography>
           </Paper>
         </Grid>
-        <Grid item xs={12} sm={3}>
+        <Grid size={{ xs: 12, sm: 3 }}>
           <Paper sx={{ p: 2, textAlign: 'center', bgcolor: overdueCount > 0 ? 'error.light' : 'success.light', color: 'common.white' }}>
             <Typography variant="h4">{overdueCount}</Typography>
             <Typography variant="body2">Overdue</Typography>
           </Paper>
         </Grid>
-        <Grid item xs={12} sm={3}>
+        <Grid size={{ xs: 12, sm: 3 }}>
           <Paper sx={{ p: 2, textAlign: 'center', bgcolor: dueSoonCount > 0 ? 'warning.light' : 'info.light', color: 'common.white' }}>
             <Typography variant="h4">{dueSoonCount}</Typography>
             <Typography variant="body2">Due Soon</Typography>
           </Paper>
         </Grid>
-        <Grid item xs={12} sm={3}>
+        <Grid size={{ xs: 12, sm: 3 }}>
           <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'info.light', color: 'common.white' }}>
             <Typography variant="h4">{vaccines.length - overdueCount - dueSoonCount}</Typography>
             <Typography variant="body2">Up to Date</Typography>

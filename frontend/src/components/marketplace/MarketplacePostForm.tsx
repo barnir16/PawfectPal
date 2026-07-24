@@ -201,16 +201,16 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
           )}
 
           <Grid container spacing={3}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="h6" gutterBottom>
                 {t('marketplace.basicInfo')}
               </Typography>
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label={t('marketplace.title')}
+                label={t('marketplace.postTitle')}
                 value={formData.title}
                 onChange={(event) =>
                   setFormData((previous) => ({ ...previous, title: event.target.value }))
@@ -220,7 +220,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 multiline
@@ -238,7 +238,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <FormControl fullWidth required>
                 <InputLabel>{t('marketplace.serviceType')}</InputLabel>
                 <Select
@@ -260,7 +260,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label={t('marketplace.location')}
@@ -272,7 +272,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Autocomplete
                 multiple
                 options={pets}
@@ -294,7 +294,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
                 <Button
                   variant="outlined"
@@ -318,13 +318,13 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
               )}
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="h6" gutterBottom sx={{ mt: 1 }}>
                 {t('marketplace.budget')}
               </Typography>
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 type="number"
@@ -339,7 +339,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
               />
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 type="number"
@@ -354,7 +354,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
               />
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 type="number"
@@ -371,7 +371,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Autocomplete
                 multiple
                 freeSolo
@@ -393,7 +393,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Autocomplete
                 multiple
                 freeSolo
@@ -415,7 +415,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 multiline
@@ -432,7 +432,7 @@ export const MarketplacePostForm: React.FC<MarketplacePostFormProps> = ({
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <FormControlLabel
                 control={
                   <Switch
