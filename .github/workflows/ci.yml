@@ -1,21 +1,24 @@
 name: CI
 
+# Runs on pushes to main/mergedPlatform (the project's active branches) and
+# on every pull request targeting main. PRs from any branch are covered by
+# the pull_request trigger automatically -- it doesn't need every feature
+# branch listed individually.
 on:
   push:
     branches:
       - main
       - mergedPlatform
-      - portfolio-ready
+      - fix/provider-consolidation-marketplace-sync
   pull_request:
     branches:
       - main
-      - mergedPlatform
-      - portfolio-ready
 
 jobs:
   backend:
-    name: Backend tests
+    name: Backend lint + tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: backend
@@ -35,24 +38,49 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          # Caches pip downloads between runs, keyed off requirements.txt --
+          # speeds up repeat CI runs since dependencies rarely change.
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
 
       - name: Install backend dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run backend smoke tests
+      - name: Lint with ruff
+        # ruff isn't a project dependency -- it's installed here just for
+        # this CI step, so it never ships with the app itself.
+        # continue-on-error: true means lint problems are reported but
+        # don't fail the build. This is deliberate for a first pass: the
+        # codebase has never been linted before, so failing the build on
+        # day one would just be noisy. Once the report comes back clean
+        # (or the team has triaged it), flip this to a hard failure.
+        continue-on-error: true
+        run: |
+          pip install ruff
+          ruff check .
+
+      - name: Run backend test suite
+        # Runs every test file except three that use hand-built Mock()
+        # objects to simulate chat/websocket/push-notification internals.
+        # Those mocks have drifted out of sync with the real code over
+        # time (confirmed: 10/14, 12/12, and several failures respectively,
+        # unrelated to any current feature work) and need a dedicated pass
+        # to rebuild properly -- tracked as a known follow-up, not swept
+        # under the rug. Every other test file, including the simpler
+        # HTTP-level chat tests in test_chat.py, runs and is expected to
+        # pass.
         run: >
           pytest --no-cov
-          tests/test_ai.py
-          tests/test_ai_chat.py
-          tests/test_references.py
-          tests/test_user_router.py
-          tests/test_users.py
+          --ignore=tests/test_chat_integration.py
+          --ignore=tests/test_chat_performance.py
+          --ignore=tests/test_websocket_chat.py
 
   frontend:
-    name: Frontend build
+    name: Frontend lint + tests + build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: frontend
@@ -80,6 +108,20 @@ jobs:
 
       - name: Install frontend dependencies
         run: npm ci
+
+      - name: Lint with ESLint
+        # Same reasoning as the backend ruff step: this project already has
+        # eslint configured (npm run lint) but it was never wired into CI.
+        # Non-blocking for the first pass so we can see the real baseline
+        # before deciding whether it should gate merges.
+        continue-on-error: true
+        run: npm run lint
+
+      - name: Run frontend unit tests
+        # vitest is already configured (npm run test:run) but was never
+        # run in CI before. Non-blocking for the same first-pass reason.
+        continue-on-error: true
+        run: npm run test:run
 
       - name: Build frontend
         run: npm run build
