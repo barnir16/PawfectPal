@@ -81,7 +81,7 @@ async def test_create_weight_record_for_nonexistent_pet_returns_404(client, owne
     _override_auth_as(owner)
     try:
         payload = {
-            "petId": 999999,
+            "pet_id": 999999,
             "weight": 10.0,
             "date": datetime.now(timezone.utc).isoformat(),
         }
@@ -101,7 +101,7 @@ async def test_create_weight_record_for_other_users_pet_returns_404(
     _override_auth_as(intruder)
     try:
         payload = {
-            "petId": pet_id,
+            "pet_id": pet_id,
             "weight": 10.0,
             "date": datetime.now(timezone.utc).isoformat(),
         }
@@ -121,7 +121,7 @@ async def test_create_weight_record_with_non_positive_weight_returns_422(
     _override_auth_as(owner)
     try:
         payload = {
-            "petId": pet_id,
+            "pet_id": pet_id,
             "weight": 0,
             "date": datetime.now(timezone.utc).isoformat(),
         }
@@ -152,7 +152,7 @@ async def test_update_other_users_weight_record_returns_403(client, owner, intru
     create_resp = await client.post(
         "/api/weight-records/",
         json={
-            "petId": pet_id,
+            "pet_id": pet_id,
             "weight": 8.0,
             "date": datetime.now(timezone.utc).isoformat(),
         },
@@ -180,7 +180,7 @@ async def test_delete_other_users_weight_record_returns_403(client, owner, intru
     create_resp = await client.post(
         "/api/weight-records/",
         json={
-            "petId": pet_id,
+            "pet_id": pet_id,
             "weight": 8.0,
             "date": datetime.now(timezone.utc).isoformat(),
         },
@@ -217,7 +217,7 @@ async def test_date_range_query_with_start_after_end_returns_empty_not_error(
         await client.post(
             "/api/weight-records/",
             json={
-                "petId": pet_id,
+                "pet_id": pet_id,
                 "weight": 8.0,
                 "date": datetime.now(timezone.utc).isoformat(),
             },

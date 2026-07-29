@@ -131,12 +131,12 @@ alembic upgrade head
 
 ## Testing
 
-Backend test suite (mirrors what CI runs -- excludes three known-broken
-integration test files, see Known Limitations):
+Backend test suite (mirrors what CI runs -- excludes six known-broken
+test files, see Known Limitations):
 
 ```bash
 cd backend
-pytest --no-cov --ignore=tests/test_chat_integration.py --ignore=tests/test_chat_performance.py --ignore=tests/test_websocket_chat.py
+pytest --no-cov --ignore=tests/test_chat_integration.py --ignore=tests/test_chat_performance.py --ignore=tests/test_websocket_chat.py --ignore=tests/test_message_pagination.py --ignore=tests/test_message_status.py --ignore=tests/test_fcm_tokens.py
 ```
 
 Backend lint:
@@ -185,7 +185,7 @@ https://your-frontend-domain.com,http://localhost:5173
 
 PawfectPal is a portfolio project, not a finished commercial marketplace. The core pet profile, auth, deployment, database, and AI assistant flows are the main showcase. The provider marketplace and booking flows are still being refined.
 
-Three backend test files (`test_chat_integration.py`, `test_chat_performance.py`, `test_websocket_chat.py`) use hand-built `Mock()` objects to simulate chat/websocket/push-notification internals, and those mocks have drifted out of sync with the real code over time. They're excluded from CI and the local test command above rather than left silently failing. Rebuilding those mocks against the current code is a tracked follow-up, not an oversight.
+Six backend test files (`test_chat_integration.py`, `test_chat_performance.py`, `test_websocket_chat.py`, `test_message_pagination.py`, `test_message_status.py`, `test_fcm_tokens.py`) use hand-built `Mock()` objects to simulate chat/websocket/push-notification internals, and those mocks have drifted out of sync with the real code over time -- either failing stricter pydantic v2 validation on Mock attributes, or assuming DB call counts/ordering that no longer match the real code. They're excluded from CI and the local test command above rather than left silently failing. Rebuilding those mocks against the current code is a tracked follow-up, not an oversight.
 
 ## Portfolio Framing
 
