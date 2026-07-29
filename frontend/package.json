@@ -22,7 +22,7 @@
     "@eslint/object-schema": "^2.1.6",
     "@hookform/resolvers": "^5.2.1",
     "@mui/icons-material": "^7.3.1",
-    "@mui/material": "^7.3.1",
+    "@mui/material": "^9.2.0",
     "@mui/stylis-plugin-rtl": "^9.1.1",
     "@mui/system": "^7.3.1",
     "@mui/types": "^7.4.5",
