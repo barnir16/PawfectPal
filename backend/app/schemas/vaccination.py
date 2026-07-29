@@ -13,7 +13,12 @@ class VaccinationBase(BaseModel):
     clinic: str = Field(..., min_length=1, max_length=255)
     dose_number: Optional[int] = Field(default=1, ge=1)
     notes: Optional[str] = None
-    is_completed: bool = Field(default=True)
+    # Defaults to False: a newly logged vaccination represents a dose that
+    # was just administered, not a finished series. Defaulting this to True
+    # silently hid every new vaccination from GET /vaccinations/overdue/
+    # (app/routers/vaccination.py filters on is_completed == False) unless
+    # the caller explicitly passed is_completed=False on every request.
+    is_completed: bool = Field(default=False)
     reminder_sent: bool = Field(default=False)
 
 class VaccinationCreate(VaccinationBase):

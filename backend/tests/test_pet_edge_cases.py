@@ -5,7 +5,6 @@ validation of minimal/invalid payloads.
 """
 import pytest
 from fastapi import status
-from sqlalchemy.exc import IntegrityError
 
 from app.main import app
 from app.models import UserORM
@@ -223,24 +222,14 @@ async def test_updating_pet_weight_creates_auto_weight_record(client, owner):
 
 
 @pytest.mark.asyncio
-async def test_update_pet_with_partial_payload_returns_500_bug(client, owner):
-    """KNOWN BUG (found while writing edge-case tests, not yet fixed):
-    PUT /pets/{id}/ in app/routers/pet.py does an unconditional full
-    overwrite of every column from the PetUpdate body instead of a partial
-    patch, even though PetUpdate declares every field Optional. Any field
-    omitted by the caller (e.g. a real-world client that only sends the
-    fields the user actually edited) gets reset to None.
-
-    For most columns that just silently wipes data. For several NOT NULL
-    columns with no DB-level default (is_birthday_given, gender,
-    weight_unit, ...) it crashes with an IntegrityError instead of a clean
-    4xx. The test client is configured to let app exceptions propagate
-    (httpx ASGITransport's default raise_app_exceptions=True), so the
-    crash surfaces here as a raised IntegrityError rather than a 500
-    response - that's the current (broken) behavior. This test pins it
-    down so a future fix is forced to update it: replace the pytest.raises
-    block with a plain 200 assertion once update_pet is changed to a real
-    partial update.
+async def test_update_pet_with_partial_payload_succeeds(client, owner):
+    """PUT /pets/{id}/ now does a real partial update (app/routers/pet.py
+    uses pet.dict(exclude_unset=True) and only setattrs fields present in
+    the request body). This test used to pin down a bug where any field
+    omitted by the caller was reset to None -- silently wiping data, or
+    crashing with an IntegrityError on NOT NULL columns like breed_type.
+    That bug is fixed: a realistic partial update (renaming the pet only)
+    should succeed and leave every other field exactly as created.
     """
     _override_auth_as(owner)
     try:
@@ -248,7 +237,12 @@ async def test_update_pet_with_partial_payload_returns_500_bug(client, owner):
         pet_id = create_resp.json()["id"]
 
         # A realistic partial update: caller only wants to rename the pet.
-        with pytest.raises(IntegrityError):
-            await client.put(f"/pets/{pet_id}/", json={"name": "Renamed"})
+        update_resp = await client.put(f"/pets/{pet_id}/", json={"name": "Renamed"})
+        assert update_resp.status_code == status.HTTP_200_OK
+        updated = update_resp.json()
+        assert updated["name"] == "Renamed"
+        # Fields not present in the partial payload must survive untouched.
+        assert updated["breed_type"] == MINIMAL_PET_PAYLOAD["breed_type"]
+        assert updated["breed"] == MINIMAL_PET_PAYLOAD["breed"]
     finally:
         _clear_auth_override()

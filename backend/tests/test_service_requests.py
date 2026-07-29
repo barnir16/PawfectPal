@@ -8,6 +8,8 @@ from app.main import app
 from app.models import UserORM
 from app.models.pet import PetORM
 from app.models.service_request import ServiceRequestORM
+from app.models.service_type import ServiceTypeORM
+from app.models.provider_profile import ProviderProfileORM
 
 # Auth deps (override both absolute, relative, and provider-guard)
 from app.dependencies.auth import get_current_user, require_provider
@@ -69,6 +71,31 @@ def pet(db_session, user):
     return p
 
 
+@pytest.fixture
+def available_walking_provider(db_session, provider_user):
+    """Seed a 'walking' service type plus an available provider offering it.
+
+    POST /service-requests/ validates that the requested service_type both
+    exists (ServiceTypeORM row) and has at least one available provider
+    linked to it (ServiceMatchingService.get_providers_for_service) before
+    it will create the request. Neither existed in this file's fixtures,
+    so the "success" test was failing with a 400 for a service type that
+    was never seeded -- following the same pattern test_service.py uses
+    for its own service_type fixture.
+    """
+    st = ServiceTypeORM(name="walking", description="Dog walking")
+    db_session.add(st)
+    db_session.commit()
+    db_session.refresh(st)
+
+    provider = ProviderProfileORM(user_id=provider_user.id, is_available=True)
+    provider.services.append(st)
+    db_session.add(provider)
+    db_session.commit()
+    db_session.refresh(provider)
+    return provider
+
+
 @pytest.fixture(autouse=True)
 def override_auth(user):
     # Default to normal user
@@ -102,7 +129,7 @@ def make_request_payload(pet_id: int):
 
 
 @pytest.mark.asyncio
-async def test_create_service_request_success(client, pet):
+async def test_create_service_request_success(client, pet, available_walking_provider):
     payload = make_request_payload(pet.id)
     resp = await client.post(f"{BASE}/", json=payload)
     assert resp.status_code == status.HTTP_200_OK, resp.text
